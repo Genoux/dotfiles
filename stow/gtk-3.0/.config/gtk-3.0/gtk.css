@@ -1,0 +1,26 @@
+/* Fix border rounding for file dialogs */
+.dialog-vbox,
+filechooser {
+    border-radius: 6px;
+    margin: 0px;
+    padding: 0px;
+}
+
+window.dialog,
+window.dialog.filechooser {
+    border-radius: 6px;
+    margin: 0px;
+    padding: 0px;
+}
+
+/* Force consistent corner rounding */
+dialog,
+messagedialog,
+dialog > box,
+messagedialog > box,
+dialog > box > box.dialog-vbox,
+messagedialog > box > box.dialog-vbox {
+    border-radius: 6px;
+    margin: 0px;
+    padding: 0px;
+}

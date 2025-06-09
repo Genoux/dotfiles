@@ -1,0 +1,65 @@
+{
+  // Simple fastfetch configuration
+  "logo": {
+    "source": "auto",
+    "padding": {
+      "top": 1,
+      "left": 2
+    }
+  },
+  "display": {
+    "separator": " → "
+  },
+  "modules": [
+    {
+      "type": "title",
+      "color": {
+        "1": "blue",
+        "2": "cyan"
+      }
+    },
+    "separator",
+    {
+      "type": "os",
+      "key": "OS"
+    },
+    {
+      "type": "kernel",
+      "key": "Kernel"
+    },
+    {
+      "type": "uptime",
+      "key": "Uptime"
+    },
+    {
+      "type": "packages",
+      "key": "Packages"
+    },
+    {
+      "type": "shell",
+      "key": "Shell"
+    },
+    {
+      "type": "wm",
+      "key": "WM"
+    },
+    {
+      "type": "terminal",
+      "key": "Terminal"
+    },
+    "separator",
+    {
+      "type": "cpu",
+      "key": "CPU"
+    },
+    {
+      "type": "memory",
+      "key": "Memory"
+    },
+    {
+      "type": "disk",
+      "key": "Disk (/)",
+      "folders": ["/"]
+    }
+  ]
+}
