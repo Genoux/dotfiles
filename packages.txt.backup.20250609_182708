@@ -61,7 +61,6 @@ kconfig5
 kcoreaddons5
 kcrash5
 kdbusaddons5
-kdeconnect
 kdialog
 kdoctools5
 ki18n5
@@ -146,6 +145,8 @@ waybar
 wayvnc
 wf-recorder
 wget
+whitesur-cursor-theme-git
+whitesur-icon-theme
 wireplumber
 wol
 xdg-desktop-portal
