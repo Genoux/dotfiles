@@ -1,0 +1,96 @@
+@use "../abstracts/variables" as *;
+@use "../abstracts/mixins" as *;
+
+// =============================================================================
+// Layout - Main window and container
+// =============================================================================
+
+window.Bar {
+  background: transparent;
+  color: $text-primary;
+  font-family: $font-family-primary;
+  font-size: $font-size-md;
+  font-weight: 500;
+}
+
+.bar-container {
+  > .bar-section {
+    margin: $spacing-xs $spacing-md;
+  }
+}
+
+// =============================================================================
+// Components - Bar items and sections
+// =============================================================================
+
+// Common bar item styling
+.bar-item {
+  border-radius: $radius-md;
+  background: $bg-transparent;
+}
+
+// Left Section - Control panel and workspaces
+.bar-left {
+  .workspaces {
+    padding: $spacing-xs;
+  }
+}
+
+// Center Section - Window title
+.bar-center {
+  padding: 0 $spacing-sm;
+}
+
+// Right Section - Consistent spacing and subtle backgrounds
+.bar-right {
+  padding: $spacing-sm;
+
+  > *:not(:last-child) {
+    @include button-base;
+    padding: $spacing-sm $spacing-md;
+    
+    &:hover {
+      background: $bg-hover;
+    }
+  }
+  
+  .time-display {
+    padding: 0 $spacing-sm;
+  }
+  
+  button {
+    min-width: $spacing-xl;
+  }
+}
+
+// =============================================================================
+// Theme - Common elements and typography
+// =============================================================================
+
+window.Bar {  
+  button {
+    all: unset;
+  }
+  
+  label {
+    color: inherit;
+    font-weight: inherit;
+    
+    &.secondary {
+      color: $text-secondary;
+      font-size: $font-size-xs;
+    }
+    
+    &.tertiary {
+      color: $text-tertiary;
+      font-size: 9px; // Slightly smaller than xs
+    }
+  }
+  
+  separator {
+    background: $separator-primary;
+    min-width: $separator-width;
+    min-height: $spacing-lg;
+    margin: 0 $spacing-sm;
+  }
+}

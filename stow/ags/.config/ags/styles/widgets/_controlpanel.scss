@@ -1,0 +1,43 @@
+@use "../abstracts/variables" as *;
+@use "../abstracts/mixins" as *;
+
+// =============================================================================
+// Control Panel Widget Styling
+// =============================================================================
+
+window.control-panel-window {
+  @include window-base;
+}
+
+box.ControlPanel {
+  font-family: $font-family-primary;
+  background-color: $bg-primary;
+  border: $border-width solid $border-tertiary;
+  border-radius: $radius-xl;
+  padding: $spacing-md;
+  margin: $spacing-sm $spacing-md;
+  box-shadow: 0 0 $spacing-2xl $shadow-tertiary;
+
+  box.widget {
+    @include section-container;
+  }
+}
+
+box.control-panel-button {
+  button {
+    border-radius: $radius-md;
+    background: $bg-transparent;
+    transition: all $transition-normal;
+    min-width: 32px;
+
+    &.active {
+      background-color: $bg-quaternary;
+      &:hover {
+        background-color: $bg-quaternary;
+      }
+    }
+    &:hover {
+      background-color: $bg-tertiary;
+    }
+  }
+}

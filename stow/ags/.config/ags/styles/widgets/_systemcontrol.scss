@@ -1,0 +1,99 @@
+@use "../../styles/abstracts/variables" as *;
+@use "../../styles/abstracts/mixins" as *;
+
+// =============================================================================
+// System Control Widget Styling
+// =============================================================================
+
+.system-control-container {
+  padding: $spacing-md;
+
+  .system-control-btn {
+    @include button-base;
+    color: $text-secondary;
+    background-color: transparent;
+    min-height: 40px;
+
+    &:hover {
+      color: $text-primary;
+    }
+
+    icon {
+      font-size: $font-size-xl;
+    }
+
+    // Individual button colors
+    &.lock-btn:hover {
+      background-color: rgba($accent-primary, 0.3);
+      color: $accent-hover;
+    }
+
+    &.sleep-btn:hover {
+      background-color: rgba($warning-primary, 0.2);
+      color: $warning-primary;
+    }
+
+    &.shutdown-btn:hover {
+      background-color: rgba($error-primary, 0.2);
+      color: $error-primary;
+    }
+
+    // Confirmation state styling
+    &.shutdown-btn.confirm-pending {
+      background-color: rgba($error-primary, 0.3);
+      color: $error-primary;
+    }
+  }
+}
+
+// =============================================================================
+// Inline Confirmation Overlay Styling
+// =============================================================================
+
+.inline-confirmation-overlay {
+  .confirmation-header {
+    .confirmation-title {
+      font-size: $font-size-sm;
+      font-weight: 500;
+      color: $text-primary;
+    }
+  }
+
+  .confirmation-buttons {
+    font-size: $font-size-sm;
+    font-weight: 500;
+
+    .cancel-btn {
+      @include button-base;
+      border: 1px solid $border-primary;
+      min-width: 60px;
+      &:hover {
+        background-color: $bg-active;
+        color: $text-primary;
+        border-color: $border-secondary;
+      }
+    }
+
+    .confirm-btn {
+      @include button-base;
+      background-color: $error-primary;
+      color: $text-primary;
+      min-width: 60px;
+
+      &:hover {
+        background-color: $error-hover;
+      }
+    }
+  }
+}
+
+// Stack transition adjustments
+.system-control-container stack {
+  transition: all 200ms ease;
+
+  // Ensure consistent height during transitions
+  .system-controls,
+  .confirmation-container {
+    min-height: 48px; // Match button height
+  }
+}

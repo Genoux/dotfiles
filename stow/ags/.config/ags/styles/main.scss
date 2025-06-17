@@ -1,0 +1,26 @@
+@use 'widgets/bar';
+@use 'widgets/audiocontrols';
+@use 'widgets/mediaplayer';
+@use 'widgets/notifications';
+@use 'widgets/windowtitle';
+@use 'widgets/workspaces';
+@use 'widgets/controlpanel';
+@use 'widgets/systemcontrol';
+@use 'widgets/systemtray';
+@use 'widgets/applauncher';
+@use 'widgets/osd';
+@use 'abstracts/variables';
+@use 'abstracts/animations';
+
+box  {
+    all: unset;
+    padding: 0;
+    margin: 0;
+    border: none;
+    background-color: transparent;
+    color: inherit;
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: inherit;
+}
+

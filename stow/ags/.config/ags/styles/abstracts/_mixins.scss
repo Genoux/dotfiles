@@ -1,0 +1,83 @@
+@use "variables" as *;
+
+// =============================================================================
+// TRULY REUSABLE MIXINS - Used across multiple components
+// =============================================================================
+
+// Base button reset and interactive behavior - THE standard button pattern
+@mixin button-base {
+  all: unset;
+  padding: $spacing-sm $spacing-md;
+  border-radius: $radius-md;
+  color: $text-primary;
+  font-size: $font-size-sm;
+  background-color: transparent;
+  transition: all $transition-normal;
+  
+  &.active {
+    transition: all $transition-normal;
+    background-color: $bg-secondary;
+    &:hover {
+      background-color: $bg-secondary;
+    }
+  }
+
+  &:hover {
+    background-color: $bg-hover;
+  }
+
+}
+
+// Window base styling - Used by multiple popup windows
+@mixin window-base {
+  all: unset;
+  background: transparent;
+}
+
+// Section container mixin - Used multiple times in control panel
+@mixin section-container {
+  > box {
+    background-color: $bg-secondary;
+    border-radius: $radius-lg;
+    border: 1px solid $border-tertiary;
+    margin: 0;
+  }
+}
+
+// Badge mixin - for notification badges and similar elements
+@mixin badge {
+  background-color: $theme-white;
+  font-size: $font-size-xs;
+  font-weight: 600;
+  padding: 0 $spacing-sm;
+  border-radius: 8px;
+  color: $theme-base;
+  
+  label {
+    margin: 0;
+    padding: 0;
+    font-size: $font-size-xs;
+  }
+} 
+
+// Global mixin class
+.separator {
+  background-color: $border-primary;
+  min-height: 1px;
+}
+
+// Global tooltip styling - applies to ALL tooltips
+tooltip {
+  background-color: rgba($bg-primary, 0.95); // 95% opacity
+  color: $text-primary;
+  font-size: $font-size-sm;
+  padding: $spacing-xs;
+  border-radius: $radius-lg;
+  border: 1px solid rgba($border-tertiary, 0.1);
+  box-shadow: 
+  0 4px 12px rgba(0, 0, 0, 0.15),
+  0 0 20px rgba(0, 0, 0, 0.05);
+
+  // Better text styling
+  font-weight: 500;
+}

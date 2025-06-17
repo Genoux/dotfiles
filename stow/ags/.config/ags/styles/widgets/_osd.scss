@@ -1,0 +1,50 @@
+@use "../abstracts/variables" as *;
+@use "../abstracts/mixins" as *;
+
+// =============================================================================
+// OSD (ON-SCREEN DISPLAY) WIDGET
+// =============================================================================
+
+.OSDWindow {
+    background: transparent;
+    
+    // Smooth glass effect
+    .osd-container {
+        border-radius: $radius-md;
+        background: $bg-transparent;
+        margin-bottom: $spacing-2xl;
+        padding: 0 $spacing-xl;
+        
+        .osd-icon {
+            color: $text-primary;
+            min-width: $spacing-xl;
+            min-height: $spacing-xl;
+            font-size: $spacing-xl;
+        }
+        
+        .osd-slider {
+            padding: 0;
+            
+            trough {
+                min-height: $spacing-md;
+                background: $bg-tertiary;
+                border-radius: $radius-sm;
+            }
+            
+            highlight {
+                background-color: $theme-white;
+                border-radius: $radius-sm;
+            }
+            
+            slider {
+                all: unset;
+            }
+        }
+        
+        .osd-label {
+            color: $text-primary;
+            font-size: $font-size-sm;
+            opacity: 0.7;
+        }
+    }
+}

@@ -1,0 +1,97 @@
+@use "../abstracts/variables" as *;
+@use "../abstracts/mixins" as *;
+
+// =============================================================================
+// Workspaces Widget Styling
+// =============================================================================
+
+.workspaces {
+    .workspace-separator {
+        min-width: $separator-width;
+        background: $separator-primary;
+        border-radius: $radius-xs;
+    }
+    
+    .workspace {
+        border: none;
+        border-radius: $radius-sm;
+        color: $text-secondary;
+        padding: 0 $spacing-md;
+        background: transparent;
+        transition: background-color $transition-normal;
+        
+        &:hover {
+            background: $bg-hover;
+            
+            .workspace-dot {
+                transition: all $transition-fast;
+            }
+        }
+        
+        .workspace-number {
+            color: $text-secondary;
+            font-size: $font-size-sm;
+            font-weight: 500;
+            transition: color $transition-normal;
+     
+        }
+        
+        // Base dot styles
+        .workspace-dot {
+            background-color: transparent;
+            border-radius: $radius-md;
+            transition: min-width 400ms cubic-bezier(0.25, 0.8, 0.25, 1),
+                       background-color 250ms ease-in-out,
+                       opacity $transition-normal;
+            margin: $spacing-md 0;
+            
+            // Focused workspace - largest dot
+            &.focused-dot {
+                background-color: $text-primary;
+                min-width: $spacing-xl;
+            }
+            
+            // Active workspace (has windows but not focused) - medium dot
+            &.active-dot {
+                background-color: $text-secondary;
+            }
+            
+            // Occupied workspace - smallest dot
+            &.occupied-dot {
+                background-color: $text-secondary;
+                min-width: $spacing-xs;
+                min-height: $spacing-xs;
+                
+                &:hover {
+                    background-color: $text-primary;
+                    min-width: $spacing-sm;
+                }
+            }
+            
+            // Empty workspace - shows number
+            &.empty-dot {
+                background-color: transparent;
+                
+                .workspace-number {
+                    color: $text-secondary;
+                    font-size: $font-size-sm;
+                    font-weight: 500;
+                    transition: color $transition-fast;
+                }
+                
+                &:hover .workspace-number {
+                    color: $text-primary;
+                }
+            }
+        }
+
+        &.focused {
+            color: $text-primary;
+            
+            .workspace-number {
+                color: $text-primary;
+                font-weight: 600;
+            }
+        }
+    }
+}  

@@ -1,0 +1,140 @@
+@use "sass:color";
+
+// =============================================================================
+// THEME SYSTEM - Edit these base colors to change the entire theme
+// =============================================================================
+
+// Base theme colors - EDIT THESE TO CHANGE THEME
+$theme-base: rgb(28, 28, 34);          // Main theme color
+$theme-accent: rgb(65, 70, 85);        // Accent color (lighter variation of base with more contrast)
+$theme-white: rgba(255, 255, 255, 1);      // White reference
+
+// =============================================================================
+// COLOR GENERATION FUNCTIONS
+// =============================================================================
+
+// Function to mix colors with different ratios
+@function theme-mix($color1, $color2, $weight: 50%) {
+  @return color.mix($color1, $color2, $weight);
+}
+
+// Function to adjust opacity of a color
+@function theme-alpha($color, $alpha) {
+  @return rgba(color.channel($color, "red"), color.channel($color, "green"), color.channel($color, "blue"), $alpha);
+}
+
+// Function to lighten theme base
+@function theme-lighten($amount: 10%) {
+  @return color.adjust($theme-base, $lightness: $amount);
+}
+
+// Function to darken theme base
+@function theme-darken($amount: 10%) {
+  @return color.adjust($theme-base, $lightness: -$amount);
+}
+
+// =============================================================================
+// GENERATED COLOR PALETTE - All colors derived from base theme
+// =============================================================================
+
+// Background colors - dark mode appropriate hierarchy with more transparency
+$bg-primary: theme-alpha($theme-base, 0.4);           // Main background (lightest layer)
+$bg-secondary: theme-alpha(theme-darken(3%), 0.55);    // Secondary surfaces (slightly darker)
+$bg-tertiary: theme-alpha(theme-darken(6%), 0.50);     // Tertiary surfaces (darker still)
+$bg-quaternary: theme-alpha(theme-darken(10%), 0.45);  // Modal/overlay backgrounds (darkest for depth)
+
+// Interactive states - very gentle transparent overlays
+$bg-hover: theme-alpha($theme-white, 0.03);            // Very subtle hover state
+$bg-active: theme-alpha($theme-white, 0.05);           // Very subtle active state
+$bg-disabled: theme-alpha($theme-base, 0.25);          // Disabled elements
+$bg-transparent: theme-alpha($theme-base, 0.4); 
+
+// Text colors - white with different opacities
+$text-primary: theme-alpha($theme-white, 0.9);         // Primary text
+$text-secondary: theme-alpha($theme-white, 0.7);       // Secondary text
+$text-tertiary: theme-alpha($theme-white, 0.5);        // Tertiary/muted text
+$text-disabled: theme-alpha($theme-white, 0.4);        // Disabled text
+
+// Border and separator colors - white with low opacity
+$border-primary: theme-alpha($theme-white, 0.06);      // Main borders
+$border-secondary: theme-alpha($theme-white, 0.10);    // Highlighted borders
+$border-tertiary: theme-alpha($theme-white, 0.03);     // Subtle borders
+$separator-primary: theme-alpha($theme-white, 0.08);   // Separators
+
+// Accent colors - variations of theme-accent with more transparency
+$accent-primary: theme-alpha($theme-accent, 0.65);     // Main accent
+$accent-secondary: theme-alpha($theme-accent, 0.55);   // Secondary accent
+$accent-hover: theme-alpha($theme-accent, 0.75);       // Accent hover
+$accent-muted: theme-alpha($theme-accent, 0.45);       // Muted accent
+
+// Warning colors - yellow/amber for caution states
+$warning-primary: rgb(255, 193, 7);                    // Main warning color
+$warning-hover: rgb(255, 206, 84);                     // Warning hover state
+$warning-muted: theme-alpha($warning-primary, 0.7);    // Muted warning
+
+// Error/danger colors - red for destructive actions
+$error-primary: rgb(220, 53, 69);                      // Main error color
+$error-hover: rgb(225, 83, 97);                        // Error hover state  
+$error-muted: theme-alpha($error-primary, 0.7);        // Muted error
+
+// Shadow colors - black with different opacities
+$shadow-primary: rgba(0, 0, 0, 0.4);                   // Strong shadows
+$shadow-secondary: rgba(0, 0, 0, 0.15);                // Subtle shadows
+$shadow-tertiary: rgba(0, 0, 0, 0.08);                 // Very subtle shadows
+
+// =============================================================================
+// DESIGN TOKENS - Consistent spacing, radius, etc.
+// =============================================================================
+
+// Spacing scale
+$spacing-xs: 2px;
+$spacing-sm: 4px;
+$spacing-md: 8px;
+$spacing-lg: 12px;
+$spacing-xl: 16px;
+$spacing-2xl: 24px;
+
+// Border radius scale
+$radius-xs: 4px;
+$radius-sm: 6px;
+$radius-md: 8px;
+$radius-lg: 12px;
+$radius-xl: 16px;
+
+// Common measurements
+$border-width: 1px;
+$separator-width: 1px;
+
+// Transitions
+$transition-fast: 50ms ease-in-out;
+$transition-normal: 200ms ease-in-out;
+$transition-slow: 300ms ease-in-out;
+
+// Typography
+$font-family-primary: "SF Pro Text";
+$font-family-mono: "SF Mono", "Monaco", "Cascadia Code", monospace;
+$font-size-xs: 10px;
+$font-size-sm: 12px;
+$font-size-md: 13px;
+$font-size-lg: 14px;
+$font-size-xl: 16px;
+
+// =============================================================================
+// THEME PRESETS - Uncomment one to switch themes instantly
+// =============================================================================
+
+// // RED THEME
+// $theme-base: rgba(40, 20, 20, 1) !default;
+// $theme-accent: rgba(220, 80, 80, 1) !default;
+
+// // BLUE THEME  
+// $theme-base: rgba(20, 25, 40, 1) !default;
+// $theme-accent: rgba(80, 120, 220, 1) !default;
+
+// // GREEN THEME
+// $theme-base: rgba(20, 30, 25, 1) !default;
+// $theme-accent: rgba(80, 180, 120, 1) !default;
+
+// // PURPLE THEME
+// $theme-base: rgba(30, 20, 40, 1) !default;
+// $theme-accent: rgba(160, 80, 220, 1) !default;

@@ -1,0 +1,124 @@
+@use "../abstracts/variables" as *;
+@use "../abstracts/mixins" as *;
+
+// =============================================================================
+// Media Player Widget Styling
+// =============================================================================
+
+window {
+    @include window-base;
+}
+
+box.MediaPlayer {
+    font-family: $font-family-primary;
+    border: none;
+    border-radius: $radius-lg;
+    padding: $spacing-lg;
+    background-size:contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-color: $bg-primary;
+
+    
+
+    box.track-info {
+        margin-bottom: $spacing-sm;
+        min-width: 0;
+        
+        box.title-row {
+            margin-bottom: $spacing-xs * 0.5;
+            min-width: 0;
+            
+            .player-indicator {
+                margin-left: $spacing-sm;
+                
+                icon {
+                    margin-right: $spacing-xs;
+                    color: $text-primary;
+                    opacity: 0.9;
+                }
+                
+                .player-name {
+                    font-size: $font-size-sm;
+                    opacity: 0.7;
+                    font-weight: normal;
+                }
+            }
+        }
+        
+        label.track-title {
+            font-weight: 600;
+            font-size: $font-size-md;
+            min-width: 0;
+            text-decoration: none;
+            color: $text-primary;
+            transition: text-decoration $transition-fast;
+            
+            &:hover {
+                text-decoration: underline;
+            }
+        }
+        
+        label.track-artist {
+            font-size: $font-size-sm;
+            opacity: 0.9;
+            min-width: 0;
+            color: $text-primary;
+        }
+    }
+
+    box.progress-with-time {
+        min-height: 2px;
+        label.current-time,
+        label.total-time {
+            font-size: $font-size-xs + 1px;
+            opacity: 0.9;
+            color: $text-primary;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+            font-feature-settings: "tnum"; // Tabular numbers for consistent width
+        }
+
+        scale {
+            padding: 0;
+
+            trough {
+                min-height: $spacing-md;
+                background-color: rgba(255, 255, 255, 0.2);
+                border-radius: $radius-sm;
+            }
+
+            highlight {
+                background-color: rgba(255, 255, 255, 0.9);
+                border-radius: $radius-sm;
+            }
+
+            slider {
+                all: unset;
+                background-color: rgba(255, 255, 255, 0.95);
+                border-radius: 50%;
+                min-width: 6px;
+                min-height: 6px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            }
+        }
+    }
+
+    box.controls {
+        .play-btn {
+            background-color: rgba(255, 255, 255, 0.15);
+            border-radius: $radius-xl;
+        }
+        
+        button {
+            @include button-base;
+            font-size: $font-size-lg;
+            margin: 0;
+            color: $text-primary;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+            
+            &:hover {
+                background-color: rgba(255, 255, 255, 0.1);
+            }
+        }
+    }
+}

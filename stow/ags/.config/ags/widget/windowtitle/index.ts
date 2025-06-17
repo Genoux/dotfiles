@@ -1,0 +1,1 @@
+export { default as WindowTitle } from "./components/WindowTitle"
