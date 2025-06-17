@@ -7,7 +7,7 @@ FIXED_WALLPAPER="$DOWNLOAD_DIR/current_wallpaper.jpg" # Single fixed filename
 TEMP_WALLPAPER="$DOWNLOAD_DIR/temp_wallpaper.jpg" # Temporary file for processing
 
 # Search term - Change this to whatever you want to search for (can be overridden by config file)
-SEARCH_TERM="${SEARCH_TERM:-}"  # Default search term
+SEARCH_TERM="${SEARCH_TERM:-+forest +moutain +cloudy}"  # Default search term
 
 # Parse command line arguments
 # Check for config file, then environment variable, then default
