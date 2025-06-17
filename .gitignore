@@ -36,8 +36,13 @@ Thumbs.db
 .tmp/
 temp/
 
-# Wallpaper
-stow/hypr/.config/hypr/wallpapers/
+# Wallpaper images only (keep scripts and configs)
+stow/hypr/.config/hypr/wallpapers/*.jpg
+stow/hypr/.config/hypr/wallpapers/*.png
+stow/hypr/.config/hypr/wallpapers/*.webp
+stow/hypr/.config/hypr/wallpapers/*/*.jpg
+stow/hypr/.config/hypr/wallpapers/*/*.png
+stow/hypr/.config/hypr/wallpapers/*/*.webp
 
 # AGS specific
 stow/ags/.config/ags/node_modules/
