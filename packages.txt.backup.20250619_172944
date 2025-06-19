@@ -11,6 +11,7 @@ btop
 caprine
 cava
 claude-desktop-debug
+clickup
 cpio
 cursor-bin
 dialog
@@ -50,7 +51,6 @@ hyprlock
 hyprpicker
 hyprsunset-git
 i3-wm
-inetutils
 inotify-tools
 inxi
 kbookmarks5
@@ -153,7 +153,6 @@ xdg-desktop-portal-gtk
 xdg-desktop-portal-hyprland
 xdg-desktop-portal-wlr
 xorg-server
-xorg-xclock
 xorg-xinit
 xterm
 yad
