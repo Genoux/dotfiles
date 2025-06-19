@@ -1,187 +1,165 @@
-@use '../abstracts/variables' as *;
-@use '../abstracts/mixins' as *;
+@use "../abstracts/variables" as *;
+@use "../abstracts/mixins" as *;
 
 .AppLauncherWindow {
-    background: rgba(0, 0, 0, 0.2);
-  
+  background: rgba(28, 28, 34, 0.5);
 }
 .AppLauncher {
-    background: $bg-primary;
+  .search-container {
+    background: $bg-secondary;
     border-radius: $radius-md;
-
-    box-shadow: 0 0 $spacing-2xl $shadow-tertiary;
-    border: $border-width solid $border-tertiary;
     font-family: $font-family-primary;
     font-size: $font-size-xl;
 
-    /* Preview Overlay - positioned on top of entry */
     .preview-overlay {
-        margin-left: $spacing-xl;
+      margin-left: $spacing-xl;
     }
-
-    /* Typed text - invisible but takes up space to position completion */
     .typed-text {
-        color: transparent;
+      color: transparent;
     }
 
     /* Preview Completion Text - appears after typed text */
     .preview-completion {
-        color: $text-tertiary;
-        opacity: 0.5;
+      color: $text-tertiary;
+      opacity: 0.5;
     }
 
     /* Preview Result (for calculator) */
     .preview-result {
-        color: $accent-primary;
-        font-family: $font-family-mono;
-        font-size: $font-size-xl;
-        font-weight: 600;
-        margin-right: $spacing-xl;
+      color: $accent-primary;
+      font-family: $font-family-mono;
+      font-size: $font-size-xl;
+      font-weight: 600;
+      margin-right: $spacing-xl;
     }
 
     /* Preview Icon */
     .preview-icon {
-        font-size: 18px;
-        margin-right: $spacing-xl;
+      font-size: 18px;
+      margin-right: $spacing-xl;
     }
 
     /* Search Entry - Using GTK-specific selectors */
     .search-entry,
     entry.search-entry {
-        all: unset;
-        padding: $spacing-lg $spacing-xl;
-        &:hover {
-            background-color: $bg-secondary;
-            border: 0px solid transparent;
-            outline: 0px solid transparent;
-        }
+      all: unset;
+      padding: $spacing-lg $spacing-xl;
+      &:hover {
+        background-color: $bg-secondary;
+        border: 0px solid transparent;
+        outline: 0px solid transparent;
+      }
     }
 
     /* Custom Placeholder - Stays visible even on focus */
     .custom-placeholder {
-        color: $text-tertiary;
-        padding-left: $spacing-xl;
-        padding-top: $spacing-lg;
-        padding-bottom: $spacing-lg;
-        opacity: 0.7;
+      color: $text-tertiary;
+      padding-left: $spacing-xl;
+      padding-top: $spacing-lg;
+      padding-bottom: $spacing-lg;
+      opacity: 0.7;
     }
 
     /* Result Button (replaces AppButton) */
     .ResultButton,
     button.ResultButton {
-        all: unset;
-        background-color: transparent;
+      all: unset;
+      background-color: transparent;
+      background-image: none;
+      border: 0px solid transparent;
+      border-radius: $radius-md;
+      padding: $spacing-md $spacing-lg;
+      margin: $spacing-xs 0;
+      transition: all $transition-fast;
+      outline: 0px solid transparent;
+      outline-width: 0px;
+      outline-offset: 0px;
+      box-shadow: none;
+      min-width: 120px;
+
+      &:hover {
+        background-color: $bg-hover;
         background-image: none;
         border: 0px solid transparent;
-        border-radius: $radius-md;
-        padding: $spacing-md $spacing-lg;
-        margin: $spacing-xs 0;
-        transition: all $transition-fast;
         outline: 0px solid transparent;
-        outline-width: 0px;
-        outline-offset: 0px;
-        box-shadow: none;
-        min-width: 120px;
-        
-        &:hover {
-            background-color: $bg-hover;
-            background-image: none;
-            border: 0px solid transparent;
-            outline: 0px solid transparent;
-        }
-        
-        &:active {
-            background-color: $bg-active;
-            background-image: none;
-            border: 0px solid transparent;
-            outline: 0px solid transparent;
-        }
-        
-        &.selected {
-            background-color: $bg-secondary;
-            background-image: none;
-            border: 0px solid transparent;
-            outline: 0px solid transparent;
-            box-shadow: 0 0 0 1px $border-secondary;
-        }
+      }
 
-        &:focus {
-            background-color: $bg-secondary;
-            background-image: none;
-            border: 0px solid transparent;
-            outline: 0px solid transparent;
-            box-shadow: 0 0 0 1px $border-secondary;
+      &:active {
+        background-color: $bg-active;
+        background-image: none;
+        border: 0px solid transparent;
+        outline: 0px solid transparent;
+      }
+
+      &.selected {
+        background-color: $bg-secondary;
+        background-image: none;
+        border: 0px solid transparent;
+        outline: 0px solid transparent;
+        box-shadow: 0 0 0 1px $border-secondary;
+      }
+
+      &:focus {
+        background-color: $bg-secondary;
+        background-image: none;
+        border: 0px solid transparent;
+        outline: 0px solid transparent;
+        box-shadow: 0 0 0 1px $border-secondary;
+      }
+
+      box {
+        icon {
+          min-width: 32px;
+          min-height: 32px;
+          margin-right: $spacing-md;
         }
 
         box {
-            icon {
-                min-width: 32px;
-                min-height: 32px;
-                margin-right: $spacing-md;
-            }
-            
-            box {
-                label.title {
-                    color: $text-primary;
-                    font-weight: 500;
-                    font-size: $font-size-lg;
-                    font-family: $font-family-primary;
-                }
-                
-                label.subtitle {
-                    color: $text-secondary;
-                    font-size: $font-size-sm;
-                    font-family: $font-family-primary;
-                }
-            }
-        }
+          label.title {
+            color: $text-primary;
+            font-weight: 500;
+            font-size: $font-size-lg;
+            font-family: $font-family-primary;
+          }
 
-        /* Calculator-specific styling */
-        &.calculator {
-            .title {
-                font-family: $font-family-mono;
-                color: $accent-primary;
-            }
-            
-            .type-badge {
-                color: $accent-primary;
-                font-size: $font-size-sm;
-                background: $accent-muted;
-                border-radius: $radius-sm;
-            }
+          label.subtitle {
+            color: $text-secondary;
+            font-size: $font-size-sm;
+            font-family: $font-family-primary;
+          }
         }
-
-        /* File-specific styling */
-        &.file {
-            .title {
-                font-family: $font-family-mono;
-            }
-        }
-
-        /* Web-specific styling */
-        &.web {
-            .title {
-                color: $accent-secondary;
-            }
-        }
-
-        /* Command-specific styling */
-        &.command {
-            .title {
-                font-family: $font-family-mono;
-                color: $text-tertiary;
-            }
-        }
+      }
     }
+  }
 
-    /* Scrollable Container */
-    .AppLauncherScrollable {
-        outline: none;
-        border: none; 
-        background: transparent;
+  /* Recent Apps Container - OUTSIDE AppLauncher scope */
+  .recent-apps-container {
+    font-size: $font-size-md;
+    color: $text-secondary;
+
+    button.recent-app-item,
+    .recent-app-item {
+      all: unset;
+      padding: $spacing-lg;
+      transition: all $transition-fast;
+      background: $bg-secondary;
+      border-radius: $radius-md;
+
+      &:hover {
+        background-color: $bg-quaternary;
         border-radius: $radius-md;
-        min-height: 120px; // Allow shrinking when few results
-        margin-top: $spacing-md;
-    }
+      }
 
+      &:active {
+        background-color: $bg-active;
+        background-image: none;
+      }
+
+      box {
+        icon {
+          font-size: $font-size-lg;
+        }
+      }
+    }
+  }
 }

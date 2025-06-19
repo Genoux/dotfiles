@@ -211,7 +211,7 @@ export class AppProvider implements LauncherProvider {
         this.trackAppUsage(app)
     }
 
-    private trackAppUsage(app: Apps.Application) {
+    public trackAppUsage(app: Apps.Application) {
         const appId = app.executable || app.name
         const now = Date.now()
         
@@ -250,5 +250,50 @@ export class AppProvider implements LauncherProvider {
         } catch (error) {
             console.warn("Failed to save app usage data:", error)
         }
+    }
+
+    // Get the last 3 used apps for display in the launcher
+    getRecentApps(): Apps.Application[] {
+        
+        // If we have usage data, use it
+        if (Object.keys(this.appUsage).length > 0) {
+            const recentUsage = Object.entries(this.appUsage)
+                .sort((a, b) => b[1].lastUsed - a[1].lastUsed)
+                .slice(0, 3)
+                .map(([appId]) => appId)
+
+            const allApps = this.apps.get_list()
+            const recentApps: Apps.Application[] = []
+
+            for (const appId of recentUsage) {
+                const app = allApps.find(app => 
+                    (app.executable === appId) || (app.name === appId)
+                )
+                if (app) {
+                    recentApps.push(app)
+                }
+            }
+
+            console.log("📱 Found recent apps from usage:", recentApps.map(app => app.name))
+            return recentApps
+        }
+        
+        // Fallback: show 3 commonly used apps if no usage data
+        const allApps = this.apps.get_list()
+        const fallbackApps = allApps
+            .filter(app => {
+                const name = app.name.toLowerCase()
+                return name.includes('firefox') || 
+                       name.includes('chrome') || 
+                       name.includes('terminal') ||
+                       name.includes('kitty') ||
+                       name.includes('code') ||
+                       name.includes('file') ||
+                       name.includes('nautilus')
+            })
+            .slice(0, 3)
+
+        console.log("📱 Using fallback apps:", fallbackApps.map(app => app.name))
+        return fallbackApps
     }
 } 

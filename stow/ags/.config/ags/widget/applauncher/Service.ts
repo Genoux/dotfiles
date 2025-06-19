@@ -5,22 +5,24 @@ import { AppProvider } from "./providers/AppProvider"
 import { CalculatorProvider } from "./providers/CalculatorProvider"
 import { GoogleProvider } from "./providers/GoogleProvider"
 
-//TODO: This need to be refactored to be more modular and easier to maintain.
 
 class SmartAppLauncherService {
     private static instance: SmartAppLauncherService
     private providers: LauncherProvider[] = []
+    private appProvider: AppProvider
 
     // Public reactive state
     public text = Variable("")
     public isVisible = Variable(false)
     public previewContent = Variable<PreviewContent | null>(null)
+    public recentApps = Variable<any[]>([])
 
     constructor() {
         // Register providers (order matters for priority)
+        this.appProvider = new AppProvider()
         this.providers = [
             new CalculatorProvider(),
-            new AppProvider(),
+            this.appProvider,
             // Add more providers here easily:
              new GoogleProvider(),  // Uncomment to enable Google search
             // new FileProvider(),
@@ -32,13 +34,20 @@ class SmartAppLauncherService {
             this.updatePreview(query)
         })
 
-        // Track launcher visibility
+        // Track launcher visibility and update recent apps when shown
         const window = App.get_window("launcher")
         if (window) {
             window.connect("notify::visible", () => {
-                this.isVisible.set(window.visible)
+                const isVisible = window.visible
+                this.isVisible.set(isVisible)
+                if (isVisible) {
+                    this.updateRecentApps()
+                }
             })
         }
+        
+        // Initialize recent apps on startup
+        this.updateRecentApps()
     }
 
     static getInstance(): SmartAppLauncherService {
@@ -148,6 +157,26 @@ class SmartAppLauncherService {
     // Getters for compatibility
     getText() {
         return this.text.get()
+    }
+
+    private updateRecentApps() {
+        console.log("🔄 updateRecentApps called")
+        const recentApps = this.appProvider.getRecentApps().map(app => ({
+            id: `app-${app.executable || app.name}`,
+            name: app.name,
+            icon: app.iconName || "application-x-executable",
+            description: app.description || undefined,
+            app: app
+        }))
+        console.log("🔄 Setting recent apps:", recentApps.map(app => app.name))
+        this.recentApps.set(recentApps)
+    }
+
+    launchRecentApp(app: any) {
+        app.app.launch()
+        // Track usage through the app provider
+        this.appProvider.trackAppUsage(app.app)
+        this.hide()
     }
 }
 

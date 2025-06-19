@@ -17,27 +17,21 @@ export class GoogleProvider implements LauncherProvider {
             trimmed.split(" ").length > 3 // Long queries are probably searches
         )
         
-        console.log(`🤔 GoogleProvider.canHandle("${query}") = ${canHandle}`)
         return canHandle
     }
 
     search(query: string): SearchResult[] {
-        console.log(`🔍 GoogleProvider.search called with: "${query}"`)
         
         if (!this.canHandle(query)) {
-            console.log(`❌ GoogleProvider cannot handle: "${query}"`)
             return []
         }
 
         const searchQuery = this.extractSearchQuery(query)
-        console.log(`🎯 Extracted search query: "${searchQuery}"`)
         
         if (!searchQuery) {
-            console.log(`❌ No search query extracted from: "${query}"`)
             return []
         }
 
-        console.log(`✅ GoogleProvider returning search result for: "${searchQuery}"`)
         return [{
             id: `google-${searchQuery}`,
             title: `Search: ${searchQuery}`,
@@ -94,13 +88,11 @@ export class GoogleProvider implements LauncherProvider {
     }
 
     private searchGoogle(searchQuery: string) {
-        console.log(`🔍 Searching Google for: "${searchQuery}"`)
         
         // Use the approach that works: firefox + google.com
         const searchUrl = `google.com/search?q=${searchQuery.replace(/ /g, '+')}`
         const command = `firefox "${searchUrl}"`
         
-        console.log(`📝 Running command: ${command}`)
         
         try {
             const result = GLib.spawn_command_line_async(command)
