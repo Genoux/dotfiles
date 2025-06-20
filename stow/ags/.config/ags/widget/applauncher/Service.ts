@@ -24,7 +24,7 @@ class SmartAppLauncherService {
             new CalculatorProvider(),
             this.appProvider,
             // Add more providers here easily:
-             new GoogleProvider(),  // Uncomment to enable Google search
+            new GoogleProvider(),  // Uncomment to enable Google search
             // new FileProvider(),
             // new WebProvider(),
         ].sort((a, b) => b.priority - a.priority)
@@ -34,17 +34,18 @@ class SmartAppLauncherService {
             this.updatePreview(query)
         })
 
-        // Track launcher visibility and update recent apps when shown
-        const window = App.get_window("launcher")
-        if (window) {
-            window.connect("notify::visible", () => {
-                const isVisible = window.visible
-                this.isVisible.set(isVisible)
-                if (isVisible) {
-                    this.updateRecentApps()
-                }
-            })
-        }
+        // Track launcher visibility 
+        setTimeout(() => {
+            const window = App.get_window("launcher")
+            if (window) {
+                window.connect("notify::visible", () => {
+                    const isVisible = window.visible
+                    this.isVisible.set(isVisible)
+                })
+            } else {
+                console.warn("⚠️ Launcher window not found during Service initialization")
+            }
+        }, 100)
         
         // Initialize recent apps on startup
         this.updateRecentApps()
@@ -79,41 +80,31 @@ class SmartAppLauncherService {
 
     activateSelected() {
         const query = this.text.get().trim()
-        console.log(`🚀 ModularService.activateSelected() called with: "${query}"`)
         
-        if (!query) {
-            console.log(`❌ Empty query, returning`)
+        if (!query) return
+        
+        // KISS: If no preview, don't launch anything
+        const preview = this.previewContent.get()
+        if (!preview) {
+            console.log(`❌ No preview for "${query}" - doing nothing`)
             return
         }
         
         // Find the first provider that can handle this query and get its best result
         for (const provider of this.providers) {
-            console.log(`🔍 Checking provider: ${provider.name} (priority: ${provider.priority})`)
-            
             if (provider.canHandle(query)) {
-                console.log(`✅ Provider ${provider.name} can handle "${query}"`)
-                
                 const results = provider.search(query)
-                const bestResult = Array.isArray(results) 
-                    ? results[0] 
-                    : results instanceof Promise 
-                        ? null 
-                        : results[0]
-                
-                console.log(`🎯 Best result from ${provider.name}:`, bestResult?.title || 'none')
+                const bestResult = Array.isArray(results) ? results[0] : null
                 
                 if (bestResult) {
-                    console.log(`🚀 Executing action for: ${bestResult.title}`)
                     bestResult.action()
                     this.hide()
+                    // Update recent apps after launching
+                    this.updateRecentApps()
                     return
                 }
-            } else {
-                console.log(`❌ Provider ${provider.name} cannot handle "${query}"`)
             }
         }
-        
-        console.log(`❌ No provider could handle "${query}"`)
     }
 
     // Window management
@@ -160,7 +151,6 @@ class SmartAppLauncherService {
     }
 
     private updateRecentApps() {
-        console.log("🔄 updateRecentApps called")
         const recentApps = this.appProvider.getRecentApps().map(app => ({
             id: `app-${app.executable || app.name}`,
             name: app.name,
@@ -173,10 +163,11 @@ class SmartAppLauncherService {
     }
 
     launchRecentApp(app: any) {
-        app.app.launch()
-        // Track usage through the app provider
-        this.appProvider.trackAppUsage(app.app)
+        // Use the AppProvider's smart launch logic (focus existing or launch new)
+        this.appProvider.launchApp(app.app)
         this.hide()
+        // Update recent apps after launching
+        this.updateRecentApps()
     }
 }
 

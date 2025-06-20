@@ -1,6 +1,6 @@
 #!/bin/bash
 # Main dotfiles manager - the only script you need to run
-
+# dotfiles.sh
 set -e
 
 # Colors

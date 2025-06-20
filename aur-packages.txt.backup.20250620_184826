@@ -8,11 +8,9 @@ beekeeper-studio-bin
 beekeeper-studio-bin-debug
 caprine
 claude-desktop-debug
-clickup
 cursor-bin
 downgrade
 dragon-drop
-electron29-bin
 figma-linux
 gauntlet-bin
 gauntlet-bin-debug
@@ -67,7 +65,6 @@ spotify
 swayosd-git
 swayosd-git-debug
 ttf-material-design-icons-git
-walker
 yay-bin
 yay-bin-debug
 zen-browser-bin

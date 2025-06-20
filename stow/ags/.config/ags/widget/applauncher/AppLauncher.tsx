@@ -61,96 +61,98 @@ export default function ModularAppLauncher() {
                     widthRequest={420}
                 >
 
-            <box
-                className="AppLauncher"
-                vertical
-                spacing={8}
-            >
+                    <box
+                        className="AppLauncher"
+                        vertical
+                        spacing={8}
+                    >
 
-                <box
-                    className="search-container"
-                >
-                    <overlay>
-                        <entry
-                            className="search-entry"
-                            text={Service.text()}
-                            onChanged={self => Service.setText(self.text)}
-                            onActivate={() => Service.activateSelected()}
-                            setup={(self) => {
-                                entryRef = self
-                            }}
-                        />
-
-                        {/* Custom placeholder */}
-                        <label
-                            className="custom-placeholder"
-                            label="Search apps..."
-                            halign={Gtk.Align.START}
-                            valign={Gtk.Align.CENTER}
-                            visible={bind(Service.text).as(text => text.length === 0)}
-                            sensitive={false}
-                        />
-
-                        {/* Smart text completion overlay */}
                         <box
-                            className="preview-overlay"
-                            halign={Gtk.Align.FILL}
-                            valign={Gtk.Align.CENTER}
-                            visible={bind(Service.previewContent).as(content =>
-                                content?.type === 'text'
-                            )}>
+                            className="search-container"
+                        >
+                            <overlay>
+                                <entry
+                                    className="search-entry"
+                                    text={Service.text()}
+                                    onChanged={self => Service.setText(self.text)}
+                                    onActivate={() => Service.activateSelected()}
+                                    setup={(self) => {
+                                        entryRef = self
+                                    }}
+                                />
 
-                            <box spacing={0} halign={Gtk.Align.START}>
+                                {/* Custom placeholder */}
                                 <label
-                                    className="typed-text"
-                                    label={Service.text()}
+                                    className="custom-placeholder"
+                                    label="Search apps..."
+                                    halign={Gtk.Align.START}
+                                    valign={Gtk.Align.CENTER}
+                                    visible={bind(Service.text).as(text => text.length === 0)}
+                                    sensitive={false}
                                 />
-                                <label
-                                    className="preview-completion"
-                                    label={bind(Service.previewContent).as(content =>
-                                        content?.type === 'text' ? content.value : ""
-                                    )}
-                                />
-                            </box>
 
-                            <box halign={Gtk.Align.END} hexpand={true}>
-                                <icon
-                                    className="preview-icon"
-                                    icon={bind(Service.previewContent).as(content =>
-                                        content?.icon || "application-x-executable"
-                                    )}
-                                />
-                            </box>
-                        </box>
-                    </overlay>
-                </box>
-                <box
-                    className="recent-apps-container"
-                    hexpand
-                    spacing={8}>
+                                {/* Smart text completion overlay */}
+                                <box
+                                    className="preview-overlay"
+                                    halign={Gtk.Align.FILL}
+                                    valign={Gtk.Align.CENTER}
+                                    visible={bind(Service.previewContent).as(content =>
+                                        content?.type === 'text'
+                                    )}>
 
-                    {bind(Service.recentApps).as(apps =>
-                        apps.map(app => (
-                            <button
-                                className="recent-app-item"
-                                hexpand
-                                onClick={() => Service.launchRecentApp(app)}>
-                                <box spacing={8} halign={Gtk.Align.START}>
-                                    <icon
-                                        icon={app.icon}
-                                    />
+                                    <box spacing={0} halign={Gtk.Align.START}>
                                         <label
-                                            className="recent-app-name"
-                                            label={app.name}
-                                            halign={Gtk.Align.START}
+                                            className="typed-text"
+                                            label={Service.text()}
                                         />
-                                </box>
-                            </button>
-                        ))
-                    )}
-                </box>
+                                        <label
+                                            className="preview-completion"
+                                            label={bind(Service.previewContent).as(content =>
+                                                content?.type === 'text' ? content.value : ""
+                                            )}
+                                        />
+                                    </box>
 
-            </box>
+                                    <box halign={Gtk.Align.END} hexpand={true}>
+                                        <icon
+                                            className="preview-icon"
+                                            icon={bind(Service.previewContent).as(content =>
+                                                content?.icon || "application-x-executable"
+                                            )}
+                                        />
+                                    </box>
+                                </box>
+                            </overlay>
+                        </box>
+                        <box
+                            className="recent-apps-container"
+                            hexpand
+                            spacing={8}
+                            // visible={bind(Service.text).as(text => text.length === 0)}
+                            >
+
+                            {bind(Service.recentApps).as(apps =>
+                                apps.map(app => (
+                                    <button
+                                        className="recent-app-item"
+                                        hexpand
+                                        onClick={() => Service.launchRecentApp(app)}>
+                                        <box spacing={8} halign={Gtk.Align.START}>
+                                            <icon
+                                                icon={app.icon}
+                                            />
+                                            <label
+                                                className="recent-app-name"
+                                                label={app.name}
+                                                halign={Gtk.Align.START}
+                                            />
+                                        </box>
+                                    </button>
+                                ))
+                            )}
+                        </box>
+
+                    </box>
 
                 </box>
 

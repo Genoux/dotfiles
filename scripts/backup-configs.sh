@@ -16,24 +16,24 @@ fi
 # Create stow directory
 mkdir -p "$STOW_DIR"
 
-# List of configs to backup (add/remove as needed)
-configs=(
-    "hypr"           # Window manager
-    "ags"            # AGS editor
-    "kitty"          # Terminal
-    "nvim"           # Editor
-    "gtk-3.0"        # GTK3 theme
-    "gtk-4.0"        # GTK4 theme
-    "fastfetch"      # System info
-    "cava"           # Audio visualizer
-    "yazi"           # File manager
-)
+# # List of configs to backup (add/remove as needed)
+# configs=(
+#     "hypr"           # Window manager
+#     "ags"            # AGS editor
+#     "kitty"          # Terminal
+#     "nvim"           # Editor
+#     "gtk-3.0"        # GTK3 theme
+#     "gtk-4.0"        # GTK4 theme
+#     "fastfetch"      # System info
+#     "cava"           # Audio visualizer
+#     "yazi"           # File manager
+# )
 
-# Files (not directories)
-files=(
-    "mimeapps.list"
-    "user-dirs.dirs"
-)
+# # Files (not directories)
+# files=(
+#     "mimeapps.list"
+#     "user-dirs.dirs"
+# )
 
 echo "🔍 Scanning your ~/.config..."
 echo
