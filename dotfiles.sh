@@ -28,25 +28,26 @@ fi
 show_menu() {
     echo -e "${BLUE}📋 What would you like to do?${NC}"
     echo
+    echo "🚀 QUICK SETUP:"
+    echo "  1) Complete Setup           (everything: packages + themes + configs)"
+    echo
     echo "📦 PACKAGES:"
-    echo "  1) Get current packages     (system → txt files)"
-    echo "  2) Install packages         (txt files → system)"
-    echo "  3) Preview sync             (show what would change)"
-    echo "  4) Install with sync        (remove unlisted packages)"
+    echo "  2) Smart Sync               (auto-sync packages)"
+    echo "  3) Package Status           (show what would change)"
+    echo "  4) Package Preview          (detailed view)"
     echo
     echo "⚙️  CONFIGS:"
-    echo "  5) Backup configs          (system → dotfiles)"
-    echo "  6) List available configs   (show what's in dotfiles)"
-    echo "  7) Install config          (dotfiles → system symlinks)"
-    echo "  8) Install all configs     (all dotfiles → system)"
-    echo "  9) Remove config           (remove symlinks)"
+    echo "  5) List Available Configs   (show what's in dotfiles)"
+    echo "  6) Install Config           (dotfiles → system symlinks)"
+    echo "  7) Install All Configs      (all dotfiles → system)"
+    echo "  8) Remove Config            (remove symlinks)"
     echo
     echo "🎨 THEMES:"
-    echo "  10) Install themes         (download custom themes)"
+    echo "  t) Install Themes           (download custom themes)"
     echo
     echo "📊 INFO:"
-    echo "  s) Status                  (show current state)"
-    echo "  h) Help                    (explain workflow)"
+    echo "  s) Status                   (show current state)"
+    echo "  h) Help                     (explain workflow)"
     echo "  q) Quit"
     echo
 }
@@ -126,27 +127,33 @@ show_status() {
 }
 
 show_help() {
-    echo -e "${BLUE}💡 Dotfiles Workflow:${NC}"
+    echo -e "${BLUE}💡 Simplified Dotfiles Workflow:${NC}"
     echo
-    echo -e "${YELLOW}First Time Setup:${NC}"
-    echo "  1. Get current packages (saves what you have)"
-    echo "  2. Backup configs (saves your current configs)"
-    echo "  3. Install all configs (creates symlinks)"
+    echo -e "${YELLOW}🚀 Quick Start (Recommended):${NC}"
+    echo "  • Just run 'Smart Sync' - it handles everything!"
+    echo "  • Then 'Install All Configs' to deploy your settings"
     echo
-    echo -e "${YELLOW}Daily Usage:${NC}"
-    echo "  • Edit configs normally (~/config/app/)"
-    echo "  • Changes automatically save to dotfiles"
-    echo "  • Commit/push when ready"
+    echo -e "${YELLOW}🏠 On Current System:${NC}"
+    echo "  1. Smart Sync (auto-gets packages + syncs)"
+    echo "  2. Install All Configs (deploy settings)"
+    echo "  3. Edit configs normally in ~/.config/"
     echo
-    echo -e "${YELLOW}New Machine:${NC}"
+    echo -e "${YELLOW}🆕 On New Machine:${NC}"
     echo "  1. Clone dotfiles repo"
-    echo "  2. Install packages"
-    echo "  3. Install all configs"
+    echo "  2. Complete Setup (does everything)"
+    echo "  3. Done! Everything synced automatically"
     echo
-    echo -e "${YELLOW}Adding New Software:${NC}"
-    echo "  1. Install software normally"
-    echo "  2. Get current packages (updates lists)"
-    echo "  3. Backup configs (if app has configs you want)"
+    echo -e "${YELLOW}➕ Adding New Software:${NC}"
+    echo "  1. Install software normally (pacman/yay)"
+    echo "  2. Smart Sync (updates package lists automatically)"
+    echo
+    echo -e "${YELLOW}⚙️  Adding New Configs:${NC}"
+    echo "  1. Copy config to stow/ folder:"
+    echo "     cp -r ~/.config/newapp stow/newapp/.config/"
+    echo "  2. Install Config 'newapp'"
+    echo "  3. Done! Now it's managed by dotfiles"
+    echo
+    echo -e "${GREEN}💡 Pro tip: 'Smart Sync' does everything automatically!${NC}"
     echo
 }
 
@@ -190,24 +197,32 @@ while true; do
     
     case $choice in
         1)
-            run_script "get-packages.sh" "Getting current packages"
+            echo -e "${BLUE}🎯 Complete Setup - Everything at once!${NC}"
+            cd "$SCRIPT_DIR"
+            bash "$SCRIPTS_DIR/manage-packages.sh" setup
+            echo
+            echo -e "${BLUE}Installing all configs...${NC}"
+            run_stow_script "install" "Installing all configs" "all"
             ;;
         2)
-            run_script "install-packages.sh" "Installing packages"
+            echo -e "${BLUE}🚀 Running Smart Sync (the magic button!)${NC}"
+            cd "$SCRIPT_DIR"
+            bash "$SCRIPTS_DIR/manage-packages.sh"
             ;;
         3)
-            run_script "preview-sync.sh" "Previewing sync changes"
+            echo -e "${BLUE}📊 Package Status${NC}"
+            cd "$SCRIPT_DIR"
+            bash "$SCRIPTS_DIR/manage-packages.sh" status
             ;;
         4)
-            run_script "install-packages.sh" "Installing packages with sync" "--sync"
+            echo -e "${BLUE}🔍 Detailed Package Preview${NC}"
+            cd "$SCRIPT_DIR"
+            bash "$SCRIPTS_DIR/manage-packages.sh" preview
             ;;
         5)
-            run_script "backup-configs.sh" "Backing up configs"
-            ;;
-        6)
             run_stow_script "list" "Listing available configs"
             ;;
-        7)
+        6)
             echo "Available configs:"
             run_stow_script "list" "Showing configs"
             echo
@@ -216,10 +231,10 @@ while true; do
                 run_stow_script "install" "Installing $config_name" "$config_name"
             fi
             ;;
-        8)
+        7)
             run_stow_script "install" "Installing all configs" "all"
             ;;
-        9)
+        8)
             echo "Available configs:"
             run_stow_script "list" "Showing configs"
             echo
@@ -228,8 +243,32 @@ while true; do
                 run_stow_script "remove" "Removing $config_name" "$config_name"
             fi
             ;;
-        10)
-            run_script "install-themes.sh" "Installing themes"
+        t|T)
+            echo -e "${BLUE}🎨 Installing Themes${NC}"
+            
+            # Check if themes are already installed
+            themes_exist=false
+            if [[ -d "$HOME/.themes/WhiteSur-Light" ]] || \
+               [[ -d "$HOME/.icons/WhiteSur" ]] || [[ -d "$HOME/.local/share/icons/WhiteSur" ]] || \
+               [[ -d "$HOME/.icons/WhiteSur-cursors" ]] || [[ -d "$HOME/.local/share/icons/WhiteSur-cursors" ]]; then
+                themes_exist=true
+            fi
+            
+            if $themes_exist; then
+                echo
+                echo -e "${YELLOW}🔍 WhiteSur themes are already installed${NC}"
+                read -p "Force reinstall to update? (y/N): " -n 1 -r
+                echo
+                if [[ $REPLY =~ ^[Yy]$ ]]; then
+                    cd "$SCRIPT_DIR"
+                    bash "$SCRIPTS_DIR/manage-packages.sh" themes --force
+                else
+                    echo -e "${YELLOW}Using existing themes${NC}"
+                fi
+            else
+                cd "$SCRIPT_DIR"
+                bash "$SCRIPTS_DIR/manage-packages.sh" themes
+            fi
             ;;
         s|S)
             show_status

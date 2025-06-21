@@ -25,7 +25,6 @@ extra-cmake-modules
 fastfetch
 fd
 figma-linux
-file-roller
 firefox
 flatpak
 font-manager
@@ -89,7 +88,6 @@ nautilus
 neovim
 net-tools
 networkmanager
-nomachine
 notion-app-electron
 notion-calendar-electron
 noto-fonts
@@ -123,7 +121,6 @@ qt6ct
 ripgrep
 rofi
 rofi-calc
-rofi-emoji
 sassc
 sherlock-launcher-bin
 slack-desktop
@@ -133,7 +130,6 @@ spotify
 stow
 swayosd-git
 swww
-tigervnc
 ttf-font-awesome
 ttf-material-design-icons-git
 ttf-montserrat

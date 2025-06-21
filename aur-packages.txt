@@ -50,7 +50,6 @@ libastal-tray-git
 libastal-wireplumber-git
 libcava
 matugen-bin
-nomachine
 notion-app-electron
 notion-app-electron-debug
 notion-calendar-electron
