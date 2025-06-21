@@ -1,5 +1,5 @@
 import { Astal } from "astal/gtk3"
-import { createWindow } from "../utils"
+import { createWindow, windowManager } from "../utils"
 import ControlPanel from "./components/ControlPanel"
 
 // Create popup window with auto-close behavior
@@ -11,6 +11,5 @@ export const controlPanel = createWindow({
   autoClose: true,
 })
 
-// Export what components need
 export const controlPanelVisible = controlPanel.isVisible
 export const toggleControlPanel = controlPanel.toggle

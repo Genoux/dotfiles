@@ -1,5 +1,5 @@
 import { Astal } from "astal/gtk3"
-import { createWindow } from "../utils"
+import { createWindow, windowManager } from "../utils"
 import NotificationCenter, { NotificationCenterWidget } from "./components/NotificationCenter"
 import { dismissAllPopups } from "./components/NotificationPopup"
 
@@ -130,6 +130,11 @@ export const notificationCenter = createWindow({
     anchor: Astal.WindowAnchor.TOP | Astal.WindowAnchor.RIGHT | Astal.WindowAnchor.BOTTOM,
     autoClose: true,
 })
+
+// Export what components need
+export const notificationCenterVisible = notificationCenter.isVisible
+
+export const toggleNotificationCenter = notificationCenter.toggle
 
 // Subscribe to visibility changes to dismiss popups when center opens
 notificationCenter.isVisible.subscribe((visible) => {

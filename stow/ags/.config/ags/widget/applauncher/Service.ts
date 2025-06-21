@@ -4,6 +4,7 @@ import { LauncherProvider, SearchResult, PreviewContent } from "./types"
 import { AppProvider } from "./providers/AppProvider"
 import { CalculatorProvider } from "./providers/CalculatorProvider"
 import { GoogleProvider } from "./providers/GoogleProvider"
+import { windowManager } from "../utils"
 
 
 class SmartAppLauncherService {
@@ -49,6 +50,9 @@ class SmartAppLauncherService {
         
         // Initialize recent apps on startup
         this.updateRecentApps()
+
+        // WindowManager now automatically detects and manages this window
+        // No manual registration needed!
     }
 
     static getInstance(): SmartAppLauncherService {
@@ -122,7 +126,8 @@ class SmartAppLauncherService {
     show() {
         const window = App.get_window("launcher")
         if (window) {
-            window.visible = true
+            // WindowManager automatically handles mutual exclusivity
+            windowManager.showExclusiveWindow("launcher")
             this.clearText()
         }
     }

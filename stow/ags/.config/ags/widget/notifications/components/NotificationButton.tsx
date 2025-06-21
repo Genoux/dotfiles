@@ -1,7 +1,7 @@
 import { bind } from "astal"
 import { Gtk } from "astal/gtk3"
 import Notifd from "gi://AstalNotifd"
-import { getCountableNotificationCount, notificationCenter } from "../Service"
+import { getCountableNotificationCount, notificationCenterVisible, toggleNotificationCenter } from "../Service"
 import { Variable } from "astal"
 
 const notifications = Notifd.get_default()
@@ -12,7 +12,7 @@ export default function NotificationButton() {
     <button
       className={bind(Variable.derive([
         bind(notifications, "notifications"), 
-        notificationCenter.isVisible
+        notificationCenterVisible
       ], (notifs, centerVisible) => {
         const count = getCountableNotificationCount(notifs)
         const baseClass = `NotificationButton${count > 0 ? " has-notifications" : ""}`
@@ -21,8 +21,8 @@ export default function NotificationButton() {
       }))}
       onClicked={
         () => {
-          notificationCenter.toggle()
-          console.log("Notification center toggled:", notificationCenter.isVisible.get())
+          toggleNotificationCenter()
+          console.log("Notification center toggled:", notificationCenterVisible.get())
         }
       }
     >
