@@ -84,6 +84,81 @@ fi
 # Change to dotfiles directory
 cd "$DOTFILES_DIR"
 
+# Hardware detection functions
+detect_gpu() {
+    local has_nvidia=false
+    local has_amd=false
+    local has_intel=false
+    
+    # Check for NVIDIA
+    if lspci | grep -i nvidia &>/dev/null || lsmod | grep -i nvidia &>/dev/null; then
+        has_nvidia=true
+    fi
+    
+    # Check for AMD
+    if lspci | grep -i "vga.*amd\|vga.*ati\|display.*amd\|display.*ati" &>/dev/null; then
+        has_amd=true
+    fi
+    
+    # Check for Intel
+    if lspci | grep -i "vga.*intel\|display.*intel" &>/dev/null; then
+        has_intel=true
+    fi
+    
+    echo "nvidia:$has_nvidia,amd:$has_amd,intel:$has_intel"
+}
+
+# Hardware-specific package filtering
+filter_packages_by_hardware() {
+    local package_file="$1"
+    local temp_file=$(mktemp)
+    local show_status="$2"  # Optional parameter to show status
+    
+    # Get GPU info
+    local gpu_info=$(detect_gpu)
+    local has_nvidia=$(echo "$gpu_info" | grep -o 'nvidia:[^,]*' | cut -d: -f2)
+    
+    # NVIDIA-specific packages to filter
+    local nvidia_packages=(
+        "nvidia"
+        "nvidia-prime" 
+        "nvidia-settings"
+        "nvidia-utils"
+        "python-nvidia-ml-py"
+    )
+    
+    if [[ "$has_nvidia" == "true" ]]; then
+        # Keep all packages if NVIDIA is present
+        cp "$package_file" "$temp_file"
+        if [[ "$show_status" == "true" ]]; then
+            echo -e "${GREEN}🖥️  NVIDIA GPU detected - keeping NVIDIA packages${NC}" >&2
+        fi
+    else
+        # Filter out NVIDIA packages if no NVIDIA hardware
+        if [[ "$show_status" == "true" ]]; then
+            echo -e "${YELLOW}🖥️  No NVIDIA GPU detected - filtering NVIDIA packages${NC}" >&2
+        fi
+        while IFS= read -r line; do
+            local should_keep=true
+            for nvidia_pkg in "${nvidia_packages[@]}"; do
+                if [[ "$line" == "$nvidia_pkg" ]]; then
+                    should_keep=false
+                    if [[ "$show_status" == "true" ]]; then
+                        echo -e "  ${YELLOW}⏭️  Skipping: $nvidia_pkg (no NVIDIA hardware)${NC}" >&2
+                    fi
+                    break
+                fi
+            done
+            if $should_keep && [[ "$line" =~ ^[^#] ]] && [[ -n "$line" ]]; then
+                echo "$line" >> "$temp_file"
+            fi
+        done < "$package_file"
+    fi
+    
+    # Only echo the temp file path (this is what gets captured)
+    echo "$temp_file"
+}
+
 # Essential packages that should NEVER be removed
 essential_packages=(
     "base" "linux" "linux-firmware" "sudo" "systemd" "pacman"
@@ -345,11 +420,15 @@ cmd_preview() {
 }
 
 cmd_preview_quiet() {
+    # Filter packages based on hardware first (no status output for preview)
+    local filtered_packages_preview=$(filter_packages_by_hardware packages.txt false)
+    local filtered_aur_packages_preview=$(filter_packages_by_hardware aur-packages.txt false)
+    
     # Get current and wanted packages
     local current_official=($(pacman -Qe | grep -v "$(pacman -Qm | cut -d' ' -f1 | paste -sd'|')" | awk '{print $1}'))
     local current_aur=($(pacman -Qm | awk '{print $1}'))
-    local wanted_official=($(grep -v '^#\|^$' packages.txt))
-    local wanted_aur=($(grep -v '^#\|^$' aur-packages.txt))
+    local wanted_official=($(grep -v '^#\|^$' "$filtered_packages_preview"))
+    local wanted_aur=($(grep -v '^#\|^$' "$filtered_aur_packages_preview"))
 
     # Find packages to install
     local missing_official=()
@@ -387,6 +466,8 @@ cmd_preview_quiet() {
     
     if [[ $install_count -eq 0 && $remove_count -eq 0 ]]; then
         echo -e "${GREEN}✅ System is already in perfect sync!${NC}"
+        # Cleanup temporary files
+        rm -f "$filtered_packages_preview" "$filtered_aur_packages_preview"
         return 0
     fi
     
@@ -396,6 +477,9 @@ cmd_preview_quiet() {
     [[ ${#missing_aur[@]} -gt 0 ]] && echo -e "  ${GREEN}+${NC} AUR: ${missing_aur[*]}"
     [[ ${#to_remove_official[@]} -gt 0 ]] && echo -e "  ${RED}-${NC} Official: ${to_remove_official[*]}"
     [[ ${#to_remove_aur[@]} -gt 0 ]] && echo -e "  ${RED}-${NC} AUR: ${to_remove_aur[*]}"
+    
+    # Cleanup temporary files
+    rm -f "$filtered_packages_preview" "$filtered_aur_packages_preview"
 }
 
 cmd_install() {
@@ -405,6 +489,12 @@ cmd_install() {
     # Step 1: Always get current packages first (auto-sync lists)
     echo -e "${BLUE}Step 1: Syncing package lists with current system...${NC}"
     cmd_get_quiet
+    echo
+    
+    # Step 1.5: Filter packages based on hardware
+    echo -e "${BLUE}Step 1.5: Filtering packages based on hardware...${NC}"
+    local filtered_packages=$(filter_packages_by_hardware packages.txt true)
+    local filtered_aur_packages=$(filter_packages_by_hardware aur-packages.txt true)
     echo
     
     # Step 2: Preview what will change
@@ -441,7 +531,7 @@ cmd_install() {
         if ! pacman -Q "$package" &>/dev/null; then
             missing_official+=("$package")
         fi
-    done < packages.txt
+    done < "$filtered_packages"
 
     if [[ ${#missing_official[@]} -gt 0 ]]; then
         echo -e "  ${YELLOW}Installing:${NC} ${missing_official[*]}"
@@ -466,7 +556,7 @@ cmd_install() {
     fi
 
     # Install missing AUR packages
-    if [[ -s "aur-packages.txt" ]]; then
+    if [[ -s "$filtered_aur_packages" ]]; then
         echo -e "${BLUE}📦 Installing missing AUR packages...${NC}"
         local missing_aur=()
         while read -r package; do
@@ -474,7 +564,7 @@ cmd_install() {
             if ! pacman -Q "$package" &>/dev/null; then
                 missing_aur+=("$package")
             fi
-        done < aur-packages.txt
+        done < "$filtered_aur_packages"
         
         if [[ ${#missing_aur[@]} -gt 0 ]]; then
             echo -e "  ${YELLOW}Installing from AUR:${NC} ${missing_aur[*]}"
@@ -494,8 +584,8 @@ cmd_install() {
     # Get current packages (fresh after installs)
     local current_official=($(pacman -Qe | grep -v "$(pacman -Qm | cut -d' ' -f1 | paste -sd'|')" | awk '{print $1}'))
     local current_aur=($(pacman -Qm | awk '{print $1}'))
-    local wanted_official=($(grep -v '^#\|^$' packages.txt))
-    local wanted_aur=($(grep -v '^#\|^$' aur-packages.txt))
+    local wanted_official=($(grep -v '^#\|^$' "$filtered_packages"))
+    local wanted_aur=($(grep -v '^#\|^$' "$filtered_aur_packages"))
     
     # Find packages to remove
     local to_remove_official=()
@@ -534,6 +624,9 @@ cmd_install() {
     if [[ ${#to_remove_official[@]} -eq 0 && ${#to_remove_aur[@]} -eq 0 ]]; then
         echo -e "  ${GREEN}✅ No packages to remove${NC}"
     fi
+    
+    # Cleanup temporary files
+    rm -f "$filtered_packages" "$filtered_aur_packages"
     
     echo
     echo -e "${GREEN}🎉 Smart sync complete!${NC}"
