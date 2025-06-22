@@ -12,6 +12,8 @@ cursor-bin
 downgrade
 dragon-drop
 electron29-bin
+fancontrol-gui
+fancontrol-gui-debug
 figma-linux
 gauntlet-bin
 gauntlet-bin-debug

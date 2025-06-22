@@ -521,7 +521,27 @@ cmd_install() {
     
     # Update system first
     echo -e "${BLUE}📦 Updating system...${NC}"
-    sudo pacman -Syu --noconfirm
+    
+    # Check if we need to handle NVIDIA firmware conflicts during update
+    if pacman -Q linux-firmware &>/dev/null && ! pacman -Q linux-firmware-nvidia &>/dev/null; then
+        # Old linux-firmware installed but not new linux-firmware-nvidia
+        # This means we might hit the firmware conflict during update
+        echo -e "  ${YELLOW}⚠️  Detected NVIDIA firmware conflict, removing conflicting files...${NC}"
+        
+        # Remove the conflicting firmware directories that will be recreated
+        sudo rm -rf /usr/lib/firmware/nvidia/ad10* 2>/dev/null || true
+        sudo rm -rf /usr/lib/firmware/nvidia/ga10* 2>/dev/null || true
+        sudo rm -rf /usr/lib/firmware/nvidia/tu10* 2>/dev/null || true
+        sudo rm -rf /usr/lib/firmware/nvidia/gv100* 2>/dev/null || true
+        
+        echo -e "  ${GREEN}✅ Cleared conflicting NVIDIA firmware files${NC}"
+    fi
+    
+    # Now try system update
+    if ! sudo pacman -Syu --noconfirm; then
+        echo -e "  ${RED}⚠️  System update failed, retrying with overwrite...${NC}"
+        sudo pacman -Syu --noconfirm --overwrite="*"
+    fi
     
     # Install missing official packages
     echo -e "${BLUE}📦 Installing missing official packages...${NC}"
@@ -535,6 +555,7 @@ cmd_install() {
 
     if [[ ${#missing_official[@]} -gt 0 ]]; then
         echo -e "  ${YELLOW}Installing:${NC} ${missing_official[*]}"
+        
         if sudo pacman -S --needed --noconfirm "${missing_official[@]}"; then
             echo -e "  ${GREEN}✅ Official packages installed successfully${NC}"
         else

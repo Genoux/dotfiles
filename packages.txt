@@ -12,6 +12,7 @@ caprine
 cava
 claude-desktop-debug
 cpio
+cpupower
 cursor-bin
 dialog
 discord
@@ -22,6 +23,7 @@ efibootmgr
 electron29-bin
 ethtool
 extra-cmake-modules
+fancontrol-gui
 fastfetch
 fd
 figma-linux
