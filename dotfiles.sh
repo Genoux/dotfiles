@@ -78,45 +78,13 @@ show_status() {
         
         if [[ $config_count -gt 0 ]]; then
             echo "   Configs:"
-            for config in "$STOW_DIR"/*; do
-                if [[ -d "$config" && "$(basename "$config")" != "." && "$(basename "$config")" != ".." ]]; then
-                    config_name=$(basename "$config")
-                    if [[ "$config_name" != "manage-configs.sh" ]]; then
-                        # Smart config detection (same logic as manage-configs.sh)
-                        linked=false
-                        case "$config_name" in
-                            "system")
-                                # Check for individual files that system config creates
-                                if [[ -L "$HOME/.config/mimeapps.list" || -L "$HOME/.config/user-dirs.dirs" ]]; then
-                                    linked=true
-                                fi
-                                ;;
-                            "zsh")
-                                # Check for zsh-related files
-                                if [[ -L "$HOME/.zshrc" || -L "$HOME/.config/zsh" ]]; then
-                                    linked=true
-                                fi
-                                ;;
-                            "bash")
-                                # Check for bash-related files  
-                                if [[ -L "$HOME/.bashrc" || -L "$HOME/.profile" ]]; then
-                                    linked=true
-                                fi
-                                ;;
-                            *)
-                                # Default: check for ~/.config/[config]/ directory
-                                if [[ -L "$HOME/.config/$config_name" ]]; then
-                                    linked=true
-                                fi
-                                ;;
-                        esac
-                        
-                        if $linked; then
-                            echo -e "     ${GREEN}✓${NC} $config_name (linked)"
-                        else
-                            echo -e "     ${YELLOW}○${NC} $config_name (not linked)"
-                        fi
-                    fi
+            # Use manage-configs.sh for accurate status (DRY principle)
+            cd "$STOW_DIR"
+            ./manage-configs.sh list | grep -E "^\s*[✅⭕]" | sed 's/✅/✓/g; s/⭕/○/g' | while read line; do
+                if [[ "$line" == *"✓"* ]]; then
+                    echo -e "     ${GREEN}$(echo "$line" | sed 's/✓/✓/')${NC}"
+                else
+                    echo -e "     ${YELLOW}$(echo "$line" | sed 's/○/○/')${NC}"
                 fi
             done
         fi
