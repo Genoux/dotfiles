@@ -170,6 +170,18 @@ case "$1" in
                     linked=true
                 fi
                 ;;
+            "shell")
+                # Check for shell-related files
+                if [[ -L "$HOME/.zshrc" || -L "$HOME/.profile" || -L "$HOME/.zprofile" ]]; then
+                    linked=true
+                fi
+                ;;
+            "applications")
+                # Check for application desktop files
+                if [[ -L "$HOME/.local/share/applications/reboot.desktop" || -L "$HOME/.local/share/applications/shutdown.desktop" ]]; then
+                    linked=true
+                fi
+                ;;
             *)
                 # Default: check for ~/.config/[config]/ directory
                 if [ -L "$HOME/.config/$config" ]; then
@@ -235,37 +247,7 @@ case "$1" in
         fi
     fi
     ;;
-"list")
-    echo "📋 Available configs:"
-    for config in */; do
-        config=${config%/}
-        [[ "$config" == "manage-configs.sh" ]] && continue
-        # Check if it's currently linked
-        if [ -L "$HOME/.config/$config" ]; then
-            echo " ✅ $config (linked)"
-        else
-            echo " ⭕ $config (not linked)"
-        fi
-        
-        # Check for backup files
-        if [ -e "$HOME/.config/$config.bak" ]; then
-            echo "    📦 Has backup: ~/.config/$config.bak"
-        fi
-    done
-    ;;
-"list")
-    echo "📋 Available configs:"
-    for config in */; do
-        config=${config%/}
-        [[ "$config" == "manage-configs.sh" ]] && continue
-        # Check if it's currently linked
-        if [ -L "$HOME/.config/$config" ]; then
-            echo " ✅ $config (linked)"
-        else
-            echo " ⭕ $config (not linked)"
-        fi
-    done
-    ;;
+
 *)
     echo "⚙️ Config Manager"
     echo "Usage: $0 <command> [config]"
