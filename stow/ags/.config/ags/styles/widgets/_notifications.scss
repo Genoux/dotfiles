@@ -2,7 +2,7 @@
 @use "../abstracts/mixins" as *;
 
 // =============================================================================
-// Notification Button Styles
+// Notification Button Styles (for bar button)
 // =============================================================================
 
 .NotificationButton {
@@ -13,12 +13,14 @@
     color: $theme-white;
     transition: color $transition-normal;
   }
+  
+  .badge {
+    @include badge;
+  }
 }
 
-
-
 // =============================================================================
-// Notification Center Styles
+// Notification Center Window
 // =============================================================================
 
 window.notification-center-window {
@@ -36,7 +38,7 @@ window.notification-center-window {
     margin: $spacing-sm;
   }
 
-  .notification-header {
+  .notifications-header {
     padding: $spacing-xl $spacing-lg;
     border-bottom: $border-width solid $border-primary;
 
@@ -78,26 +80,17 @@ window.notification-center-window {
 
   scrolled,
   scrolledwindow {
-    all: unset;
-    background: transparent;
-    border: none;
-    box-shadow: none;
+    @include gtk-reset;
   }
 
   viewport {
-    all: unset;
-    background: transparent;
-    border: none;
+    @include gtk-reset;
   }
 }
 
 // =============================================================================
-// Notification Item Styles
+// Notification Popup Windows
 // =============================================================================
-
-.badge {
-  @include badge;
-}
 
 window.NotificationPopup,
 window.NotificationPopups {
@@ -105,165 +98,104 @@ window.NotificationPopups {
 }
 
 // =============================================================================
-// Notification Group Styles  
-// =============================================================================
-
-eventbox.notification-group-header {
-  all: unset;
-
-  > box {
-    border: 1px solid $border-tertiary;
-    background-color: $bg-tertiary;
-    border-radius: $radius-md;
-    transition: all $transition-fast;
-    min-width: 300px;
-    font-family: $font-family-primary;
-    padding: $spacing-md;
-  }
-
-  &:hover > box {
-    background-color: $bg-quaternary;
-  }
-
-  .notification-group-header-content {
-    .app-icon {
-      min-width: 16px;
-      min-height: 16px;
-      color: $theme-white;
-    }
-
-    .app-name {
-      font-weight: 500;
-      color: $text-primary;
-      font-size: $font-size-sm;
-    }
-
-    .timestamp {
-      font-size: $font-size-xs;
-      color: $text-secondary;
-    }
-
-    .close-btn {
-      @include button-base;
-    }
-
-    .action-buttons {
-      .close-btn {
-        @include button-base;
-        
-        &:hover {
-          background-color: rgba($theme-white, 0.1);
-        }
-      }
-    }
-  }
-}
-
-.notification-group-expanded {
-  .grouped-notification-wrapper {
-    // Individual notifications in groups maintain their styling
-    // No additional margin/padding needed
-  }
-}
-
-// =============================================================================
-// Individual Notification Styles
+// Individual Notification Component
 // =============================================================================
 
 eventbox.notification {
-  all: unset;
+  @include gtk-reset;
 
-  > box {
-    border: 1px solid $border-tertiary;
-    background-color: $bg-tertiary;
-    border-radius: $radius-md;
-    transition: all $transition-fast;
-    min-width: 300px;
-    font-family: $font-family-primary;
-  }
-
-  &:hover > box {
+  &:hover .notification-container {
     background-color: $bg-quaternary;
   }
 
-  &.clickable:hover > box {
+  &.clickable:hover .notification-container {
     background-color: $bg-quaternary;
   }
 
-  &.read > box {
-   // background-color: rgba($bg-secondary, 0.7);
-    
+  &.read .notification-container {
     .app-name,
     .summary {
       opacity: 0.8;
     }
     
-    .body,
-    .timestamp {
+    .body {
       opacity: 0.6;
     }
   }
 
-  .notification-header {
-    padding: $spacing-md;
+  .notification-container {
+    @include card-base;
+    border: 1px solid $border-tertiary;
+    background-color: $bg-tertiary;
+    border-radius: $radius-md;
+    transition: all $transition-fast;
+    min-width: 300px;
+    font-family: $font-family-primary;
 
-    .app-icon {
-      min-width: 16px;
-      min-height: 16px;
-      color: $theme-white;
+    .notification-header {
+      padding-bottom: $spacing-lg;
+
+      .app-icon {
+        min-width: 16px;
+        min-height: 16px;
+        color: $theme-white;
+      }
+
+      .app-name {
+        font-weight: 500;
+        color: $text-primary;
+        font-size: $font-size-sm;
+      }
+
+      .timestamp {
+        font-size: $font-size-xs;
+        opacity: 0.7;
+        color: $text-secondary;
+      }
+
+      .action-buttons {
+        .close-btn {
+          @include button-base;
+          
+          &:hover {
+            background-color: rgba($theme-white, 0.1);
+          }
+        }
+      }
     }
 
-    .app-name {
-      font-weight: 500;
-      color: $text-primary;
-      font-size: $font-size-sm;
+    .notification-body {
+      .notification-image {
+        min-width: 48px;
+        min-height: 48px;
+        background-size: cover;
+        background-position: center;
+        border-radius: $radius-sm;
+      }
+
+      .text-content {
+        .summary {
+          color: $text-primary;
+          font-size: $font-size-md;
+          font-weight: 600;
+          margin-bottom: $spacing-xs;
+        }
+
+        .body {
+          color: $text-primary;
+          font-size: $font-size-md;
+          opacity: 0.7;
+        }
+      }
     }
 
-    .timestamp {
-      font-size: $font-size-xs;
-      color: $text-secondary;
-    }
+    .notification-actions {
+      padding-top: $spacing-md;
 
-    .close-btn {
-      @include button-base;
-    }
-  }
-
-  .notification-content {
-    padding: $spacing-md;
-
-    .notification-image {
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-      min-width: 50px;
-      min-height: 50px;
-      border-radius: $radius-xs;
-    }
-
-    .summary {
-      font-weight: 600;
-      color: $text-primary;
-      font-size: $font-size-md;
-    }
-
-    .body {
-      color: $text-secondary;
-      font-size: $font-size-sm;
-    }
-  }
-
-  .separator {
-    background-color: $border-primary;
-    opacity: 0.3;
-  }
-
-  .notification-actions {
-    padding: 0 $spacing-md $spacing-md $spacing-md;
-
-    .notification-action-button {
-      @include button-base;
-      border: 1px solid $border-primary;
+      .notification-action-button {
+        @include button-base;
+        border: 1px solid $border-primary;
+      }
     }
   }
 }
@@ -272,19 +204,19 @@ eventbox.notification {
 // Scrollbar Styling
 // =============================================================================
 
-// scrollbar {
-//   all: unset;
-//   background-color: transparent;
-//   margin: 1px;
+scrollbar {
+  all: unset;
+  background-color: transparent;
+  margin: 1px;
 
-//   slider {
-//     background-color: $text-tertiary;
-//     border-radius: $spacing-xs + 1px;
-//     min-width: $spacing-xs;
-//     transition: background-color $transition-fast;
+  slider {
+    background-color: $text-tertiary;
+    border-radius: $spacing-xs + 1px;
+    min-width: $spacing-xs;
+    transition: background-color $transition-fast;
 
-//     &:hover {
-//       background-color: $text-secondary;
-//     }
-//   }
-// }
+    &:hover {
+      background-color: $text-secondary;
+    }
+  }
+}

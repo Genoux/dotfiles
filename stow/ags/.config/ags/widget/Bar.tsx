@@ -10,25 +10,28 @@ import { NotificationButton } from "./notifications";
 import { SystemTray, trayItems } from "./systemtray";
 import { CavaVisualizer, isPlaying } from "./cava";
 
+function ControlPanelSection() {
+  return (
+      <ControlPanelButton />
+  );
+}
+
 function LeftSection() {
   return (
-    <box className="bar-section bar-left" halign={Gtk.Align.START} spacing={4}>
-      <box className="control-panel-button">
-        <ControlPanelButton />
-      </box>
-      <box className="bar-item workspaces">
+    <>  
+       <box className="bar-section" halign={Gtk.Align.START} spacing={4}>
         <Workspaces />
-      </box>
-      <box className="bar-item system-tray" visible={bind(trayItems).as(items => items.length > 0)}>
-        <SystemTray />
-      </box>
     </box>
+        <SystemTraySection />
+
+    </>
+ 
   );
 }
 
 function CenterSection() {
   return (
-    <box className="bar-section bar-center bar-item" halign={Gtk.Align.CENTER} spacing={12}>
+    <box className="bar-section" halign={Gtk.Align.CENTER} spacing={12}>
       <WindowTitle />
     </box>
   );
@@ -36,15 +39,23 @@ function CenterSection() {
 
 function CavaSection() {
   return (
-    <box className="bar-item cava-widget" halign={Gtk.Align.END}>
+    <box className="bar-section" halign={Gtk.Align.END}>
       <CavaVisualizer />
+    </box>
+  );
+}
+
+function SystemTraySection() {
+  return (
+    <box className="bar-section" halign={Gtk.Align.END} visible={bind(trayItems).as(items => items.length > 0)}>
+      <SystemTray />
     </box>
   );
 }
 
 function RightSection() {
   return (
-    <box className="bar-section bar-right bar-item" halign={Gtk.Align.END}>
+    <box className="bar-section" halign={Gtk.Align.END}>
       <NotificationButton />
       <KeyboardSwitcher />
       <AudioButton />
@@ -61,7 +72,6 @@ export default function Bar({ gdkmonitor }: BarProps) {
   const { BOTTOM, LEFT, RIGHT } = Astal.WindowAnchor;
 
   return (
-
     <window
       name="Bar"
       className="Bar"
@@ -70,11 +80,14 @@ export default function Bar({ gdkmonitor }: BarProps) {
       anchor={BOTTOM | LEFT | RIGHT}
       layer={Astal.Layer.OVERLAY}
       heightRequest={24}
-      marginTop={2}
-      marginBottom={2}
+      marginLeft={8}
+      marginRight={8}
+      marginTop={0}
+      marginBottom={6}
       application={App}
     >
-      <box className="bar-container" halign={Gtk.Align.FILL}>
+      <box className="bar-container" halign={Gtk.Align.FILL} spacing={4}>
+        <ControlPanelSection />
         <LeftSection />
         <box halign={Gtk.Align.CENTER} hexpand>
           <CenterSection />

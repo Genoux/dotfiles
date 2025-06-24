@@ -62,11 +62,8 @@ export default function Notification({
           </box>
         </box>
 
-        {/* Separator */}
-        <box className="separator" />
-
         {/* Notification Content */}
-        <box className="notification-content" spacing={8}>
+        <box className="notification-body" spacing={8}>
           {notification.image && (
             <box
               className="notification-image"

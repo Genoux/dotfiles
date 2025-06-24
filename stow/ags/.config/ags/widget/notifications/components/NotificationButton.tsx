@@ -25,11 +25,19 @@ export default function NotificationButton() {
           console.log("Notification center toggled:", notificationCenterVisible.get())
         }
       }
+      halign={Gtk.Align.CENTER}
+      valign={Gtk.Align.CENTER}
     >
-      <box spacing={4}>
+      <box 
+        spacing={1}
+        halign={Gtk.Align.CENTER}
+        valign={Gtk.Align.CENTER}
+      >
         <icon
           className="notification-icon"
           icon={"notification"}
+          halign={Gtk.Align.CENTER}
+          valign={Gtk.Align.CENTER}
         />
         <box
           className="badge"

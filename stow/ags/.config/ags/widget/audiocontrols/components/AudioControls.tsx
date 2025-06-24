@@ -2,15 +2,7 @@ import { Astal, Gtk } from "astal/gtk3"
 import Wp from "gi://AstalWp"
 import { bind, Variable } from "astal"
 import AudioButton from "./AudioButton"
-
-// Utility Functions
-function volumeIcon(volume: number, muted: boolean) {
-    if (muted) return "audio-volume-muted-symbolic"
-    if (volume === 0) return "audio-volume-low-symbolic"
-    if (volume < 0.33) return "audio-volume-low-symbolic"
-    if (volume < 0.66) return "audio-volume-medium-symbolic"
-    return "audio-volume-high-symbolic"
-}
+import { getVolumeIcon, clampVolume, initializeAudioSystem, suppressOSD } from "../utils"
 
 export default function AudioControlsComponent(): Gtk.Widget {
     const audio = Wp.get_default()
@@ -29,22 +21,26 @@ export default function AudioControlsComponent(): Gtk.Widget {
         </box>
     }
 
-    const sliderValue = Variable(speaker.volume)
+    // Initialize global audio system (volume limiter, etc.)
+    initializeAudioSystem()
+
+    const sliderValue = Variable(clampVolume(speaker.volume))
     
     // Derived variable for icon that updates with both volume and mute
     const iconName = Variable.derive([
         bind(speaker, "volume"),
         bind(speaker, "mute")
-    ], (volume, mute) => volumeIcon(volume, mute))
+    ], (volume, mute) => getVolumeIcon(clampVolume(volume), mute))
     
-    // Simple: just update when not dragging
+    // Optimized for responsive volume changes
     let isDragging = false
     let ignoreNotifications = false
     let lastVolumeUpdate = 0
+    let ignoreTimeout: any = null
     
     speaker.connect("notify::volume", () => {
         if (!isDragging && !ignoreNotifications) {
-            sliderValue.set(speaker.volume)
+            sliderValue.set(clampVolume(speaker.volume))
         }
     })
     
@@ -53,32 +49,54 @@ export default function AudioControlsComponent(): Gtk.Widget {
         <slider
             hexpand
             value={bind(sliderValue)}
+            max={1.0}
+            min={0.0}
+            step={0.01}
             onButtonPressEvent={() => {
                 isDragging = true
+                // Suppress OSD while dragging
+                suppressOSD(1000) // Suppress for 1 second initially
                 return false
             }}
             onButtonReleaseEvent={() => {
-                // Always set the final value to ensure accuracy
-                speaker.volume = sliderValue.get()
-                if (sliderValue.get() > 0) {
+                // Always set the final value to ensure accuracy, but clamp it
+                const clampedValue = clampVolume(sliderValue.get())
+                speaker.volume = clampedValue
+                if (clampedValue > 0) {
                     speaker.mute = false
                 }
                 
                 isDragging = false
-                // Ignore notifications briefly to prevent feedback
+                // Ignore notifications briefly to prevent feedback with improved timeout handling
                 ignoreNotifications = true
-                setTimeout(() => { ignoreNotifications = false }, 150)
+                
+                if (ignoreTimeout) {
+                    clearTimeout(ignoreTimeout)
+                }
+                
+                ignoreTimeout = setTimeout(() => { 
+                    ignoreNotifications = false 
+                    ignoreTimeout = null
+                }, 100) // Reduced from 150ms for more responsive updates
+                
+                // Keep OSD suppressed for a bit longer after release
+                suppressOSD(300)
+                
                 return false
             }}
             onDragged={({ value }) => {
-                // Update UI immediately
-                sliderValue.set(value)
+                // Clamp the value before using it
+                const clampedValue = clampVolume(value)
+                sliderValue.set(clampedValue)
                 
-                // Throttle volume updates to reduce queued notifications
+                // Continue suppressing OSD while dragging
+                suppressOSD(500)
+                
+                // Reduced throttling for smoother continuous volume changes
                 const now = Date.now()
-                if (now - lastVolumeUpdate > 50) { // Max 20 updates/second
-                    speaker.volume = value
-                    if (value > 0) {
+                if (now - lastVolumeUpdate > 25) { // Reduced from 50ms to 25ms for smoother operation
+                    speaker.volume = clampedValue
+                    if (clampedValue > 0) {
                         speaker.mute = false
                     }
                     lastVolumeUpdate = now
@@ -87,7 +105,7 @@ export default function AudioControlsComponent(): Gtk.Widget {
         />
         <label 
             className="volume-label"
-            label={bind(sliderValue).as(v => `${Math.round(v * 100)}%`)}
+            label={bind(sliderValue).as(v => `${Math.round(clampVolume(v) * 100)}%`)}
         />
     </box>
 } 

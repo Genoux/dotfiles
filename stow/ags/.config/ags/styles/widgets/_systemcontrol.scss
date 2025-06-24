@@ -1,5 +1,5 @@
-@use "../../styles/abstracts/variables" as *;
-@use "../../styles/abstracts/mixins" as *;
+@use "../abstracts/variables" as *;
+@use "../abstracts/mixins" as *;
 
 // =============================================================================
 // System Control Widget Styling
@@ -10,8 +10,7 @@
 
   .system-control-btn {
     @include button-base;
-    color: $text-secondary;
-    background-color: transparent;
+    @include text-secondary;
     min-height: 40px;
 
     &:hover {
@@ -22,26 +21,22 @@
       font-size: $font-size-xl;
     }
 
-    // Individual button colors
+    // Individual button color variants
     &.lock-btn:hover {
-      background-color: rgba($accent-primary, 0.3);
-      color: $accent-hover;
+      @include button-variant(rgba($accent-primary, 0.3), rgba($accent-primary, 0.4), $accent-hover);
     }
 
     &.sleep-btn:hover {
-      background-color: rgba($warning-primary, 0.2);
-      color: $warning-primary;
+      @include button-variant(rgba($warning-primary, 0.2), rgba($warning-primary, 0.3), $warning-primary);
     }
 
     &.shutdown-btn:hover {
-      background-color: rgba($error-primary, 0.2);
-      color: $error-primary;
+      @include button-variant(rgba($error-primary, 0.2), rgba($error-primary, 0.3), $error-primary);
     }
 
     // Confirmation state styling
     &.shutdown-btn.confirm-pending {
-      background-color: rgba($error-primary, 0.3);
-      color: $error-primary;
+      @include button-variant(rgba($error-primary, 0.3), rgba($error-primary, 0.4), $error-primary);
     }
   }
 }
@@ -53,9 +48,8 @@
 .inline-confirmation-overlay {
   .confirmation-header {
     .confirmation-title {
+      @include text-primary;
       font-size: $font-size-sm;
-      font-weight: 500;
-      color: $text-primary;
     }
   }
 
@@ -65,8 +59,9 @@
 
     .cancel-btn {
       @include button-base;
-      border: 1px solid $border-primary;
+      border: $border-width solid $border-primary;
       min-width: 60px;
+      
       &:hover {
         background-color: $bg-active;
         color: $text-primary;
@@ -75,14 +70,8 @@
     }
 
     .confirm-btn {
-      @include button-base;
-      background-color: $error-primary;
-      color: $text-primary;
+      @include button-variant($error-primary, $error-hover, $text-primary);
       min-width: 60px;
-
-      &:hover {
-        background-color: $error-hover;
-      }
     }
   }
 }

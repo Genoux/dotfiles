@@ -1,1 +1,5 @@
-export { default as CavaVisualizer, isPlaying } from "./CavaVisualizer"
+// CAVA Widget - Component Pattern
+import CavaVisualizer from "./CavaVisualizer"
+export { isPlaying } from "./Service"
+
+export { CavaVisualizer }

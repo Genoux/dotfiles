@@ -4,6 +4,7 @@
 .AppLauncherWindow {
   background: rgba(28, 28, 34, 0.5);
 }
+
 .AppLauncher {
   .search-container {
     background: $bg-secondary;
@@ -14,17 +15,16 @@
     .preview-overlay {
       margin-left: $spacing-xl;
     }
+    
     .typed-text {
       color: transparent;
     }
 
-    /* Preview Completion Text - appears after typed text */
     .preview-completion {
       color: $text-tertiary;
       opacity: 0.5;
     }
 
-    /* Preview Result (for calculator) */
     .preview-result {
       color: $accent-primary;
       font-family: $font-family-mono;
@@ -33,17 +33,19 @@
       margin-right: $spacing-xl;
     }
 
-    /* Preview Icon */
     .preview-icon {
       font-size: 18px;
       margin-right: $spacing-xl;
     }
 
-    /* Search Entry - Using GTK-specific selectors */
+    // Search Entry - proper alignment and padding
     .search-entry,
     entry.search-entry {
-      all: unset;
+      @include gtk-reset;
       padding: $spacing-lg $spacing-xl;
+      font-size: $font-size-xl;
+      font-family: $font-family-primary;
+      
       &:hover {
         background-color: $bg-secondary;
         border: 0px solid transparent;
@@ -51,7 +53,7 @@
       }
     }
 
-    /* Custom Placeholder - Stays visible even on focus */
+    // Custom Placeholder
     .custom-placeholder {
       color: $text-tertiary;
       padding-left: $spacing-xl;
@@ -60,50 +62,28 @@
       opacity: 0.7;
     }
 
-    /* Result Button (replaces AppButton) */
+    // Result Button - restored original styling
     .ResultButton,
     button.ResultButton {
-      all: unset;
+      @include gtk-reset;
       background-color: transparent;
-      background-image: none;
-      border: 0px solid transparent;
       border-radius: $radius-md;
       padding: $spacing-md $spacing-lg;
       margin: $spacing-xs 0;
       transition: all $transition-fast;
-      outline: 0px solid transparent;
-      outline-width: 0px;
-      outline-offset: 0px;
-      box-shadow: none;
       min-width: 120px;
 
       &:hover {
         background-color: $bg-hover;
-        background-image: none;
-        border: 0px solid transparent;
-        outline: 0px solid transparent;
       }
 
       &:active {
         background-color: $bg-active;
-        background-image: none;
-        border: 0px solid transparent;
-        outline: 0px solid transparent;
       }
 
-      &.selected {
-        background-color: $bg-secondary;
-        background-image: none;
-        border: 0px solid transparent;
-        outline: 0px solid transparent;
-        box-shadow: 0 0 0 1px $border-secondary;
-      }
-
+      &.selected,
       &:focus {
         background-color: $bg-secondary;
-        background-image: none;
-        border: 0px solid transparent;
-        outline: 0px solid transparent;
         box-shadow: 0 0 0 1px $border-secondary;
       }
 
@@ -132,14 +112,14 @@
     }
   }
 
-  /* Recent Apps Container - OUTSIDE AppLauncher scope */
+  // Recent Apps Container
   .recent-apps-container {
     font-size: $font-size-md;
     color: $text-secondary;
 
     button.recent-app-item,
     .recent-app-item {
-      all: unset;
+      @include gtk-reset;
       padding: $spacing-lg;
       transition: all $transition-fast;
       background: $bg-secondary;
@@ -147,12 +127,10 @@
 
       &:hover {
         background-color: $bg-quaternary;
-        border-radius: $radius-md;
       }
 
       &:active {
         background-color: $bg-active;
-        background-image: none;
       }
 
       box {

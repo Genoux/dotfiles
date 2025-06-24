@@ -1,27 +1,39 @@
-@use 'widgets/bar';
-@use 'widgets/audiocontrols';
-@use 'widgets/mediaplayer';
-@use 'widgets/notifications';
-@use 'widgets/windowtitle';
-@use 'widgets/workspaces';
-@use 'widgets/controlpanel';
-@use 'widgets/systemcontrol';
-@use 'widgets/systemtray';
-@use 'widgets/applauncher';
-@use 'widgets/osd';
-@use 'widgets/cava';
-@use 'abstracts/variables';
-@use 'abstracts/animations';
+// =============================================================================
+// ABSTRACTS - Variables, mixins, functions first
+// =============================================================================
+@use "abstracts/variables";
+@use "abstracts/mixins";
+@use "abstracts/animations";
 
-box  {
-    all: unset;
-    padding: 0;
-    margin: 0;
-    border: none;
-    background-color: transparent;
-    color: inherit;
-    font-family: inherit;
-    font-size: inherit;
-    font-weight: inherit;
+// =============================================================================
+// WIDGETS - Import all widget styles
+// =============================================================================
+@use "widgets/bar";
+@use "widgets/audiocontrols";
+@use "widgets/mediaplayer";
+@use "widgets/notifications";
+@use "widgets/windowtitle";
+@use "widgets/workspaces";
+@use "widgets/controlpanel";
+@use "widgets/systemcontrol";
+@use "widgets/systemtray";
+@use "widgets/applauncher";
+@use "widgets/osd";
+@use "widgets/cava";
+
+// =============================================================================
+// GLOBAL BASE STYLES - Apply to all elements
+// =============================================================================
+
+// Global GTK reset for common elements
+box,
+button,
+window,
+eventbox,
+overlay {
+  @include mixins.gtk-reset;
 }
 
+button {
+  @include mixins.button-base;
+}

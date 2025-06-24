@@ -17,7 +17,7 @@ export default function ControlPanel() {
       <box className="widget">
         <AudioControls />
       </box>
-      <box className="widget" visible={bind(hasMediaPlayers).as((visible) => visible)}>
+      <box visible={bind(hasMediaPlayers).as((visible) => visible)}>
         <MediaPlayer />
       </box>
     </box>

@@ -1,83 +1,189 @@
 @use "variables" as *;
 
 // =============================================================================
-// TRULY REUSABLE MIXINS - Used across multiple components
+// CORE RESET MIXINS
 // =============================================================================
 
-// Base button reset and interactive behavior - THE standard button pattern
-@mixin button-base {
+// Universal GTK reset - use for all unset elements
+@mixin gtk-reset {
   all: unset;
-  padding: $spacing-sm $spacing-md;
-  border-radius: $radius-md;
+  padding: 0;
+  margin: 0;
+  border: none;
+  background-color: transparent;
+  color: inherit;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+// =============================================================================
+// LAYOUT MIXINS
+// =============================================================================
+
+// Standard window base - used by all popup windows
+@mixin window-base {
+  @include gtk-reset;
+  background: transparent;
+}
+
+// Card/container styling - used for panels, notifications, etc.
+@mixin card-base($padding: $spacing-lg) {
+  background-color: $bg-secondary;
+  border: $border-width solid $bg-hover;
+  border-radius: $radius-lg;
+  padding: $padding;
+}
+
+
+// =============================================================================
+// INTERACTIVE ELEMENT MIXINS
+// =============================================================================
+
+// Base button reset and styling
+@mixin button-base {
+  @include gtk-reset;
+  padding: $spacing-sm;
+  border-radius: $radius-sm;
   color: $text-primary;
   font-size: $font-size-sm;
-  background-color: transparent;
   transition: all $transition-normal;
-  
-  &.active {
-    transition: all $transition-normal;
-    background-color: $bg-secondary;
-    &:hover {
-      background-color: $bg-secondary;
-    }
-  }
 
   &:hover {
     background-color: $bg-hover;
   }
 
-}
-
-// Window base styling - Used by multiple popup windows
-@mixin window-base {
-  all: unset;
-  background: transparent;
-}
-
-// Section container mixin - Used multiple times in control panel
-@mixin section-container {
-  > box {
-    background-color: $bg-secondary;
-    border-radius: $radius-lg;
-    border: 1px solid $border-tertiary;
-    margin: 0;
+  &.active {
+    background-color: $bg-hover;
   }
 }
 
-// Badge mixin - for notification badges and similar elements
-@mixin badge {
-  background-color: $theme-white;
+// Icon button variant
+@mixin icon-button($size: $spacing-xl) {
+  @include button-base;
+  min-width: $size;
+  min-height: $size;
+  padding: $spacing-sm;
+  
+  icon {
+    font-size: $size;
+  }
+}
+
+// Colored button variants
+@mixin button-variant($bg-color, $hover-color, $text-color: $text-primary) {
+  @include button-base;
+  background-color: $bg-color;
+  color: $text-color;
+  
+  &:hover {
+    background-color: $hover-color;
+  }
+}
+
+// =============================================================================
+// FORM/INPUT MIXINS
+// =============================================================================
+
+// Input/entry styling
+@mixin input-base {
+  @include gtk-reset;
+  padding: $spacing-sm $spacing-md;
+  background-color: $bg-secondary;
+  border: $border-width solid $border-tertiary;
+  border-radius: $radius-md;
+  color: $text-primary;
+  font-family: $font-family-primary;
+  transition: all $transition-normal;
+  
+  &:focus {
+    border-color: $border-secondary;
+    outline: none;
+  }
+  
+  &:hover {
+    border-color: $border-secondary;
+  }
+}
+
+// =============================================================================
+// TEXT AND TYPOGRAPHY MIXINS
+// =============================================================================
+
+// Text hierarchy mixins
+@mixin text-primary {
+  color: $text-primary;
+  font-size: $font-size-md;
+  font-weight: 500;
+}
+
+@mixin text-secondary {
+  color: $text-secondary;
+  font-size: $font-size-sm;
+  font-weight: 400;
+}
+
+@mixin text-tertiary {
+  color: $text-tertiary;
   font-size: $font-size-xs;
+  font-weight: 400;
+}
+
+// =============================================================================
+// COMPONENT-SPECIFIC MIXINS
+// =============================================================================
+
+// Badge styling - for notifications, counts, etc.
+@mixin badge {
+  font-size: $font-size-xs;
+  background-color: $bg-hover;
   font-weight: 600;
   padding: 0 $spacing-sm;
-  border-radius: 8px;
-  color: $theme-base;
+  border-radius: $radius-xs;
+  border: 1px solid $bg-hover;
+  color: $theme-white;
+  opacity: 0.7;
   
   label {
     margin: 0;
     padding: 0;
     font-size: $font-size-xs;
   }
-} 
+}
 
-// Global mixin class
+// Notification/popup item base
+@mixin popup-item {
+  eventbox {
+    @include gtk-reset;
+
+    > box {
+      @include card-base;
+      min-width: 300px;
+      font-family: $font-family-primary;
+      transition: all $transition-fast;
+    }
+
+    &:hover > box {
+      background-color: $bg-quaternary;
+    }
+  }
+}
+
+// =============================================================================
+// UTILITY CLASSES (Applied globally)
+// =============================================================================
+
+// Global separator styling
 .separator {
-  background-color: $border-primary;
+  background-color: $bg-hover;
   min-height: 1px;
 }
 
-// Global tooltip styling - applies to ALL tooltips
-tooltip {
-  background-color: rgba($bg-primary, 0.95); // 95% opacity
-  color: $text-primary;
-  font-size: $font-size-sm;
-  padding: $spacing-xs;
-  border-radius: $radius-lg;
-  border: 1px solid rgba($border-tertiary, 0.1);
-  box-shadow: 
-  0 4px 12px rgba(0, 0, 0, 0.15),
-  0 0 20px rgba(0, 0, 0, 0.05);
+// Global hidden utility
+.hidden {
+  opacity: 0;
+}
 
-  // Better text styling
-  font-weight: 500;
+.badge {
+  @include badge;
 }

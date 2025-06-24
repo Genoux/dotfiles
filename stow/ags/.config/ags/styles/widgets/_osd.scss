@@ -6,9 +6,8 @@
 // =============================================================================
 
 .OSDWindow {
-    background: transparent;
+    @include window-base;
     
-    // Smooth glass effect
     .osd-container {
         border-radius: $radius-md;
         background: $bg-transparent;
@@ -37,13 +36,12 @@
             }
             
             slider {
-                all: unset;
+                @include gtk-reset;
             }
         }
         
         .osd-label {
-            color: $text-primary;
-            font-size: $font-size-sm;
+            @include text-primary;
             opacity: 0.7;
         }
     }

@@ -16,7 +16,7 @@ export default function NotificationCenter({ showCloseButton = true }: Notificat
 
   return (
     <box className={`notification-center ${showCloseButton ? 'floating' : ''}`} vertical spacing={8} vexpand hexpand>
-      <box className="notification-header" hexpand>
+      <box className="notifications-header" hexpand>
         <label
           label="Notifications"
           className="notification-title"

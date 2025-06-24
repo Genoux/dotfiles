@@ -5,21 +5,9 @@
 // Audio Controls Widget Styling
 // =============================================================================
 
-window {
-    @include window-base;
-}
-
 box.AudioPanel {
-    font-family: $font-family-primary;
     padding: $spacing-md;
-    
-    button {
-        @include button-base;
-        min-width: $spacing-xs;
-        min-height: $spacing-xs;
-        font-size: $spacing-xl;
-    }
-    
+
     scale {
         padding: 0;
         margin-right: $spacing-sm;

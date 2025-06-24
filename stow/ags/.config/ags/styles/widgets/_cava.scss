@@ -1,20 +1,24 @@
 @use "../abstracts/variables" as *;
 
 // =============================================================================
-// CAVA AUDIO VISUALIZER - SIMPLE WHITE BARS
+// CAVA AUDIO VISUALIZER - CENTER-GROWING ROUNDED BARS
 // =============================================================================
 
 .cava-island {
-  padding: $spacing-sm $spacing-md;
+  padding: $spacing-sm;
+  
+  .cava-bars {
+      .cava-bar {
+    background: white;
+    border-radius: $radius-xl;
+    transition: all 0.1s ease-out;
+    min-height: 2px; // Minimum height so bars never disappear
+   
+    }
+  }
 }
 
 .cava-island-empty {
   padding: 0;
   background: transparent;
-}
-
-.cava-bars {
-  .cava-bar {
-    background: $theme-white;
-  }
 }
