@@ -45,6 +45,9 @@ show_menu() {
     echo "🎨 THEMES:"
     echo "  t) Install Themes           (download custom themes)"
     echo
+    echo "🖥️  MONITOR:"
+    echo "  m) Setup Monitors           (auto-detect and configure)"
+    echo
     echo "📊 INFO:"
     echo "  s) Status                   (show current state)"
     echo "  h) Help                     (explain workflow)"
@@ -169,6 +172,13 @@ while true; do
             cd "$SCRIPT_DIR"
             bash "$SCRIPTS_DIR/manage-packages.sh" setup
             echo
+            echo -e "${BLUE}🖥️  Setting up monitors...${NC}"
+            if [[ -f "$SCRIPTS_DIR/setup-monitors.sh" ]]; then
+                bash "$SCRIPTS_DIR/setup-monitors.sh" --quiet
+            else
+                echo -e "${YELLOW}⚠️  Monitor setup script not found, skipping...${NC}"
+            fi
+            echo
             echo -e "${BLUE}Installing all configs...${NC}"
             run_stow_script "install" "Installing all configs" "all"
             ;;
@@ -236,6 +246,14 @@ while true; do
             else
                 cd "$SCRIPT_DIR"
                 bash "$SCRIPTS_DIR/manage-packages.sh" themes
+            fi
+            ;;
+        m|M)
+            echo -e "${BLUE}🖥️  Monitor Setup${NC}"
+            if [[ -f "$SCRIPTS_DIR/setup-monitors.sh" ]]; then
+                bash "$SCRIPTS_DIR/setup-monitors.sh"
+            else
+                echo -e "${RED}❌ Monitor setup script not found${NC}"
             fi
             ;;
         s|S)

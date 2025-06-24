@@ -8,9 +8,7 @@ import { AudioButton } from "./audiocontrols";
 import { ControlPanelButton } from "./controlpanel";
 import { NotificationButton } from "./notifications";
 import { SystemTray, trayItems } from "./systemtray";
-
-import { closeAllWindows } from "./utils/WindowHelper"
-
+import { CavaVisualizer, isPlaying } from "./cava";
 
 function LeftSection() {
   return (
@@ -30,8 +28,16 @@ function LeftSection() {
 
 function CenterSection() {
   return (
-    <box className="bar-section bar-center bar-item" halign={Gtk.Align.CENTER}>
+    <box className="bar-section bar-center bar-item" halign={Gtk.Align.CENTER} spacing={12}>
       <WindowTitle />
+    </box>
+  );
+}
+
+function CavaSection() {
+  return (
+    <box className="bar-item cava-widget" halign={Gtk.Align.END}>
+      <CavaVisualizer />
     </box>
   );
 }
@@ -68,11 +74,16 @@ export default function Bar({ gdkmonitor }: BarProps) {
       marginBottom={2}
       application={App}
     >
-      <centerbox className="bar-container">
+      <box className="bar-container" halign={Gtk.Align.FILL}>
         <LeftSection />
-        <CenterSection />
-        <RightSection />
-      </centerbox>
+        <box halign={Gtk.Align.CENTER} hexpand>
+          <CenterSection />
+        </box>
+        <box halign={Gtk.Align.END} spacing={4}>
+          <CavaSection />
+          <RightSection />
+        </box>
+      </box>
     </window>
   );
 }

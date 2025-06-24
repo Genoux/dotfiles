@@ -754,6 +754,16 @@ cmd_setup() {
     cmd_themes
     echo
     
+    # Step 3: Setup monitors (if monitor setup script exists)
+    echo -e "${BLUE}Step 3: Setting up monitors...${NC}"
+    local monitor_script="$SCRIPT_DIR/setup-monitors.sh"
+    if [[ -f "$monitor_script" ]]; then
+        bash "$monitor_script" --quiet
+    else
+        echo -e "${YELLOW}⚠️  Monitor setup script not found, will be configured during config install${NC}"
+    fi
+    echo
+    
     echo -e "${GREEN}🎉 Complete setup finished!${NC}"
     echo
     echo -e "${YELLOW}💡 Next steps:${NC}"

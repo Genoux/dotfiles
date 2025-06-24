@@ -4,19 +4,28 @@ import Variable from "astal/variable"
 import Wp from "gi://AstalWp"
 
 function OnScreenProgress({ visible }: { visible: Variable<boolean> }) {
-    const speaker = Wp.get_default()?.get_default_speaker()
+    const wp = Wp.get_default()
+    let speaker: Wp.Endpoint | null = null
 
-    const iconName = Variable("")
+    // Safely get the speaker
+    try {
+        speaker = wp?.get_default_speaker() ?? null
+    } catch (error) {
+        console.error("Failed to get WirePlumber speaker:", error)
+    }
+
+    const iconName = Variable("audio-volume-medium-symbolic")
     const value = Variable(0)
     const label = Variable("0%")
 
     let startupComplete = false
-    timeout(50, () => { startupComplete = true })
+    timeout(100, () => { startupComplete = true })
 
     let count = 0
     function show(v: number, icon: string, labelText?: string) {
         if (!startupComplete) return // Don't show during startup
         
+        console.log("OSD show:", v, icon, labelText)
         visible.set(true)
         value.set(v)
         iconName.set(icon)
@@ -32,24 +41,29 @@ function OnScreenProgress({ visible }: { visible: Variable<boolean> }) {
     return (
         <revealer
             setup={(self) => {
-                // Volume changes
                 if (speaker) {
+                    console.log("Setting up OSD with speaker:", speaker.description)
+                    
+                    // Volume changes
                     self.hook(speaker, "notify::volume", () => {
-                        const vol = speaker.volume
-                        const icon = speaker.volumeIcon || "audio-volume-medium-symbolic"
+                        const vol = speaker!.volume
+                        const icon = getVolumeIcon(vol, speaker!.mute)
                         show(vol, icon)
                     })
                     
+                    // Mute changes  
                     self.hook(speaker, "notify::mute", () => {
-                        const vol = speaker.mute ? 0 : speaker.volume
-                        const icon = speaker.mute ? "audio-volume-muted-symbolic" : (speaker.volumeIcon || "audio-volume-medium-symbolic")
-                        show(vol, icon, speaker.mute ? "Muted" : undefined)
+                        const vol = speaker!.mute ? 0 : speaker!.volume
+                        const icon = getVolumeIcon(speaker!.volume, speaker!.mute)
+                        show(vol, icon, speaker!.mute ? "Muted" : undefined)
                     })
+                } else {
+                    console.warn("No WirePlumber speaker available for OSD")
                 }
             }}
             revealChild={visible()}
             transitionType={Gtk.RevealerTransitionType.SLIDE_UP}
-            transitionDuration={1200}
+            transitionDuration={200}
             widthRequest={250}
             heightRequest={70}
         >
@@ -71,6 +85,15 @@ function OnScreenProgress({ visible }: { visible: Variable<boolean> }) {
             </box>
         </revealer>
     )
+}
+
+function getVolumeIcon(volume: number, muted: boolean): string {
+    if (muted) return "audio-volume-muted-symbolic"
+    
+    if (volume > 0.6) return "audio-volume-high-symbolic"
+    if (volume > 0.3) return "audio-volume-medium-symbolic"
+    if (volume > 0) return "audio-volume-low-symbolic"
+    return "audio-volume-muted-symbolic"
 }
 
 export default function OSD(monitor: Gdk.Monitor) {

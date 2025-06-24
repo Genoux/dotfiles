@@ -29,6 +29,11 @@ window.Bar {
   background: $bg-transparent;
 }
 
+// Global hidden class
+.hidden {
+  opacity: 0;
+}
+
 // Left Section - Control panel and workspaces
 .bar-left {
   .workspaces {

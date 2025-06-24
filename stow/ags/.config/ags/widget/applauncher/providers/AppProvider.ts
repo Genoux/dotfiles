@@ -324,7 +324,7 @@ export class AppProvider implements LauncherProvider {
     // If we have usage data, use it
     if (Object.keys(this.appUsage).length > 0) {
       const topUsage = Object.entries(this.appUsage)
-        .sort((a, b) => b[1].count - a[1].count) // Sort by frequency, not recency
+        .sort((a, b) => b[1].count - a[1].count)
         .slice(0, 3)
         .map(([appId]) => appId);
 

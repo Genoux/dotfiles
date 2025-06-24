@@ -56,6 +56,20 @@ case "$1" in
             
             if stow -t "$HOME" "$config" 2>/dev/null; then
                 echo "✅ Successfully linked $config"
+                
+                # Auto-setup monitors when installing hypr config in batch mode
+                if [[ "$config" == "hypr" ]]; then
+                    echo
+                    echo "🖥️  Setting up monitors for Hyprland..."
+                    local dotfiles_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+                    local monitor_script="$dotfiles_dir/scripts/setup-monitors.sh"
+                    
+                    if [[ -f "$monitor_script" ]]; then
+                        bash "$monitor_script" --quiet
+                    else
+                        echo "⚠️  Monitor setup script not found, skipping auto-configuration"
+                    fi
+                fi
             else
                 echo "❌ Failed to link $config"
             fi
@@ -110,6 +124,21 @@ case "$1" in
             # Show the symlink that was created
             if [ -L "$HOME/.config/$2" ]; then
                 echo "📁 Created: ~/.config/$2 -> $(readlink ~/.config/$2)"
+            fi
+            
+            # Auto-setup monitors when installing hypr config
+            if [[ "$2" == "hypr" ]]; then
+                echo
+                echo "🖥️  Setting up monitors for Hyprland..."
+                local dotfiles_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+                local monitor_script="$dotfiles_dir/scripts/setup-monitors.sh"
+                
+                if [[ -f "$monitor_script" ]]; then
+                    bash "$monitor_script" --quiet
+                else
+                    echo "⚠️  Monitor setup script not found, skipping auto-configuration"
+                    echo "💡 You can set up monitors manually later with: dotfiles.sh -> Monitor Setup"
+                fi
             fi
         else
             echo "❌ Failed to link $2"
