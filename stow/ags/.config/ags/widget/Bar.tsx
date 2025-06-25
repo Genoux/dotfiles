@@ -57,7 +57,7 @@ function SystemTraySection() {
 
 function WeatherSection() {
   return (
-    <box className="bar-section" h spacing={4}>
+    <box className="bar-section" spacing={4}>
       <WeatherDisplay />
     </box>
   );
