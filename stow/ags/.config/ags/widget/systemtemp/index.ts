@@ -1,0 +1,1 @@
+export { default as SystemTempDisplay } from "./components/SystemTempDisplay" 

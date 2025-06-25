@@ -46,18 +46,6 @@ window.notification-center-window {
       font-size: $font-size-lg;
       color: $text-primary;
     }
-
-    .clear-all-btn,
-    .close-btn {
-      @include button-base;
-      font-size: $font-size-sm;
-      color: $text-secondary;
-      transition: color $transition-fast;
-
-      &:hover {
-        color: $theme-white;
-      }
-    }
   }
 
   .notification-list {

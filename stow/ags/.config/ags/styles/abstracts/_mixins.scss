@@ -28,7 +28,7 @@
 }
 
 // Card/container styling - used for panels, notifications, etc.
-@mixin card-base($padding: $spacing-lg) {
+@mixin card-base($padding: $spacing-md) {
   background-color: $bg-secondary;
   border: $border-width solid $bg-hover;
   border-radius: $radius-lg;

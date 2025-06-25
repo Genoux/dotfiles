@@ -5,6 +5,7 @@ import { WindowTitle } from "./windowtitle";
 import { KeyboardSwitcher } from "./keyboardswitcher";
 import { TimeDisplay } from "./timedisplay";
 import { WeatherDisplay } from "./weather";
+import { SystemTempDisplay } from "./systemtemp";
 import { AudioButton } from "./audiocontrols";
 import { ControlPanelButton } from "./controlpanel";
 import { NotificationButton } from "./notifications";
@@ -61,6 +62,14 @@ function WeatherSection() {
   );
 }
 
+function SystemTempSection() {
+  return (
+    <box className="bar-section" halign={Gtk.Align.END} spacing={4}>
+      <SystemTempDisplay />
+    </box>
+  );
+}
+
 function RightSection() {
   return (
     <box className="bar-section" halign={Gtk.Align.END} spacing={4}>
@@ -90,7 +99,7 @@ export default function Bar({ gdkmonitor }: BarProps) {
       heightRequest={24}
       marginLeft={8}
       marginRight={8}
-      marginTop={6}
+      marginTop={0}
       marginBottom={6}
       application={App}
     >
@@ -102,6 +111,7 @@ export default function Bar({ gdkmonitor }: BarProps) {
         </box>
         <box halign={Gtk.Align.END} spacing={4}>
           <CavaSection />
+          <SystemTempSection />
           <WeatherSection />
           <RightSection />
         </box>
