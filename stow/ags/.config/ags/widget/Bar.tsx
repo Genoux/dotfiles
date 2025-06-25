@@ -4,6 +4,7 @@ import { Workspaces } from "./workspaces";
 import { WindowTitle } from "./windowtitle";
 import { KeyboardSwitcher } from "./keyboardswitcher";
 import { TimeDisplay } from "./timedisplay";
+import { WeatherDisplay } from "./weather";
 import { AudioButton } from "./audiocontrols";
 import { ControlPanelButton } from "./controlpanel";
 import { NotificationButton } from "./notifications";
@@ -12,20 +13,19 @@ import { CavaVisualizer, isPlaying } from "./cava";
 
 function ControlPanelSection() {
   return (
-      <ControlPanelButton />
+    <ControlPanelButton />
   );
 }
 
 function LeftSection() {
   return (
-    <>  
-       <box className="bar-section" halign={Gtk.Align.START} spacing={4}>
+    <>
+      <box className="bar-section" halign={Gtk.Align.START} spacing={4}>
         <Workspaces />
-    </box>
-        <SystemTraySection />
-
+      </box>
+      <SystemTraySection />
     </>
- 
+
   );
 }
 
@@ -53,9 +53,17 @@ function SystemTraySection() {
   );
 }
 
+function WeatherSection() {
+  return (
+    <box className="bar-section" halign={Gtk.Align.END} spacing={4}>
+      <WeatherDisplay />
+    </box>
+  );
+}
+
 function RightSection() {
   return (
-    <box className="bar-section" halign={Gtk.Align.END}>
+    <box className="bar-section" halign={Gtk.Align.END} spacing={4}>
       <NotificationButton />
       <KeyboardSwitcher />
       <AudioButton />
@@ -82,7 +90,7 @@ export default function Bar({ gdkmonitor }: BarProps) {
       heightRequest={24}
       marginLeft={8}
       marginRight={8}
-      marginTop={0}
+      marginTop={6}
       marginBottom={6}
       application={App}
     >
@@ -94,6 +102,7 @@ export default function Bar({ gdkmonitor }: BarProps) {
         </box>
         <box halign={Gtk.Align.END} spacing={4}>
           <CavaSection />
+          <WeatherSection />
           <RightSection />
         </box>
       </box>
