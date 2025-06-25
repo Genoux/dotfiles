@@ -11,6 +11,7 @@ import { ControlPanelButton } from "./controlpanel";
 import { NotificationButton } from "./notifications";
 import { SystemTray, trayItems } from "./systemtray";
 import { CavaVisualizer, isPlaying } from "./cava";
+import { windowManager } from "./utils";
 
 function ControlPanelSection() {
   return (
@@ -32,7 +33,7 @@ function LeftSection() {
 
 function CenterSection() {
   return (
-    <box className="bar-section" halign={Gtk.Align.CENTER} spacing={12}>
+    <box className="bar-section">
       <WindowTitle />
     </box>
   );
@@ -40,7 +41,7 @@ function CenterSection() {
 
 function CavaSection() {
   return (
-    <box className="bar-section" halign={Gtk.Align.END}>
+    <box className="bar-section">
       <CavaVisualizer />
     </box>
   );
@@ -48,7 +49,7 @@ function CavaSection() {
 
 function SystemTraySection() {
   return (
-    <box className="bar-section" halign={Gtk.Align.END} visible={bind(trayItems).as(items => items.length > 0)}>
+    <box className="bar-section" visible={bind(trayItems).as(items => items.length > 0)}>
       <SystemTray />
     </box>
   );
@@ -56,7 +57,7 @@ function SystemTraySection() {
 
 function WeatherSection() {
   return (
-    <box className="bar-section" halign={Gtk.Align.END} spacing={4}>
+    <box className="bar-section" h spacing={4}>
       <WeatherDisplay />
     </box>
   );
@@ -102,11 +103,16 @@ export default function Bar({ gdkmonitor }: BarProps) {
       marginTop={0}
       marginBottom={6}
       application={App}
+      onButtonPressEvent={() => {
+        windowManager.hide("*")
+      }}
     >
-      <box className="bar-container" halign={Gtk.Align.FILL} spacing={4}>
-        <ControlPanelSection />
-        <LeftSection />
-        <box halign={Gtk.Align.CENTER} hexpand>
+      <box className="bar-container" hexpand homogeneous>
+        <box halign={Gtk.Align.START} spacing={4}>
+          <ControlPanelSection />
+          <LeftSection />
+        </box>
+        <box halign={Gtk.Align.CENTER}>
           <CenterSection />
         </box>
         <box halign={Gtk.Align.END} spacing={4}>

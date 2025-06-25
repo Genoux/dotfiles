@@ -140,16 +140,6 @@ eventbox.notification {
         opacity: 0.7;
         color: $text-secondary;
       }
-
-      .action-buttons {
-        .close-btn {
-          @include button-base;
-          
-          &:hover {
-            background-color: rgba($theme-white, 0.1);
-          }
-        }
-      }
     }
 
     .notification-body {

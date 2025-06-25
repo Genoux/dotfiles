@@ -1,5 +1,5 @@
 import { Astal } from "astal/gtk3"
-import { createWindow, windowManager } from "../utils"
+import { windowManager } from "../utils"
 import NotificationCenter, { NotificationCenterWidget } from "./components/NotificationCenter"
 import { dismissAllPopups } from "./components/NotificationPopup"
 
@@ -21,15 +21,6 @@ export function setGroupExpanded(appName: string, expanded: boolean): void {
         expandedGroups.delete(appName);
     }
 }
-
-// Apps to ignore from count and notification center (but still show in popup)
-const IGNORED_FROM_COUNT_AND_CENTER_APPS: string[] = [
-    "spotify", // Note: using lowercase for case-insensitive matching
-]
-
-// Apps to ignore completely (don't show anywhere)
-const COMPLETELY_IGNORED_APPS_LIST: string[] = [
-]
 
 // Helper function to check if notification should be ignored from count and center
 export function shouldIgnoreFromCountAndCenter(notification: any): boolean {
@@ -123,11 +114,13 @@ export function processNotificationsForGrouping(notifications: any[], groupThres
 }
 
 // Notification Center Window
-export const notificationCenter = createWindow({
+export const notificationCenter = windowManager.createWindow({
     name: "notification-center",
+    type: 'popup',
     className: "notification-center-window",
     content: NotificationCenter({ showCloseButton: true }),
     anchor: Astal.WindowAnchor.TOP | Astal.WindowAnchor.RIGHT | Astal.WindowAnchor.BOTTOM,
+    exclusive: true,
     autoClose: true,
 })
 
@@ -137,7 +130,7 @@ export const notificationCenterVisible = notificationCenter.isVisible
 export const toggleNotificationCenter = notificationCenter.toggle
 
 // Subscribe to visibility changes to dismiss popups when center opens
-notificationCenter.isVisible.subscribe((visible) => {
+notificationCenter.isVisible.subscribe((visible: boolean) => {
     if (visible) {
         // Dismiss all popup notifications when notification center opens
         dismissAllPopups()

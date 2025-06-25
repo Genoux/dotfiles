@@ -1,186 +1,358 @@
-import { App } from "astal/gtk3"
-import { closeAllWindows } from "./WindowHelper"
-
 /**
- * Global Window Manager
- * Automatically manages ALL AGS popup/overlay windows:
- * - Closes any open popup when Hyprland workspace changes
- * - Ensures mutual exclusivity between popup windows
- * - Works with both App windows and Widget windows (WindowHelper)
+ * Unified Window Management System for AGS
+ * Clean, simple, scalable - replaces all existing window managers
+ * 
+ * DESIGN PRINCIPLES:
+ * - One system handles all windows (JSX, programmatic, popups, persistent)
+ * - Strict rules enforced automatically
+ * - Zero configuration overhead
+ * - DRY, KISS, scalable
  */
-class WindowManager {
-  private static instance: WindowManager
+
+import { App, Astal, Widget, Gdk } from "astal/gtk3"
+import { Variable } from "astal"
+
+// Simple, clean interfaces
+interface WindowConfig {
+  name: string
+  type: 'popup' | 'launcher' | 'persistent'
+  layer?: Astal.Layer
+  anchor?: Astal.WindowAnchor
+  content?: any
+  className?: string
+  exclusive?: boolean  // Only one exclusive window at a time
+  autoClose?: boolean  // Close on ESC, outside click, workspace change
+}
+
+interface ManagedWindow {
+  name: string
+  config: WindowConfig
+  window: Widget.Window
+  isVisible: Variable<boolean>
+  show: () => void
+  hide: () => void
+  toggle: () => void
+  clickCatcher?: Widget.Window | null
+}
+
+class UnifiedWindowManager {
+  private static instance: UnifiedWindowManager
+  private windows = new Map<string, ManagedWindow>()
+  private activeExclusiveWindow: string | null = null
   private hypr: any = null
-  private isInitialized = false
 
   constructor() {
-    this.initHyprland()
+    this.initializeHyprland()
+    this.setupGlobalHandlers()
   }
 
-  static getInstance(): WindowManager {
-    if (!WindowManager.instance) {
-      WindowManager.instance = new WindowManager()
+  static getInstance(): UnifiedWindowManager {
+    if (!UnifiedWindowManager.instance) {
+      UnifiedWindowManager.instance = new UnifiedWindowManager()
     }
-    return WindowManager.instance
-  }
-
-  private async initHyprland() {
-    if (this.isInitialized) return
-    
-    try {
-      // Dynamic import to handle potential missing dependency
-      const AstalHyprland = await import("gi://AstalHyprland").catch(() => null)
-      if (AstalHyprland) {
-        this.hypr = AstalHyprland.default.get_default()
-        this.setupGlobalHyprlandDetection()
-        this.isInitialized = true
-        console.log("🚀 WindowManager: Global Hyprland detection enabled")
-      }
-    } catch (error) {
-      console.warn("⚠️ WindowManager: Hyprland integration not available:", error)
-    }
-  }
-
-  private setupGlobalHyprlandDetection() {
-    if (!this.hypr) return
-
-    // GLOBAL: Close ANY open AGS popup when workspace changes
-    this.hypr.connect("notify::focused-workspace", () => {
-      console.log("🔄 Workspace changed - closing all AGS popups")
-      this.closeAllPopupWindows()
-    })
-
-    // GLOBAL: Close ANY open AGS popup when window focus changes to different workspace
-    this.hypr.connect("notify::focused-client", () => {
-      // Small delay to allow for normal interactions
-      setTimeout(() => {
-        const focusedClient = this.hypr.focusedClient
-        if (focusedClient) {
-          // If focus moved to a different workspace, close popups
-          const currentWorkspace = this.hypr.focusedWorkspace?.id
-          const clientWorkspace = focusedClient.workspace?.id
-          
-          if (currentWorkspace && clientWorkspace && currentWorkspace !== clientWorkspace) {
-            console.log("🔄 Focus moved to different workspace - closing all AGS popups")
-            this.closeAllPopupWindows()
-          }
-        }
-      }, 100)
-    })
+    return UnifiedWindowManager.instance
   }
 
   /**
-   * GLOBAL: Close ALL popup windows automatically
-   * Works with both App windows and WindowHelper windows
+   * Create and register a window - handles everything
    */
-  private closeAllPopupWindows() {
-    console.log("🔄 Closing all popup windows...")
+  createWindow(config: WindowConfig): ManagedWindow {
+    const isVisible = Variable(false)
     
-    // Close App windows (like launcher)
-    const allAppWindows = App.get_windows()
-    allAppWindows.forEach(window => {
-      if (this.isPopupWindow(window) && window.visible) {
-        console.log(`🔄 Closing App window: ${window.name}`)
-        window.visible = false
-      }
+    // Create click-outside-to-close overlay if needed
+    let clickCatcher: Widget.Window | null = null
+    if (config.autoClose) {
+      clickCatcher = this.createClickCatcher(config.name)
+    }
+    
+    // Create the window with consistent defaults
+    const window = new Widget.Window({
+      name: config.name,
+      className: config.className || `window-${config.name}`,
+      layer: config.layer || (config.type === 'persistent' ? Astal.Layer.BOTTOM : Astal.Layer.OVERLAY),
+      anchor: config.anchor || this.getDefaultAnchor(config.type),
+      visible: false,
+      keymode: config.type === 'launcher' ? Astal.Keymode.ON_DEMAND : Astal.Keymode.NONE,
+      exclusivity: Astal.Exclusivity.NORMAL,
+      child: config.content || new Widget.Box()
     })
 
-    // Close WindowHelper managed windows (control-panel, notification-center)
-    closeAllWindows()
-    console.log("🔄 Closed WindowHelper windows")
+    // Apply cursor management
+    this.applyCursorManagement(window)
+
+    // Set up key handling
+    window.connect("key-press-event", (_, event: Gdk.Event) => {
+      const keyval = event.get_keyval()[1]
+      if (keyval === Gdk.KEY_Escape && config.autoClose) {
+        this.hide(config.name)
+        return true
+      }
+      return false
+    })
+
+    // Create managed window interface
+    const managedWindow: ManagedWindow = {
+      name: config.name,
+      config,
+      window,
+      isVisible,
+      show: () => this.show(config.name),
+      hide: () => this.hide(config.name),
+      toggle: () => this.toggle(config.name),
+      clickCatcher
+    }
+
+    // Register the window
+    this.windows.set(config.name, managedWindow)
+    
+    console.log(`📋 Created window: ${config.name} (${config.type})`)
+    return managedWindow
   }
 
   /**
-   * Automatically detect if a window is a popup/overlay that should be closed
-   * Based on window properties, not manual registration
+   * Show window with all rules applied
    */
-  private isPopupWindow(window: any): boolean {
-    // Skip the bar and persistent windows
-    const persistentWindows = ['bar', 'osd', 'notification-popup']
-    if (persistentWindows.some(name => window.name?.includes(name))) {
+  show(windowName: string): boolean {
+    const managedWindow = this.windows.get(windowName)
+    if (!managedWindow) {
+      console.warn(`⚠️ Window not found: ${windowName}`)
       return false
     }
 
-    // Detect popup characteristics
-    const isOverlay = window.layer === 'overlay' || window.layer === 2 // LAYER.OVERLAY = 2
-    const isModal = window.layer === 'top' || window.layer === 1 // LAYER.TOP = 1
-    const hasAutoClose = window.name?.includes('center') || 
-                        window.name?.includes('panel') || 
-                        window.name?.includes('launcher')
+    const { config, window, isVisible } = managedWindow
 
-    return isOverlay || isModal || hasAutoClose
-  }
-
-  /**
-   * Show a window and automatically close others (mutual exclusivity)
-   * Works with both App windows and WindowHelper windows
-   */
-  showExclusiveWindow(windowName: string) {
-    console.log(`🔄 Showing exclusive window: ${windowName}`)
-    
-    // Close all other popup windows first
-    this.closeAllPopupWindows()
-
-    // Try to show App window first
-    const appWindow = App.get_window(windowName)
-    if (appWindow) {
-      console.log(`🔄 Found App window: ${windowName}`)
-      appWindow.visible = true
-      return
+    // RULE: Launcher closes ALL windows
+    if (config.type === 'launcher') {
+      this.hideAll()
+    }
+    // RULE: Exclusive windows close other exclusive windows
+    else if (config.exclusive && this.activeExclusiveWindow && this.activeExclusiveWindow !== windowName) {
+      this.hide(this.activeExclusiveWindow)
     }
 
-    // If not found as App window, it might be managed by WindowHelper
-    // In that case, the calling service should handle showing it
-    console.log(`ℹ️ Window '${windowName}' not found as App window, assuming WindowHelper managed`)
+    // Show click catcher first (if it exists)
+    if (managedWindow.clickCatcher) {
+      managedWindow.clickCatcher.visible = true
+    }
+
+    // Show the window
+    window.visible = true
+    isVisible.set(true)
+
+    // Track exclusive windows
+    if (config.exclusive) {
+      this.activeExclusiveWindow = windowName
+    }
+
+    console.log(`✅ Showed window: ${windowName}`)
+    return true
   }
 
   /**
-   * Manual trigger to close all popups (for external use)
+   * Hide window with cleanup - supports "*" to hide all
    */
-  closeAllPopups() {
-    this.closeAllPopupWindows()
+  hide(windowName: string): boolean {
+    // Special case: hide all windows
+    if (windowName === "*" || windowName === "any" || windowName === "all") {
+      this.hideAll()
+      return true
+    }
+
+    const managedWindow = this.windows.get(windowName)
+    if (!managedWindow || !managedWindow.window.visible) {
+      return false
+    }
+
+    managedWindow.window.visible = false
+    managedWindow.isVisible.set(false)
+
+    // Hide click catcher too
+    if (managedWindow.clickCatcher) {
+      managedWindow.clickCatcher.visible = false
+    }
+
+    // Clear active exclusive window
+    if (this.activeExclusiveWindow === windowName) {
+      this.activeExclusiveWindow = null
+    }
+
+    console.log(`❌ Hid window: ${windowName}`)
+    return true
   }
 
   /**
-   * Check if any popup window is currently open
+   * Toggle window
    */
-  isAnyPopupOpen(): boolean {
-    // Check App windows
-    const allAppWindows = App.get_windows()
-    const hasOpenAppPopup = allAppWindows.some(window => 
-      this.isPopupWindow(window) && window.visible
-    )
+  toggle(windowName: string): boolean {
+    const managedWindow = this.windows.get(windowName)
+    if (!managedWindow) return false
+
+    if (managedWindow.window.visible) {
+      return this.hide(windowName)
+    } else {
+      return this.show(windowName)
+    }
+  }
+
+  /**
+   * Hide all auto-close windows
+   */
+  hideAll(): void {
+    const hiddenWindows: string[] = []
     
-    // Note: Can't easily check WindowHelper windows without refactoring
-    // This is a limitation of the current architecture
-    return hasOpenAppPopup
+    this.windows.forEach((managedWindow, name) => {
+      if (managedWindow.config.autoClose && managedWindow.window.visible) {
+        this.hide(name)
+        hiddenWindows.push(name)
+      }
+    })
+
+    if (hiddenWindows.length > 0) {
+      console.log(`🧹 Hid all windows: ${hiddenWindows.join(', ')}`)
+    }
+  }
+
+
+
+  /**
+   * Get window reference for external use
+   */
+  getWindow(windowName: string): ManagedWindow | undefined {
+    return this.windows.get(windowName)
   }
 
   /**
-   * Get list of currently open popup windows
+   * Check if window is visible
    */
-  getOpenPopups(): string[] {
-    const allAppWindows = App.get_windows()
-    return allAppWindows
-      .filter(window => this.isPopupWindow(window) && window.visible)
-      .map(window => window.name || 'unnamed')
+  isVisible(windowName: string): boolean {
+    const managedWindow = this.windows.get(windowName)
+    return managedWindow ? managedWindow.window.visible : false
   }
 
-  // Legacy compatibility - these methods are no longer needed but kept for transition
-  /** @deprecated Use automatic detection instead */
-  registerExclusiveWindow(windowName: string) {
-    console.log(`ℹ️ WindowManager: registerExclusiveWindow('${windowName}') is deprecated - now using automatic detection`)
+  /**
+   * Get all registered windows
+   */
+  getAllWindows(): string[] {
+    return Array.from(this.windows.keys())
   }
 
-  /** @deprecated Use closeAllPopups() instead */
-  closeAllExclusiveWindows() {
-    this.closeAllPopups()
+  /**
+   * Get currently active exclusive window
+   */
+  getActiveWindow(): string | null {
+    return this.activeExclusiveWindow
   }
 
-  /** @deprecated Use isAnyPopupOpen() instead */
-  isAnyExclusiveWindowOpen(): boolean {
-    return this.isAnyPopupOpen()
+  // Private helper methods
+  private getDefaultAnchor(type: string): Astal.WindowAnchor {
+    switch (type) {
+      case 'launcher':
+        return Astal.WindowAnchor.TOP | Astal.WindowAnchor.BOTTOM | 
+               Astal.WindowAnchor.LEFT | Astal.WindowAnchor.RIGHT
+      case 'popup':
+        return Astal.WindowAnchor.TOP | Astal.WindowAnchor.RIGHT
+      case 'persistent':
+        return Astal.WindowAnchor.TOP | Astal.WindowAnchor.LEFT | Astal.WindowAnchor.RIGHT
+      default:
+        return Astal.WindowAnchor.TOP | Astal.WindowAnchor.RIGHT
+    }
+  }
+
+  private applyCursorManagement(window: Widget.Window): void {
+    // Recursive function to apply cursor to all buttons
+    const applyToAllButtons = (widget: any) => {
+      if (!widget) return
+
+      // Check if it's a button
+      if (widget.constructor.name.includes('Button') || 
+          widget.get_style_context?.()?.has_class?.('button')) {
+        
+        widget.connect('enter-notify-event', () => {
+          const display = widget.get_display()
+          const cursor = Gdk.Cursor.new_from_name(display, 'pointer')
+          widget.get_window()?.set_cursor(cursor)
+        })
+        
+        widget.connect('leave-notify-event', () => {
+          widget.get_window()?.set_cursor(null)
+        })
+      }
+
+      // Recursively apply to children
+      if (widget.get_children) {
+        widget.get_children().forEach(applyToAllButtons)
+      }
+    }
+
+    if (window.child) {
+      applyToAllButtons(window.child)
+    }
+  }
+
+  private async initializeHyprland(): Promise<void> {
+    try {
+      const AstalHyprland = await import("gi://AstalHyprland").catch(() => null)
+      if (AstalHyprland) {
+        this.hypr = AstalHyprland.default.get_default()
+        
+        // Close all auto-close windows on workspace change
+        this.hypr.connect("notify::focused-workspace", () => {
+          console.log("🔄 Workspace changed - hiding auto-close windows")
+          this.hideAll()
+        })
+        
+        console.log("🚀 UnifiedWindowManager: Hyprland integration active")
+      }
+    } catch (error) {
+      console.warn("⚠️ UnifiedWindowManager: Hyprland not available:", error)
+    }
+  }
+
+  private setupGlobalHandlers(): void {
+    // Global ESC key handler will be handled by individual windows
+    // Global click outside handler will be implemented via overlay windows
+    console.log("🔧 Global handlers initialized")
+  }
+
+  private createClickCatcher(windowName: string): Widget.Window {
+    // Create FULLSCREEN invisible overlay - includes AGS bar and everything
+    const clickCatcher = new Widget.Window({
+      name: `${windowName}-click-catcher`,
+      layer: Astal.Layer.TOP,
+      anchor: Astal.WindowAnchor.TOP | Astal.WindowAnchor.BOTTOM | 
+              Astal.WindowAnchor.LEFT | Astal.WindowAnchor.RIGHT,
+      visible: false,
+      keymode: Astal.Keymode.NONE,
+      exclusivity: Astal.Exclusivity.IGNORE,
+      // NO margins - truly fullscreen to catch clicks on AGS bar too
+      child: new Widget.EventBox({
+        onButtonPressEvent: () => {
+          // Hide the window when clicking ANYWHERE (including AGS bar)
+          this.hide(windowName)
+          return true
+        },
+        child: new Widget.Box({
+          css: "background-color: transparent;",
+          expand: true
+        })
+      })
+    })
+
+    return clickCatcher
+  }
+
+  /**
+   * Debug helper
+   */
+  debug(): void {
+    console.log("🔍 UnifiedWindowManager State:")
+    console.log(`  Active exclusive window: ${this.activeExclusiveWindow}`)
+    console.log(`  Registered windows: ${this.getAllWindows().join(', ')}`)
+    this.windows.forEach((managedWindow, name) => {
+      console.log(`    ${name}: ${managedWindow.window.visible ? 'visible' : 'hidden'} (${managedWindow.config.type})`)
+    })
   }
 }
 
-export const windowManager = WindowManager.getInstance() 
+export const windowManager = UnifiedWindowManager.getInstance()
+export type { WindowConfig, ManagedWindow } 

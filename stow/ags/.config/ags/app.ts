@@ -10,7 +10,7 @@ import { windowManager } from "./widget/utils"
 App.start({
     css: style,
     main() {
-        // Initialize WindowManager early for workspace change detection
+
         windowManager
         
         App.get_monitors().map(monitor => {

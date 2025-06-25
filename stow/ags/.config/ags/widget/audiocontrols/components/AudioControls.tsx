@@ -2,7 +2,7 @@ import { Astal, Gtk } from "astal/gtk3"
 import Wp from "gi://AstalWp"
 import { bind, Variable } from "astal"
 import AudioButton from "./AudioButton"
-import { getVolumeIcon, clampVolume, initializeAudioSystem, suppressOSD } from "../utils"
+import { getVolumeIcon, clampVolume, initializeAudioSystem, suppressOSD } from "../Service"
 
 export default function AudioControlsComponent(): Gtk.Widget {
     const audio = Wp.get_default()

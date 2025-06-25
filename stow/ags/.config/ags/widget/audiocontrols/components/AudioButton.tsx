@@ -1,6 +1,7 @@
 import { bind, Variable } from "astal"
 import Wp from "gi://AstalWp"
-import { getVolumeIcon } from "../utils"
+import { getVolumeIcon, suppressOSD } from "../Service"
+
 
 export default function AudioButton() {
     const audio = Wp.get_default()
@@ -26,6 +27,7 @@ export default function AudioButton() {
                 muted ? "audio-button active" : "audio-button"
             )}
             onClicked={() => {
+                suppressOSD(1000)
                 speaker.mute = !speaker.mute
             }}
         >

@@ -6,15 +6,13 @@ import { CalculatorProvider } from "./providers/CalculatorProvider"
 import { GoogleProvider } from "./providers/GoogleProvider"
 import { windowManager } from "../utils"
 
-
 class SmartAppLauncherService {
     private static instance: SmartAppLauncherService
     private providers: LauncherProvider[] = []
     private appProvider: AppProvider
 
-    // Public reactive state
+    // Core reactive state
     public text = Variable("")
-    public isVisible = Variable(false)
     public previewContent = Variable<PreviewContent | null>(null)
     public recentApps = Variable<any[]>([])
 
@@ -35,24 +33,20 @@ class SmartAppLauncherService {
             this.updatePreview(query)
         })
 
-        // Track launcher visibility 
+        // Clear text when launcher closes
         setTimeout(() => {
             const window = App.get_window("launcher")
             if (window) {
                 window.connect("notify::visible", () => {
-                    const isVisible = window.visible
-                    this.isVisible.set(isVisible)
+                    if (!window.visible) {
+                        this.clearText()
+                    }
                 })
-            } else {
-                console.warn("⚠️ Launcher window not found during Service initialization")
             }
         }, 100)
-        
+
         // Initialize recent apps on startup
         this.updateRecentApps()
-
-        // WindowManager now automatically detects and manages this window
-        // No manual registration needed!
     }
 
     static getInstance(): SmartAppLauncherService {
@@ -87,12 +81,9 @@ class SmartAppLauncherService {
         
         if (!query) return
         
-        // KISS: If no preview, don't launch anything
+        // If no preview, don't launch anything
         const preview = this.previewContent.get()
-        if (!preview) {
-            console.log(`❌ No preview for "${query}" - doing nothing`)
-            return
-        }
+        if (!preview) return
         
         // Find the first provider that can handle this query and get its best result
         for (const provider of this.providers) {
@@ -111,26 +102,7 @@ class SmartAppLauncherService {
         }
     }
 
-    // Window management
-    toggle() {
-        const window = App.get_window("launcher")
-        if (window) {
-            if (window.visible) {
-                this.hide()
-            } else {
-                this.show()
-            }
-        }
-    }
 
-    show() {
-        const window = App.get_window("launcher")
-        if (window) {
-            // WindowManager automatically handles mutual exclusivity
-            windowManager.showExclusiveWindow("launcher")
-            this.clearText()
-        }
-    }
 
     hide() {
         const window = App.get_window("launcher")
@@ -150,10 +122,7 @@ class SmartAppLauncherService {
         this.previewContent.set(null)
     }
 
-    // Getters for compatibility
-    getText() {
-        return this.text.get()
-    }
+
 
     private updateRecentApps() {
         const recentApps = this.appProvider.getRecentApps().map(app => ({
@@ -163,7 +132,7 @@ class SmartAppLauncherService {
             description: app.description || undefined,
             app: app
         }))
-        console.log("🔄 Setting recent apps:", recentApps.map(app => app.name))
+
         this.recentApps.set(recentApps)
     }
 

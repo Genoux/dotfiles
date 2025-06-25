@@ -1,6 +1,7 @@
 import { App, Astal, Gdk, Gtk } from "astal/gtk3"
 import { bind } from "astal"
 import Service from "./Service"
+import { windowManager } from "../utils"
 
 export default function ModularAppLauncher() {
     let entryRef: Gtk.Entry | null = null
@@ -49,7 +50,9 @@ export default function ModularAppLauncher() {
         }}>
 
         <box hexpand vexpand>
-            <eventbox hexpand onClick={() => Service.hide()} />
+            <eventbox hexpand onDraw={() => {
+                windowManager.hide("*")
+            }} onClick={() => Service.hide()} />
 
             <box vertical hexpand={false} vexpand>
                 <eventbox vexpand onClick={() => Service.hide()} />
@@ -128,8 +131,8 @@ export default function ModularAppLauncher() {
                             className="recent-apps-container"
                             hexpand
                             spacing={8}
-                            // visible={bind(Service.text).as(text => text.length === 0)}
-                            >
+                        // visible={bind(Service.text).as(text => text.length === 0)}
+                        >
 
                             {bind(Service.recentApps).as(apps =>
                                 apps.map(app => (
