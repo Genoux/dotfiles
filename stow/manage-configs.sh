@@ -34,8 +34,8 @@ case "$1" in
                         fi
                     done
                     ;;
-                "zsh"|"bash")
-                    for file in .zshrc .bashrc .profile; do
+                "shell"|"zsh"|"bash")
+                    for file in .zshrc .bashrc .profile .zprofile; do
                         if [[ -f "$HOME/$file" && ! -L "$HOME/$file" ]]; then
                             echo "⚠️  Found existing ~/$file"
                             echo "📦 Backing up to ~/$file.bak"
@@ -57,17 +57,17 @@ case "$1" in
             if stow -t "$HOME" "$config" 2>/dev/null; then
                 echo "✅ Successfully linked $config"
                 
-                # Auto-setup monitors when installing hypr config in batch mode
+                # Auto-setup Hyprland configuration when installing hypr config in batch mode
                 if [[ "$config" == "hypr" ]]; then
                     echo
-                    echo "🖥️  Setting up monitors for Hyprland..."
-                    local dotfiles_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-                    local monitor_script="$dotfiles_dir/scripts/setup-monitors.sh"
+                    echo "🚀 Auto-configuring Hyprland for your device..."
+                    dotfiles_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+                    hypr_config_script="$dotfiles_dir/scripts/hypr-config.sh"
                     
-                    if [[ -f "$monitor_script" ]]; then
-                        bash "$monitor_script" --quiet
+                    if [[ -f "$hypr_config_script" ]]; then
+                        bash "$hypr_config_script" --quiet
                     else
-                        echo "⚠️  Monitor setup script not found, skipping auto-configuration"
+                                            echo "⚠️  Hyprland config script not found, skipping auto-configuration"
                     fi
                 fi
             else
@@ -101,10 +101,24 @@ case "$1" in
                             mv "$HOME/.config/$file" "$HOME/.config/$file.bak"
                         fi
                     done
+
                     ;;
-                "zsh"|"bash")
+                "shell"|"zsh"|"bash")
+                    # Install Oh My Zsh if needed (dependency for shell config)
+                    if [[ "$2" == "shell" && ! -d "$HOME/.oh-my-zsh" ]]; then
+                        echo "🚀 Installing Oh My Zsh (required for shell config)..."
+                        sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+                        
+                        # Install required plugins
+                        echo "📦 Installing zsh plugins..."
+                        git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions 2>/dev/null || true
+                        git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting 2>/dev/null || true
+                        
+                        echo "✅ Oh My Zsh setup complete!"
+                    fi
+                    
                     # Handle dotfiles in home directory
-                    for file in .zshrc .bashrc .profile; do
+                    for file in .zshrc .bashrc .profile .zprofile; do
                         if [[ -f "$HOME/$file" && ! -L "$HOME/$file" ]]; then
                             echo "⚠️  Found existing ~/$file"
                             echo "📦 Backing up to ~/$file.bak"
@@ -126,18 +140,18 @@ case "$1" in
                 echo "📁 Created: ~/.config/$2 -> $(readlink ~/.config/$2)"
             fi
             
-            # Auto-setup monitors when installing hypr config
+            # Auto-setup Hyprland configuration when installing hypr config
             if [[ "$2" == "hypr" ]]; then
                 echo
-                echo "🖥️  Setting up monitors for Hyprland..."
-                local dotfiles_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-                local monitor_script="$dotfiles_dir/scripts/setup-monitors.sh"
+                echo "🚀 Auto-configuring Hyprland for your device..."
+                dotfiles_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+                hypr_config_script="$dotfiles_dir/scripts/hypr-config.sh"
                 
-                if [[ -f "$monitor_script" ]]; then
-                    bash "$monitor_script" --quiet
+                if [[ -f "$hypr_config_script" ]]; then
+                    bash "$hypr_config_script" --quiet
                 else
-                    echo "⚠️  Monitor setup script not found, skipping auto-configuration"
-                    echo "💡 You can set up monitors manually later with: dotfiles.sh -> Monitor Setup"
+                    echo "⚠️  Hyprland config script not found, skipping auto-configuration"
+                    echo "💡 You can run Hyprland auto-config later with: dotfiles.sh -> Hyprland Auto-Config"
                 fi
             fi
         else

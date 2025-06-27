@@ -45,12 +45,12 @@ show_menu() {
     echo "🎨 THEMES:"
     echo "  t) Install Themes           (download custom themes)"
     echo
-    echo "🖥️  MONITOR:"
-    echo "  m) Setup Monitors           (auto-detect and configure)"
+    echo "🖥️  HYPRLAND:"
+    echo "  h) Hyprland Auto-Config     (detect device + optimize all settings)"
     echo
     echo "📊 INFO:"
     echo "  s) Status                   (show current state)"
-    echo "  h) Help                     (explain workflow)"
+    echo "  help) Help                  (explain workflow)"
     echo "  q) Quit"
     echo
 }
@@ -172,11 +172,11 @@ while true; do
             cd "$SCRIPT_DIR"
             bash "$SCRIPTS_DIR/manage-packages.sh" setup
             echo
-            echo -e "${BLUE}🖥️  Setting up monitors...${NC}"
-            if [[ -f "$SCRIPTS_DIR/setup-monitors.sh" ]]; then
-                bash "$SCRIPTS_DIR/setup-monitors.sh" --quiet
+            echo -e "${BLUE}🚀 Auto-configuring Hyprland...${NC}"
+            if [[ -f "$SCRIPTS_DIR/hypr-config.sh" ]]; then
+                bash "$SCRIPTS_DIR/hypr-config.sh" --quiet
             else
-                echo -e "${YELLOW}⚠️  Monitor setup script not found, skipping...${NC}"
+                echo -e "${YELLOW}⚠️  Hyprland config script not found, skipping...${NC}"
             fi
             echo
             echo -e "${BLUE}Installing all configs...${NC}"
@@ -248,18 +248,19 @@ while true; do
                 bash "$SCRIPTS_DIR/manage-packages.sh" themes
             fi
             ;;
-        m|M)
-            echo -e "${BLUE}🖥️  Monitor Setup${NC}"
-            if [[ -f "$SCRIPTS_DIR/setup-monitors.sh" ]]; then
-                bash "$SCRIPTS_DIR/setup-monitors.sh"
+        h|H)
+            echo -e "${BLUE}🚀 Hyprland Auto-Configuration${NC}"
+            if [[ -f "$SCRIPTS_DIR/hypr-config.sh" ]]; then
+                bash "$SCRIPTS_DIR/hypr-config.sh"
             else
-                echo -e "${RED}❌ Monitor setup script not found${NC}"
+                echo -e "${RED}❌ Hyprland config script not found${NC}"
             fi
             ;;
+
         s|S)
             show_status
             ;;
-        h|H)
+        help)
             show_help
             ;;
         q|Q)
