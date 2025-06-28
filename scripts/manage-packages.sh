@@ -23,13 +23,14 @@ show_help() {
     echo
     echo "Commands:"
     echo -e "  ${GREEN}install${NC}   Auto-sync packages (default - does everything)"
+    echo -e "  ${GREEN}services${NC}  Configure essential services (greetd, NetworkManager, etc.)"
     echo -e "  ${GREEN}themes${NC}    Install custom themes only"
     echo -e "  ${GREEN}status${NC}    Show current package status"
     echo -e "  ${GREEN}preview${NC}   Preview what would change"
     echo
     echo "Advanced (rarely needed):"
     echo -e "  ${GREEN}get${NC}       Just update package lists from system"
-    echo -e "  ${GREEN}setup${NC}     Complete setup (install + themes)"
+    echo -e "  ${GREEN}setup${NC}     Complete setup (install + services + themes)"
     echo
     echo "Options:"
     echo "  --force     Skip confirmations"
@@ -52,7 +53,7 @@ NO_DEPS=false
 
 while [[ $# -gt 0 ]]; do
     case $1 in
-        get|install|sync|preview|setup|themes|status)
+        get|install|sync|preview|setup|themes|services|status)
             COMMAND="$1"
             shift
             ;;
@@ -726,18 +727,157 @@ cmd_sync() {
 }
 
 cmd_themes() {
-    echo -e "${BLUE}🎨 Installing custom themes...${NC}"
+    echo -e "${BLUE}🎨 Installing WhiteSur themes via packages...${NC}"
     
-    if [[ -f "$SCRIPT_DIR/install-themes.sh" ]]; then
-        local force_flag=""
-        if [[ "$FORCE" == true ]]; then
-            force_flag="--force"
+    # Check if WhiteSur packages are in the AUR list
+    local packages_to_install=()
+    local aur_packages=""
+    
+    if [[ -f "aur-packages.txt" ]]; then
+        aur_packages=$(cat aur-packages.txt)
+        
+        if echo "$aur_packages" | grep -q "whitesur-gtk-theme"; then
+            packages_to_install+=("whitesur-gtk-theme")
         fi
-        bash "$SCRIPT_DIR/install-themes.sh" $force_flag
-    else
-        echo -e "${RED}❌ install-themes.sh not found!${NC}"
+        
+        if echo "$aur_packages" | grep -q "whitesur-icon-theme"; then
+            packages_to_install+=("whitesur-icon-theme") 
+        fi
+        
+        if echo "$aur_packages" | grep -q "whitesur-cursor-theme-git"; then
+            packages_to_install+=("whitesur-cursor-theme-git")
+        fi
+    fi
+    
+    if [[ ${#packages_to_install[@]} -eq 0 ]]; then
+        echo -e "${YELLOW}⚠️  No WhiteSur packages found in aur-packages.txt${NC}"
+        echo -e "${BLUE}💡 WhiteSur packages should be automatically included${NC}"
         return 1
     fi
+    
+    echo -e "${BLUE}Installing WhiteSur packages: ${packages_to_install[*]}${NC}"
+    
+    # Install the packages
+    if yay -S --noconfirm "${packages_to_install[@]}"; then
+        echo -e "${GREEN}✅ WhiteSur theme packages installed successfully${NC}"
+        
+        # Automatically configure themes after successful installation
+        echo
+        cmd_configure_themes
+        
+    else
+        echo -e "${RED}❌ Failed to install some WhiteSur packages${NC}"
+        return 1
+    fi
+}
+
+cmd_services() {
+    echo -e "${BLUE}⚙️  Configuring essential services...${NC}"
+    
+    # Services to enable based on installed packages
+    local services_to_enable=()
+    
+    # Check if greetd is installed and enable it as display manager
+    if pacman -Q greetd &>/dev/null; then
+        # Check if greetd is already enabled
+        if ! systemctl is-enabled greetd &>/dev/null; then
+            echo -e "  ${BLUE}🔐 Enabling greetd (display manager)...${NC}"
+            if sudo systemctl enable greetd; then
+                echo -e "  ${GREEN}✅ greetd enabled - will show login screen on boot${NC}"
+            else
+                echo -e "  ${YELLOW}⚠️  Failed to enable greetd${NC}"
+            fi
+        else
+            echo -e "  ${GREEN}✅ greetd already enabled${NC}"
+        fi
+    fi
+    
+    # Check if NetworkManager is installed
+    if pacman -Q networkmanager &>/dev/null; then
+        if ! systemctl is-enabled NetworkManager &>/dev/null; then
+            echo -e "  ${BLUE}🌐 Enabling NetworkManager...${NC}"
+            if sudo systemctl enable NetworkManager; then
+                echo -e "  ${GREEN}✅ NetworkManager enabled${NC}"
+            else
+                echo -e "  ${YELLOW}⚠️  Failed to enable NetworkManager${NC}"
+            fi
+        else
+            echo -e "  ${GREEN}✅ NetworkManager already enabled${NC}"
+        fi
+    fi
+    
+    # Check if bluetooth is installed
+    if pacman -Q bluez &>/dev/null; then
+        if ! systemctl is-enabled bluetooth &>/dev/null; then
+            echo -e "  ${BLUE}📶 Enabling Bluetooth...${NC}"
+            if sudo systemctl enable bluetooth; then
+                echo -e "  ${GREEN}✅ Bluetooth enabled${NC}"
+            else
+                echo -e "  ${YELLOW}⚠️  Failed to enable Bluetooth${NC}"
+            fi
+        else
+            echo -e "  ${GREEN}✅ Bluetooth already enabled${NC}"
+        fi
+    fi
+    
+    echo -e "${GREEN}✅ Service configuration complete${NC}"
+}
+
+cmd_configure_themes() {
+    echo -e "${BLUE}🎨 Configuring system themes...${NC}"
+    
+    # Set GTK theme and icon theme if WhiteSur packages are installed
+    if pacman -Q whitesur-icon-theme &>/dev/null; then
+        echo -e "  ${BLUE}🎭 Setting WhiteSur icon theme...${NC}"
+        gsettings set org.gnome.desktop.interface icon-theme 'WhiteSur-dark'
+        echo -e "  ${GREEN}✅ Icon theme set to WhiteSur-dark${NC}"
+        
+        # Set GTK theme if available
+        if pacman -Q whitesur-gtk-theme &>/dev/null; then
+            echo -e "  ${BLUE}🎨 Setting WhiteSur GTK theme...${NC}"
+            gsettings set org.gnome.desktop.interface gtk-theme 'WhiteSur-Dark'
+            echo -e "  ${GREEN}✅ GTK theme set to WhiteSur-Dark${NC}"
+        fi
+        
+        # Set cursor theme if available
+        if pacman -Q whitesur-cursor-theme-git &>/dev/null; then
+            echo -e "  ${BLUE}🖱️  Setting WhiteSur cursor theme...${NC}"
+            gsettings set org.gnome.desktop.interface cursor-theme 'WhiteSur'
+            echo -e "  ${GREEN}✅ Cursor theme set to WhiteSur${NC}"
+        fi
+        
+        # Configure Hyprland environment variables if Hyprland config exists
+        local hypr_env_file=""
+        if [[ -f "$HOME/.config/hypr/env.conf" ]]; then
+            hypr_env_file="$HOME/.config/hypr/env.conf"
+        elif [[ -f "stow/hypr/.config/hypr/env.conf" ]]; then
+            hypr_env_file="stow/hypr/.config/hypr/env.conf"
+        fi
+        
+        if [[ -n "$hypr_env_file" ]]; then
+            echo -e "  ${BLUE}🔧 Configuring Hyprland theme variables...${NC}"
+            
+            # Check if WhiteSur themes are already configured
+            if ! grep -q "WhiteSur" "$hypr_env_file"; then
+                echo "" >> "$hypr_env_file"
+                echo "# WhiteSur themes (auto-configured)" >> "$hypr_env_file"
+                echo "env = GTK_THEME,WhiteSur-Dark" >> "$hypr_env_file"
+                echo "env = XCURSOR_THEME,WhiteSur" >> "$hypr_env_file"
+                echo "env = XCURSOR_SIZE,24" >> "$hypr_env_file"
+                echo "env = HYPRCURSOR_SIZE,24" >> "$hypr_env_file"
+                echo -e "  ${GREEN}✅ Hyprland theme variables configured${NC}"
+                echo -e "  ${YELLOW}💡 Run 'hyprctl reload' to apply changes${NC}"
+            else
+                echo -e "  ${GREEN}✅ Hyprland theme variables already configured${NC}"
+            fi
+        fi
+        
+    else
+        echo -e "  ${YELLOW}⚠️  WhiteSur themes not installed - install packages first${NC}"
+        echo -e "  ${BLUE}💡 Run './scripts/manage-packages.sh install' to install theme packages${NC}"
+    fi
+    
+    echo -e "${GREEN}✅ Theme configuration complete${NC}"
 }
 
 cmd_setup() {
@@ -749,13 +889,23 @@ cmd_setup() {
     cmd_install
     echo
     
-    # Step 2: Install themes
-    echo -e "${BLUE}Step 2: Installing themes...${NC}"
+    # Step 2: Configure essential services
+    echo -e "${BLUE}Step 2: Configuring essential services...${NC}"
+    cmd_services
+    echo
+    
+    # Step 3: Install themes
+    echo -e "${BLUE}Step 3: Installing themes...${NC}"
     cmd_themes
     echo
     
-    # Step 3: Setup monitors (if monitor setup script exists)
-    echo -e "${BLUE}Step 3: Setting up monitors...${NC}"
+    # Step 4: Configure system themes
+    echo -e "${BLUE}Step 4: Configuring system themes...${NC}"
+    cmd_configure_themes
+    echo
+    
+    # Step 5: Setup monitors (if monitor setup script exists)
+    echo -e "${BLUE}Step 5: Setting up monitors...${NC}"
     local monitor_script="$SCRIPT_DIR/setup-monitors.sh"
     if [[ -f "$monitor_script" ]]; then
         bash "$monitor_script" --quiet
@@ -791,8 +941,14 @@ case "$COMMAND" in
     setup)
         cmd_setup
         ;;
+    services)
+        cmd_services
+        ;;
     themes)
         cmd_themes
+        ;;
+    configure-themes)
+        cmd_configure_themes
         ;;
     status)
         cmd_status

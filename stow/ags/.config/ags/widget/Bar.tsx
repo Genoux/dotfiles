@@ -6,6 +6,7 @@ import { KeyboardSwitcher } from "./keyboardswitcher";
 import { TimeDisplay } from "./timedisplay";
 import { WeatherDisplay } from "./weather";
 import { SystemTempDisplay } from "./systemtemp";
+import { BatteryDisplay, batteryVisible } from "./battery";
 import { AudioButton } from "./audiocontrols";
 import { ControlPanelButton } from "./controlpanel";
 import { NotificationButton } from "./notifications";
@@ -71,6 +72,18 @@ function SystemTempSection() {
   );
 }
 
+function BatterySection() {
+  return (
+    <box 
+      className="bar-section" 
+      spacing={4}
+      visible={batteryVisible}
+    >
+      <BatteryDisplay />
+    </box>
+  );
+}
+
 function RightSection() {
   return (
     <box className="bar-section" halign={Gtk.Align.END} spacing={4}>
@@ -118,6 +131,7 @@ export default function Bar({ gdkmonitor }: BarProps) {
         <box halign={Gtk.Align.END} spacing={4}>
           <CavaSection />
           <SystemTempSection />
+          <BatterySection />
           <WeatherSection />
           <RightSection />
         </box>

@@ -46,5 +46,8 @@ libastal-wireplumber-git-debug
 libcava
 libcava-debug
 spotify
+whitesur-cursor-theme-git
+whitesur-gtk-theme
+whitesur-icon-theme
 yay
 yay-debug

@@ -1,0 +1,61 @@
+@use "../abstracts/variables" as *;
+@use "../abstracts/mixins" as *;
+
+// =============================================================================
+// Battery Widget Styling
+// =============================================================================
+
+.battery-display {
+  @include button-base;
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $radius-sm;
+  background: transparent;
+  transition: background $transition-fast;
+  
+  &:hover {
+    background: $bg-hover;
+  }
+  
+  &:active {
+    background: $bg-active;
+  }
+  
+  // Battery icon styling
+  .battery-icon {
+    opacity: 0.9;
+    transition: opacity $transition-fast, color $transition-fast;
+    font-size: 14px;
+    
+   
+   
+  }
+  
+  // Battery percentage label
+  .battery-label {
+    
+    // Color coding for text as well
+    &.battery-critical {
+      color: $error-primary;
+    }
+    
+    &.battery-low {
+      color: $warning-primary;
+    }
+    
+    &.battery-medium {
+      color: $text-secondary;
+    }
+    
+    &.battery-high,
+    &.battery-full {
+      color: $text-primary;
+    }
+  }
+  
+  &:hover {
+    .battery-icon,
+    .battery-label {
+      opacity: 1;
+    }
+  }
+} 

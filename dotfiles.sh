@@ -42,8 +42,12 @@ show_menu() {
     echo "  7) Install All Configs      (all dotfiles → system)"
     echo "  8) Remove Config            (remove symlinks)"
     echo
+    echo "🔧 SERVICES:"
+    echo "  9) Configure Services       (greetd, NetworkManager, Bluetooth)"
+    echo
     echo "🎨 THEMES:"
-    echo "  t) Install Themes           (download custom themes)"
+    echo "  t) Install & Configure Themes (WhiteSur packages + settings)"
+    echo "  c) Configure Themes Only      (apply WhiteSur theme settings)"
     echo
     echo "🖥️  HYPRLAND:"
     echo "  h) Hyprland Auto-Config     (detect device + optimize all settings)"
@@ -221,32 +225,20 @@ while true; do
                 run_stow_script "remove" "Removing $config_name" "$config_name"
             fi
             ;;
+        9)
+            echo -e "${BLUE}🔧 Configuring Essential Services${NC}"
+            cd "$SCRIPT_DIR"
+            bash "$SCRIPTS_DIR/manage-packages.sh" services
+            ;;
         t|T)
-            echo -e "${BLUE}🎨 Installing Themes${NC}"
-            
-            # Check if themes are already installed
-            themes_exist=false
-            if [[ -d "$HOME/.themes/WhiteSur-Light" ]] || \
-               [[ -d "$HOME/.icons/WhiteSur" ]] || [[ -d "$HOME/.local/share/icons/WhiteSur" ]] || \
-               [[ -d "$HOME/.icons/WhiteSur-cursors" ]] || [[ -d "$HOME/.local/share/icons/WhiteSur-cursors" ]]; then
-                themes_exist=true
-            fi
-            
-            if $themes_exist; then
-                echo
-                echo -e "${YELLOW}🔍 WhiteSur themes are already installed${NC}"
-                read -p "Force reinstall to update? (y/N): " -n 1 -r
-                echo
-                if [[ $REPLY =~ ^[Yy]$ ]]; then
-                    cd "$SCRIPT_DIR"
-                    bash "$SCRIPTS_DIR/manage-packages.sh" themes --force
-                else
-                    echo -e "${YELLOW}Using existing themes${NC}"
-                fi
-            else
-                cd "$SCRIPT_DIR"
-                bash "$SCRIPTS_DIR/manage-packages.sh" themes
-            fi
+            echo -e "${BLUE}🎨 Installing & Configuring WhiteSur Themes${NC}"
+            cd "$SCRIPT_DIR"
+            bash "$SCRIPTS_DIR/manage-packages.sh" themes
+            ;;
+        c|C)
+            echo -e "${BLUE}🎨 Configuring System Themes${NC}"
+            cd "$SCRIPT_DIR"
+            bash "$SCRIPTS_DIR/manage-packages.sh" configure-themes
             ;;
         h|H)
             echo -e "${BLUE}🚀 Hyprland Auto-Configuration${NC}"
