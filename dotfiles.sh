@@ -39,10 +39,9 @@ show_menu() {
     echo "  z) Shell Setup              (zsh + Oh My Zsh + plugins)"
     echo
     echo "⚙️  CONFIGS:"
-    echo "  4) List Available Configs   (show what's in dotfiles)"
-    echo "  5) Install Config           (dotfiles → system symlinks)"
-    echo "  6) Install All Configs      (all dotfiles → system)"
-    echo "  7) Remove Config            (remove symlinks)"
+    echo "  4) Install Config           (shows status + install specific)"
+    echo "  5) Install All Configs      (all dotfiles → system)"
+    echo "  6) Remove Config            (remove symlinks)"
     echo
     echo "🎨 THEMES:"
     echo "  t) Install Themes           (WhiteSur GTK + Icons + Cursors)"
@@ -330,10 +329,7 @@ while true; do
             bash "$SCRIPTS_DIR/setup-packages.sh" check
             ;;
         4)
-            run_stow_script "list" "Listing available configs"
-            ;;
-        5)
-            echo "Available configs:"
+            echo "📋 Current config status:"
             run_stow_script "list" "Showing configs"
             echo
             read -p "Enter config name to install: " config_name
@@ -355,7 +351,7 @@ while true; do
                 bash manage-configs.sh install "$config_name" $mode_flag
             fi
             ;;
-        6)
+        5)
             echo "Choose installation mode for ALL configs:"
             echo "  1) Force - Just overwrite everything (recommended)"
             echo "  2) Backup - Create .bak files before overwriting"
@@ -371,10 +367,8 @@ while true; do
             echo -e "${BLUE}🔗 Installing ALL configs with $(echo $mode_flag | sed 's/--//' | tr '[:lower:]' '[:upper:]') mode...${NC}"
             bash manage-configs.sh install all $mode_flag
             ;;
-        7)
-            echo "Available configs:"
-            run_stow_script "list" "Showing configs"
-            echo
+        6)
+            echo -e "${BLUE}💡 Available configs: $(cd "$STOW_DIR" && ls -1 | grep -v manage-configs.sh | grep -v '\.sh$' | tr '\n' ' ')${NC}"
             read -p "Enter config name to remove: " config_name
             if [[ ! -z "$config_name" ]]; then
                 run_stow_script "remove" "Removing $config_name" "$config_name"

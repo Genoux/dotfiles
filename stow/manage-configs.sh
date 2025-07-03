@@ -63,6 +63,14 @@ handle_config_conflicts() {
                 handle_conflict "$HOME/$file" "~/$file" || return 1
             done
             ;;
+        "applications")
+            # Handle all .desktop files in applications directory
+            while IFS= read -r -d '' stow_file; do
+                relative_path="${stow_file#applications/}"
+                target_file="$HOME/$relative_path"
+                handle_conflict "$target_file" "~/$relative_path" || return 1
+            done < <(find applications -type f -print0 2>/dev/null)
+            ;;
         *)
             handle_conflict "$HOME/.config/$config" "~/.config/$config" || return 1
             ;;
@@ -159,6 +167,17 @@ case "$1" in
                 if [[ -L "$HOME/.zshrc" || -L "$HOME/.profile" || -L "$HOME/.zprofile" ]]; then
                     linked=true
                 fi
+                ;;
+            "applications")
+                # Check if any application files are linked dynamically
+                while IFS= read -r -d '' stow_file; do
+                    relative_path="${stow_file#applications/}"
+                    target_file="$HOME/$relative_path"
+                    if [[ -L "$target_file" ]]; then
+                        linked=true
+                        break
+                    fi
+                done < <(find applications -type f -print0 2>/dev/null)
                 ;;
             *)
                 if [ -L "$HOME/.config/$config" ]; then
