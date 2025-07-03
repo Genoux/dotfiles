@@ -26,13 +26,28 @@ case "$1" in
             # Check for other common locations
             case "$config" in
                 "system")
-                    for file in mimeapps.list user-dirs.dirs; do
-                        if [[ -f "$HOME/.config/$file" && ! -L "$HOME/.config/$file" ]]; then
-                            echo "⚠️  Found existing ~/.config/$file"
-                            echo "📦 Backing up to ~/.config/$file.bak"
-                            mv "$HOME/.config/$file" "$HOME/.config/$file.bak"
-                        fi
-                    done
+                    # Dynamically find all files in system config and back them up
+                    echo "🔍 Checking system config files for conflicts..."
+                    
+                    # Find all files in stow/system/.config/ (relative paths)
+                    while IFS= read -r -d '' stow_file; do
+                        # Convert stow path to target path
+                        relative_path="${stow_file#system/.config/}"
+                        target_file="$HOME/.config/$relative_path"
+                        
+                        # Skip if target doesn't exist or is already a symlink
+                        [[ ! -e "$target_file" || -L "$target_file" ]] && continue
+                        
+                        echo "⚠️  Found existing ~/.config/$relative_path"
+                        
+                        # Create backup directory if needed
+                        backup_dir="$(dirname "$target_file")"
+                        [[ ! -d "$backup_dir" ]] && mkdir -p "$backup_dir"
+                        
+                        echo "📦 Backing up to ~/.config/$relative_path.bak"
+                        mv "$target_file" "$target_file.bak"
+                        
+                    done < <(find system/.config -type f -print0 2>/dev/null)
                     ;;
                 "shell"|"zsh"|"bash")
                     for file in .zshrc .bashrc .profile .zprofile; do
@@ -93,15 +108,28 @@ case "$1" in
             # Check for other common locations
             case "$config" in
                 "system")
-                    # Handle individual files that system config contains
-                    for file in mimeapps.list user-dirs.dirs; do
-                        if [[ -f "$HOME/.config/$file" && ! -L "$HOME/.config/$file" ]]; then
-                            echo "⚠️  Found existing ~/.config/$file"
-                            echo "📦 Backing up to ~/.config/$file.bak"
-                            mv "$HOME/.config/$file" "$HOME/.config/$file.bak"
-                        fi
-                    done
-
+                    # Dynamically find all files in system config and back them up
+                    echo "🔍 Checking system config files for conflicts..."
+                    
+                    # Find all files in stow/system/.config/ (relative paths)
+                    while IFS= read -r -d '' stow_file; do
+                        # Convert stow path to target path
+                        relative_path="${stow_file#system/.config/}"
+                        target_file="$HOME/.config/$relative_path"
+                        
+                        # Skip if target doesn't exist or is already a symlink
+                        [[ ! -e "$target_file" || -L "$target_file" ]] && continue
+                        
+                        echo "⚠️  Found existing ~/.config/$relative_path"
+                        
+                        # Create backup directory if needed
+                        backup_dir="$(dirname "$target_file")"
+                        [[ ! -d "$backup_dir" ]] && mkdir -p "$backup_dir"
+                        
+                        echo "📦 Backing up to ~/.config/$relative_path.bak"
+                        mv "$target_file" "$target_file.bak"
+                        
+                    done < <(find system/.config -type f -print0 2>/dev/null)
                     ;;
                 "shell"|"zsh"|"bash")
                     # Install Oh My Zsh if needed (dependency for shell config)
@@ -196,10 +224,15 @@ case "$1" in
         linked=false
         case "$config" in
             "system")
-                # Check for individual files that system config creates
-                if [[ -L "$HOME/.config/mimeapps.list" || -L "$HOME/.config/user-dirs.dirs" ]]; then
-                    linked=true
-                fi
+                # Check if any system config files are linked
+                while IFS= read -r -d '' stow_file; do
+                    relative_path="${stow_file#system/.config/}"
+                    target_file="$HOME/.config/$relative_path"
+                    if [[ -L "$target_file" ]]; then
+                        linked=true
+                        break
+                    fi
+                done < <(find system/.config -type f -print0 2>/dev/null)
                 ;;
             "zsh")
                 # Check for zsh-related files
