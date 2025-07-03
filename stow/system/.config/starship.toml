@@ -15,7 +15,7 @@ style_user = "bold yellow"
 style_root = "bold red"
 format = "[$user]($style)[@](bold green)"
 disabled = false
-show_always = false
+show_always = true
 
 # Hostname module  
 [hostname]
