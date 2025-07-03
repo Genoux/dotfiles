@@ -47,4 +47,4 @@ stow/hypr/.config/hypr/wallpapers/*/*.webp
 # AGS specific
 stow/ags/.config/ags/node_modules/
 stow/ags/.config/ags/@girs/
-stow/ags/.config/ags/*.log
+stow/ags/.config/ags/*.logmonitors.conf
