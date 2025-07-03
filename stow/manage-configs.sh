@@ -62,12 +62,12 @@ case "$1" in
                     echo
                     echo "🚀 Auto-configuring Hyprland for your device..."
                     dotfiles_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-                    hypr_config_script="$dotfiles_dir/scripts/hypr-config.sh"
+                    hypr_setup_script="$dotfiles_dir/scripts/setup-hyprland.sh"
                     
-                    if [[ -f "$hypr_config_script" ]]; then
-                        bash "$hypr_config_script" --quiet
+                    if [[ -f "$hypr_setup_script" ]]; then
+                        bash "$hypr_setup_script" setup --quiet
                     else
-                                            echo "⚠️  Hyprland config script not found, skipping auto-configuration"
+                        echo "⚠️  Hyprland setup script not found, skipping auto-configuration"
                     fi
                 fi
             else
@@ -145,13 +145,13 @@ case "$1" in
                 echo
                 echo "🚀 Auto-configuring Hyprland for your device..."
                 dotfiles_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-                hypr_config_script="$dotfiles_dir/scripts/hypr-config.sh"
+                hypr_setup_script="$dotfiles_dir/scripts/setup-hyprland.sh"
                 
-                if [[ -f "$hypr_config_script" ]]; then
-                    bash "$hypr_config_script" --quiet
+                if [[ -f "$hypr_setup_script" ]]; then
+                    bash "$hypr_setup_script" setup --quiet
                 else
-                    echo "⚠️  Hyprland config script not found, skipping auto-configuration"
-                    echo "💡 You can run Hyprland auto-config later with: dotfiles.sh -> Hyprland Auto-Config"
+                    echo "⚠️  Hyprland setup script not found, skipping auto-configuration"
+                    echo "💡 You can run Hyprland setup later with: dotfiles.sh -> Hyprland Setup"
                 fi
             fi
         else
