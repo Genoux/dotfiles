@@ -48,3 +48,8 @@ stow/hypr/.config/hypr/wallpapers/*/*.webp
 stow/ags/.config/ags/node_modules/
 stow/ags/.config/ags/@girs/
 stow/ags/.config/ags/*.logmonitors.conf
+
+
+# Hyprland specific
+stow/hypr/.config/hypr/monitors.conf.backups/
+*.backup.*
