@@ -164,11 +164,11 @@ install_plugins() {
         fi
         
         echo -e "  ${BLUE}📦${NC} Installing $plugin_name from $plugin_url..."
-        if timeout 30 git clone "$plugin_url" "$plugin_dir" --depth=1 2>&1; then
+        if git clone "$plugin_url" "$plugin_dir" --depth=1 2>/dev/null; then
             echo -e "  ${GREEN}✅${NC} $plugin_name installed successfully"
         else
             echo -e "  ${RED}❌${NC} Failed to install $plugin_name"
-            echo -e "      ${RED}Error details: Clone failed or timed out for $plugin_url${NC}"
+            echo -e "      ${RED}Error details: Clone failed for $plugin_url${NC}"
         fi
     done <<< "$plugin_list"
     
@@ -177,7 +177,19 @@ install_plugins() {
 
 # Set zsh as default shell
 set_default_shell() {
-    local current_shell=$(getent passwd "$USER" | cut -d: -f7)
+    # Cross-platform way to get current shell
+    local current_shell
+    if command -v getent >/dev/null 2>&1; then
+        # Linux
+        current_shell=$(getent passwd "$USER" | cut -d: -f7)
+    elif [[ -f "/etc/passwd" ]]; then
+        # macOS/Unix fallback
+        current_shell=$(grep "^$USER:" /etc/passwd | cut -d: -f7)
+    else
+        # Use environment variable as last resort
+        current_shell="$SHELL"
+    fi
+    
     local zsh_path=$(which zsh)
     
     if [[ "$current_shell" == "$zsh_path" ]]; then
