@@ -29,28 +29,26 @@ show_menu() {
     echo -e "${BLUE}📋 What would you like to do?${NC}"
     echo
     echo "🚀 QUICK SETUP:"
-    echo "  1) Complete Setup           (everything: packages + themes + configs)"
+    echo "  1) Complete Setup           (everything: packages + shell + themes + configs)"
     echo
     echo "📦 PACKAGES:"
     echo "  2) Smart Sync               (auto-sync packages)"
-    echo "  3) Package Status           (show what would change)"
-    echo "  4) Package Preview          (detailed view)"
+    echo "  3) Package Check            (status + preview changes)"
+    echo
+    echo "🐚 SHELL:"
+    echo "  z) Shell Setup              (zsh + Oh My Zsh + plugins)"
     echo
     echo "⚙️  CONFIGS:"
-    echo "  5) List Available Configs   (show what's in dotfiles)"
-    echo "  6) Install Config           (dotfiles → system symlinks)"
-    echo "  7) Install All Configs      (all dotfiles → system)"
-    echo "  8) Remove Config            (remove symlinks)"
-    echo
-    echo "🔧 SERVICES:"
-    echo "  9) Configure Services       (greetd, NetworkManager, Bluetooth)"
+    echo "  4) List Available Configs   (show what's in dotfiles)"
+    echo "  5) Install Config           (dotfiles → system symlinks)"
+    echo "  6) Install All Configs      (all dotfiles → system)"
+    echo "  7) Remove Config            (remove symlinks)"
     echo
     echo "🎨 THEMES:"
-    echo "  t) Install & Configure Themes (WhiteSur packages + settings)"
-    echo "  c) Configure Themes Only      (apply WhiteSur theme settings)"
+    echo "  t) Install Themes           (WhiteSur GTK + Icons + Cursors)"
     echo
     echo "🖥️  HYPRLAND:"
-    echo "  h) Hyprland Auto-Config     (detect device + optimize all settings)"
+    echo "  h) Setup Hyprland           (monitors + workspaces + config)"
     echo
     echo "📊 INFO:"
     echo "  s) Status                   (show current state)"
@@ -74,6 +72,42 @@ show_status() {
         echo -e "📦 AUR packages: ${GREEN}$(wc -l < "$SCRIPT_DIR/aur-packages.txt")${NC}"
     else
         echo -e "📦 AUR packages: ${RED}Not found${NC}"
+    fi
+    
+    # Shell status
+    echo
+    echo -e "${BLUE}🐚 Shell Status:${NC}"
+    if command -v zsh &> /dev/null; then
+        echo -e "   zsh: ${GREEN}✓ $(zsh --version | cut -d' ' -f2)${NC}"
+    else
+        echo -e "   zsh: ${RED}✗ Not installed${NC}"
+    fi
+    
+    if [[ -d "$HOME/.oh-my-zsh" ]]; then
+        echo -e "   Oh My Zsh: ${GREEN}✓ Installed${NC}"
+    else
+        echo -e "   Oh My Zsh: ${RED}✗ Not installed${NC}"
+    fi
+    
+    # Check plugins
+    local plugins=("zsh-autosuggestions" "zsh-syntax-highlighting")
+    local plugin_status=""
+    for plugin in "${plugins[@]}"; do
+        if [[ -d "$HOME/.oh-my-zsh/custom/plugins/$plugin" ]]; then
+            plugin_status="${plugin_status}✓ "
+        else
+            plugin_status="${plugin_status}✗ "
+        fi
+    done
+    echo -e "   Plugins: ${plugin_status}"
+    
+    # Default shell
+    local current_shell=$(getent passwd "$USER" | cut -d: -f7 2>/dev/null || echo "$SHELL")
+    local zsh_path=$(which zsh 2>/dev/null || echo "")
+    if [[ "$current_shell" == "$zsh_path" && -n "$zsh_path" ]]; then
+        echo -e "   Default shell: ${GREEN}✓ zsh${NC}"
+    else
+        echo -e "   Default shell: ${YELLOW}⚠ $(basename "$current_shell")${NC}"
     fi
     
     # Config packages
@@ -102,21 +136,42 @@ show_status() {
 }
 
 show_help() {
-    echo -e "${BLUE}💡 Simplified Dotfiles Workflow:${NC}"
+    echo -e "${BLUE}💡 Enhanced Dotfiles Workflow:${NC}"
     echo
     echo -e "${YELLOW}🚀 Quick Start (Recommended):${NC}"
-    echo "  • Just run 'Smart Sync' - it handles everything!"
-    echo "  • Then 'Install All Configs' to deploy your settings"
+    echo "  • Run 'Complete Setup' - it handles EVERYTHING!"
+    echo "  • Packages, shell, themes, configs - all automated"
     echo
     echo -e "${YELLOW}🏠 On Current System:${NC}"
-    echo "  1. Smart Sync (auto-gets packages + syncs)"
-    echo "  2. Install All Configs (deploy settings)"
-    echo "  3. Edit configs normally in ~/.config/"
+    echo "  1. Smart Sync (packages)"
+    echo "  2. Shell Setup (zsh + Oh My Zsh + plugins)"  
+    echo "  3. Hyprland Setup (monitors + workspaces)"
+    echo "  4. Install All Configs (deploy settings)"
+    echo "  5. Edit configs normally in ~/.config/"
     echo
     echo -e "${YELLOW}🆕 On New Machine:${NC}"
     echo "  1. Clone dotfiles repo"
-    echo "  2. Complete Setup (does everything)"
-    echo "  3. Done! Everything synced automatically"
+    echo "  2. Complete Setup (packages + shell + hyprland + themes + configs)"
+    echo "  3. Log out and back in for shell changes"
+    echo "  4. Done! Everything synced automatically"
+    echo
+    echo -e "${YELLOW}📦 Package Management:${NC}"
+    echo "  • Smart hardware detection (NVIDIA filtering)"
+    echo "  • Combined status + preview in one command"
+    echo "  • Automatic dependency detection"
+    echo "  • Handles both official and AUR packages"
+    echo
+    echo -e "${YELLOW}🐚 Shell Features:${NC}"
+    echo "  • Automatic zsh + Oh My Zsh installation"
+    echo "  • zsh-autosuggestions & zsh-syntax-highlighting"
+    echo "  • Custom themes and configurations"
+    echo "  • Sets zsh as default shell"
+    echo
+    echo -e "${YELLOW}🖥️  Hyprland Features:${NC}"
+    echo "  • Auto-detects monitors and generates config"
+    echo "  • Smart workspace distribution across monitors"
+    echo "  • Modular configuration (monitors.conf, workspaces.conf)"
+    echo "  • Automatic config includes in main hyprland.conf"
     echo
     echo -e "${YELLOW}➕ Adding New Software:${NC}"
     echo "  1. Install software normally (pacman/yay)"
@@ -128,7 +183,7 @@ show_help() {
     echo "  2. Install Config 'newapp'"
     echo "  3. Done! Now it's managed by dotfiles"
     echo
-    echo -e "${GREEN}💡 Pro tip: 'Smart Sync' does everything automatically!${NC}"
+    echo -e "${GREEN}💡 Pro tip: 'Complete Setup' is now fully automated!${NC}"
     echo
 }
 
@@ -174,37 +229,64 @@ while true; do
         1)
             echo -e "${BLUE}🎯 Complete Setup - Everything at once!${NC}"
             cd "$SCRIPT_DIR"
-            bash "$SCRIPTS_DIR/manage-packages.sh" setup
+            
+            # Step 1: Packages
+            echo -e "${BLUE}Step 1: Setting up packages...${NC}"
+            bash "$SCRIPTS_DIR/setup-packages.sh" install
             echo
-            echo -e "${BLUE}🚀 Auto-configuring Hyprland...${NC}"
-            if [[ -f "$SCRIPTS_DIR/hypr-config.sh" ]]; then
-                bash "$SCRIPTS_DIR/hypr-config.sh" --quiet
+            
+            # Step 1.5: Themes
+            echo -e "${BLUE}Step 1.5: Setting up themes...${NC}"
+            if [[ -f "$SCRIPTS_DIR/setup-themes.sh" ]]; then
+                bash "$SCRIPTS_DIR/setup-themes.sh" install --quiet
             else
-                echo -e "${YELLOW}⚠️  Hyprland config script not found, skipping...${NC}"
+                echo -e "${YELLOW}⚠️  Theme setup script not found, skipping...${NC}"
             fi
             echo
-            echo -e "${BLUE}Installing all configs...${NC}"
+            
+            # Step 2: Shell setup  
+            echo -e "${BLUE}Step 2: Setting up shell (zsh + Oh My Zsh + plugins)...${NC}"
+            if [[ -f "$SCRIPTS_DIR/setup-shell.sh" ]]; then
+                bash "$SCRIPTS_DIR/setup-shell.sh" install --quiet
+            else
+                echo -e "${YELLOW}⚠️  Shell setup script not found, skipping...${NC}"
+            fi
+            echo
+            
+            # Step 3: Hyprland setup
+            echo -e "${BLUE}Step 3: Setting up Hyprland...${NC}"
+            if [[ -f "$SCRIPTS_DIR/setup-hyprland.sh" ]]; then
+                bash "$SCRIPTS_DIR/setup-hyprland.sh" setup --quiet
+            else
+                echo -e "${YELLOW}⚠️  Hyprland setup script not found, skipping...${NC}"
+            fi
+            echo
+            
+            # Step 4: Install configs
+            echo -e "${BLUE}Step 4: Installing all configs...${NC}"
             run_stow_script "install" "Installing all configs" "all"
+            
+            echo
+            echo -e "${GREEN}🎉 Complete setup finished!${NC}"
+            echo -e "${YELLOW}💡 Next steps:${NC}"
+            echo "  • Log out and back in for shell changes to take effect"
+            echo "  • Restart desktop environment for themes"
+            echo "  • Open new terminal to see Oh My Zsh in action"
             ;;
         2)
             echo -e "${BLUE}🚀 Running Smart Sync (the magic button!)${NC}"
             cd "$SCRIPT_DIR"
-            bash "$SCRIPTS_DIR/manage-packages.sh"
+            bash "$SCRIPTS_DIR/setup-packages.sh" install
             ;;
         3)
-            echo -e "${BLUE}📊 Package Status${NC}"
+            echo -e "${BLUE}📊 Package Check (Status + Preview)${NC}"
             cd "$SCRIPT_DIR"
-            bash "$SCRIPTS_DIR/manage-packages.sh" status
+            bash "$SCRIPTS_DIR/setup-packages.sh" check
             ;;
         4)
-            echo -e "${BLUE}🔍 Detailed Package Preview${NC}"
-            cd "$SCRIPT_DIR"
-            bash "$SCRIPTS_DIR/manage-packages.sh" preview
-            ;;
-        5)
             run_stow_script "list" "Listing available configs"
             ;;
-        6)
+        5)
             echo "Available configs:"
             run_stow_script "list" "Showing configs"
             echo
@@ -213,10 +295,10 @@ while true; do
                 run_stow_script "install" "Installing $config_name" "$config_name"
             fi
             ;;
-        7)
+        6)
             run_stow_script "install" "Installing all configs" "all"
             ;;
-        8)
+        7)
             echo "Available configs:"
             run_stow_script "list" "Showing configs"
             echo
@@ -225,27 +307,47 @@ while true; do
                 run_stow_script "remove" "Removing $config_name" "$config_name"
             fi
             ;;
-        9)
-            echo -e "${BLUE}🔧 Configuring Essential Services${NC}"
-            cd "$SCRIPT_DIR"
-            bash "$SCRIPTS_DIR/manage-packages.sh" services
+        z|Z)
+            echo -e "${BLUE}🐚 Shell Setup${NC}"
+            if [[ -f "$SCRIPTS_DIR/setup-shell.sh" ]]; then
+                bash "$SCRIPTS_DIR/setup-shell.sh"
+            else
+                echo -e "${RED}❌ Shell setup script not found${NC}"
+            fi
             ;;
         t|T)
-            echo -e "${BLUE}🎨 Installing & Configuring WhiteSur Themes${NC}"
-            cd "$SCRIPT_DIR"
-            bash "$SCRIPTS_DIR/manage-packages.sh" themes
-            ;;
-        c|C)
-            echo -e "${BLUE}🎨 Configuring System Themes${NC}"
-            cd "$SCRIPT_DIR"
-            bash "$SCRIPTS_DIR/manage-packages.sh" configure-themes
+            echo -e "${BLUE}🎨 Installing Themes${NC}"
+            
+            # Check if themes are already installed
+            themes_exist=false
+            if [[ -d "$HOME/.themes/WhiteSur-Light" ]] || \
+               [[ -d "$HOME/.icons/WhiteSur" ]] || [[ -d "$HOME/.local/share/icons/WhiteSur" ]] || \
+               [[ -d "$HOME/.icons/WhiteSur-cursors" ]] || [[ -d "$HOME/.local/share/icons/WhiteSur-cursors" ]]; then
+                themes_exist=true
+            fi
+            
+            if $themes_exist; then
+                echo
+                echo -e "${YELLOW}🔍 WhiteSur themes are already installed${NC}"
+                read -p "Force reinstall to update? (y/N): " -n 1 -r
+                echo
+                if [[ $REPLY =~ ^[Yy]$ ]]; then
+                    cd "$SCRIPT_DIR"
+                    bash "$SCRIPTS_DIR/setup-themes.sh" install --force
+                else
+                    echo -e "${YELLOW}Using existing themes${NC}"
+                fi
+            else
+                cd "$SCRIPT_DIR"
+                bash "$SCRIPTS_DIR/setup-themes.sh" install
+            fi
             ;;
         h|H)
-            echo -e "${BLUE}🚀 Hyprland Auto-Configuration${NC}"
-            if [[ -f "$SCRIPTS_DIR/hypr-config.sh" ]]; then
-                bash "$SCRIPTS_DIR/hypr-config.sh"
+            echo -e "${BLUE}🖥️  Hyprland Setup${NC}"
+            if [[ -f "$SCRIPTS_DIR/setup-hyprland.sh" ]]; then
+                bash "$SCRIPTS_DIR/setup-hyprland.sh"
             else
-                echo -e "${RED}❌ Hyprland config script not found${NC}"
+                echo -e "${RED}❌ Hyprland setup script not found${NC}"
             fi
             ;;
 
