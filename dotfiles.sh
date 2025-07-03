@@ -145,7 +145,7 @@ show_help() {
     echo -e "${YELLOW}🏠 On Current System:${NC}"
     echo "  1. Smart Sync (packages)"
     echo "  2. Shell Setup (zsh + Oh My Zsh + plugins)"  
-    echo "  3. Hyprland Setup (monitors + workspaces)"
+    echo "  3. Hyprland Setup (device-specific monitors only)"
     echo "  4. Install All Configs (deploy settings)"
     echo "  5. Edit configs normally in ~/.config/"
     echo
@@ -169,9 +169,9 @@ show_help() {
     echo
     echo -e "${YELLOW}🖥️  Hyprland Features:${NC}"
     echo "  • Auto-detects monitors and generates config"
-    echo "  • Smart workspace distribution across monitors"
-    echo "  • Modular configuration (monitors.conf, workspaces.conf)"
-    echo "  • Automatic config includes in main hyprland.conf"
+    echo "  • Device-specific scaling (laptop vs desktop)"
+    echo "  • Only monitors.conf is generated - input/appearance stay universal"
+    echo "  • Keeps git clean - no device conflicts"
     echo
     echo -e "${YELLOW}➕ Adding New Software:${NC}"
     echo "  1. Install software normally (pacman/yay)"
