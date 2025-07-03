@@ -1,65 +1,119 @@
 {
-  // Simple fastfetch configuration
+  "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/json_schema.json",
   "logo": {
-    "source": "auto",
+    "type": "command-raw",
+    "source": "~/.config/fastfetch/scripts/bonsai.sh -n -L 20 -g 20,16 -T -s 1231222333",
+    //"type": "chafa",
+    //"source": "~/.config/fastfetch/gifs/gif.gif",
+    "height": 16,
+    "width": 32,
     "padding": {
-      "top": 1,
-      "left": 2
+        "top": 0,
+        "left": 2,
+        "right": 6
     }
   },
   "display": {
-    "separator": " → "
+    "separator": " ▸ "
   },
   "modules": [
     {
-      "type": "title",
-      "color": {
-        "1": "blue",
-        "2": "cyan"
-      }
+      "type": "title"
     },
-    "separator",
+    {
+      "type": "break"
+    },
+    {
+      "type": "custom",
+      "format": "\u001b[90m┌────────────────────────────────────────────────────────────┐"
+    },
     {
       "type": "os",
-      "key": "OS"
+      "key": "",
+      "keycolor": "red"
     },
     {
       "type": "kernel",
-      "key": "Kernel"
+      "key": "",
+      "keycolor": "red"
     },
     {
-      "type": "uptime",
-      "key": "Uptime"
-    },
-    {
-      "type": "packages",
-      "key": "Packages"
-    },
-    {
-      "type": "shell",
-      "key": "Shell"
+      "type": "de",
+      "key": "",
+      "keycolor": "green"
     },
     {
       "type": "wm",
-      "key": "WM"
+      "key": "",
+      "keycolor": "green"
     },
     {
-      "type": "terminal",
-      "key": "Terminal"
+      "type": "packages",
+      "key": "",
+      "keycolor": "yellow"
     },
-    "separator",
     {
-      "type": "cpu",
-      "key": "CPU"
+      "type": "custom",
+      "format": "\u001b[90m├─────────────────────────────────────────────────────────────┤"
     },
     {
       "type": "memory",
-      "key": "Memory"
+      "key": "",
+      "keycolor": "blue"
+    },
+    {
+      "type": "cpu",
+      "key": "",
+      "keycolor": "blue"
+    },
+    {
+      "type": "gpu",
+      "key": "",
+      "keycolor": "magenta"
+    },
+    {
+      "type": "swap",
+      "key": "",
+      "keycolor": "magenta"
     },
     {
       "type": "disk",
-      "key": "Disk (/)",
-      "folders": ["/"]
+      "key": "",
+      "keycolor": "red"
+    },
+    {
+      "type": "battery",
+      "key": "",
+      "keycolor": "red"
+    },
+    {
+      "type": "custom",
+      "format": "\u001b[90m├─────────────────────────────────────────────────────────────┤"
+    },
+    {
+      "type": "uptime",
+      "key": "",
+      "keycolor": "yellow"
+    },
+    {
+      "type": "terminal",
+      "key": "",
+      "keycolor": "yellow"
+    },
+    {
+      "type": "custom",
+      "format": "\u001b[90m└────────────────────────────────────────────────────────────┘"
+    },
+    {
+      "type": "colors",
+      "paddingLeft": 36,
+      "symbol": "circle",
+      "block": {
+        "width": 10
+      }
+    },
+    {
+      "type": "break"
     }
   ]
 }
