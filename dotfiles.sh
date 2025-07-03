@@ -89,17 +89,27 @@ show_status() {
         echo -e "   Oh My Zsh: ${RED}✗ Not installed${NC}"
     fi
     
-    # Check plugins
-    local plugins=("zsh-autosuggestions" "zsh-syntax-highlighting")
+    # Check plugins (dynamic from zsh-plugins.txt)
     local plugin_status=""
-    for plugin in "${plugins[@]}"; do
-        if [[ -d "$HOME/.oh-my-zsh/custom/plugins/$plugin" ]]; then
-            plugin_status="${plugin_status}✓ "
-        else
-            plugin_status="${plugin_status}✗ "
-        fi
-    done
-    echo -e "   Plugins: ${plugin_status}"
+    local plugin_count=0
+    if [[ -f "$SCRIPT_DIR/zsh-plugins.txt" ]]; then
+        while IFS= read -r plugin_line; do
+            [[ -z "$plugin_line" ]] && continue
+            local plugin_name=$(echo "$plugin_line" | cut -d':' -f1)
+            if [[ -d "$HOME/.oh-my-zsh/custom/plugins/$plugin_name" ]]; then
+                plugin_status="${plugin_status}✓ "
+            else
+                plugin_status="${plugin_status}✗ "
+            fi
+            ((plugin_count++))
+        done < <(grep -v '^#' "$SCRIPT_DIR/zsh-plugins.txt" | grep -v '^[[:space:]]*$')
+    fi
+    
+    if [[ $plugin_count -gt 0 ]]; then
+        echo -e "   Plugins ($plugin_count): ${plugin_status}"
+    else
+        echo -e "   Plugins: ${YELLOW}⚠ No plugin list found${NC}"
+    fi
     
     # Default shell
     local current_shell=$(getent passwd "$USER" | cut -d: -f7 2>/dev/null || echo "$SHELL")
@@ -140,18 +150,19 @@ show_help() {
     echo
     echo -e "${YELLOW}🚀 Quick Start (Recommended):${NC}"
     echo "  • Run 'Complete Setup' - it handles EVERYTHING!"
-    echo "  • Packages, shell, themes, configs - all automated"
+    echo "  • Packages → shell → configs with auto Hyprland setup"
+    echo "  • Themes available separately if needed"
     echo
     echo -e "${YELLOW}🏠 On Current System:${NC}"
-    echo "  1. Smart Sync (packages)"
-    echo "  2. Shell Setup (zsh + Oh My Zsh + plugins)"  
-    echo "  3. Hyprland Setup (device-specific monitors only)"
-    echo "  4. Install All Configs (deploy settings)"
-    echo "  5. Edit configs normally in ~/.config/"
+    echo "  2. Smart Sync (packages)"
+    echo "  z. Shell Setup (zsh + Oh My Zsh + plugins)"  
+    echo "  3. Install All Configs (force or backup mode)"
+    echo "  5. Install Single Config (force or backup mode)"
+    echo "  h. Hyprland Setup (device-specific monitors - auto-runs during config install)"
     echo
     echo -e "${YELLOW}🆕 On New Machine:${NC}"
     echo "  1. Clone dotfiles repo"
-    echo "  2. Complete Setup (packages + shell + hyprland + themes + configs)"
+    echo "  2. Complete Setup (packages → shell → configs with Hyprland auto-setup)"
     echo "  3. Log out and back in for shell changes"
     echo "  4. Done! Everything synced automatically"
     echo
@@ -163,7 +174,25 @@ show_help() {
     echo
     echo -e "${YELLOW}🐚 Shell Features:${NC}"
     echo "  • Automatic zsh + Oh My Zsh installation"
-    echo "  • zsh-autosuggestions & zsh-syntax-highlighting"
+    
+    # Dynamic plugin display from zsh-plugins.txt
+    if [[ -f "$SCRIPT_DIR/zsh-plugins.txt" ]]; then
+        local plugin_names=()
+        while IFS= read -r plugin_line; do
+            [[ -z "$plugin_line" ]] && continue
+            plugin_names+=($(echo "$plugin_line" | cut -d':' -f1))
+        done < <(grep -v '^#' "$SCRIPT_DIR/zsh-plugins.txt" | grep -v '^[[:space:]]*$')
+        
+        if [[ ${#plugin_names[@]} -gt 0 ]]; then
+            local plugin_list=$(IFS=' & '; echo "${plugin_names[*]}")
+            echo "  • $plugin_list"
+        else
+            echo "  • Configurable zsh plugins (edit zsh-plugins.txt)"
+        fi
+    else
+        echo "  • Configurable zsh plugins (create zsh-plugins.txt)"
+    fi
+    
     echo "  • Custom themes and configurations"
     echo "  • Sets zsh as default shell"
     echo
@@ -171,6 +200,7 @@ show_help() {
     echo "  • Auto-detects monitors and generates config"
     echo "  • Device-specific scaling (laptop vs desktop)"
     echo "  • Only monitors.conf is generated - input/appearance stay universal"
+    echo "  • Auto-runs when installing hypr config - no manual setup needed"
     echo "  • Keeps git clean - no device conflicts"
     echo
     echo -e "${YELLOW}➕ Adding New Software:${NC}"
@@ -183,7 +213,7 @@ show_help() {
     echo "  2. Install Config 'newapp'"
     echo "  3. Done! Now it's managed by dotfiles"
     echo
-    echo -e "${GREEN}💡 Pro tip: 'Complete Setup' is now fully automated!${NC}"
+    echo -e "${GREEN}💡 Pro tip: 'Complete Setup' is streamlined - no redundant steps!${NC}"
     echo
 }
 
@@ -228,6 +258,13 @@ while true; do
     case $choice in
         1)
             echo -e "${BLUE}🎯 Complete Setup - Everything at once!${NC}"
+            echo -e "${YELLOW}Note: Complete setup uses FORCE mode (overwrites everything)${NC}"
+            read -p "Continue with force mode? (Y/n): " -n 1 -r
+            echo
+            if [[ $REPLY =~ ^[Nn]$ ]]; then
+                echo "Setup cancelled."
+                continue
+            fi
             cd "$SCRIPT_DIR"
             
 
@@ -240,7 +277,7 @@ while true; do
             # Step 1.5: Themes
             echo -e "${BLUE}Step 1.5: Setting up themes...${NC}"
             if [[ -f "$SCRIPTS_DIR/setup-themes.sh" ]]; then
-                bash "$SCRIPTS_DIR/setup-themes.sh" install --quiet
+                bash "$SCRIPTS_DIR/setup-themes.sh" --quiet
             else
                 echo -e "${YELLOW}⚠️  Theme setup script not found, skipping...${NC}"
             fi
@@ -249,39 +286,27 @@ while true; do
             # Step 2: Shell setup  
             echo -e "${BLUE}Step 2: Setting up shell (zsh + Oh My Zsh + plugins)...${NC}"
             if [[ -f "$SCRIPTS_DIR/setup-shell.sh" ]]; then
-                bash "$SCRIPTS_DIR/setup-shell.sh" install --quiet
+                bash "$SCRIPTS_DIR/setup-shell.sh"
             else
                 echo -e "${YELLOW}⚠️  Shell setup script not found, skipping...${NC}"
             fi
             echo
             
-            # Step 3: Hyprland setup
-            echo -e "${BLUE}Step 3: Setting up Hyprland...${NC}"
-            if [[ -f "$SCRIPTS_DIR/setup-hyprland.sh" ]]; then
-                bash "$SCRIPTS_DIR/setup-hyprland.sh" setup --quiet
-            else
-                echo -e "${YELLOW}⚠️  Hyprland setup script not found, skipping...${NC}"
-            fi
-            echo
-            
-                        # Step 4: Install configs (force mode for complete setup)
-            echo -e "${BLUE}Step 4: Installing configs (force mode)...${NC}"
-            echo -e "${BLUE}4a. Installing system config first (avoids race conditions)...${NC}"
+            # Step 3: Install configs (force mode for complete setup)
+            echo -e "${BLUE}Step 3: Installing configs (force mode)...${NC}"
+            echo -e "${BLUE}3a. Installing system config first (avoids race conditions)...${NC}"
             cd "$STOW_DIR"
             bash manage-configs.sh install system --force
             echo
             
-            echo -e "${BLUE}4b. Installing remaining configs...${NC}"
+            echo -e "${BLUE}3b. Installing remaining configs...${NC}"
             for config in */; do
                 config=${config%/}
                 [[ "$config" == "manage-configs.sh" ]] && continue
                 [[ "$config" == "system" ]] && continue  # Already installed
-                echo "Installing $config..."
-                if bash manage-configs.sh install "$config" --force 2>/dev/null; then
-                    echo "✅ Successfully linked $config"
-                else
-                    echo "❌ Failed to link $config"
-                fi
+                
+                # Install config (let manage-configs.sh handle output)
+                bash manage-configs.sh install "$config" --force
             done
             echo "🎉 All configs processed!"
             cd "$SCRIPT_DIR"  # Return to dotfiles root
@@ -290,8 +315,9 @@ while true; do
             echo -e "${GREEN}🎉 Complete setup finished!${NC}"
             echo -e "${YELLOW}💡 Next steps:${NC}"
             echo "  • Log out and back in for shell changes to take effect"
-            echo "  • Restart desktop environment for themes"
+            echo "  • Restart desktop environment for themes (if installed)"
             echo "  • Open new terminal to see Oh My Zsh in action"
+            echo "  • Hyprland monitors configured automatically"
             ;;
         2)
             echo -e "${BLUE}🚀 Running Smart Sync (the magic button!)${NC}"
@@ -312,11 +338,38 @@ while true; do
             echo
             read -p "Enter config name to install: " config_name
             if [[ ! -z "$config_name" ]]; then
-                run_stow_script "install" "Installing $config_name" "$config_name"
+                echo
+                echo "Choose installation mode:"
+                echo "  1) Force - Just overwrite everything (recommended)"
+                echo "  2) Backup - Create .bak files before overwriting"
+                read -p "Mode (1-2): " mode_choice
+                
+                case "$mode_choice" in
+                    1) mode_flag="--force" ;;
+                    2) mode_flag="--backup" ;;
+                    *) mode_flag="--force" ;;  # Default to force
+                esac
+                
+                cd "$STOW_DIR"
+                echo -e "${BLUE}🔗 Installing $config_name with $(echo $mode_flag | sed 's/--//' | tr '[:lower:]' '[:upper:]') mode...${NC}"
+                bash manage-configs.sh install "$config_name" $mode_flag
             fi
             ;;
         6)
-            run_stow_script "install" "Installing all configs" "all"
+            echo "Choose installation mode for ALL configs:"
+            echo "  1) Force - Just overwrite everything (recommended)"
+            echo "  2) Backup - Create .bak files before overwriting"
+            read -p "Mode (1-2): " mode_choice
+            
+            case "$mode_choice" in
+                1) mode_flag="--force" ;;
+                2) mode_flag="--backup" ;;
+                *) mode_flag="--force" ;;  # Default to force
+            esac
+            
+            cd "$STOW_DIR"
+            echo -e "${BLUE}🔗 Installing ALL configs with $(echo $mode_flag | sed 's/--//' | tr '[:lower:]' '[:upper:]') mode...${NC}"
+            bash manage-configs.sh install all $mode_flag
             ;;
         7)
             echo "Available configs:"
@@ -353,13 +406,13 @@ while true; do
                 echo
                 if [[ $REPLY =~ ^[Yy]$ ]]; then
                     cd "$SCRIPT_DIR"
-                    bash "$SCRIPTS_DIR/setup-themes.sh" install --force
+                    bash "$SCRIPTS_DIR/setup-themes.sh" --force
                 else
                     echo -e "${YELLOW}Using existing themes${NC}"
                 fi
             else
                 cd "$SCRIPT_DIR"
-                bash "$SCRIPTS_DIR/setup-themes.sh" install
+                bash "$SCRIPTS_DIR/setup-themes.sh"
             fi
             ;;
         h|H)

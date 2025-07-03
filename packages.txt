@@ -129,6 +129,7 @@ slack-desktop
 socat
 solid5
 spotify
+starship
 stow
 swayosd
 swww

@@ -1,13 +1,13 @@
 #!/bin/bash
 # Creates/removes symlinks between dotfiles and system configs
+# Pure symlink management - no software installation
 
 # Parse mode flags
-MODE="default"  # default, force, backup, preview
+MODE="default"  # default, force, backup
 for arg in "$@"; do
     case "$arg" in
         --force)   MODE="force" ;;
         --backup)  MODE="backup" ;;
-        --preview) MODE="preview" ;;
     esac
 done
 
@@ -28,14 +28,6 @@ handle_conflict() {
                 echo "⚠️  Found existing $description"
                 echo "📦 Backing up to $target.bak"
                 mv "$target" "$target.bak"
-            fi
-            return 0
-            ;;
-        "preview")
-            # Just show what would be overwritten
-            if [[ -e "$target" && ! -L "$target" ]]; then
-                echo "⚠️  Would overwrite: $description"
-                return 1  # Don't actually install in preview mode
             fi
             return 0
             ;;
@@ -89,17 +81,18 @@ case "$1" in
     if [[ -z "$2" ]]; then
         echo "Available configs:"
         ls -1 | grep -v manage-configs.sh | grep -v '\.sh$'
-        echo "Usage: $0 install <config-name> [--force|--backup|--preview]"
-        echo " or: $0 install all [--force|--backup|--preview]"
+        echo "Usage: $0 install <config-name> [--force|--backup]"
+        echo " or: $0 install all [--force|--backup]"
         echo ""
         echo "Modes:"
         echo "  --force   Overwrite everything (recommended)"
         echo "  --backup  Create .bak files before overwriting"
-        echo "  --preview Show what would be overwritten (safe)"
+        echo ""
+        echo "💡 For software setup (Oh My Zsh, Hyprland, etc.), use dedicated scripts:"
+        echo "   dotfiles.sh → Shell Setup (Z) for Oh My Zsh + plugins"
+        echo "   dotfiles.sh → Hyprland Setup (H) for monitors"
     elif [[ "$2" == "all" ]]; then
         echo "🔗 Installing all configs..."
-        
-
         
         for config in */; do
             config=${config%/}
@@ -113,58 +106,24 @@ case "$1" in
                 continue
             fi
             
-            # Only actually stow if not in preview mode
-            if [[ "$MODE" == "preview" ]]; then
-                echo "👁️  Would link $config"
-                continue
-            fi
-            
+            # Stow the config
             if stow -t "$HOME" "$config" 2>/dev/null; then
                 echo "✅ Successfully linked $config"
-                
-                # Auto-setup Hyprland configuration when installing hypr config in batch mode
-                if [[ "$config" == "hypr" ]]; then
-                    echo
-                    echo "🚀 Auto-configuring Hyprland for your device..."
-                    dotfiles_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-                    hypr_setup_script="$dotfiles_dir/scripts/setup-hyprland.sh"
-                    
-                    if [[ -f "$hypr_setup_script" ]]; then
-                        bash "$hypr_setup_script" setup --quiet
-                    else
-                        echo "⚠️  Hyprland setup script not found, skipping auto-configuration"
-                    fi
-                fi
             else
                 echo "❌ Failed to link $config"
             fi
         done
         echo "🎉 All configs processed!"
+        echo ""
+        echo "💡 Next steps for full setup:"
+        echo "   • Shell: dotfiles.sh → Shell Setup (Z) for Oh My Zsh + plugins"
+        echo "   • Hyprland: dotfiles.sh → Hyprland Setup (H) for monitor config"
     else
         echo "🔗 Linking $2..."
-        
-        # Install Oh My Zsh if needed (dependency for shell config)
-        if [[ "$2" == "shell" && ! -d "$HOME/.oh-my-zsh" ]]; then
-            echo "🚀 Installing Oh My Zsh (required for shell config)..."
-            sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
-            
-            # Install required plugins
-            echo "📦 Installing zsh plugins..."
-            git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions 2>/dev/null || true
-            git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting 2>/dev/null || true
-            
-            echo "✅ Oh My Zsh setup complete!"
-        fi
         
         # Handle conflicts based on mode
         if ! handle_config_conflicts "$2"; then
             echo "⏭️  Skipped $2"
-            exit 0
-        fi
-        
-        # Only actually stow if not in preview mode
-        if [[ "$MODE" == "preview" ]]; then
-            echo "👁️  Would link $2"
             exit 0
         fi
         
@@ -176,20 +135,19 @@ case "$1" in
                 echo "📁 Created: ~/.config/$2 -> $(readlink ~/.config/$2)"
             fi
             
-            # Auto-setup Hyprland configuration when installing hypr config
-            if [[ "$2" == "hypr" ]]; then
-                echo
-                echo "🚀 Auto-configuring Hyprland for your device..."
-                dotfiles_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-                hypr_setup_script="$dotfiles_dir/scripts/setup-hyprland.sh"
-                
-                if [[ -f "$hypr_setup_script" ]]; then
-                    bash "$hypr_setup_script" setup --quiet
-                else
-                    echo "⚠️  Hyprland setup script not found, skipping auto-configuration"
-                    echo "💡 You can run Hyprland setup later with: dotfiles.sh -> Hyprland Setup"
-                fi
-            fi
+            # Give helpful hints for configs that need additional setup
+            case "$2" in
+                "shell")
+                    echo ""
+                    echo "💡 For complete shell setup with Oh My Zsh + plugins:"
+                    echo "   dotfiles.sh → Shell Setup (Z)"
+                    ;;
+                "hypr")
+                    echo ""
+                    echo "💡 For Hyprland monitor configuration:"
+                    echo "   dotfiles.sh → Hyprland Setup (H)"
+                    ;;
+            esac
         else
             echo "❌ Failed to link $2"
             echo "💡 Run with verbose mode to see details:"
@@ -287,6 +245,19 @@ case "$1" in
                     echo "    📦 Has backups in ~/.config/"
                 fi
                 ;;
+            "shell")
+                # Shell config backups are in home directory, not ~/.config/
+                has_shell_backup=false
+                for file in .zshrc .profile .zprofile; do
+                    if [ -e "$HOME/$file.bak" ]; then
+                        has_shell_backup=true
+                        break
+                    fi
+                done
+                if $has_shell_backup; then
+                    echo "    📦 Has backup: ~/shell-files.bak"
+                fi
+                ;;
             *)
                 if [ -e "$HOME/.config/$config.bak" ]; then
                     echo "    📦 Has backup: ~/.config/$config.bak"
@@ -313,9 +284,8 @@ case "$1" in
             
             # Restore backup
             mv "$backup" "$original"
-            echo "✅ Restored: $original"
+            echo "✅ Restored $(basename "$original")"
         done
-        echo "🎉 All backups restored!"
     else
         backup_file="$HOME/.config/$2.bak"
         original_file="$HOME/.config/$2"
@@ -324,25 +294,38 @@ case "$1" in
             echo "🔄 Restoring $2..."
             rm -rf "$original_file" 2>/dev/null
             mv "$backup_file" "$original_file"
-            echo "✅ Restored: $original_file"
+            echo "✅ Restored $2"
         else
             echo "❌ No backup found for $2"
-            echo "Expected: $backup_file"
         fi
     fi
     ;;
-
 *)
-    echo "⚙️ Config Manager"
-    echo "Usage: $0 <command> [config]"
-    echo
+    echo "Dotfiles Config Manager - Pure Symlink Management"
+    echo ""
+    echo "Usage: $0 <command> [config-name] [options]"
+    echo ""
     echo "Commands:"
-    echo " install <config> - Link config (auto-backup conflicts)"
-    echo " install all     - Link all configs"
-    echo " remove <config> - Unlink config"
-    echo " remove all      - Unlink all configs"
-    echo " restore <config> - Restore backed up config"
-    echo " restore all     - Restore all backed up configs"
-    echo " list           - Show available configs and backups"
+    echo "  install <config>   Create symlinks for config"
+    echo "  install all        Create symlinks for all configs"
+    echo "  remove <config>    Remove symlinks for config"
+    echo "  remove all         Remove all symlinks"
+    echo "  list               Show config status and backups"
+    echo "  restore <config>   Restore backup for config"
+    echo "  restore all        Restore all backups"
+    echo ""
+    echo "Options:"
+    echo "  --force            Overwrite existing files"
+    echo "  --backup           Create .bak files before overwriting"
+    echo ""
+    echo "Examples:"
+    echo "  $0 install hypr --force     # Link Hyprland config, overwrite existing"
+    echo "  $0 install all --backup     # Link all configs, backup existing files"
+    echo "  $0 list                     # Show which configs are linked"
+    echo ""
+    echo "💡 For software setup, use dedicated scripts:"
+    echo "   dotfiles.sh → Shell Setup (Z) for Oh My Zsh + plugins"
+    echo "   dotfiles.sh → Hyprland Setup (H) for monitor configuration"
+    echo "   dotfiles.sh → Package Sync for package installation"
     ;;
 esac

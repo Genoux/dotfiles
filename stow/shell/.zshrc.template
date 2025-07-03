@@ -96,18 +96,14 @@ ZSH_THEME=""
 # Add wisely, as too many plugins slow down shell startup.
 # Plugins (auto-generated from zsh-plugins.txt + built-in plugins)
 # Built-in Oh My Zsh plugins: git, command-not-found, sudo, history, dirhistory
-# External plugins from zsh-plugins.txt: zsh-autosuggestions,zsh-syntax-highlighting,zsh-completions,fast-syntax-highlighting,zsh-history-substring-search
+# External plugins from zsh-plugins.txt: {{EXTERNAL_PLUGINS}}
 plugins=(
   git
   command-not-found
   sudo
   history
   dirhistory
-  zsh-autosuggestions
-  zsh-syntax-highlighting
-  zsh-completions
-  fast-syntax-highlighting
-  zsh-history-substring-search
+{{EXTERNAL_PLUGINS_ARRAY}}
 )
 
 source $ZSH/oh-my-zsh.sh

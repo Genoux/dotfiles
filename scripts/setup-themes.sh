@@ -1,55 +1,21 @@
 #!/bin/bash
 
-# setup-themes.sh - Theme installation and management
-# Focuses only on theme setup
+# setup-themes.sh - WhiteSur theme installation
+# Internal worker script - called by dotfiles.sh to install WhiteSur themes
 
 set -e
 
-# Source utilities
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/utils.sh"
 
-show_help() {
-    log_section "Theme Setup Manager"
-    echo "Usage: $0 [command] [options]"
-    echo
-    echo "Commands:"
-    echo -e "  ${GREEN}install${NC}     Install WhiteSur themes (default)"
-    echo -e "  ${GREEN}status${NC}      Check theme installation status"
-    echo
-    echo "Options:"
-    echo "  --force       Reinstall themes even if they exist"
-    echo "  --quiet       Minimal output"
-}
-
-# Parse arguments
-COMMAND="install"
+# Simple flag parsing
 FORCE=false
 QUIET=false
 
-while [[ $# -gt 0 ]]; do
-    case $1 in
-        install|status)
-            COMMAND="$1"
-            shift
-            ;;
-        --force)
-            FORCE=true
-            shift
-            ;;
-        --quiet)
-            QUIET=true
-            shift
-            ;;
-        -h|--help)
-            show_help
-            exit 0
-            ;;
-        *)
-            log_error "Unknown option: $1"
-            show_help
-            exit 1
-            ;;
+for arg in "$@"; do
+    case $arg in
+        --force) FORCE=true ;;
+        --quiet) QUIET=true ;;
     esac
 done
 
@@ -169,79 +135,34 @@ install_cursor_theme() {
     return 0
 }
 
-# Show theme status
-cmd_status() {
-    log_section "Theme Status"
-    
-    # Check each theme component
-    local themes=("GTK:gtk" "Icons:icons" "Cursors:cursors")
-    
-    for theme_info in "${themes[@]}"; do
-        local name=$(echo "$theme_info" | cut -d':' -f1)
-        local type=$(echo "$theme_info" | cut -d':' -f2)
-        local status=$(check_theme_status "$type")
-        
-        if [[ "$status" == "installed" ]]; then
-            log_success "$name theme installed"
-        else
-            log_warning "$name theme not installed"
-        fi
-    done
-    
+# Main execution - install all themes
+if [[ "$QUIET" != true ]]; then
+    log_section "Installing WhiteSur Themes"
+    start_timer
+fi
+
+failed=0
+
+# Install GTK theme
+install_gtk_theme || ((failed++))
+
+# Install icon theme
+install_icon_theme || ((failed++))
+
+# Install cursor theme
+install_cursor_theme || ((failed++))
+
+if [[ "$QUIET" != true ]]; then
     echo
-    echo -e "${BLUE}💡 Usage:${NC}"
-    echo "  • After installing themes, restart your desktop environment"
-    echo "  • Configure themes in your desktop settings"
-    echo "  • GTK themes: ~/.themes/"
-    echo "  • Icon themes: ~/.icons/ or ~/.local/share/icons/"
-    echo "  • Cursor themes: ~/.icons/ or ~/.local/share/icons/"
-}
-
-# Install all themes
-cmd_install() {
-    if [[ "$QUIET" != true ]]; then
-        log_section "Installing WhiteSur Themes"
-        start_timer
-    fi
-    
-    local failed=0
-    
-    # Install GTK theme
-    install_gtk_theme || ((failed++))
-    
-    # Install icon theme
-    install_icon_theme || ((failed++))
-    
-    # Install cursor theme
-    install_cursor_theme || ((failed++))
-    
-    if [[ "$QUIET" != true ]]; then
+    if [[ $failed -eq 0 ]]; then
+        log_success "All themes installed successfully! ($(stop_timer))"
         echo
-        if [[ $failed -eq 0 ]]; then
-            log_success "All themes installed successfully! ($(stop_timer))"
-            echo
-            echo -e "${YELLOW}💡 Next steps:${NC}"
-            echo "  • Restart your desktop environment"
-            echo "  • Configure themes in your settings"
-        else
-            log_warning "$failed theme(s) failed to install"
-        fi
+        echo -e "${YELLOW}💡 Next steps:${NC}"
+        echo "  • Restart your desktop environment"
+        echo "  • Configure themes in your settings"
+    else
+        log_warning "$failed theme(s) failed to install"
     fi
-    
-    return $failed
-}
+fi
 
-# Execute command
-case "$COMMAND" in
-    install)
-        cmd_install
-        ;;
-    status)
-        cmd_status
-        ;;
-    *)
-        log_error "Unknown command: $COMMAND"
-        show_help
-        exit 1
-        ;;
-esac 
+exit $failed 

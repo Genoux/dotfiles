@@ -52,3 +52,4 @@ stow/ags/.config/ags/*.logmonitors.conf
 
 # Hyprland specific
 *.backup.*
+stow/hypr/.config/hypr/monitors.conf

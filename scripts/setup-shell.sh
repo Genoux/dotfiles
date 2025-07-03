@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # setup-shell.sh - Complete shell setup (zsh, Oh My Zsh, plugins)
-# Handles shell extensions installation automatically
+# Internal worker script - called by dotfiles.sh to set up complete shell environment
 
 set -e
 
@@ -16,62 +16,16 @@ NC='\033[0m'
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DOTFILES_DIR="$(dirname "$SCRIPT_DIR")"
 
-show_help() {
-    echo -e "${BLUE}🐚 Shell Setup Manager${NC}"
-    echo
-    echo "Usage: $0 [command] [options]"
-    echo
-    echo "Commands:"
-    echo -e "  ${GREEN}install${NC}     Complete shell setup (default)"
-    echo -e "  ${GREEN}omz${NC}         Install Oh My Zsh only"
-    echo -e "  ${GREEN}plugins${NC}     Install zsh plugins only"
-    echo -e "  ${GREEN}status${NC}      Check installation status"
-    echo
-    echo "Options:"
-    echo "  --force       Skip confirmations and reinstall"
-    echo "  --quiet       Minimal output"
-    echo
-    echo "Examples:"
-    echo -e "  ${GREEN}$0${NC}                   # Complete shell setup"
-    echo -e "  ${GREEN}$0 install --force${NC}  # Force reinstall everything"
-    echo -e "  ${GREEN}$0 plugins${NC}          # Just install plugins"
-}
-
-# Parse arguments
-COMMAND=""
+# Simple flag parsing
 FORCE=false
 QUIET=false
 
-while [[ $# -gt 0 ]]; do
-    case $1 in
-        install|omz|plugins|status)
-            COMMAND="$1"
-            shift
-            ;;
-        --force)
-            FORCE=true
-            shift
-            ;;
-        --quiet)
-            QUIET=true
-            shift
-            ;;
-        -h|--help)
-            show_help
-            exit 0
-            ;;
-        *)
-            echo -e "${RED}❌ Unknown option: $1${NC}"
-            show_help
-            exit 1
-            ;;
+for arg in "$@"; do
+    case $arg in
+        --force) FORCE=true ;;
+        --quiet) QUIET=true ;;
     esac
 done
-
-# Default to install if no command given
-if [[ -z "$COMMAND" ]]; then
-    COMMAND="install"
-fi
 
 # Check if zsh is installed
 check_zsh() {
@@ -97,7 +51,7 @@ install_omz() {
     local omz_status=$(check_omz_status)
     
     if [[ "$omz_status" == "installed" && "$FORCE" != true ]]; then
-        [[ "$QUIET" != true ]] && echo -e "${GREEN}✅ Oh My Zsh already installed${NC}"
+        echo -e "${GREEN}✅ Oh My Zsh already installed${NC}"
         return 0
     fi
     
@@ -107,10 +61,12 @@ install_omz() {
     fi
     
     echo -e "${BLUE}📦 Installing Oh My Zsh...${NC}"
+    echo -e "   📥 Downloading installer..."
     
     # Download and run installer
     local temp_file=$(mktemp)
     if curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh > "$temp_file"; then
+        echo -e "   🚀 Running installer..."
         # Run installer in unattended mode
         env RUNZSH=no CHSH=no sh "$temp_file"
         
@@ -129,6 +85,20 @@ install_omz() {
     
     rm -f "$temp_file"
     return 0
+}
+
+# Read plugins from file
+read_plugins_file() {
+    local plugins_file="$DOTFILES_DIR/zsh-plugins.txt"
+    
+    if [[ ! -f "$plugins_file" ]]; then
+        echo -e "${RED}❌ Plugin list not found: $plugins_file${NC}"
+        echo -e "${BLUE}💡 Create the file with format: plugin-name:repository-url${NC}"
+        return 1
+    fi
+    
+    # Read non-comment, non-empty lines
+    grep -v '^#' "$plugins_file" | grep -v '^[[:space:]]*$'
 }
 
 # Check plugin installation status
@@ -152,24 +122,39 @@ install_plugins() {
     
     echo -e "${BLUE}🔌 Installing zsh plugins...${NC}"
     
-    # Define plugins to install (based on .zshrc config)
-    local plugins=(
-        "zsh-autosuggestions:https://github.com/zsh-users/zsh-autosuggestions.git"
-        "zsh-syntax-highlighting:https://github.com/zsh-users/zsh-syntax-highlighting.git"
-    )
+    # Read plugins from file
+    local plugin_list
+    if ! plugin_list=$(read_plugins_file); then
+        return 1
+    fi
+    
+    if [[ -z "$plugin_list" ]]; then
+        echo -e "${YELLOW}⚠️  No plugins found in zsh-plugins.txt${NC}"
+        return 0
+    fi
+    
+    local plugin_count=$(echo "$plugin_list" | wc -l)
+    echo -e "${BLUE}📋 Found $plugin_count plugins to process...${NC}"
     
     local plugins_dir="$HOME/.oh-my-zsh/custom/plugins"
     mkdir -p "$plugins_dir"
     
-    for plugin_info in "${plugins[@]}"; do
+    # Process each plugin line
+    local processed_count=0
+    while IFS= read -r plugin_info; do
+        [[ -z "$plugin_info" ]] && continue
+        
         local plugin_name=$(echo "$plugin_info" | cut -d':' -f1)
-        local plugin_url=$(echo "$plugin_info" | cut -d':' -f2)
+        local plugin_url=$(echo "$plugin_info" | cut -d':' -f2-)
         local plugin_dir="$plugins_dir/$plugin_name"
+        
+        processed_count=$((processed_count + 1))
+        echo -e "${BLUE}Processing plugin $processed_count/$plugin_count: $plugin_name${NC}"
         
         local status=$(check_plugin_status "$plugin_name")
         
         if [[ "$status" == "installed" && "$FORCE" != true ]]; then
-            [[ "$QUIET" != true ]] && echo -e "  ${GREEN}✅${NC} $plugin_name already installed"
+            echo -e "  ${GREEN}✅${NC} $plugin_name already installed"
             continue
         fi
         
@@ -178,13 +163,16 @@ install_plugins() {
             rm -rf "$plugin_dir"
         fi
         
-        echo -e "  ${BLUE}📦${NC} Installing $plugin_name..."
-        if git clone "$plugin_url" "$plugin_dir" --depth=1; then
+        echo -e "  ${BLUE}📦${NC} Installing $plugin_name from $plugin_url..."
+        if timeout 30 git clone "$plugin_url" "$plugin_dir" --depth=1 2>&1; then
             echo -e "  ${GREEN}✅${NC} $plugin_name installed successfully"
         else
             echo -e "  ${RED}❌${NC} Failed to install $plugin_name"
+            echo -e "      ${RED}Error details: Clone failed or timed out for $plugin_url${NC}"
         fi
-    done
+    done <<< "$plugin_list"
+    
+    echo -e "${GREEN}✅ Plugin installation complete! ($plugin_count plugins processed)${NC}"
 }
 
 # Set zsh as default shell
@@ -193,11 +181,15 @@ set_default_shell() {
     local zsh_path=$(which zsh)
     
     if [[ "$current_shell" == "$zsh_path" ]]; then
-        [[ "$QUIET" != true ]] && echo -e "${GREEN}✅ zsh is already the default shell${NC}"
+        echo -e "${GREEN}✅ zsh is already the default shell${NC}"
         return 0
     fi
     
     echo -e "${BLUE}🔧 Setting zsh as default shell...${NC}"
+    
+    # Always show password prompt clearly, even in quiet mode
+    echo -e "${YELLOW}🔐 Password required to change default shell${NC}"
+    echo -e "${BLUE}💡 Running: chsh -s $zsh_path${NC}"
     
     if chsh -s "$zsh_path"; then
         echo -e "${GREEN}✅ Default shell changed to zsh${NC}"
@@ -205,130 +197,103 @@ set_default_shell() {
     else
         echo -e "${RED}❌ Failed to change default shell${NC}"
         echo -e "${BLUE}💡 You can manually run: chsh -s $zsh_path${NC}"
+        echo -e "${YELLOW}   (This is optional - shell config will work anyway)${NC}"
         return 1
     fi
 }
 
-# Command functions
-cmd_status() {
-    echo -e "${BLUE}🐚 Shell Setup Status${NC}"
-    echo
+# Process shell config template (auto-sync plugins)
+process_shell_template() {
+    local master_template="$DOTFILES_DIR/stow/shell/.zshrc.template"
+    local target_file="$DOTFILES_DIR/stow/shell/.zshrc"
+    local temp_file=$(mktemp)
     
-    # Check zsh
-    if command -v zsh &> /dev/null; then
-        echo -e "${GREEN}✅ zsh:${NC} $(zsh --version | cut -d' ' -f2)"
-    else
-        echo -e "${RED}❌ zsh:${NC} Not installed"
+    if [[ "$QUIET" != true ]]; then
+        echo -e "${BLUE}🔄 Auto-syncing .zshrc with plugins from zsh-plugins.txt...${NC}"
     fi
     
-    # Check Oh My Zsh
-    local omz_status=$(check_omz_status)
-    if [[ "$omz_status" == "installed" ]]; then
-        local omz_version=""
-        if [[ -f "$HOME/.oh-my-zsh/tools/upgrade.sh" ]]; then
-            omz_version="$(cd "$HOME/.oh-my-zsh" && git describe --tags 2>/dev/null || echo "unknown")"
+    # Always start from master template to preserve placeholders
+    if [[ ! -f "$master_template" ]]; then
+        echo -e "${RED}❌ Master template not found: $master_template${NC}"
+        return 1
+    fi
+    
+    # Read external plugins from zsh-plugins.txt
+    local external_plugins=()
+    local external_plugins_list=""
+    
+    local plugin_list
+    if plugin_list=$(read_plugins_file 2>/dev/null); then
+        while IFS= read -r plugin_line; do
+            [[ -z "$plugin_line" ]] && continue
+            local plugin_name=$(echo "$plugin_line" | cut -d':' -f1)
+            external_plugins+=("$plugin_name")
+        done <<< "$plugin_list"
+        
+        if [[ ${#external_plugins[@]} -gt 0 ]]; then
+            external_plugins_list=$(IFS=', '; echo "${external_plugins[*]}")
+            # Create plugin array entries (properly indented)
+            local plugin_array=""
+            for plugin in "${external_plugins[@]}"; do
+                plugin_array="${plugin_array}  ${plugin}"$'\n'
+            done
+            # Remove trailing newline
+            plugin_array=$(echo -n "$plugin_array" | sed '$s/$//')
         fi
-        echo -e "${GREEN}✅ Oh My Zsh:${NC} Installed${omz_version:+ ($omz_version)}"
-    else
-        echo -e "${RED}❌ Oh My Zsh:${NC} Not installed"
     fi
     
-    # Check plugins
-    echo
-    echo -e "${BLUE}🔌 Plugin Status:${NC}"
-    local plugins=("zsh-autosuggestions" "zsh-syntax-highlighting")
-    
-    for plugin in "${plugins[@]}"; do
-        local status=$(check_plugin_status "$plugin")
-        if [[ "$status" == "installed" ]]; then
-            echo -e "  ${GREEN}✅${NC} $plugin"
+    # Process master template and replace placeholders
+    # Simple line-by-line processing from master template
+    while IFS= read -r line; do
+        if [[ "$line" == *"{{EXTERNAL_PLUGINS}}"* ]]; then
+            echo "${line//\{\{EXTERNAL_PLUGINS\}\}/$external_plugins_list}" >> "$temp_file"
+        elif [[ "$line" == *"{{EXTERNAL_PLUGINS_ARRAY}}"* ]]; then
+            # Replace with external plugins, each on its own line
+            if [[ -n "$plugin_array" ]]; then
+                echo "$plugin_array" >> "$temp_file"
+            fi
         else
-            echo -e "  ${RED}❌${NC} $plugin"
+            echo "$line" >> "$temp_file"
         fi
-    done
+    done < "$master_template"
     
-    # Check default shell
-    echo
-    local current_shell=$(getent passwd "$USER" | cut -d: -f7)
-    local zsh_path=$(which zsh 2>/dev/null || echo "")
-    
-    if [[ "$current_shell" == "$zsh_path" && -n "$zsh_path" ]]; then
-        echo -e "${GREEN}✅ Default shell:${NC} zsh"
-    else
-        echo -e "${YELLOW}⚠️  Default shell:${NC} $current_shell (not zsh)"
-    fi
+    # Replace target file with processed version (master template stays intact)
+    mv "$temp_file" "$target_file"
+    echo -e "${GREEN}✅ .zshrc synced with ${#external_plugins[@]} external plugins${NC}"
 }
 
-cmd_install() {
-    echo -e "${BLUE}🚀 Complete Shell Setup${NC}"
-    echo
-    
-    # Check prerequisites
-    if ! check_zsh; then
-        return 1
-    fi
-    
-    # Step 1: Install Oh My Zsh
-    echo -e "${BLUE}Step 1: Installing Oh My Zsh...${NC}"
-    if ! install_omz; then
-        echo -e "${RED}❌ Failed to install Oh My Zsh${NC}"
-        return 1
-    fi
-    echo
-    
-    # Step 2: Install plugins
-    echo -e "${BLUE}Step 2: Installing plugins...${NC}"
-    install_plugins
-    echo
-    
-    # Step 3: Set default shell
-    echo -e "${BLUE}Step 3: Setting default shell...${NC}"
-    set_default_shell
-    echo
-    
-    echo -e "${GREEN}🎉 Shell setup complete!${NC}"
-    echo
-    echo -e "${YELLOW}📋 Next steps:${NC}"
-    echo "  • Install shell configs: dotfiles.sh → Install Config → shell"
-    echo "  • Log out and back in for shell changes"
-    echo "  • Open new terminal to see Oh My Zsh in action"
-}
+# Main execution - complete shell setup
+echo -e "${BLUE}🚀 Complete Shell Setup${NC}"
+echo
 
-cmd_omz() {
-    echo -e "${BLUE}📦 Installing Oh My Zsh Only${NC}"
-    echo
-    
-    if ! check_zsh; then
-        return 1
-    fi
-    
-    install_omz
-}
+# Check prerequisites
+if ! check_zsh; then
+    exit 1
+fi
 
-cmd_plugins() {
-    echo -e "${BLUE}🔌 Installing Plugins Only${NC}"
-    echo
-    
-    install_plugins
-}
+# Step 1: Install Oh My Zsh
+echo -e "${BLUE}Step 1: Installing Oh My Zsh...${NC}"
+if ! install_omz; then
+    echo -e "${RED}❌ Failed to install Oh My Zsh${NC}"
+    exit 1
+fi
+echo
 
-# Execute command
-case "$COMMAND" in
-    install)
-        cmd_install
-        ;;
-    omz)
-        cmd_omz
-        ;;
-    plugins)
-        cmd_plugins
-        ;;
-    status)
-        cmd_status
-        ;;
-    *)
-        echo -e "${RED}❌ Unknown command: $COMMAND${NC}"
-        show_help
-        exit 1
-        ;;
-esac 
+# Step 2: Install plugins
+echo -e "${BLUE}Step 2: Installing plugins...${NC}"
+install_plugins
+echo
+
+# Step 3: Sync .zshrc template
+echo -e "${BLUE}Step 3: Syncing .zshrc with plugin list...${NC}"
+process_shell_template
+echo
+
+# Step 4: Set default shell
+echo -e "${BLUE}Step 4: Setting default shell...${NC}"
+if ! set_default_shell; then
+    echo -e "${YELLOW}⚠️  Shell setup will continue (default shell change is optional)${NC}"
+fi
+echo
+
+echo -e "${GREEN}🎉 Shell setup complete!${NC}" 

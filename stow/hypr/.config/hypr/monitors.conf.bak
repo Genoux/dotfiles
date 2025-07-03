@@ -1,0 +1,9 @@
+# Auto-generated monitor configuration
+# Generated on Thu Jul  3 01:00:22 PM EDT 2025
+# Device type: desktop
+# Only monitors are device-specific - input/appearance stay universal
+
+monitor = DP-6,1920x1080@60.00000,0x0,1
+
+# Fallback for unrecognized monitors
+monitor = ,preferred,auto,1

@@ -16,30 +16,7 @@ NC='\033[0m'
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DOTFILES_DIR="$(dirname "$SCRIPT_DIR")"
 
-show_help() {
-    echo -e "${BLUE}📦 Package Manager for Dotfiles${NC}"
-    echo
-    echo "Usage: $0 [command] [options]"
-    echo
-    echo "Commands:"
-    echo -e "  ${GREEN}install${NC}   Smart sync packages (default)"
-    echo -e "  ${GREEN}check${NC}     Check package status and preview changes"
-    echo -e "  ${GREEN}get${NC}       Update package lists from system"
-    echo
-    echo "Options:"
-    echo "  --force     Skip confirmations"
-    echo "  --no-deps   Skip dependency scanning"
-    echo
-    echo "Examples:"
-    echo -e "  ${GREEN}$0${NC}                       # Smart sync (recommended)"
-    echo -e "  ${GREEN}$0 install --force${NC}       # No confirmations"
-    echo -e "  ${GREEN}$0 check${NC}                 # Check status and preview changes"
-    echo -e "  ${GREEN}$0 themes${NC}                # Just install themes"
-    echo
-    echo -e "${YELLOW}💡 Pro tip: Just run '${GREEN}$0${NC}${YELLOW}' and it handles everything!${NC}"
-}
-
-# Parse arguments
+# Simple argument parsing
 COMMAND=""
 FORCE=false
 NO_DEPS=false
@@ -58,13 +35,8 @@ while [[ $# -gt 0 ]]; do
             NO_DEPS=true
             shift
             ;;
-        -h|--help)
-            show_help
-            exit 0
-            ;;
         *)
             echo -e "${RED}❌ Unknown option: $1${NC}"
-            show_help
             exit 1
             ;;
     esac
@@ -271,12 +243,6 @@ cmd_get_quiet() {
     echo -e "${GREEN}✅ Package lists synced${NC} (Official: $(wc -l < packages.txt), AUR: $(wc -l < aur-packages.txt))"
 }
 
-
-
-
-
-
-
 cmd_install() {
     echo -e "${BLUE}🚀 Smart Package Sync (Auto-Get + Full Sync)${NC}"
     echo
@@ -288,8 +254,18 @@ cmd_install() {
     
     # Step 1.5: Filter packages based on hardware
     echo -e "${BLUE}Step 1.5: Filtering packages based on hardware...${NC}"
-    local filtered_packages=$(filter_packages_by_hardware packages.txt true)
-    local filtered_aur_packages=$(filter_packages_by_hardware aur-packages.txt true)
+    
+    # Show hardware detection only once
+    local gpu_info=$(detect_gpu)
+    local has_nvidia=$(echo "$gpu_info" | grep -o 'nvidia:[^,]*' | cut -d: -f2)
+    if [[ "$has_nvidia" == "true" ]]; then
+        echo -e "${GREEN}🖥️  NVIDIA GPU detected - keeping NVIDIA packages${NC}"
+    else
+        echo -e "${YELLOW}🖥️  No NVIDIA GPU detected - filtering NVIDIA packages${NC}"
+    fi
+    
+    local filtered_packages=$(filter_packages_by_hardware packages.txt false)
+    local filtered_aur_packages=$(filter_packages_by_hardware aur-packages.txt false)
     echo
     
     # Step 2: Quick analysis of changes needed
@@ -490,8 +466,6 @@ cmd_install() {
     echo -e "${BLUE}📊 Your system is now perfectly synced with your dotfiles${NC}"
 }
 
-
-
 cmd_check() {
     echo -e "${BLUE}📊 Package Status & Preview${NC}"
     echo
@@ -514,8 +488,18 @@ cmd_check() {
     
     # Hardware filtering preview
     echo -e "${BLUE}🔧 Hardware filtering...${NC}"
-    local filtered_packages=$(filter_packages_by_hardware packages.txt true)
-    local filtered_aur_packages=$(filter_packages_by_hardware aur-packages.txt true)
+    
+    # Show hardware detection only once
+    local gpu_info=$(detect_gpu)
+    local has_nvidia=$(echo "$gpu_info" | grep -o 'nvidia:[^,]*' | cut -d: -f2)
+    if [[ "$has_nvidia" == "true" ]]; then
+        echo -e "${GREEN}🖥️  NVIDIA GPU detected - keeping NVIDIA packages${NC}"
+    else
+        echo -e "${YELLOW}🖥️  No NVIDIA GPU detected - filtering NVIDIA packages${NC}"
+    fi
+    
+    local filtered_packages=$(filter_packages_by_hardware packages.txt false)
+    local filtered_aur_packages=$(filter_packages_by_hardware aur-packages.txt false)
     echo
     
     # Find differences
@@ -597,7 +581,6 @@ case "$COMMAND" in
         ;;
     *)
         echo -e "${RED}❌ Unknown command: $COMMAND${NC}"
-        show_help
         exit 1
         ;;
 esac 

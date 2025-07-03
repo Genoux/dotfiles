@@ -1,0 +1,93 @@
+# Starship Configuration
+# A modern, fast, and highly customizable cross-shell prompt
+# Documentation: https://starship.rs/config/
+
+# Prompt format - defines what shows up and in what order
+format = """
+[╭─](bold blue)$username$hostname$directory$git_branch$git_status$python$nodejs$rust$package
+[╰─](bold blue)$character"""
+
+# Don't print a new line at the start of the prompt
+add_newline = false
+
+# Username module
+[username]
+style_user = "bold yellow"
+style_root = "bold red"
+format = "[$user]($style) "
+disabled = false
+show_always = true
+
+# Hostname module  
+[hostname]
+ssh_only = false
+format = "[@$hostname](bold green) "
+disabled = false
+
+# Directory module
+[directory]
+style = "bold cyan"
+truncation_length = 3
+truncate_to_repo = true
+format = "in [$path]($style)[$read_only]($read_only_style) "
+
+# Git branch module
+[git_branch]
+style = "bold purple"
+format = "on [$branch]($style) "
+symbol = ""
+
+# Git status module
+[git_status]
+style = "bold red"
+format = '([\[$all_status$ahead_behind\]]($style) )'
+
+# Character module (the prompt symbol)
+[character]
+success_symbol = "[❯](bold green)"
+error_symbol = "[❯](bold red)"
+vicmd_symbol = "[❮](bold yellow)"
+
+# Programming language modules
+[python]
+style = "bold blue"
+format = '[🐍 $version]($style) '
+
+[nodejs]
+style = "bold green"
+format = '[⬢ $version]($style) '
+
+[rust]
+style = "bold orange"
+format = '[🦀 $version]($style) '
+
+[package]
+style = "bold magenta"
+format = '[📦 $version]($style) '
+
+# System modules
+[cmd_duration]
+min_time = 2_000
+style = "bold yellow"
+format = "took [$duration]($style) "
+
+[memory_usage]
+disabled = true
+threshold = 75
+style = "bold dimmed red"
+format = "with [$symbol${ram}]($style) "
+
+[time]
+disabled = true
+format = 'at [$time]($style) '
+style = "bold white"
+
+# Cloud/container modules
+[docker_context]
+style = "bold blue"
+format = '[🐳 $context]($style) '
+
+[kubernetes]
+disabled = false
+style = "bold cyan"
+format = '[⎈ $context\($namespace\)]($style) ' 
