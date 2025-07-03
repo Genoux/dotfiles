@@ -1,73 +1,123 @@
 #!/bin/bash
 # Creates/removes symlinks between dotfiles and system configs
 
+# Parse mode flags
+MODE="default"  # default, force, backup, preview
+for arg in "$@"; do
+    case "$arg" in
+        --force)   MODE="force" ;;
+        --backup)  MODE="backup" ;;
+        --preview) MODE="preview" ;;
+    esac
+done
+
+# Simple conflict handling based on mode
+handle_conflict() {
+    local target="$1"
+    local description="$2"
+    
+    case "$MODE" in
+        "force")
+            # Just overwrite - that's what they want!
+            [[ -e "$target" && ! -L "$target" ]] && rm -rf "$target" 2>/dev/null
+            return 0
+            ;;
+        "backup")
+            # Create .bak files
+            if [[ -e "$target" && ! -L "$target" ]]; then
+                echo "⚠️  Found existing $description"
+                echo "📦 Backing up to $target.bak"
+                mv "$target" "$target.bak"
+            fi
+            return 0
+            ;;
+        "preview")
+            # Just show what would be overwritten
+            if [[ -e "$target" && ! -L "$target" ]]; then
+                echo "⚠️  Would overwrite: $description"
+                return 1  # Don't actually install in preview mode
+            fi
+            return 0
+            ;;
+        "default")
+            # Ask user what to do
+            if [[ -e "$target" && ! -L "$target" ]]; then
+                echo "⚠️  Found existing $description"
+                read -p "Overwrite? (y/N): " -n 1 -r
+                echo
+                if [[ $REPLY =~ ^[Yy]$ ]]; then
+                    rm -rf "$target" 2>/dev/null
+                    return 0
+                else
+                    echo "⏭️  Skipping $description"
+                    return 1
+                fi
+            fi
+            return 0
+            ;;
+    esac
+}
+
+# Simple conflict handling for different config types (shared function)
+handle_config_conflicts() {
+    local config="$1"
+    
+    case "$config" in
+        "system")
+            # Handle all files in system config dynamically
+            while IFS= read -r -d '' stow_file; do
+                relative_path="${stow_file#system/.config/}"
+                target_file="$HOME/.config/$relative_path"
+                handle_conflict "$target_file" "~/.config/$relative_path" || return 1
+            done < <(find system/.config -type f -print0 2>/dev/null)
+            ;;
+        "shell"|"zsh"|"bash")
+            for file in .zshrc .bashrc .profile .zprofile; do
+                handle_conflict "$HOME/$file" "~/$file" || return 1
+            done
+            ;;
+        *)
+            # Default: check ~/.config/[config] directory
+            handle_conflict "$HOME/.config/$config" "~/.config/$config" || return 1
+            ;;
+    esac
+    return 0
+}
+
 case "$1" in
 "install"|"link")
     if [[ -z "$2" ]]; then
         echo "Available configs:"
         ls -1 | grep -v manage-configs.sh | grep -v '\.sh$'
-        echo "Usage: $0 install <config-name>"
-        echo " or: $0 install all"
+        echo "Usage: $0 install <config-name> [--force|--backup|--preview]"
+        echo " or: $0 install all [--force|--backup|--preview]"
+        echo ""
+        echo "Modes:"
+        echo "  --force   Overwrite everything (recommended)"
+        echo "  --backup  Create .bak files before overwriting"
+        echo "  --preview Show what would be overwritten (safe)"
     elif [[ "$2" == "all" ]]; then
         echo "🔗 Installing all configs..."
         
-        # Handle conflicts function (same as above)
-        handle_conflicts() {
-            local config="$1"
-            local target_dir="$HOME/.config/$config"
-            
-            # Check if target exists and is not a symlink
-            if [[ -e "$target_dir" && ! -L "$target_dir" ]]; then
-                echo "⚠️  Found existing $target_dir"
-                echo "📦 Backing up to $target_dir.bak"
-                mv "$target_dir" "$target_dir.bak"
-            fi
-            
-            # Check for other common locations
-            case "$config" in
-                "system")
-                    # Dynamically find all files in system config and back them up
-                    echo "🔍 Checking system config files for conflicts..."
-                    
-                    # Find all files in stow/system/.config/ (relative paths)
-                    while IFS= read -r -d '' stow_file; do
-                        # Convert stow path to target path
-                        relative_path="${stow_file#system/.config/}"
-                        target_file="$HOME/.config/$relative_path"
-                        
-                        # Skip if target doesn't exist or is already a symlink
-                        [[ ! -e "$target_file" || -L "$target_file" ]] && continue
-                        
-                        echo "⚠️  Found existing ~/.config/$relative_path"
-                        
-                        # Create backup directory if needed
-                        backup_dir="$(dirname "$target_file")"
-                        [[ ! -d "$backup_dir" ]] && mkdir -p "$backup_dir"
-                        
-                        echo "📦 Backing up to ~/.config/$relative_path.bak"
-                        mv "$target_file" "$target_file.bak"
-                        
-                    done < <(find system/.config -type f -print0 2>/dev/null)
-                    ;;
-                "shell"|"zsh"|"bash")
-                    for file in .zshrc .bashrc .profile .zprofile; do
-                        if [[ -f "$HOME/$file" && ! -L "$HOME/$file" ]]; then
-                            echo "⚠️  Found existing ~/$file"
-                            echo "📦 Backing up to ~/$file.bak"
-                            mv "$HOME/$file" "$HOME/$file.bak"
-                        fi
-                    done
-                    ;;
-            esac
-        }
+
         
         for config in */; do
             config=${config%/}
             [[ "$config" == "manage-configs.sh" ]] && continue
+            
             echo "Linking $config..."
             
-            # Handle conflicts before stowing
-            handle_conflicts "$config"
+            # Handle conflicts based on mode
+            if ! handle_config_conflicts "$config"; then
+                echo "⏭️  Skipped $config"
+                continue
+            fi
+            
+            # Only actually stow if not in preview mode
+            if [[ "$MODE" == "preview" ]]; then
+                echo "👁️  Would link $config"
+                continue
+            fi
             
             if stow -t "$HOME" "$config" 2>/dev/null; then
                 echo "✅ Successfully linked $config"
@@ -93,72 +143,30 @@ case "$1" in
     else
         echo "🔗 Linking $2..."
         
-        # Handle conflicts by backing up existing files/directories
-        handle_conflicts() {
-            local config="$1"
-            local target_dir="$HOME/.config/$config"
+        # Install Oh My Zsh if needed (dependency for shell config)
+        if [[ "$2" == "shell" && ! -d "$HOME/.oh-my-zsh" ]]; then
+            echo "🚀 Installing Oh My Zsh (required for shell config)..."
+            sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
             
-            # Check if target exists and is not a symlink
-            if [[ -e "$target_dir" && ! -L "$target_dir" ]]; then
-                echo "⚠️  Found existing $target_dir"
-                echo "📦 Backing up to $target_dir.bak"
-                mv "$target_dir" "$target_dir.bak"
-            fi
+            # Install required plugins
+            echo "📦 Installing zsh plugins..."
+            git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions 2>/dev/null || true
+            git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting 2>/dev/null || true
             
-            # Check for other common locations
-            case "$config" in
-                "system")
-                    # Dynamically find all files in system config and back them up
-                    echo "🔍 Checking system config files for conflicts..."
-                    
-                    # Find all files in stow/system/.config/ (relative paths)
-                    while IFS= read -r -d '' stow_file; do
-                        # Convert stow path to target path
-                        relative_path="${stow_file#system/.config/}"
-                        target_file="$HOME/.config/$relative_path"
-                        
-                        # Skip if target doesn't exist or is already a symlink
-                        [[ ! -e "$target_file" || -L "$target_file" ]] && continue
-                        
-                        echo "⚠️  Found existing ~/.config/$relative_path"
-                        
-                        # Create backup directory if needed
-                        backup_dir="$(dirname "$target_file")"
-                        [[ ! -d "$backup_dir" ]] && mkdir -p "$backup_dir"
-                        
-                        echo "📦 Backing up to ~/.config/$relative_path.bak"
-                        mv "$target_file" "$target_file.bak"
-                        
-                    done < <(find system/.config -type f -print0 2>/dev/null)
-                    ;;
-                "shell"|"zsh"|"bash")
-                    # Install Oh My Zsh if needed (dependency for shell config)
-                    if [[ "$2" == "shell" && ! -d "$HOME/.oh-my-zsh" ]]; then
-                        echo "🚀 Installing Oh My Zsh (required for shell config)..."
-                        sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
-                        
-                        # Install required plugins
-                        echo "📦 Installing zsh plugins..."
-                        git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions 2>/dev/null || true
-                        git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting 2>/dev/null || true
-                        
-                        echo "✅ Oh My Zsh setup complete!"
-                    fi
-                    
-                    # Handle dotfiles in home directory
-                    for file in .zshrc .bashrc .profile .zprofile; do
-                        if [[ -f "$HOME/$file" && ! -L "$HOME/$file" ]]; then
-                            echo "⚠️  Found existing ~/$file"
-                            echo "📦 Backing up to ~/$file.bak"
-                            mv "$HOME/$file" "$HOME/$file.bak"
-                        fi
-                    done
-                    ;;
-            esac
-        }
+            echo "✅ Oh My Zsh setup complete!"
+        fi
         
-        # Handle conflicts before stowing
-        handle_conflicts "$2"
+        # Handle conflicts based on mode
+        if ! handle_config_conflicts "$2"; then
+            echo "⏭️  Skipped $2"
+            exit 0
+        fi
+        
+        # Only actually stow if not in preview mode
+        if [[ "$MODE" == "preview" ]]; then
+            echo "👁️  Would link $2"
+            exit 0
+        fi
         
         # Now try to stow
         if stow -t "$HOME" "$2" 2>/dev/null; then

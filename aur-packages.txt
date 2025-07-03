@@ -12,6 +12,8 @@ cursor-bin
 downgrade
 dragon-drop
 electron29-bin
+fancontrol-gui
+fancontrol-gui-debug
 figma-linux
 gauntlet-bin
 gauntlet-bin-debug
@@ -50,7 +52,6 @@ libastal-tray-git
 libastal-wireplumber-git
 libcava
 matugen-bin
-nomachine
 notion-app-electron
 notion-app-electron-debug
 notion-calendar-electron
@@ -63,7 +64,6 @@ python-nvidia-ml-py
 sherlock-launcher-bin
 slack-desktop
 spotify
-swayosd-git
 swayosd-git-debug
 ttf-material-design-icons-git
 yay-bin

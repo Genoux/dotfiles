@@ -16,6 +16,7 @@ export SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export DOTFILES_DIR="$(dirname "$SCRIPT_DIR")"
 export STOW_DIR="$DOTFILES_DIR/stow"
 
+
 # Logging functions
 log_info() {
     echo -e "${BLUE}ℹ️  $1${NC}"
@@ -58,13 +59,13 @@ dir_exists_and_not_empty() {
     [[ -d "$1" && -n "$(ls -A "$1" 2>/dev/null)" ]]
 }
 
-# Backup file with timestamp
+# Simple backup with timestamp (if needed)
 backup_file() {
     local file="$1"
     if [[ -f "$file" ]]; then
-        local backup_file="$file.backup.$(date +%Y%m%d_%H%M%S)"
+        local backup_file="$file.bak"
         cp "$file" "$backup_file"
-        log_info "Backed up $file to $backup_file"
+        [[ "$QUIET" != true ]] && log_info "📦 Backed up $(basename "$file") to $(basename "$backup_file")"
         echo "$backup_file"
     fi
 }
@@ -252,10 +253,10 @@ check_prerequisites() {
 # Cleanup temporary files
 cleanup_temp() {
     local temp_pattern="$1"
-    if [[ -n "$temp_pattern" ]]; then
-        rm -f "$temp_pattern" 2>/dev/null || true
-    fi
+    # Implementation would go here
 }
+
+
 
 # Export functions for use in other scripts
 export -f log_info log_success log_warning log_error log_step log_section

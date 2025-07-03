@@ -1,4 +1,3 @@
-// @ts-expect-error - AstalBattery GI module doesn't have TS definitions but works at runtime
 import Battery from "gi://AstalBattery"
 
 // Get the UPower instance directly - this is the correct way

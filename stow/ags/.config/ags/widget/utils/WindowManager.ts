@@ -1,14 +1,3 @@
-/**
- * Unified Window Management System for AGS
- * Clean, simple, scalable - replaces all existing window managers
- * 
- * DESIGN PRINCIPLES:
- * - One system handles all windows (JSX, programmatic, popups, persistent)
- * - Strict rules enforced automatically
- * - Zero configuration overhead
- * - DRY, KISS, scalable
- */
-
 import { App, Astal, Widget, Gdk } from "astal/gtk3"
 import { Variable } from "astal"
 

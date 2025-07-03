@@ -230,6 +230,8 @@ while true; do
             echo -e "${BLUE}🎯 Complete Setup - Everything at once!${NC}"
             cd "$SCRIPT_DIR"
             
+
+            
             # Step 1: Packages
             echo -e "${BLUE}Step 1: Setting up packages...${NC}"
             bash "$SCRIPTS_DIR/setup-packages.sh" install
@@ -262,9 +264,27 @@ while true; do
             fi
             echo
             
-            # Step 4: Install configs
-            echo -e "${BLUE}Step 4: Installing all configs...${NC}"
-            run_stow_script "install" "Installing all configs" "all"
+                        # Step 4: Install configs (force mode for complete setup)
+            echo -e "${BLUE}Step 4: Installing configs (force mode)...${NC}"
+            echo -e "${BLUE}4a. Installing system config first (avoids race conditions)...${NC}"
+            cd "$STOW_DIR"
+            bash manage-configs.sh install system --force
+            echo
+            
+            echo -e "${BLUE}4b. Installing remaining configs...${NC}"
+            for config in */; do
+                config=${config%/}
+                [[ "$config" == "manage-configs.sh" ]] && continue
+                [[ "$config" == "system" ]] && continue  # Already installed
+                echo "Installing $config..."
+                if bash manage-configs.sh install "$config" --force 2>/dev/null; then
+                    echo "✅ Successfully linked $config"
+                else
+                    echo "❌ Failed to link $config"
+                fi
+            done
+            echo "🎉 All configs processed!"
+            cd "$SCRIPT_DIR"  # Return to dotfiles root
             
             echo
             echo -e "${GREEN}🎉 Complete setup finished!${NC}"
