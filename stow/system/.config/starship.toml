@@ -4,24 +4,23 @@
 
 # Prompt format - defines what shows up and in what order
 format = """
-[╭─](bold blue)$username$hostname$directory$git_branch$git_status$python$nodejs$rust$package
-[╰─](bold blue)$character"""
+$username$hostname$directory$git_branch$git_status$python$nodejs$rust$package$character"""
 
 # Don't print a new line at the start of the prompt
 add_newline = false
 
-# Username module
+# Username module - show when it matters (SSH, root)
 [username]
 style_user = "bold yellow"
 style_root = "bold red"
-format = "[$user]($style) "
+format = "[$user]($style)[@](bold green)"
 disabled = false
-show_always = true
+show_always = false
 
 # Hostname module  
 [hostname]
 ssh_only = false
-format = "[@$hostname](bold green) "
+format = "[$hostname](bold green) "
 disabled = false
 
 # Directory module
@@ -29,24 +28,24 @@ disabled = false
 style = "bold cyan"
 truncation_length = 3
 truncate_to_repo = true
-format = "in [$path]($style)[$read_only]($read_only_style) "
+format = "[$path]($style)[$read_only]($read_only_style)"
 
 # Git branch module
 [git_branch]
 style = "bold purple"
-format = "on [$branch]($style) "
+format = " on [$branch]($style)"
 symbol = ""
 
 # Git status module
 [git_status]
 style = "bold red"
-format = '([\[$all_status$ahead_behind\]]($style) )'
+format = ' ([\[$all_status$ahead_behind\]]($style))'
 
 # Character module (the prompt symbol)
 [character]
-success_symbol = "[❯](bold green)"
-error_symbol = "[❯](bold red)"
-vicmd_symbol = "[❮](bold yellow)"
+success_symbol = " [❯](bold green)"
+error_symbol = " [❯](bold red)"
+vicmd_symbol = " [❮](bold yellow)"
 
 # Programming language modules
 [python]
