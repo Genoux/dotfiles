@@ -14,7 +14,7 @@
     min-height: 40px;
 
     &:hover {
-      color: $text-primary;
+      color: $white;
     }
 
     icon {
@@ -27,16 +27,16 @@
     }
 
     &.sleep-btn:hover {
-      @include button-variant(rgba($warning-primary, 0.2), rgba($warning-primary, 0.3), $warning-primary);
+      @include button-variant(rgba($warning, 0.2), rgba($warning, 0.3), $warning);
     }
 
     &.shutdown-btn:hover {
-      @include button-variant(rgba($error-primary, 0.2), rgba($error-primary, 0.3), $error-primary);
+      @include button-variant(rgba($error, 0.2), rgba($error, 0.3), $error);
     }
 
     // Confirmation state styling
     &.shutdown-btn.confirm-pending {
-      @include button-variant(rgba($error-primary, 0.3), rgba($error-primary, 0.4), $error-primary);
+      @include button-variant(rgba($error, 0.3), rgba($error, 0.4), $error);
     }
   }
 }
@@ -63,14 +63,14 @@
       min-width: 60px;
       
       &:hover {
-        background-color: $bg-active;
-        color: $text-primary;
+        background-color: $white-subtle;
+        color: $white;
         border-color: $border-secondary;
       }
     }
 
     .confirm-btn {
-      @include button-variant($error-primary, $error-hover, $text-primary);
+      @include button-variant($error, $error, $white);
       min-width: 60px;
     }
   }

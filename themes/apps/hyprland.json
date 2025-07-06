@@ -1,0 +1,9 @@
+{
+  "format": "rgba",
+  "filename": "hyprland-colors.conf",
+  "variables": {
+    "active_border": "border-active",
+    "inactive_border": "border",
+    "shadow_color": "shadow"
+  }
+} 

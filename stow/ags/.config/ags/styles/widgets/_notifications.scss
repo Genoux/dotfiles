@@ -10,7 +10,7 @@
   min-width: $spacing-xl;
 
   .notification-icon {
-    color: $theme-white;
+    color: $white;
     transition: color $transition-normal;
   }
   
@@ -28,7 +28,7 @@ window.notification-center-window {
 }
 
 .notification-center {
-  background-color: $bg-secondary;
+  background-color: $bg-transparent;
   min-height: 300px;
   min-width: 320px;
   border: 1px solid $border-tertiary;
@@ -44,7 +44,7 @@ window.notification-center-window {
 
     .notification-title {
       font-size: $font-size-lg;
-      color: $text-primary;
+      color: $white;
     }
   }
 
@@ -57,7 +57,7 @@ window.notification-center-window {
     }
 
     .no-notifications {
-      color: $theme-white;
+      color: $white;
 
       .no-notifications-text {
         font-size: $font-size-lg;
@@ -126,19 +126,19 @@ eventbox.notification {
       .app-icon {
         min-width: 16px;
         min-height: 16px;
-        color: $theme-white;
+        color: $white;
       }
 
       .app-name {
         font-weight: 500;
-        color: $text-primary;
+        color: $white;
         font-size: $font-size-sm;
       }
 
       .timestamp {
         font-size: $font-size-xs;
         opacity: 0.7;
-        color: $text-secondary;
+        color: $secondary;
       }
     }
 
@@ -153,14 +153,14 @@ eventbox.notification {
 
       .text-content {
         .summary {
-          color: $text-primary;
+          color: $white;
           font-size: $font-size-md;
           font-weight: 600;
           margin-bottom: $spacing-xs;
         }
 
         .body {
-          color: $text-primary;
+          color: $white;
           font-size: $font-size-md;
           opacity: 0.7;
         }
@@ -194,7 +194,7 @@ scrollbar {
     transition: background-color $transition-fast;
 
     &:hover {
-      background-color: $text-secondary;
+      background-color: $secondary;
     }
   }
 }

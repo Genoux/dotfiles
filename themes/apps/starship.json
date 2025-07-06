@@ -1,0 +1,17 @@
+{
+  "format": "hex",
+  "filename": "starship-colors.toml",
+  "variables": {
+    "primary": "primary",
+    "secondary": "secondary",
+    "accent": "accent",
+    "success": "success",
+    "warning": "warning",
+    "error": "error",
+    "info": "info",
+    "surface": "surface",
+    "on_surface": "on-surface",
+    "background": "background",
+    "on_background": "on-background"
+  }
+} 

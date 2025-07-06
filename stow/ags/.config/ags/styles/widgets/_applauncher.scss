@@ -63,59 +63,59 @@
     }
 
     // Result Button - restored original styling
-    .ResultButton,
-    button.ResultButton {
-      @include gtk-reset;
-      background-color: transparent;
-      border-radius: $radius-md;
-      padding: $spacing-md $spacing-lg;
-      margin: $spacing-xs 0;
-      transition: all $transition-fast;
-      min-width: 120px;
+    // .ResultButton,
+    // button.ResultButton {
+    //   @include gtk-reset;
+    //   background-color: transparent;
+    //   border-radius: $radius-md;
+    //   padding: $spacing-md $spacing-lg;
+    //   margin: $spacing-xs 0;
+    //   transition: all $transition-fast;
+    //   min-width: 120px;
 
-      &:hover {
-        background-color: $bg-hover;
-      }
+    //   &:hover {
+    //     background-color: $white-subtle;
+    //   }
 
-      &:active {
-        background-color: $bg-active;
-      }
+    //   &:active {
+    //     background-color: $white-subtle;
+    //   }
 
-      &.selected,
-      &:focus {
-        background-color: $bg-secondary;
-        box-shadow: 0 0 0 1px $border-secondary;
-      }
+    //   &.selected,
+    //   &:focus {
+    //     background-color: $bg-secondary;
+    //     box-shadow: 0 0 0 1px $border-secondary;
+    //   }
 
-      box {
-        icon {
-          min-width: 32px;
-          min-height: 32px;
-          margin-right: $spacing-md;
-        }
+    //   box {
+    //     icon {
+    //       min-width: 32px;
+    //       min-height: 32px;
+    //       margin-right: $spacing-md;
+    //     }
 
-        box {
-          label.title {
-            color: $text-primary;
-            font-weight: 500;
-            font-size: $font-size-lg;
-            font-family: $font-family-primary;
-          }
+    //     box {
+    //       label.title {
+    //         color: $white;
+    //         font-weight: 500;
+    //         font-size: $font-size-lg;
+    //         font-family: $font-family-primary;
+    //       }
 
-          label.subtitle {
-            color: $text-secondary;
-            font-size: $font-size-sm;
-            font-family: $font-family-primary;
-          }
-        }
-      }
-    }
+    //       label.subtitle {
+    //         color: $secondary;
+    //         font-size: $font-size-sm;
+    //         font-family: $font-family-primary;
+    //       }
+    //     }
+    //   }
+    // }
   }
 
   // Recent Apps Container
   .recent-apps-container {
     font-size: $font-size-md;
-    color: $text-secondary;
+    color: $secondary;
 
     button.recent-app-item,
     .recent-app-item {
@@ -130,7 +130,7 @@
       }
 
       &:active {
-        background-color: $bg-active;
+        background-color: $white-subtle;
       }
 
       box {

@@ -15,7 +15,7 @@
         padding: 0 $spacing-xl;
         
         .osd-icon {
-            color: $text-primary;
+            color: $white;
             min-width: $spacing-xl;
             min-height: $spacing-xl;
             font-size: $spacing-xl;
@@ -31,7 +31,7 @@
             }
             
             highlight {
-                background-color: $theme-white;
+                background-color: $white;
                 border-radius: $radius-sm;
             }
             

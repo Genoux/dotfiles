@@ -13,11 +13,11 @@
   transition: background $transition-fast;
   
   &:hover {
-    background: $bg-hover;
+    background: $white-subtle;
   }
   
   &:active {
-    background: $bg-active;
+    background: $white-subtle;
   }
   
   // Battery icon styling
@@ -35,20 +35,20 @@
     
     // Color coding for text as well
     &.battery-critical {
-      color: $error-primary;
+      color: $error;
     }
     
     &.battery-low {
-      color: $warning-primary;
+      color: $warning;
     }
     
     &.battery-medium {
-      color: $text-secondary;
+      color: $secondary;
     }
     
     &.battery-high,
     &.battery-full {
-      color: $text-primary;
+      color: $white;
     }
   }
   

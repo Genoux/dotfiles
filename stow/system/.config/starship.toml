@@ -1,6 +1,12 @@
+# Include theme colors
+"$schema" = 'https://starship.rs/config-schema.json'
+
 # Starship Configuration
 # A modern, fast, and highly customizable cross-shell prompt
 # Documentation: https://starship.rs/config/
+
+# Use the custom palette
+palette = "custom"
 
 # Prompt format - defines what shows up and in what order
 format = """
@@ -11,82 +17,96 @@ add_newline = false
 
 # Username module - show when it matters (SSH, root)
 [username]
-style_user = "bold yellow"
-style_root = "bold red"
-format = "[$user]($style)[@](bold green)"
+style_user = "bold warning"
+style_root = "bold error"
+format = "[$user]($style)[@](bold success)"
 disabled = false
 show_always = true
 
 # Hostname module  
 [hostname]
 ssh_only = false
-format = "[$hostname](bold green) "
+format = "[$hostname](bold success) "
 disabled = false
 
 # Directory module
 [directory]
-style = "bold cyan"
+style = "bold info"
 truncation_length = 3
 truncate_to_repo = true
 format = "[$path]($style)[$read_only]($read_only_style)"
 
 # Git branch module
 [git_branch]
-style = "bold purple"
+style = "bold secondary"
 format = " on [$branch]($style)"
 symbol = ""
 
 # Git status module
 [git_status]
-style = "bold red"
+style = "bold error"
 format = ' ([\[$all_status$ahead_behind\]]($style))'
 
 # Character module (the prompt symbol)
 [character]
-success_symbol = " [❯](bold green)"
-error_symbol = " [❯](bold red)"
-vicmd_symbol = " [❮](bold yellow)"
+success_symbol = " [❯](bold success)"
+error_symbol = " [❯](bold error)"
+vicmd_symbol = " [❮](bold warning)"
 
 # Programming language modules
 [python]
-style = "bold blue"
+style = "bold primary"
 format = '[🐍 $version]($style) '
 
 [nodejs]
-style = "bold green"
+style = "bold success"
 format = '[⬢ $version]($style) '
 
 [rust]
-style = "bold orange"
+style = "bold accent"
 format = '[🦀 $version]($style) '
 
 [package]
-style = "bold magenta"
+style = "bold secondary"
 format = '[📦 $version]($style) '
 
 # System modules
 [cmd_duration]
 min_time = 2_000
-style = "bold yellow"
+style = "bold warning"
 format = "took [$duration]($style) "
 
 [memory_usage]
 disabled = true
 threshold = 75
-style = "bold dimmed red"
+style = "bold dimmed error"
 format = "with [$symbol${ram}]($style) "
 
 [time]
 disabled = true
 format = 'at [$time]($style) '
-style = "bold white"
+style = "bold on_surface"
 
 # Cloud/container modules
 [docker_context]
-style = "bold blue"
+style = "bold info"
 format = '[🐳 $context]($style) '
 
 [kubernetes]
 disabled = false
-style = "bold cyan"
-format = '[⎈ $context\($namespace\)]($style) ' 
+style = "bold info"
+format = '[⎈ $context\($namespace\)]($style) '
+
+# Include the custom palette
+[palettes.custom]
+primary = "#89b4fa"
+secondary = "#cba6f7"
+accent = "#fab387"
+success = "#a6e3a1"
+warning = "#f9e2af"
+error = "#f38ba8"
+info = "#74c7ec"
+surface = "#1e1e2e"
+on_surface = "#cdd6f4"
+background = "#11111b"
+on_background = "#cdd6f4" 
