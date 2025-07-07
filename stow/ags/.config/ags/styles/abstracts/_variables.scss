@@ -26,18 +26,15 @@ $transition-slow: 300ms ease-in-out;
 $border-width: 1px;
 
 // Typography
-$font-family-primary: "SF Pro Text", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
-$font-family-mono: "SF Mono", "Monaco", "Cascadia Code", monospace;
 $font-size-xs: 10px;
 $font-size-sm: 12px;
 $font-size-md: 13px;
 $font-size-lg: 14px;
 $font-size-xl: 16px;
 
+
 // THEME_COLORS_START
 // Generated theme colors - DO NOT EDIT MANUALLY
-// Generated from: base.json
-// Generated at: Mon Jul  7 05:05:59 PM EDT 2025
 $white: rgba(255,255,255,1);
 $text-primary: rgba(250,250,250,0.96);
 $text-secondary: rgba(220,220,220,0.82);
@@ -45,9 +42,9 @@ $text-tertiary: rgba(180,180,180,0.68);
 $text-disabled: rgba(120,120,120,0.48);
 $bg-primary: rgba(25,25,28,0.96);
 $bg-secondary: rgba(32,32,36,0.92);
-$bg-tertiary: rgba(42,42,46,0.88);
-$bg-quaternary: rgba(52,52,56,0.84);
-$bg-translucent: rgba(30,30,34,0.35);
+$bg-tertiary: rgba(28,28,34,0.8);
+$bg-quaternary: rgba(28,28,34,0.7);
+$bg-translucent: rgba(30,30,34,0.5);
 $surface-primary: rgba(30,30,34,0.94);
 $surface-secondary: rgba(38,38,42,0.90);
 $border-primary: rgba(255,255,255,0.015);
@@ -65,4 +62,7 @@ $error: rgba(255,100,100,0.85);
 $success: rgba(100,200,100,0.8);
 $info: rgba(150,150,200,0.8);
 $shadow-primary: rgba(0,0,0,0.22);
+$shadow-secondary: rgba(0,0,0,0.12);
+$shadow-tertiary: rgba(0,0,0,0.06);
+$black: rgba(0,0,0,1);
 // THEME_COLORS_END

@@ -6,7 +6,6 @@
 // =============================================================================
 
 box.MediaPlayer {
-    font-family: $font-family-primary;
     border: none;
     border-radius: $radius-lg;
     padding: $spacing-lg;
@@ -20,7 +19,7 @@ box.MediaPlayer {
         min-width: 0;
         
         box.title-row {
-            margin-bottom: $spacing-xs * 0.5;
+            margin-bottom: 1px;
             min-width: 0;
             
             .player-indicator {
@@ -67,10 +66,10 @@ box.MediaPlayer {
         
         label.current-time,
         label.total-time {
-            font-size: $font-size-xs + 1px;
+            font-size: 11px;
             opacity: 0.9;
             color: $white;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+            text-shadow: 0 1px 2px $shadow-primary;
             font-feature-settings: "tnum"; // Tabular numbers for consistent width
         }
 
@@ -84,24 +83,24 @@ box.MediaPlayer {
             }
 
             highlight {
-                background-color: rgba(255, 255, 255, 0.9);
+                background-color: $white;
                 border-radius: $radius-sm;
             }
 
             slider {
                 @include gtk-reset;
-                background-color: rgba(255, 255, 255, 0.95);
+                background-color: $white;
                 border-radius: 50%;
                 min-width: 6px;
                 min-height: 6px;
-                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+                box-shadow: 0 2px 4px $shadow-tertiary;
             }
         }
     }
 
     box.controls {
         .play-btn {
-            background-color: rgba(255, 255, 255, 0.15);
+            background-color: $state-hover;
             border-radius: $radius-xl;
         }
         
@@ -110,10 +109,10 @@ box.MediaPlayer {
             font-size: $font-size-lg;
             margin: 0;
             color: $white;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+            text-shadow: 0 1px 2px $shadow-primary;
             
             &:hover {
-                background-color: rgba(255, 255, 255, 0.1);
+                background-color: $state-hover;
             }
         }
     }

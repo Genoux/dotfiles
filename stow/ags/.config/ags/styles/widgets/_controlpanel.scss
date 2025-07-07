@@ -15,10 +15,19 @@ box.ControlPanel {
 }
 
 .control-panel-button {
-    background-color: $bg-translucent;
-    border-radius: $radius-md;
+  @include button-base;
+  background-color: $bg-translucent;
+  border-radius: $radius-md;
+
+  &:hover:not(.active) {
+    background-color: $bg-quaternary;
+  }
+
+  &.active {
+    background-color: $bg-tertiary;
 
     &:hover {
-        background-color: $bg-tertiary;
+      background-color: $bg-secondary;
     }
+  }
 }

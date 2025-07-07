@@ -33,7 +33,7 @@
 
   .notifications-header {
     padding: $spacing-xl $spacing-lg;
-    border-bottom: $border-width solid $border-primary;
+    border-bottom: $border-width solid $border-tertiary;
 
     .notification-title {
       font-size: $font-size-lg;
@@ -54,7 +54,7 @@
 
       .no-notifications-text {
         font-size: $font-size-lg;
-        opacity: 0.3;
+        opacity: 0.8;
       }
     }
   }
@@ -92,7 +92,6 @@ eventbox.notification {
     border-radius: $radius-md;
     transition: all $transition-fast;
     min-width: 300px;
-    font-family: $font-family-primary;
 
     .notification-header {
       padding-bottom: $spacing-lg;
@@ -143,27 +142,6 @@ eventbox.notification {
 
     .notification-actions {
       padding-top: $spacing-md;
-    }
-  }
-}
-
-// =============================================================================
-// Scrollbar Styling
-// =============================================================================
-
-scrollbar {
-  all: unset;
-  background-color: transparent;
-  margin: 1px;
-
-  slider {
-    background-color: $text-tertiary;
-    border-radius: $spacing-xs + 1px;
-    min-width: $spacing-xs;
-    transition: background-color $transition-fast;
-
-    &:hover {
-      background-color: $text-secondary;
     }
   }
 }

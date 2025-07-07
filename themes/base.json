@@ -6,9 +6,9 @@
     "text-disabled": "rgba(120,120,120,0.48)",
     "background-primary": "rgba(25,25,28,0.96)",
     "background-secondary": "rgba(32,32,36,0.92)",
-    "background-tertiary": "rgba(42,42,46,0.88)",
-    "background-quaternary": "rgba(52,52,56,0.84)",
-    "background-translucent": "rgba(30,30,34,0.35)",
+    "background-tertiary": "rgba(28,28,34,0.8)",
+    "background-quaternary": "rgba(28,28,34,0.7)",
+    "background-translucent": "rgba(30,30,34,0.5)",
     "surface-primary": "rgba(30,30,34,0.94)",
     "surface-secondary": "rgba(38,38,42,0.90)",
     "surface-tertiary": "rgba(46,46,50,0.86)",
@@ -30,7 +30,7 @@
     "shadow-primary": "rgba(0,0,0,0.22)",
     "shadow-secondary": "rgba(0,0,0,0.12)",
     "shadow-tertiary": "rgba(0,0,0,0.06)",
-    "pure-black": "rgba(0,0,0,1)",
-    "pure-white": "rgba(255,255,255,1)"
+    "black": "rgba(0,0,0,1)",
+    "white": "rgba(255,255,255,1)"
   }
 }

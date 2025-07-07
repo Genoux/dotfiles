@@ -42,8 +42,9 @@
   transition: all $transition-normal;
   min-width: 24px;
 
+  // Default states - can be overridden
   &:hover:not(.active) {
-    background-color: $state-hover;
+    background-color: $bg-tertiary;
   }
 
   &.active {
@@ -86,7 +87,6 @@
   border: $border-width solid $border-tertiary;
   border-radius: $radius-md;
   color: $white;
-  font-family: $font-family-primary;
   transition: all $transition-normal;
   
   &:focus {
@@ -152,7 +152,6 @@
     > box {
       @include card-base;
       min-width: 300px;
-      font-family: $font-family-primary;
       transition: all $transition-fast;
     }
 

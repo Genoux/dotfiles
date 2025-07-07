@@ -1,14 +1,13 @@
 #!/bin/bash
 
 # Theme Build Script
-# Generates app-specific color files from base.json to stow/system/.config/themes/
+# Generates app-specific color files from base.json and merges directly into target files
 
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BASE_JSON="$SCRIPT_DIR/base.json"
 APPS_DIR="$SCRIPT_DIR/apps"
-OUTPUT_DIR="$SCRIPT_DIR/../stow/system/.config/themes"
 
 # Colors
 RED='\033[0;31m'
@@ -45,8 +44,7 @@ if [ ! -d "$APPS_DIR" ]; then
     exit 1
 fi
 
-# Create output directory
-mkdir -p "$OUTPUT_DIR"
+# No longer creating theme directory - files merged directly into targets
 
 # Function to normalize rgba string (remove spaces)
 normalize_rgba() {
@@ -242,30 +240,34 @@ generate_theme_file() {
 
 log "Starting theme build process..."
 log "Base colors: $BASE_JSON"
-log "Output directory: $OUTPUT_DIR"
+log "Merging colors directly into target files..."
 
 # Process each app configuration
 for app_config in "$APPS_DIR"/*.json; do
     if [ -f "$app_config" ]; then
         app_name=$(basename "$app_config" .json)
-        filename=$(jq -r '.filename' "$app_config")
-        output_file="$OUTPUT_DIR/$filename"
         
         log "Processing $app_name..."
-        
-        # Universal generation - no hardcoded app knowledge
-        generate_theme_file "$app_config" "$output_file"
-        
-        success "Generated $filename"
         
         # Check if this app has a target file for merging
         target_file=$(jq -r '.target_file // empty' "$app_config")
         if [ -n "$target_file" ]; then
-            merge_theme_into_target "$output_file" "$target_file" "$app_config"
+            # Create temporary file for generated theme
+            temp_file=$(mktemp)
+            
+            # Generate theme content
+            generate_theme_file "$app_config" "$temp_file"
+            
+            # Merge directly into target
+            merge_theme_into_target "$temp_file" "$target_file" "$app_config"
+            
+            # Cleanup temp file
+            rm "$temp_file"
+        else
+            warning "No target file specified for $app_name - skipping"
         fi
     fi
 done
 
 success "Theme build completed successfully!"
-log "Generated files are in: $OUTPUT_DIR"
-log "You can now run your dotfiles.sh script to deploy with stow" 
+log "Colors have been merged directly into target files" 

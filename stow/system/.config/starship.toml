@@ -100,8 +100,6 @@ format = '[⎈ $context\($namespace\)]($style) '
 
 # THEME_COLORS_START
 # Generated theme colors - DO NOT EDIT MANUALLY
-# Generated from: base.json
-# Generated at: Mon Jul  7 05:06:00 PM EDT 2025
 
 [palettes.custom]
 primary = "#fafafa"
@@ -115,4 +113,5 @@ surface = "#1e1e22"
 on_surface = "#fafafa"
 background = "#19191c"
 on_background = "#fafafa"
+
 # THEME_COLORS_END

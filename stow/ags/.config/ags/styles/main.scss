@@ -22,10 +22,9 @@
 @use "widgets/osd";
 @use "widgets/cava";
 
-// =============================================================================
-// GLOBAL BASE STYLES - Apply to all elements
-// =============================================================================
-
+* {
+  font-family: "SF Pro Display", monospace;
+}
 // Global GTK reset for common elements
 box,
 button,

@@ -2,14 +2,13 @@
 @use "../abstracts/mixins" as *;
 
 .AppLauncherWindow {
-  background: rgba(28, 28, 34, 0.5);
+  background: $bg-translucent;
 }
 
 .AppLauncher {
   .search-container {
     background: $bg-secondary;
     border-radius: $radius-md;
-    font-family: $font-family-primary;
     font-size: $font-size-xl;
 
     .preview-overlay {
@@ -27,7 +26,7 @@
 
     .preview-result {
       color: $accent-primary;
-      font-family: $font-family-mono;
+      font-family: "SF Mono", "Monaco", "Cascadia Code", monospace;
       font-size: $font-size-xl;
       font-weight: 600;
       margin-right: $spacing-xl;
@@ -44,7 +43,6 @@
       @include gtk-reset;
       padding: $spacing-lg $spacing-xl;
       font-size: $font-size-xl;
-      font-family: $font-family-primary;
       
       &:hover {
         background-color: $bg-secondary;
@@ -62,54 +60,6 @@
       opacity: 0.7;
     }
 
-    // Result Button - restored original styling
-    // .ResultButton,
-    // button.ResultButton {
-    //   @include gtk-reset;
-    //   background-color: transparent;
-    //   border-radius: $radius-md;
-    //   padding: $spacing-md $spacing-lg;
-    //   margin: $spacing-xs 0;
-    //   transition: all $transition-fast;
-    //   min-width: 120px;
-
-    //   &:hover {
-    //     background-color: $state-hover;
-    //   }
-
-    //   &:active {
-    //     background-color: $state-hover;
-    //   }
-
-    //   &.selected,
-    //   &:focus {
-    //     background-color: $bg-secondary;
-    //     box-shadow: 0 0 0 1px $border-secondary;
-    //   }
-
-    //   box {
-    //     icon {
-    //       min-width: 32px;
-    //       min-height: 32px;
-    //       margin-right: $spacing-md;
-    //     }
-
-    //     box {
-    //       label.title {
-    //         color: $white;
-    //         font-weight: 500;
-    //         font-size: $font-size-lg;
-    //         font-family: $font-family-primary;
-    //       }
-
-    //       label.subtitle {
-    //         color: $text-secondary;
-    //         font-size: $font-size-sm;
-    //         font-family: $font-family-primary;
-    //       }
-    //     }
-    //   }
-    // }
   }
 
   // Recent Apps Container

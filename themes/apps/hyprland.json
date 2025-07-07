@@ -10,7 +10,7 @@
     "prefix": "",
     "separator": " = ",
     "suffix": "",
-    "header": "# Generated theme colors - DO NOT EDIT MANUALLY\n# Generated from: {{BASE_FILE}}\n# Generated at: {{DATE}}\n"
+    "header": "# Generated theme colors - DO NOT EDIT MANUALLY\n"
   },
   "variables": {
     "col.active_border": "border-focus",

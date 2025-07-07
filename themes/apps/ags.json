@@ -10,10 +10,10 @@
     "prefix": "$",
     "separator": ": ",
     "suffix": ";",
-    "header": "// Generated theme colors - DO NOT EDIT MANUALLY\n// Generated from: {{BASE_FILE}}\n// Generated at: {{DATE}}\n"
+    "header": "// Generated theme colors - DO NOT EDIT MANUALLY"
   },
   "variables": {
-    "white": "pure-white",
+    "white": "white",
     "text-primary": "text-primary",
     "text-secondary": "text-secondary",
     "text-tertiary": "text-tertiary",
@@ -39,6 +39,9 @@
     "error": "error",
     "success": "success",
     "info": "info",
-    "shadow-primary": "shadow-primary"
+    "shadow-primary": "shadow-primary",
+    "shadow-secondary": "shadow-secondary",
+    "shadow-tertiary": "shadow-tertiary",
+    "black": "black"
   }
 } 
