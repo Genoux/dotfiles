@@ -1,9 +1,20 @@
 {
   "format": "hex",
   "filename": "kitty-colors.conf",
+  "target_file": "../stow/kitty/.config/kitty/kitty.conf",
+  "merge_markers": {
+    "start": "# THEME_COLORS_START",
+    "end": "# THEME_COLORS_END"
+  },
+  "syntax": {
+    "prefix": "",
+    "separator": " ",
+    "suffix": "",
+    "header": "# Generated theme colors - DO NOT EDIT MANUALLY\n# Generated from: {{BASE_FILE}}\n# Generated at: {{DATE}}\n"
+  },
   "variables": {
     "foreground": "text-primary",
-    "background": "background-primary",
+    "background": "background-translucent",
     "selection_foreground": "background-primary",
     "selection_background": "text-primary",
     "cursor": "text-primary",

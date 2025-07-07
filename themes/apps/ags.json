@@ -1,6 +1,17 @@
 {
   "format": "rgba",
   "filename": "ags-colors.scss",
+  "target_file": "../stow/ags/.config/ags/styles/abstracts/_variables.scss",
+  "merge_markers": {
+    "start": "// THEME_COLORS_START",
+    "end": "// THEME_COLORS_END"
+  },
+  "syntax": {
+    "prefix": "$",
+    "separator": ": ",
+    "suffix": ";",
+    "header": "// Generated theme colors - DO NOT EDIT MANUALLY\n// Generated from: {{BASE_FILE}}\n// Generated at: {{DATE}}\n"
+  },
   "variables": {
     "white": "pure-white",
     "text-primary": "text-primary",

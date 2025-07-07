@@ -1,6 +1,17 @@
 {
   "format": "hex",
   "filename": "starship-colors.toml",
+  "target_file": "../stow/system/.config/starship.toml",
+  "merge_markers": {
+    "start": "# THEME_COLORS_START",
+    "end": "# THEME_COLORS_END"
+  },
+  "syntax": {
+    "prefix": "",
+    "separator": " = ",
+    "suffix": "",
+    "header": "# Generated theme colors - DO NOT EDIT MANUALLY\n# Generated from: {{BASE_FILE}}\n# Generated at: {{DATE}}\n\n[palettes.custom]"
+  },
   "variables": {
     "primary": "text-primary",
     "secondary": "text-secondary",

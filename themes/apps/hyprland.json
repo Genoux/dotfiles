@@ -1,9 +1,27 @@
 {
   "format": "rgba",
   "filename": "hyprland-colors.conf",
+  "target_file": "../stow/hypr/.config/hypr/appearance.conf",
+  "merge_markers": {
+    "start": "general {",
+    "end": "}"
+  },
+  "syntax": {
+    "prefix": "",
+    "separator": " = ",
+    "suffix": "",
+    "header": "# Generated theme colors - DO NOT EDIT MANUALLY\n# Generated from: {{BASE_FILE}}\n# Generated at: {{DATE}}\n"
+  },
   "variables": {
-    "active_border": "border-focus",
-    "inactive_border": "border-primary",
-    "shadow_color": "shadow-primary"
+    "col.active_border": "border-focus",
+    "col.inactive_border": "border-primary",
+    "gaps_in": "@2",
+    "gaps_out": "@8",
+    "border_size": "@1",
+    "no_border_on_floating": "@true",
+    "no_focus_fallback": "@true",
+    "resize_on_border": "@true",
+    "allow_tearing": "@false",
+    "layout": "@monocle"
   }
 } 

@@ -1,6 +1,4 @@
 @use "sass:color";
-@forward "/home/john/.config/themes/ags-colors.scss";
-
 
 // Spacing scale
 $spacing-xs: 2px;
@@ -35,3 +33,36 @@ $font-size-sm: 12px;
 $font-size-md: 13px;
 $font-size-lg: 14px;
 $font-size-xl: 16px;
+
+// THEME_COLORS_START
+// Generated theme colors - DO NOT EDIT MANUALLY
+// Generated from: base.json
+// Generated at: Mon Jul  7 04:58:48 PM EDT 2025
+$white: rgba(255,255,255,1);
+$text-primary: rgba(255,255,255,0.95);
+$text-secondary: rgba(255,255,255,0.75);
+$text-tertiary: rgba(255,255,255,0.55);
+$text-disabled: rgba(255,255,255,0.35);
+$bg-primary: rgba(12,12,18,0.95);
+$bg-secondary: rgba(20,20,28,0.90);
+$bg-tertiary: rgba(28,28,38,0.85);
+$bg-quaternary: rgba(35,35,48,0.80);
+$bg-translucent: rgba(28,28,34,0.4);
+$surface-primary: rgba(25,25,35,0.90);
+$surface-secondary: rgba(35,35,48,0.85);
+$border-primary: rgba(255,255,255,0.05);
+$border-secondary: rgba(255,255,255,0.1);
+$border-tertiary: rgba(255,255,255,0.2);
+$border-focus: rgba(255,255,255,0.08);
+$accent-primary: rgba(65,70,85,0.85);
+$accent-secondary: rgba(65,70,85,0.65);
+$accent-hover: rgba(65,70,85,0.95);
+$accent-muted: rgba(65,70,85,0.45);
+$state-hover: rgba(255,255,255,0.05);
+$state-active: rgba(28,28,34,0.6);
+$warning: rgba(255,193,7,1);
+$error: rgba(220,53,69,1);
+$success: rgba(76,175,80,0.8);
+$info: rgba(116,199,236,1);
+$shadow-primary: rgba(0,0,0,0.6);
+// THEME_COLORS_END
