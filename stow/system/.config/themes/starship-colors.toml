@@ -1,16 +1,16 @@
 # Generated theme colors - DO NOT EDIT MANUALLY
 # Generated from: base.json
-# Generated at: Mon Jul  7 04:58:48 PM EDT 2025
+# Generated at: Mon Jul  7 05:06:00 PM EDT 2025
 
 [palettes.custom]
-primary = "#ffffff"
-secondary = "#ffffff"
-accent = "#414655"
-success = "#4caf50"
-warning = "#ffc107"
-error = "#dc3545"
-info = "#74c7ec"
-surface = "#191923"
-on_surface = "#ffffff"
-background = "#0c0c12"
-on_background = "#ffffff"
+primary = "#fafafa"
+secondary = "#dcdcdc"
+accent = "#b4b4b4"
+success = "#64c864"
+warning = "#ffc850"
+error = "#ff6464"
+info = "#9696c8"
+surface = "#1e1e22"
+on_surface = "#fafafa"
+background = "#19191c"
+on_background = "#fafafa"
