@@ -1,36 +1,14 @@
 @use "../abstracts/variables" as *;
 @use "../abstracts/mixins" as *;
 
-// =============================================================================
-// LAYOUT - Main window and container
-// =============================================================================
-
-window.Bar {
-  @include window-base;
-}
-
-.bar-container {
-  .bar-section {
-    padding: $spacing-sm;
-    border-radius: $radius-md;
-    background: $bg-transparent;
-  }
-}
-
-// =============================================================================
-// GLOBAL ELEMENTS - Typography and separators
-// =============================================================================
-
 window.Bar {  
-  label {
-    color: inherit;
-    font-weight: inherit;
-  }
-  
-  separator {
-    @extend .separator;
-    min-width: $separator-width;
-    min-height: $spacing-lg;
-    margin: 0 $spacing-sm;
+  @include text-primary;
+
+  .bar-container {
+    .bar-section {
+      padding: $spacing-sm;
+      border-radius: $radius-md;
+      background: $bg-translucent;
+    }
   }
 }

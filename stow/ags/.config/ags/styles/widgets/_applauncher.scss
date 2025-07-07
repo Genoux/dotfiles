@@ -74,11 +74,11 @@
     //   min-width: 120px;
 
     //   &:hover {
-    //     background-color: $white-subtle;
+    //     background-color: $state-hover;
     //   }
 
     //   &:active {
-    //     background-color: $white-subtle;
+    //     background-color: $state-hover;
     //   }
 
     //   &.selected,
@@ -103,7 +103,7 @@
     //       }
 
     //       label.subtitle {
-    //         color: $secondary;
+    //         color: $text-secondary;
     //         font-size: $font-size-sm;
     //         font-family: $font-family-primary;
     //       }
@@ -115,7 +115,7 @@
   // Recent Apps Container
   .recent-apps-container {
     font-size: $font-size-md;
-    color: $secondary;
+    color: $text-secondary;
 
     button.recent-app-item,
     .recent-app-item {
@@ -130,7 +130,7 @@
       }
 
       &:active {
-        background-color: $white-subtle;
+        background-color: $state-hover;
       }
 
       box {

@@ -6,14 +6,13 @@
 // =============================================================================
 
 .window-title {
-    box {
-        font-size: $font-size-lg;
-        padding: 0 $spacing-md;
-        
-        icon {
-            font-size: $font-size-xl + 2px;
-            color: $white;
-            opacity: 0.9;
-        }
+  box {
+    padding: 0 $spacing-md;
+
+    icon {
+      font-size: $font-size-xl + 2px;
+      color: $white;
+      opacity: 0.9;
     }
-} 
+  }
+}

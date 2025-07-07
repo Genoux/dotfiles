@@ -6,49 +6,45 @@
 // =============================================================================
 
 .workspaces {
-    
-    .workspace {
-        @include gtk-reset;
-        border-radius: $radius-sm;
-        padding: 0 $spacing-md;
-        background: transparent;
-        transition: background-color $transition-normal;
-      
-        // Hover effect for non-focused workspaces
-        &:hover:not(.focused) {
-            background: $white-subtle;
-        }
-        
-        // Focused workspace gets subtle background
-        &.focused {
-            background: $white-subtle;
-        }
+  .workspace {
+    border-radius: $radius-sm;
+    padding: 0 $spacing-md;
+    background: transparent;
+    transition: background-color $transition-normal;
+
+    // Hover effect for non-focused workspaces
+    &:hover:not(.focused) {
+      background: $state-hover;
     }
-    
-    .dot {
-        background-color: $secondary;
-        border-radius: $radius-md;
-        transition: min-width 200ms cubic-bezier(0.25, 0.8, 0.25, 1);
-        min-height: 2px;
-        min-width: $spacing-md;
-        
-        // Focused workspace - horizontal line
-        &.focused {
-            background-color: $white;
-            min-width: $spacing-xl;
-            min-height: 2px;
-        }
-        
-        &:hover {
-            background-color: $white;
-        }
+
+    // Focused workspace gets subtle background
+    &.focused {
+      background: $state-active;
     }
-    
-    .number {
-        @include text-tertiary;
-        
-        &:hover {
-            color: $white;
-        }
+  }
+
+  .dot {
+    background-color: $white;
+    border-radius: $radius-md;
+    transition: min-width 200ms cubic-bezier(0.25, 0.8, 0.25, 1);
+    min-height: 2px;
+    min-width: $spacing-md;
+
+    // Focused workspace - horizontal line
+    &.focused {
+      background-color: $white;
+      min-width: $spacing-xl;
+      min-height: 2px;
     }
-}  
+
+    &:hover {
+      background-color: $white;
+    }
+  }
+
+  .number {
+    &:hover {
+      color: $white;
+    }
+  }
+}

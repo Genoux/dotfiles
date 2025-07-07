@@ -5,10 +5,6 @@
 // Media Player Widget Styling
 // =============================================================================
 
-window {
-    @include window-base;
-}
-
 box.MediaPlayer {
     font-family: $font-family-primary;
     border: none;
@@ -38,7 +34,7 @@ box.MediaPlayer {
                 
                 .player-name {
                     font-size: $font-size-sm;
-                    color: $secondary;
+                    color: $text-secondary;
                     opacity: 0.7;
                     font-weight: normal;
                 }

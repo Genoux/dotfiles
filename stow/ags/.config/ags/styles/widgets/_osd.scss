@@ -6,11 +6,9 @@
 // =============================================================================
 
 .OSDWindow {
-    @include window-base;
-    
     .osd-container {
         border-radius: $radius-md;
-        background: $bg-transparent;
+        background: $bg-translucent;
         margin-bottom: $spacing-2xl;
         padding: 0 $spacing-xl;
         

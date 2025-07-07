@@ -58,25 +58,30 @@ normalize_rgba() {
 rgba_to_hex() {
     local rgba="$1"
     rgba=$(normalize_rgba "$rgba")
-    # Extract r, g, b, a values from rgba(r, g, b, a)
-    local values=$(echo "$rgba" | sed 's/rgba(\([^)]*\))/\1/' | tr ',' ' ')
-    read -r r g b a <<< "$values"
+    # Extract r, g, b, a values from rgba(r, g, b, a) or rgb(r,g,b)
+    local values=$(echo "$rgba" | sed 's/.*(\(.*\))/\1/' | tr ',' ' ')
+    read -r r g b _ <<< "$values"
     
     # Convert to integers and format as hex
-    printf "#%02x%02x%02x" $(printf "%.0f" "$r") $(printf "%.0f" "$g") $(printf "%.0f" "$b")
+    printf "#%02x%02x%02x" "$(printf "%.0f" "$r")" "$(printf "%.0f" "$g")" "$(printf "%.0f" "$b")"
 }
 
 # Function to convert rgba to rgba_hex (for Hyprland)
 rgba_to_rgba_hex() {
     local rgba="$1"
     rgba=$(normalize_rgba "$rgba")
-    # Extract r, g, b, a values from rgba(r, g, b, a)
-    local values=$(echo "$rgba" | sed 's/rgba(\([^)]*\))/\1/' | tr ',' ' ')
+    # Extract r, g, b, a values from rgba(r, g, b, a) or rgb(r,g,b)
+    local values=$(echo "$rgba" | sed 's/.*(\(.*\))/\1/' | tr ',' ' ')
     read -r r g b a <<< "$values"
+
+    # if alpha is not set, default to 1
+    if [ -z "$a" ]; then
+        a=1
+    fi
     
     # Convert alpha to 0-255 range and format as 0xRRGGBBAA
-    local alpha_hex=$(printf "%02x" $(printf "%.0f" $(echo "$a * 255" | bc -l)))
-    printf "0x%02x%02x%02x%s" $(printf "%.0f" "$r") $(printf "%.0f" "$g") $(printf "%.0f" "$b") "$alpha_hex"
+    local alpha_hex=$(printf "%02x" "$(printf "%.0f" "$(echo "$a * 255" | bc -l)")")
+    printf "0x%02x%02x%02x%s" "$(printf "%.0f" "$r")" "$(printf "%.0f" "$g")" "$(printf "%.0f" "$b")" "$alpha_hex"
 }
 
 # Function to format color based on format type

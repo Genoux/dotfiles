@@ -16,18 +16,18 @@
     padding: 0 $spacing-sm;
     
     &:hover {
-      background: $white-subtle;
+      background: $state-hover;
     }
     
     &:active {
-      background: $white-subtle;
+      background: $state-hover;
     }
     
     // Tray icon styling
     .tray-icon {
       opacity: 0.9;
       transition: opacity $transition-fast;
-      font-size: 14px;
+      font-size: $font-size-sm;
       
       &:hover {
         opacity: 1;

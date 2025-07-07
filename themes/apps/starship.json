@@ -2,16 +2,16 @@
   "format": "hex",
   "filename": "starship-colors.toml",
   "variables": {
-    "primary": "primary",
-    "secondary": "secondary",
-    "accent": "accent",
+    "primary": "text-primary",
+    "secondary": "text-secondary",
+    "accent": "accent-primary",
     "success": "success",
     "warning": "warning",
     "error": "error",
     "info": "info",
-    "surface": "surface",
-    "on_surface": "on-surface",
-    "background": "background",
-    "on_background": "on-background"
+    "surface": "surface-primary",
+    "on_surface": "text-primary",
+    "background": "background-primary",
+    "on_background": "text-primary"
   }
 } 

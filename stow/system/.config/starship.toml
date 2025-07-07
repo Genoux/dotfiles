@@ -10,10 +10,11 @@ palette = "custom"
 
 # Prompt format - defines what shows up and in what order
 format = """
-$username$hostname$directory$git_branch$git_status$python$nodejs$rust$package$character"""
+$username$hostname$directory$git_branch$git_status$python$nodejs$rust$package
+$character"""
 
-# Don't print a new line at the start of the prompt
-add_newline = false
+# Print a new line at the start of the prompt
+add_newline = true
 
 # Username module - show when it matters (SSH, root)
 [username]
@@ -49,9 +50,9 @@ format = ' ([\[$all_status$ahead_behind\]]($style))'
 
 # Character module (the prompt symbol)
 [character]
-success_symbol = " [❯](bold success)"
-error_symbol = " [❯](bold error)"
-vicmd_symbol = " [❮](bold warning)"
+success_symbol = "[❯](bold success)"
+error_symbol = "[❯](bold error)"
+vicmd_symbol = "[❮](bold warning)"
 
 # Programming language modules
 [python]

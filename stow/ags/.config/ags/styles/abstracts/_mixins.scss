@@ -21,15 +21,9 @@
 // LAYOUT MIXINS
 // =============================================================================
 
-// Standard window base - used by all popup windows
-@mixin window-base {
-  @include gtk-reset;
-  background: transparent;
-}
-
 // Card/container styling - used for panels, notifications, etc.
 @mixin card-base($padding: $spacing-md) {
-  background-color: $bg-transparent;
+  background-color: $bg-translucent;
   border: $border-width solid $border-tertiary;
   border-radius: $radius-lg;
   padding: $padding;
@@ -45,16 +39,15 @@
   @include gtk-reset;
   padding: $spacing-sm;
   border-radius: $radius-sm;
-  color: $white;
-  font-size: $font-size-sm;
   transition: all $transition-normal;
+  min-width: 24px;
 
-  &:hover {
-    background-color: $white-subtle;
+  &:hover:not(.active) {
+    background-color: $state-hover;
   }
 
   &.active {
-    background-color: $white-subtle;
+    background-color: $state-active;
   }
 }
 
@@ -118,7 +111,7 @@
 }
 
 @mixin text-secondary {
-  color: $secondary;
+  color: $text-secondary;
   font-size: $font-size-sm;
   font-weight: 400;
 }
@@ -136,11 +129,11 @@
 // Badge styling - for notifications, counts, etc.
 @mixin badge {
   font-size: $font-size-xs;
-  background-color: $white-subtle;
+  background-color: $state-hover;
   font-weight: 600;
   padding: 0 $spacing-sm;
   border-radius: $radius-xs;
-  border: 1px solid $white-subtle;
+  border: 1px solid $state-hover;
   color: $white;
   opacity: 0.7;
   
@@ -175,7 +168,7 @@
 
 // Global separator styling
 .separator {
-  background-color: $white-subtle;
+  background-color: $state-hover;
   min-height: 1px;
 }
 

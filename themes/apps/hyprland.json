@@ -2,8 +2,8 @@
   "format": "rgba",
   "filename": "hyprland-colors.conf",
   "variables": {
-    "active_border": "border-active",
-    "inactive_border": "border",
-    "shadow_color": "shadow"
+    "active_border": "border-focus",
+    "inactive_border": "border-primary",
+    "shadow_color": "shadow-primary"
   }
 } 

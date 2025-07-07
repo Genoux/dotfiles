@@ -22,7 +22,7 @@ export default function AudioButton() {
     ], (volume, mute) => getVolumeIcon(volume, mute))
 
     return (
-        <button
+      <button
             className={bind(speaker, "mute").as(muted => 
                 muted ? "audio-button active" : "audio-button"
             )}

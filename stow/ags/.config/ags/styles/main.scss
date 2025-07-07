@@ -31,7 +31,10 @@ box,
 button,
 window,
 eventbox,
-overlay {
+overlay,
+scrolled,
+scrolledwindow,
+viewport {
   @include mixins.gtk-reset;
 }
 

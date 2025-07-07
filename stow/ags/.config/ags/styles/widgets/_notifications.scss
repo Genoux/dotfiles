@@ -6,9 +6,6 @@
 // =============================================================================
 
 .NotificationButton {
-  @include button-base;
-  min-width: $spacing-xl;
-
   .notification-icon {
     color: $white;
     transition: color $transition-normal;
@@ -23,12 +20,8 @@
 // Notification Center Window
 // =============================================================================
 
-window.notification-center-window {
-  @include window-base;
-}
-
 .notification-center {
-  background-color: $bg-transparent;
+  background-color: $bg-translucent;
   min-height: 300px;
   min-width: 320px;
   border: 1px solid $border-tertiary;
@@ -65,24 +58,6 @@ window.notification-center-window {
       }
     }
   }
-
-  scrolled,
-  scrolledwindow {
-    @include gtk-reset;
-  }
-
-  viewport {
-    @include gtk-reset;
-  }
-}
-
-// =============================================================================
-// Notification Popup Windows
-// =============================================================================
-
-window.NotificationPopup,
-window.NotificationPopups {
-  @include window-base;
 }
 
 // =============================================================================
@@ -90,7 +65,6 @@ window.NotificationPopups {
 // =============================================================================
 
 eventbox.notification {
-  @include gtk-reset;
 
   &:hover .notification-container {
     background-color: $bg-quaternary;
@@ -138,7 +112,7 @@ eventbox.notification {
       .timestamp {
         font-size: $font-size-xs;
         opacity: 0.7;
-        color: $secondary;
+        color: $text-secondary;
       }
     }
 
@@ -169,11 +143,6 @@ eventbox.notification {
 
     .notification-actions {
       padding-top: $spacing-md;
-
-      .notification-action-button {
-        @include button-base;
-        border: 1px solid $border-primary;
-      }
     }
   }
 }
@@ -194,7 +163,7 @@ scrollbar {
     transition: background-color $transition-fast;
 
     &:hover {
-      background-color: $secondary;
+      background-color: $text-secondary;
     }
   }
 }

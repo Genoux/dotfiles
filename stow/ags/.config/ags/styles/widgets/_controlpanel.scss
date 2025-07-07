@@ -5,10 +5,6 @@
 // Control Panel Widget Styling
 // =============================================================================
 
-window.control-panel-window {
-  @include window-base;
-}
-
 box.ControlPanel {
   @include card-base;
   margin: $spacing-sm $spacing-md;
@@ -19,15 +15,10 @@ box.ControlPanel {
 }
 
 .control-panel-button {
-    padding: $spacing-xs $spacing-md;
-    background-color: $bg-primary;
+    background-color: $bg-translucent;
+    border-radius: $radius-md;
+
     &:hover {
         background-color: $bg-tertiary;
-    }
-    &.active {
-        background-color: $bg-quaternary;
-        &:hover {
-            background-color: $bg-quaternary;
-        }
     }
 }

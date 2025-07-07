@@ -86,7 +86,7 @@ function BatterySection() {
 
 function RightSection() {
   return (
-    <box className="bar-section" halign={Gtk.Align.END} spacing={4}>
+    <box className="bar-section" halign={Gtk.Align.END} spacing={0}>
       <NotificationButton />
       <KeyboardSwitcher />
       <AudioButton />

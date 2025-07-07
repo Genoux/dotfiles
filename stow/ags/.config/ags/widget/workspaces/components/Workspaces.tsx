@@ -27,6 +27,7 @@ export default function Workspaces() {
 
           return (
             <button
+              widthRequest={32}
               className={bind(hypr, "focusedWorkspace").as(focused => {
                 const isFocused = focused?.id === ws.id
                 let classes = ["workspace"]

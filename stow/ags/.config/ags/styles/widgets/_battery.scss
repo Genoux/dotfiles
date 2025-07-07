@@ -13,21 +13,17 @@
   transition: background $transition-fast;
   
   &:hover {
-    background: $white-subtle;
+    background: $state-hover;
   }
   
   &:active {
-    background: $white-subtle;
+    background: $state-hover;
   }
   
   // Battery icon styling
   .battery-icon {
     opacity: 0.9;
     transition: opacity $transition-fast, color $transition-fast;
-    font-size: 14px;
-    
-   
-   
   }
   
   // Battery percentage label
@@ -43,7 +39,7 @@
     }
     
     &.battery-medium {
-      color: $secondary;
+      color: $text-secondary;
     }
     
     &.battery-high,
