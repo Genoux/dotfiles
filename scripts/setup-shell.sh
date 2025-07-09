@@ -31,7 +31,7 @@ done
 check_zsh() {
     if ! command -v zsh &> /dev/null; then
         echo -e "${RED}❌ zsh is not installed${NC}"
-        echo -e "${BLUE}💡 Install zsh first: Add 'zsh' to packages.txt and run package sync${NC}"
+        echo -e "${RED}Install zsh first${NC}"
         return 1
     fi
     return 0
@@ -93,7 +93,7 @@ read_plugins_file() {
     
     if [[ ! -f "$plugins_file" ]]; then
         echo -e "${RED}❌ Plugin list not found: $plugins_file${NC}"
-        echo -e "${BLUE}💡 Create the file with format: plugin-name:repository-url${NC}"
+        echo -e "${RED}Create zsh-plugins.txt with format: plugin-name:repository-url${NC}"
         return 1
     fi
     
@@ -201,15 +201,12 @@ set_default_shell() {
     
     # Always show password prompt clearly, even in quiet mode
     echo -e "${YELLOW}🔐 Password required to change default shell${NC}"
-    echo -e "${BLUE}💡 Running: chsh -s $zsh_path${NC}"
     
     if chsh -s "$zsh_path"; then
         echo -e "${GREEN}✅ Default shell changed to zsh${NC}"
-        echo -e "${YELLOW}💡 Log out and back in for changes to take effect${NC}"
     else
         echo -e "${RED}❌ Failed to change default shell${NC}"
-        echo -e "${BLUE}💡 You can manually run: chsh -s $zsh_path${NC}"
-        echo -e "${YELLOW}   (This is optional - shell config will work anyway)${NC}"
+        echo -e "${YELLOW}Manual command: chsh -s $zsh_path${NC}"
         return 1
     fi
 }

@@ -44,7 +44,7 @@ show_menu() {
     echo "  6) Remove Config            (remove symlinks)"
     echo
     echo "🎨 THEMES:"
-    echo "  t) Install Themes           (WhiteSur GTK + Icons + Cursors)"
+    echo "  t) Theme Management         (unified themes + current system theme)"
     echo
     echo "🖥️  HYPRLAND:"
     echo "  h) Setup Hyprland           (monitors + workspaces + config)"
@@ -57,57 +57,63 @@ show_menu() {
 }
 
 show_status() {
-    echo -e "${BLUE}📊 Current Status:${NC}"
+    echo -e "${BLUE}📊 Dotfiles Status${NC}"
     echo
     
-    # Package files
+    # Package Status
+    echo -e "${BLUE}📦 Package Status:${NC}"
     if [[ -f "$SCRIPT_DIR/packages.txt" ]]; then
-        echo -e "📦 Official packages: ${GREEN}$(wc -l < "$SCRIPT_DIR/packages.txt")${NC}"
+        local pkg_count=$(grep -v '^#' "$SCRIPT_DIR/packages.txt" | grep -v '^[[:space:]]*$' | wc -l)
+        echo -e "   Official: ${GREEN}$pkg_count packages${NC}"
     else
-        echo -e "📦 Official packages: ${RED}Not found${NC}"
+        echo -e "   Official: ${RED}packages.txt missing${NC}"
     fi
     
     if [[ -f "$SCRIPT_DIR/aur-packages.txt" ]]; then
-        echo -e "📦 AUR packages: ${GREEN}$(wc -l < "$SCRIPT_DIR/aur-packages.txt")${NC}"
+        local aur_count=$(grep -v '^#' "$SCRIPT_DIR/aur-packages.txt" | grep -v '^[[:space:]]*$' | wc -l)
+        echo -e "   AUR: ${GREEN}$aur_count packages${NC}"
     else
-        echo -e "📦 AUR packages: ${RED}Not found${NC}"
+        echo -e "   AUR: ${RED}aur-packages.txt missing${NC}"
     fi
-    
-    # Shell status
     echo
+    
+    # Shell Status
     echo -e "${BLUE}🐚 Shell Status:${NC}"
     if command -v zsh &> /dev/null; then
-        echo -e "   zsh: ${GREEN}✓ $(zsh --version | cut -d' ' -f2)${NC}"
+        echo -e "   zsh: ${GREEN}✓ Installed${NC}"
     else
-        echo -e "   zsh: ${RED}✗ Not installed${NC}"
+        echo -e "   zsh: ${RED}✗ Missing${NC}"
     fi
     
     if [[ -d "$HOME/.oh-my-zsh" ]]; then
         echo -e "   Oh My Zsh: ${GREEN}✓ Installed${NC}"
     else
-        echo -e "   Oh My Zsh: ${RED}✗ Not installed${NC}"
+        echo -e "   Oh My Zsh: ${RED}✗ Missing${NC}"
     fi
     
-    # Check plugins (dynamic from zsh-plugins.txt)
-    local plugin_status=""
-    local plugin_count=0
+    # Check plugins
     if [[ -f "$SCRIPT_DIR/zsh-plugins.txt" ]]; then
+        local plugin_count=$(grep -v '^#' "$SCRIPT_DIR/zsh-plugins.txt" | grep -v '^[[:space:]]*$' | wc -l)
+        local installed_count=0
+        
+        # Count installed plugins
         while IFS= read -r plugin_line; do
             [[ -z "$plugin_line" ]] && continue
             local plugin_name=$(echo "$plugin_line" | cut -d':' -f1)
             if [[ -d "$HOME/.oh-my-zsh/custom/plugins/$plugin_name" ]]; then
-                plugin_status="${plugin_status}✓ "
-            else
-                plugin_status="${plugin_status}✗ "
+                ((installed_count++))
             fi
-            ((plugin_count++))
-        done < <(grep -v '^#' "$SCRIPT_DIR/zsh-plugins.txt" | grep -v '^[[:space:]]*$')
-    fi
-    
-    if [[ $plugin_count -gt 0 ]]; then
-        echo -e "   Plugins ($plugin_count): ${plugin_status}"
+        done < <(grep -v '^#' "$SCRIPT_DIR/zsh-plugins.txt" | grep -v '^[[:space:]]*$' | head -20)
+        
+        if [[ $plugin_count -gt 0 ]]; then
+            if [[ $installed_count -eq $plugin_count ]]; then
+                echo -e "   Plugins: ${GREEN}✓ All $plugin_count installed${NC}"
+            else
+                echo -e "   Plugins: ${YELLOW}⚠ $installed_count/$plugin_count installed${NC}"
+            fi
+        fi
     else
-        echo -e "   Plugins: ${YELLOW}⚠ No plugin list found${NC}"
+        echo -e "   Plugins: ${RED}zsh-plugins.txt missing${NC}"
     fi
     
     # Default shell
@@ -118,101 +124,112 @@ show_status() {
     else
         echo -e "   Default shell: ${YELLOW}⚠ $(basename "$current_shell")${NC}"
     fi
-    
-    # Config packages
     echo
+    
+    # Config Status
+    echo -e "${BLUE}⚙️  Config Status:${NC}"
     if [[ -d "$STOW_DIR" ]]; then
-        local config_count=$(find "$STOW_DIR" -maxdepth 1 -type d ! -name ".*" | wc -l)
-        ((config_count--)) # Remove stow dir itself from count
-        echo -e "⚙️  Available configs: ${GREEN}$config_count${NC}"
+        local total_configs=$(find "$STOW_DIR" -maxdepth 1 -type d ! -name ".*" ! -name "*manage-configs*" ! -path "$STOW_DIR" | wc -l)
+        local installed_configs=0
         
-        if [[ $config_count -gt 0 ]]; then
-            echo "   Configs:"
-            # Use manage-configs.sh for accurate status (DRY principle)
-            cd "$STOW_DIR"
-            ./manage-configs.sh list | grep -E "^\s*[✅⭕]" | sed 's/✅/✓/g; s/⭕/○/g' | while read line; do
-                if [[ "$line" == *"✓"* ]]; then
-                    echo -e "     ${GREEN}$(echo "$line" | sed 's/✓/✓/')${NC}"
-                else
-                    echo -e "     ${YELLOW}$(echo "$line" | sed 's/○/○/')${NC}"
-                fi
-            done
+        installed_configs=$(cd "$STOW_DIR" && ./manage-configs.sh list 2>/dev/null | grep -c "✅" || echo "0")
+        
+        if [[ $installed_configs -eq $total_configs ]]; then
+            echo -e "   Configs: ${GREEN}✓ All $total_configs installed${NC}"
+        else
+            echo -e "   Configs: ${YELLOW}⚠ $installed_configs/$total_configs installed${NC}"
         fi
     else
-        echo -e "⚙️  Configs: ${RED}stow/ directory not found${NC}"
+        echo -e "   Configs: ${RED}stow/ directory missing${NC}"
+    fi
+    echo
+    
+    # Theme Status
+    echo -e "${BLUE}🎨 Theme Status:${NC}"
+    if [[ -f "$SCRIPT_DIR/themes/theme-config.json" ]]; then
+        local theme_count=$(jq '.themes | length' "$SCRIPT_DIR/themes/theme-config.json" 2>/dev/null || echo "0")
+        echo -e "   Configured: ${GREEN}$theme_count themes${NC}"
+        
+        # Check current GTK theme
+        if command -v gsettings &>/dev/null; then
+            local current_gtk=$(gsettings get org.gnome.desktop.interface gtk-theme 2>/dev/null | tr -d "'" || echo "unknown")
+            echo -e "   Current GTK: ${GREEN}$current_gtk${NC}"
+        fi
+        
+        # Check which apps have theme colors applied
+        if [[ -d "$SCRIPT_DIR/themes/apps" ]]; then
+            local app_configs=($(find "$SCRIPT_DIR/themes/apps" -name "*.json" -exec basename {} .json \; | sort))
+            if [[ ${#app_configs[@]} -gt 0 ]]; then
+                echo -e "   App colors: ${GREEN}$(IFS=', '; echo "${app_configs[*]}")${NC}"
+            else
+                echo -e "   App colors: ${YELLOW}No apps configured${NC}"
+            fi
+        else
+            echo -e "   App colors: ${RED}apps/ directory missing${NC}"
+        fi
+    else
+        echo -e "   Themes: ${RED}theme-config.json missing${NC}"
+    fi
+    echo
+    
+    # Hyprland Status
+    echo -e "${BLUE}🖥️  Hyprland Status:${NC}"
+    if command -v hyprctl &>/dev/null; then
+        # Try to get version from binary directly first, then fallback to hyprctl
+        local hypr_version="unknown"
+        if command -v Hyprland &>/dev/null; then
+            hypr_version=$(Hyprland --version 2>/dev/null | grep -o 'v[0-9]\+\.[0-9]\+\.[0-9]\+' || echo "unknown")
+        fi
+        if [[ "$hypr_version" == "unknown" ]] && hyprctl version &>/dev/null; then
+            hypr_version=$(hyprctl version 2>/dev/null | head -1 | grep -o 'v[0-9]\+\.[0-9]\+\.[0-9]\+' || echo "unknown")
+        fi
+        echo -e "   Version: ${GREEN}$hypr_version${NC}"
+        
+        # Monitor config path
+        local monitor_config="$HOME/.config/hypr/monitors.conf"
+        
+        # Get monitor details if Hyprland is running
+        if hyprctl version &>/dev/null; then
+            local monitor_info=$(hyprctl monitors 2>/dev/null | grep "Monitor" | head -1)
+            if [[ -n "$monitor_info" ]]; then
+                local monitor_name=$(echo "$monitor_info" | awk '{print $2}')
+                echo -e "   Monitor: ${GREEN}$monitor_name $monitor_config${NC}"
+            else
+                echo -e "   Monitor: ${YELLOW}No active monitors $monitor_config${NC}"
+            fi
+        else
+            echo -e "   Monitor: ${YELLOW}Not running $monitor_config${NC}"
+        fi
+    else
+        echo -e "   Status: ${RED}Not installed${NC}"
     fi
     echo
 }
 
 show_help() {
-    echo -e "${BLUE}💡 Enhanced Dotfiles Workflow:${NC}"
+    echo -e "${BLUE}Dotfiles Help${NC}"
     echo
-    echo -e "${YELLOW}🚀 Quick Start (Recommended):${NC}"
-    echo "  • Run 'Complete Setup' - it handles EVERYTHING!"
-    echo "  • Packages → shell → configs with auto Hyprland setup"
-    echo "  • Themes available separately if needed"
+    echo -e "${YELLOW}Quick Start:${NC}"
+    echo "  1. Complete Setup - installs everything"
     echo
-    echo -e "${YELLOW}🏠 On Current System:${NC}"
+    echo -e "${YELLOW}Commands:${NC}"
+    echo "  1. Complete Setup"
     echo "  2. Smart Sync (packages)"
-    echo "  z. Shell Setup (zsh + Oh My Zsh + plugins)"  
-    echo "  3. Install All Configs (force or backup mode)"
-    echo "  5. Install Single Config (force or backup mode)"
-    echo "  h. Hyprland Setup (device-specific monitors - auto-runs during config install)"
+    echo "  z. Shell Setup"  
+    echo "  4. Install Config"
+    echo "  5. Install All Configs"
+    echo "  6. Remove Config"
+    echo "  t. Theme Management"
+    echo "  h. Hyprland Setup"
+    echo "  s. Status"
     echo
-    echo -e "${YELLOW}🆕 On New Machine:${NC}"
-    echo "  1. Clone dotfiles repo"
-    echo "  2. Complete Setup (packages → shell → configs with Hyprland auto-setup)"
-    echo "  3. Log out and back in for shell changes"
-    echo "  4. Done! Everything synced automatically"
+    echo -e "${YELLOW}Adding Software:${NC}"
+    echo "  1. Install: pacman -S app"
+    echo "  2. Run Smart Sync"
     echo
-    echo -e "${YELLOW}📦 Package Management:${NC}"
-    echo "  • Smart hardware detection (NVIDIA filtering)"
-    echo "  • Combined status + preview in one command"
-    echo "  • Automatic dependency detection"
-    echo "  • Handles both official and AUR packages"
-    echo
-    echo -e "${YELLOW}🐚 Shell Features:${NC}"
-    echo "  • Automatic zsh + Oh My Zsh installation"
-    
-    # Dynamic plugin display from zsh-plugins.txt
-    if [[ -f "$SCRIPT_DIR/zsh-plugins.txt" ]]; then
-        local plugin_names=()
-        while IFS= read -r plugin_line; do
-            [[ -z "$plugin_line" ]] && continue
-            plugin_names+=($(echo "$plugin_line" | cut -d':' -f1))
-        done < <(grep -v '^#' "$SCRIPT_DIR/zsh-plugins.txt" | grep -v '^[[:space:]]*$')
-        
-        if [[ ${#plugin_names[@]} -gt 0 ]]; then
-            local plugin_list=$(IFS=' & '; echo "${plugin_names[*]}")
-            echo "  • $plugin_list"
-        else
-            echo "  • Configurable zsh plugins (edit zsh-plugins.txt)"
-        fi
-    else
-        echo "  • Configurable zsh plugins (create zsh-plugins.txt)"
-    fi
-    
-    echo "  • Custom themes and configurations"
-    echo "  • Sets zsh as default shell"
-    echo
-    echo -e "${YELLOW}🖥️  Hyprland Features:${NC}"
-    echo "  • Auto-detects monitors and generates config"
-    echo "  • Device-specific scaling (laptop vs desktop)"
-    echo "  • Only monitors.conf is generated - input/appearance stay universal"
-    echo "  • Auto-runs when installing hypr config - no manual setup needed"
-    echo "  • Keeps git clean - no device conflicts"
-    echo
-    echo -e "${YELLOW}➕ Adding New Software:${NC}"
-    echo "  1. Install software normally (pacman/yay)"
-    echo "  2. Smart Sync (updates package lists automatically)"
-    echo
-    echo -e "${YELLOW}⚙️  Adding New Configs:${NC}"
-    echo "  1. Copy config to stow/ folder:"
-    echo "     cp -r ~/.config/newapp stow/newapp/.config/"
-    echo "  2. Install Config 'newapp'"
-    echo "  3. Done! Now it's managed by dotfiles"
-    echo
-    echo -e "${GREEN}💡 Pro tip: 'Complete Setup' is streamlined - no redundant steps!${NC}"
+    echo -e "${YELLOW}Adding Configs:${NC}"
+    echo "  1. Copy: cp -r ~/.config/app stow/app/.config/"
+    echo "  2. Install Config 'app'"
     echo
 }
 
@@ -275,10 +292,12 @@ while true; do
             
             # Step 1.5: Themes
             echo -e "${BLUE}Step 1.5: Setting up themes...${NC}"
-            if [[ -f "$SCRIPTS_DIR/setup-themes.sh" ]]; then
-                bash "$SCRIPTS_DIR/setup-themes.sh" --quiet
+            if [[ -f "$SCRIPT_DIR/themes/theme-manager.sh" ]]; then
+                cd "$SCRIPT_DIR/themes"
+                bash theme-manager.sh install
+                cd "$SCRIPT_DIR"
             else
-                echo -e "${YELLOW}⚠️  Theme setup script not found, skipping...${NC}"
+                echo -e "${YELLOW}⚠️  Theme manager not found, skipping...${NC}"
             fi
             echo
             
@@ -311,12 +330,7 @@ while true; do
             cd "$SCRIPT_DIR"  # Return to dotfiles root
             
             echo
-            echo -e "${GREEN}🎉 Complete setup finished!${NC}"
-            echo -e "${YELLOW}💡 Next steps:${NC}"
-            echo "  • Log out and back in for shell changes to take effect"
-            echo "  • Restart desktop environment for themes (if installed)"
-            echo "  • Open new terminal to see Oh My Zsh in action"
-            echo "  • Hyprland monitors configured automatically"
+            echo -e "${GREEN}Complete setup finished!${NC}"
             ;;
         2)
             echo -e "${BLUE}🚀 Running Smart Sync (the magic button!)${NC}"
@@ -368,7 +382,7 @@ while true; do
             bash manage-configs.sh install all $mode_flag
             ;;
         6)
-            echo -e "${BLUE}💡 Available configs: $(cd "$STOW_DIR" && ls -1 | grep -v manage-configs.sh | grep -v '\.sh$' | tr '\n' ' ')${NC}"
+            echo -e "${BLUE}Available configs: $(cd "$STOW_DIR" && ls -1 | grep -v manage-configs.sh | grep -v '\.sh$' | tr '\n' ' ')${NC}"
             read -p "Enter config name to remove: " config_name
             if [[ ! -z "$config_name" ]]; then
                 run_stow_script "remove" "Removing $config_name" "$config_name"
@@ -383,30 +397,27 @@ while true; do
             fi
             ;;
         t|T)
-            echo -e "${BLUE}🎨 Installing Themes${NC}"
-            
-            # Check if themes are already installed
-            themes_exist=false
-            if [[ -d "$HOME/.themes/WhiteSur-Light" ]] || \
-               [[ -d "$HOME/.icons/WhiteSur" ]] || [[ -d "$HOME/.local/share/icons/WhiteSur" ]] || \
-               [[ -d "$HOME/.icons/WhiteSur-cursors" ]] || [[ -d "$HOME/.local/share/icons/WhiteSur-cursors" ]]; then
-                themes_exist=true
-            fi
-            
-            if $themes_exist; then
+            echo -e "${BLUE}🎨 Theme Management${NC}"
+            if [[ -f "$SCRIPT_DIR/themes/theme-manager.sh" ]]; then
+                cd "$SCRIPT_DIR/themes"
                 echo
-                echo -e "${YELLOW}🔍 WhiteSur themes are already installed${NC}"
-                read -p "Force reinstall to update? (y/N): " -n 1 -r
-                echo
-                if [[ $REPLY =~ ^[Yy]$ ]]; then
-                    cd "$SCRIPT_DIR"
-                    bash "$SCRIPTS_DIR/setup-themes.sh" --force
-                else
-                    echo -e "${YELLOW}Using existing themes${NC}"
-                fi
-            else
+                echo "Choose an action:"
+                echo "  1) Install complete theme"
+                echo "  2) Install shell theme only"
+                echo "  3) Install colors only"
+                echo "  4) List themes + current system theme"
+                read -p "Action (1-4): " theme_action
+                
+                case "$theme_action" in
+                    1) bash theme-manager.sh install ;;
+                    2) bash theme-manager.sh install-shell ;;
+                    3) bash theme-manager.sh install-colors ;;
+                    4) bash theme-manager.sh list ;;
+                    *) echo -e "${YELLOW}Invalid option${NC}" ;;
+                esac
                 cd "$SCRIPT_DIR"
-                bash "$SCRIPTS_DIR/setup-themes.sh"
+            else
+                echo -e "${RED}❌ Theme manager not found${NC}"
             fi
             ;;
         h|H)
@@ -419,7 +430,7 @@ while true; do
             ;;
 
         s|S)
-            show_status
+            show_status || echo -e "${RED}Error in status function${NC}"
             ;;
         help)
             show_help

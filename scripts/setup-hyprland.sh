@@ -207,9 +207,6 @@ config=$(generate_monitor_config "${monitor_info[@]}")
 # Ensure directory exists
 ensure_dir "$(dirname "$MONITORS_CONF")"
 
-# Backup existing config
-backup_file "$MONITORS_CONF"
-
 # Write new config
 echo -e "$config" > "$MONITORS_CONF"
 log_success "Monitor configuration written to $(basename "$MONITORS_CONF")"
@@ -217,29 +214,10 @@ log_success "Monitor configuration written to $(basename "$MONITORS_CONF")"
 # Update main config to include monitors.conf if needed
 main_config="$HOME/.config/hypr/hyprland.conf"
 if [[ -f "$main_config" ]] && ! grep -q "source.*monitors\.conf" "$main_config"; then
-    backup_file "$main_config"
     echo -e "\n# Device-specific monitor configuration\nsource = ~/.config/hypr/monitors.conf" >> "$main_config"
     [[ "$QUIET" != true ]] && log_info "Added monitors.conf include to hyprland.conf"
 fi
 
-if [[ "$QUIET" != true ]]; then
-    echo
-    if [[ "$device_type" == "laptop" ]]; then
-        echo -e "${YELLOW}💡 Laptop optimizations applied:${NC}"
-        echo "  • Built-in display scaled to 1.25x for readability"
-        echo "  • External monitors use laptop scaling too"
-    else
-        echo -e "${YELLOW}💡 Desktop optimizations applied:${NC}"
-        echo "  • No scaling (1x) for sharp desktop experience"
-        echo "  • Multi-monitor layout optimized"
-    fi
-    
-    echo
-    echo -e "${BLUE}📝 Remember:${NC}"
-    echo "  • Input/gestures/appearance stay universal in your dotfiles"
-    echo "  • Only monitors.conf is generated per system"
-    echo "  • Missing config? Just run this script again"
-fi
 
 # Reload if Hyprland is running
 if has_command hyprctl && hyprctl version &>/dev/null; then

@@ -1,0 +1,21 @@
+{
+  "active_theme": "vinceliuice/MacTahoe-gtk-theme",
+  "themes": {
+    "vinceliuice/MacTahoe-gtk-theme": {
+      "name": "MacTahoe Dark",
+      "description": "MacOS Tahoe theme for GTK desktops",
+      "gtk": {
+        "repo": "https://github.com/vinceliuice/MacTahoe-gtk-theme.git",
+        "install_cmd": "./install.sh -l"
+      }
+    },
+    "vinceliuice/WhiteSur-icon-theme": {
+      "name": "WhiteSur Icons",
+      "description": "MacOS WhiteSur icon theme",
+      "icons": {
+        "repo": "https://github.com/vinceliuice/WhiteSur-icon-theme.git",
+        "install_cmd": "./install.sh"
+      }
+    }
+  }
+} 
