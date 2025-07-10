@@ -7,11 +7,12 @@ export const isPlaying = Variable(false)
 
 class CavaManager {
   private cavaProcess: any = null
+  private isDisposed = false
 
   constructor() {
-    console.log("CAVA Manager initialized")
     this.startCava()
   }
+
 
   private normalizeValue(value: number): number {
     // Simple normalization: 0-1000 -> 2-16 (min height 2, max height 16)
@@ -20,10 +21,13 @@ class CavaManager {
   }
 
   private startCava() {
+    if (this.isDisposed) return
+    
     try {
       this.cavaProcess = subprocess(
         ["cava", "-p", "/home/john/dotfiles/stow/cava/.config/cava/config"],
         (output) => {
+          if (this.isDisposed) return
           if (output.trim()) {
             const values = output.trim().split(';').map(Number).filter(n => !isNaN(n))
             if (values.length >= 8) {
@@ -37,24 +41,44 @@ class CavaManager {
           }
         },
         (error) => {
+          if (this.isDisposed) return
           console.error("CAVA error:", error)
           this.restartCava()
         }
       )
-      console.log("CAVA started")
     } catch (error) {
       console.error("Failed to start CAVA:", error)
     }
   }
 
   private restartCava() {
+    if (this.isDisposed) return
     setTimeout(() => this.startCava(), 1000)
+  }
+
+  public dispose() {
+    if (this.isDisposed) return
+    
+    this.isDisposed = true
+    
+    if (this.cavaProcess) {
+      try {
+        this.cavaProcess.kill()
+        this.cavaProcess = null
+      } catch (error) {
+        console.error("Error terminating CAVA process:", error)
+      }
+    }
+    
+    // Reset state
+    cavaData.set(new Array(8).fill(2))
+    isPlaying.set(false)
   }
 
 }
 
-// Initialize manager - keep it simple like the original
-new CavaManager()
+// Initialize manager and export for cleanup
+export const cavaManager = new CavaManager()
 
 // Utility function to calculate gradient opacity based on distance from center
 export function calculateGradientOpacity(index: number, totalBars: number): number {

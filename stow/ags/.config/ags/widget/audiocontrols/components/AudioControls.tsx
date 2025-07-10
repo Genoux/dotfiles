@@ -51,10 +51,9 @@ export default function AudioControlsComponent(): Gtk.Widget {
             value={bind(sliderValue)}
             max={1.0}
             min={0.0}
-            step={0.01}
+            step={1}
             onButtonPressEvent={() => {
                 isDragging = true
-                // Suppress OSD while dragging
                 suppressOSD(1000) // Suppress for 1 second initially
                 return false
             }}
@@ -62,9 +61,7 @@ export default function AudioControlsComponent(): Gtk.Widget {
                 // Always set the final value to ensure accuracy, but clamp it
                 const clampedValue = clampVolume(sliderValue.get())
                 speaker.volume = clampedValue
-                if (clampedValue > 0) {
-                    speaker.mute = false
-                }
+                // Don't auto-mute/unmute based on volume level
                 
                 isDragging = false
                 // Ignore notifications briefly to prevent feedback with improved timeout handling
@@ -96,9 +93,7 @@ export default function AudioControlsComponent(): Gtk.Widget {
                 const now = Date.now()
                 if (now - lastVolumeUpdate > 25) { // Reduced from 50ms to 25ms for smoother operation
                     speaker.volume = clampedValue
-                    if (clampedValue > 0) {
-                        speaker.mute = false
-                    }
+                    // Don't auto-unmute when sliding - only manual button toggle should control mute
                     lastVolumeUpdate = now
                 }
             }}

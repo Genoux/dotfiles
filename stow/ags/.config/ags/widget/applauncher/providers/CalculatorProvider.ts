@@ -83,7 +83,6 @@ export class CalculatorProvider implements LauncherProvider {
 
     private copyToClipboard(text: string) {
         // Basic clipboard copying (might need to implement based on your system)
-        console.log(`Copying to clipboard: ${text}`)
         // You can implement actual clipboard functionality here
     }
 } 

@@ -6,11 +6,11 @@
 // =============================================================================
 
 .NotificationButton {
-  .notification-icon {
+
+  .icon {
     color: $white;
-    transition: color $transition-normal;
   }
-  
+
   .badge {
     @include badge;
   }
@@ -21,11 +21,9 @@
 // =============================================================================
 
 .notification-center {
-  background-color: $bg-translucent;
+  @include card-base;
   min-height: 300px;
   min-width: 320px;
-  border: 1px solid $border-tertiary;
-  border-radius: $radius-lg;
 
   &.floating {
     margin: $spacing-sm;

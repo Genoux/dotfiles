@@ -23,6 +23,11 @@ $transition-fast: 50ms ease-in-out;
 $transition-normal: 200ms ease-in-out;
 $transition-slow: 300ms ease-in-out;
 
+// Standardized transition patterns
+$transition-hover: all $transition-fast;
+$transition-state: all $transition-fast;
+$transition-opacity: all $transition-fast;
+
 $border-width: 1px;
 
 // Typography
@@ -31,6 +36,7 @@ $font-size-sm: 12px;
 $font-size-md: 13px;
 $font-size-lg: 14px;
 $font-size-xl: 16px;
+
 
 
 // THEME_COLORS_START

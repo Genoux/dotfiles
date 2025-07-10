@@ -10,6 +10,7 @@ class SmartAppLauncherService {
     private static instance: SmartAppLauncherService
     private providers: LauncherProvider[] = []
     private appProvider: AppProvider
+    private searchTimeout: number | null = null
 
     // Core reactive state
     public text = Variable("")
@@ -28,9 +29,9 @@ class SmartAppLauncherService {
             // new WebProvider(),
         ].sort((a, b) => b.priority - a.priority)
 
-        // React to text changes
+        // React to text changes with debouncing
         this.text.subscribe((query) => {
-            this.updatePreview(query)
+            this.debouncedUpdatePreview(query)
         })
 
         // Clear text when launcher closes
@@ -54,6 +55,25 @@ class SmartAppLauncherService {
             SmartAppLauncherService.instance = new SmartAppLauncherService()
         }
         return SmartAppLauncherService.instance
+    }
+
+    private debouncedUpdatePreview(query: string) {
+        // Clear any existing timeout
+        if (this.searchTimeout !== null) {
+            clearTimeout(this.searchTimeout)
+        }
+
+        // For empty queries, update immediately
+        if (!query.trim()) {
+            this.previewContent.set(null)
+            return
+        }
+
+        // Debounce search for non-empty queries
+        this.searchTimeout = setTimeout(() => {
+            this.updatePreview(query)
+            this.searchTimeout = null
+        }, 150) // 150ms debounce delay
     }
 
     private updatePreview(query: string) {
@@ -111,6 +131,8 @@ class SmartAppLauncherService {
             this.clearText()
         }
     }
+
+    // Search timeout is cleaned up automatically in debouncedUpdatePreview
 
     // Text management
     setText(newText: string) {

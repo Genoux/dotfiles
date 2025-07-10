@@ -27,7 +27,6 @@
 }
 // Global GTK reset for common elements
 box,
-button,
 window,
 eventbox,
 overlay,
@@ -37,6 +36,7 @@ viewport {
   @include mixins.gtk-reset;
 }
 
+// Only reset buttons, don't apply base styling globally
 button {
   @include mixins.button-base;
 }

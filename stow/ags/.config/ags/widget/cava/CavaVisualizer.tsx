@@ -38,10 +38,9 @@ function handleCavaClick() {
     const hypr = Hyprland.get_default()
     
     if (mediaSource) {
-      console.log(`Opening media source: ${mediaSource}`)
       hypr.dispatch("focuswindow", `class:${mediaSource}`)
     } else {
-      console.log("No active media player found, trying fallback apps")
+      console.error("No active media player found, trying fallback apps")
       // Fallback: try to open common music apps
       const musicApps = ["spotify", "rhythmbox", "vlc", "audacious"]
       for (const app of musicApps) {

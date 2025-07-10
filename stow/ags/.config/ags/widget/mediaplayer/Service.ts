@@ -17,8 +17,6 @@ export function trackPlayerInteraction(player: Mpris.Player) {
     
     // Trigger immediate UI update
     globalUpdateTrigger.set(globalUpdateTrigger.get() + 1)
-    
-    console.log(`[MediaPlayer] Interaction with ${player.identity || busName} at ${now}`)
 }
 
 // Set up monitoring for when players start playing (implicit interaction)
@@ -32,7 +30,6 @@ export function setupPlaybackMonitoring(players: Mpris.Player[]) {
             // If player started playing (was not playing before), treat as interaction
             if (currentStatus === Mpris.PlaybackStatus.PLAYING && 
                 previousStatus !== Mpris.PlaybackStatus.PLAYING) {
-                console.log(`[MediaPlayer] ${player.identity || player.busName} started playing - treating as interaction`)
                 trackPlayerInteraction(player)
             }
             
@@ -58,7 +55,6 @@ export function getMostRecentPlayer(players: Mpris.Player[]): Mpris.Player | nul
         }
     }
     
-    console.log(`[MediaPlayer] Showing most recent: ${mostRecentPlayer.identity || mostRecentPlayer.busName} (last interaction: ${mostRecentTime})`)
     return mostRecentPlayer
 }
 

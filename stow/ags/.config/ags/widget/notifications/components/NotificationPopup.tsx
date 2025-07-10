@@ -13,6 +13,20 @@ const agsStartTime = Date.now() / 1000
 // Track timeouts for auto-hide
 const autoHideTimeouts = new Map<number, any>()
 
+// Cleanup old timeouts to prevent memory accumulation
+function cleanupOldTimeouts() {
+    const currentNotifications = new Set(notifications.get_notifications().map(n => n.id))
+    const dismissedIds = new Set(dismissedPopups.get())
+    
+    for (const [notifId, timeoutId] of autoHideTimeouts.entries()) {
+        // Remove timeouts for notifications that no longer exist or are dismissed
+        if (!currentNotifications.has(notifId) || dismissedIds.has(notifId)) {
+            clearTimeout(timeoutId)
+            autoHideTimeouts.delete(notifId)
+        }
+    }
+}
+
 // Function to dismiss a popup notification
 export function dismissPopupNotification(notifId: number) {
     const current = dismissedPopups.get()
@@ -73,12 +87,8 @@ const visiblePopupNotifications = Variable.derive([
     bind(notifications, "notifications"),
     dismissedPopups
 ], (notifs, dismissed) => {
-    // Debug: Log all incoming notifications
-    notifs.forEach(notif => {
-        if (notif.time > agsStartTime - 60) { // Log recent notifications
-            console.log(`📢 Notification received - App: "${notif.app_name}", Summary: "${notif.summary}", Body: "${notif.body}"`)
-        }
-    })
+    // Clean up old timeouts first to prevent memory accumulation
+    cleanupOldTimeouts()
     
     const visible = filterPopupNotifications(notifs) // Filter out completely ignored apps
         .filter(notif => notif.time > agsStartTime) // Only show notifications that arrived after AGS started
@@ -95,6 +105,13 @@ const visiblePopupNotifications = Variable.derive([
     
     return visible
 })
+
+// Periodic cleanup to ensure no memory leaks
+const cleanupInterval = setInterval(() => {
+    cleanupOldTimeouts()
+}, 60000) // Clean up every minute
+
+// Cleanup is handled automatically via periodic cleanup and timeout management
 
 // Simple notification popup for floating notifications
 export default function NotificationPopup(gdkmonitor: Gdk.Monitor) {

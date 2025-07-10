@@ -252,7 +252,7 @@ export default function MediaPlayer() {
                 hypr.dispatch("focuswindow", `class:${appClass}`);
                 toggleControlPanel();
               } catch (error) {
-                console.log("No app class found for player", error);
+                console.error("No app class found for player", error);
               }
             }}
           >

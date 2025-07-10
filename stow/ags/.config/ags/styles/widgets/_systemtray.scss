@@ -7,31 +7,15 @@
 
 .system-tray {
   padding: $spacing-xs;
-  
-  // Tray items container
-  .systray-item {
-    @include button-base;
-    border-radius: $radius-md;
-    transition: background $transition-fast;
-    padding: 0 $spacing-sm;
-    
-    &:hover {
-      background: $state-hover;
-    }
-    
-    &:active {
-      background: $state-hover;
-    }
-    
-    // Tray icon styling
-    .tray-icon {
-      opacity: 0.9;
-      transition: opacity $transition-fast;
-      font-size: $font-size-sm;
-      
-      &:hover {
-        opacity: 1;
-      }
-    }
-  }
+}
+
+.system-tray__item {
+  @include interactive-element;
+  border-radius: $radius-md;
+  padding: 0 $spacing-sm;
+}
+
+.system-tray__icon {
+  @include status-indicator;
+  font-size: $font-size-sm;
 }

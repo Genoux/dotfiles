@@ -8,7 +8,7 @@ export const controlPanel = windowManager.createWindow({
   type: 'popup',
   className: "control-panel-window",
   content: ControlPanel(),
-  anchor: Astal.WindowAnchor.BOTTOM | Astal.WindowAnchor.LEFT,
+  anchor: Astal.WindowAnchor.BOTTOM | Astal.WindowAnchor.RIGHT,
   exclusive: true,   // Only one popup at a time
   autoClose: true,   // Close on ESC, fullscreen click (including AGS bar), workspace change
 })

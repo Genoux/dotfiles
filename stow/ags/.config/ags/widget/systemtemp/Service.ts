@@ -81,10 +81,10 @@ async function fetchSystemTemps(): Promise<SystemTempData> {
     }
 }
 
-// Create a variable that polls system temperatures every 3 seconds
+// Create a variable that polls system temperatures every 10 seconds
 export const systemTemps = Variable<SystemTempData>({
     cpu: 0,
     gpu: 0,
     avgTemp: 0,
     status: 'normal'
-}).poll(3000, fetchSystemTemps); // Poll every 3 seconds for real-time monitoring 
+}).poll(10000, fetchSystemTemps); // Poll every 10 seconds to reduce system load 

@@ -35,7 +35,7 @@ export function switchKeyboardLayout() {
             exec(`hyprctl switchxkblayout ${keyboard.name} next`)
         }
     } catch (error) {
-        console.log("Failed to switch layout:", error)
+        console.error("Failed to switch layout:", error)
     }
 }
 

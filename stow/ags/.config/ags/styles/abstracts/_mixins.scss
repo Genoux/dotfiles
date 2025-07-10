@@ -39,12 +39,12 @@
   @include gtk-reset;
   padding: $spacing-sm;
   border-radius: $radius-sm;
-  transition: all $transition-normal;
-  min-width: 24px;
+  transition: $transition-hover;
+  min-width: 32px;
 
   // Default states - can be overridden
   &:hover:not(.active) {
-    background-color: $bg-tertiary;
+    background-color: $state-hover;
   }
 
   &.active {
@@ -87,7 +87,7 @@
   border: $border-width solid $border-tertiary;
   border-radius: $radius-md;
   color: $white;
-  transition: all $transition-normal;
+  transition: $transition-hover;
   
   &:focus {
     border-color: $border-secondary;
@@ -126,6 +126,103 @@
 // COMPONENT-SPECIFIC MIXINS
 // =============================================================================
 
+// Slider/Scale styling - consistent across media player, audio controls, and OSD
+@mixin slider-base($height: $spacing-md, $bg-color: $bg-tertiary, $highlight-color: $white) {
+  @include gtk-reset;
+  
+  trough {
+    min-height: $height;
+    background-color: $bg-color;
+    border-radius: $radius-sm;
+    transition: $transition-state;
+  }
+  
+  highlight {
+    background-color: $highlight-color;
+    border-radius: $radius-sm;
+    transition: $transition-state;
+    min-width: 0; // Allow highlight to be completely hidden at 0
+    
+    // Override GTK's minimum content requirements
+    -gtk-outline-radius: 0;
+    min-height: 0;
+    padding: 0;
+    margin: 0;
+  }
+  
+  slider {
+    @include gtk-reset;
+    min-width: $spacing-md;
+    min-height: $spacing-md;
+    border-radius: 50%;
+    background-color: $highlight-color;
+    transition: $transition-hover;
+    
+    margin-left: -#{$spacing-sm};
+    
+    &:hover {
+      background-color: $accent-hover;
+    }
+  }
+}
+
+// Icon styling - consistent opacity and transitions
+@mixin icon-base($size: $font-size-lg, $opacity: 0.9) {
+  font-size: $size;
+  opacity: $opacity;
+  transition: $transition-opacity;
+  
+  &:hover {
+    opacity: 1;
+  }
+}
+
+// Interactive element base - for buttons, clickable items
+@mixin interactive-element {
+  @include button-base;
+  transition: $transition-hover;
+  
+  &:hover {
+    background-color: $state-hover;
+  }
+}
+
+// Status indicator - for battery, network, etc.
+@mixin status-indicator {
+  @include icon-base;
+  opacity: 0.9;
+  transition: $transition-opacity;
+  
+  &:hover {
+    opacity: 1;
+  }
+  
+  &.active {
+    opacity: 1;
+    color: $accent-primary;
+  }
+}
+
+// Panel container - for control panels, popups
+@mixin panel-container {
+  @include card-base;
+  background-color: $bg-translucent;
+  border: $border-width solid $border-tertiary;
+  
+  &.active {
+    border-color: $border-secondary;
+  }
+}
+
+// Hover state utility
+@mixin hover-state($bg-color: $state-hover) {
+  transition: $transition-state;
+  
+  &:hover {
+    background-color: $bg-color;
+  }
+}
+
 // Badge styling - for notifications, counts, etc.
 @mixin badge {
   font-size: $font-size-xs;
@@ -152,30 +249,11 @@
     > box {
       @include card-base;
       min-width: 300px;
-      transition: all $transition-fast;
+      transition: $transition-hover;
     }
 
     &:hover > box {
       background-color: $bg-quaternary;
     }
   }
-}
-
-// =============================================================================
-// UTILITY CLASSES (Applied globally)
-// =============================================================================
-
-// Global separator styling
-.separator {
-  background-color: $state-hover;
-  min-height: 1px;
-}
-
-// Global hidden utility
-.hidden {
-  opacity: 0;
-}
-
-.badge {
-  @include badge;
 }

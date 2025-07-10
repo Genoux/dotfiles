@@ -21,7 +21,6 @@
       font-size: $font-size-xl;
     }
 
-    // Individual button color variants
     &.lock-btn:hover {
       @include button-variant(rgba($accent-primary, 0.3), rgba($accent-primary, 0.4), $accent-hover);
     }
@@ -34,7 +33,6 @@
       @include button-variant(rgba($error, 0.2), rgba($error, 0.3), $error);
     }
 
-    // Confirmation state styling
     &.shutdown-btn.confirm-pending {
       @include button-variant(rgba($error, 0.3), rgba($error, 0.4), $error);
     }
@@ -80,9 +78,8 @@
 .system-control-container stack {
   transition: all 200ms ease;
 
-  // Ensure consistent height during transitions
   .system-controls,
   .confirmation-container {
-    min-height: 48px; // Match button height
+    min-height: 48px;
   }
 }

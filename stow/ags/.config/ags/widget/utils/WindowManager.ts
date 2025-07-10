@@ -32,7 +32,6 @@ class UnifiedWindowManager {
 
   constructor() {
     this.initializeHyprland()
-    this.setupGlobalHandlers()
   }
 
   static getInstance(): UnifiedWindowManager {
@@ -94,7 +93,7 @@ class UnifiedWindowManager {
     // Register the window
     this.windows.set(config.name, managedWindow)
     
-    console.log(`📋 Created window: ${config.name} (${config.type})`)
+    console.info(`📋 Created window: ${config.name} (${config.type})`)
     return managedWindow
   }
 
@@ -133,7 +132,7 @@ class UnifiedWindowManager {
       this.activeExclusiveWindow = windowName
     }
 
-    console.log(`✅ Showed window: ${windowName}`)
+    console.info(`✅ Showed window: ${windowName}`)
     return true
   }
 
@@ -165,7 +164,7 @@ class UnifiedWindowManager {
       this.activeExclusiveWindow = null
     }
 
-    console.log(`❌ Hid window: ${windowName}`)
+    console.info(`Hid window: ${windowName}`)
     return true
   }
 
@@ -195,10 +194,6 @@ class UnifiedWindowManager {
         hiddenWindows.push(name)
       }
     })
-
-    if (hiddenWindows.length > 0) {
-      console.log(`🧹 Hid all windows: ${hiddenWindows.join(', ')}`)
-    }
   }
 
 
@@ -247,18 +242,29 @@ class UnifiedWindowManager {
     }
   }
 
-  private applyCursorManagement(window: Widget.Window): void {
-    // Recursive function to apply cursor to all buttons
-    const applyToAllButtons = (widget: any) => {
-      if (!widget) return
+  private static cursorCache = new Map<string, any>()
 
-      // Check if it's a button
-      if (widget.constructor.name.includes('Button') || 
-          widget.get_style_context?.()?.has_class?.('button')) {
-        
+  private applyCursorManagement(window: Widget.Window): void {
+    // Optimized recursive function with depth limiting and caching
+    const applyToAllButtons = (widget: any, depth: number = 0) => {
+      if (!widget || depth > 10) return // Limit recursion depth to prevent deep traversal
+
+      // More efficient button detection
+      const isButton = widget.constructor.name === 'Button' || 
+                      widget.get_style_context?.()?.has_class?.('button')
+
+      if (isButton) {
         widget.connect('enter-notify-event', () => {
           const display = widget.get_display()
-          const cursor = Gdk.Cursor.new_from_name(display, 'pointer')
+          const displayId = display.get_name() || 'default'
+          
+          // Cache cursor objects to avoid repeated creation
+          if (!UnifiedWindowManager.cursorCache.has(displayId)) {
+            const cursor = Gdk.Cursor.new_from_name(display, 'pointer')
+            UnifiedWindowManager.cursorCache.set(displayId, cursor)
+          }
+          
+          const cursor = UnifiedWindowManager.cursorCache.get(displayId)
           widget.get_window()?.set_cursor(cursor)
         })
         
@@ -267,9 +273,9 @@ class UnifiedWindowManager {
         })
       }
 
-      // Recursively apply to children
+      // Recursively apply to children with depth tracking
       if (widget.get_children) {
-        widget.get_children().forEach(applyToAllButtons)
+        widget.get_children().forEach((child) => applyToAllButtons(child, depth + 1))
       }
     }
 
@@ -286,21 +292,14 @@ class UnifiedWindowManager {
         
         // Close all auto-close windows on workspace change
         this.hypr.connect("notify::focused-workspace", () => {
-          console.log("🔄 Workspace changed - hiding auto-close windows")
           this.hideAll()
         })
         
-        console.log("🚀 UnifiedWindowManager: Hyprland integration active")
+        console.info("🚀 UnifiedWindowManager: Hyprland integration active")
       }
     } catch (error) {
       console.warn("⚠️ UnifiedWindowManager: Hyprland not available:", error)
     }
-  }
-
-  private setupGlobalHandlers(): void {
-    // Global ESC key handler will be handled by individual windows
-    // Global click outside handler will be implemented via overlay windows
-    console.log("🔧 Global handlers initialized")
   }
 
   private createClickCatcher(windowName: string): Widget.Window {
@@ -328,18 +327,6 @@ class UnifiedWindowManager {
     })
 
     return clickCatcher
-  }
-
-  /**
-   * Debug helper
-   */
-  debug(): void {
-    console.log("🔍 UnifiedWindowManager State:")
-    console.log(`  Active exclusive window: ${this.activeExclusiveWindow}`)
-    console.log(`  Registered windows: ${this.getAllWindows().join(', ')}`)
-    this.windows.forEach((managedWindow, name) => {
-      console.log(`    ${name}: ${managedWindow.window.visible ? 'visible' : 'hidden'} (${managedWindow.config.type})`)
-    })
   }
 }
 

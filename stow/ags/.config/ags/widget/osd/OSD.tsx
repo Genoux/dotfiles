@@ -28,13 +28,11 @@ function OnScreenProgress({ visible }: { visible: Variable<boolean> }) {
 
     // Check if OSD is suppressed (e.g., during manual slider dragging)
     if (isOSDSuppressed()) {
-      console.log("OSD suppressed, not showing")
       return
     }
 
     // Clamp the volume for display purposes
     const clampedVolume = clampVolume(v)
-    console.log("OSD show:", clampedVolume, icon, labelText)
     if (clampedVolume > 1.0) {
       return
     }
@@ -57,8 +55,6 @@ function OnScreenProgress({ visible }: { visible: Variable<boolean> }) {
     <revealer
       setup={(self) => {
         if (speaker) {
-          console.log("Setting up OSD with speaker:", speaker.description)
-
           // Volume changes
           self.hook(speaker, "notify::volume", () => {
             const vol = speaker!.volume

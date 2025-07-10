@@ -96,7 +96,6 @@ export class GoogleProvider implements LauncherProvider {
         
         try {
             const result = GLib.spawn_command_line_async(command)
-            console.log(`✅ Firefox command executed: ${result}`)
         } catch (error) {
             console.error(`❌ Error with firefox: ${error}`)
             
@@ -104,7 +103,6 @@ export class GoogleProvider implements LauncherProvider {
             try {
                 const fullUrl = `https://www.google.com/search?q=${searchQuery.replace(/ /g, '+')}`
                 const fallbackCommand = `xdg-open "${fullUrl}"`
-                console.log(`🔄 Trying fallback: ${fallbackCommand}`)
                 GLib.spawn_command_line_async(fallbackCommand)
             } catch (fallbackError) {
                 console.error(`❌ Fallback failed: ${fallbackError}`)

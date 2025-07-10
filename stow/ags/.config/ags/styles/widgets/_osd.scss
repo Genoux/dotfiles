@@ -13,29 +13,14 @@
         padding: 0 $spacing-xl;
         
         .osd-icon {
+            @include icon-base($spacing-xl, 1.0);
             color: $white;
             min-width: $spacing-xl;
             min-height: $spacing-xl;
-            font-size: $spacing-xl;
         }
         
         .osd-slider {
-            padding: 0;
-            
-            trough {
-                min-height: $spacing-md;
-                background: $bg-tertiary;
-                border-radius: $radius-sm;
-            }
-            
-            highlight {
-                background-color: $white;
-                border-radius: $radius-sm;
-            }
-            
-            slider {
-                @include gtk-reset;
-            }
+            @include slider-base($spacing-md, $bg-tertiary, $white);
         }
         
         .osd-label {

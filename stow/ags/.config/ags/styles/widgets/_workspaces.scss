@@ -12,12 +12,10 @@
     background: transparent;
     transition: background-color $transition-normal;
 
-    // Hover effect for non-focused workspaces
     &:hover:not(.focused) {
       background: $state-hover;
     }
 
-    // Focused workspace gets subtle background
     &.focused {
       background: $state-active;
     }
@@ -30,7 +28,6 @@
     min-height: 2px;
     min-width: $spacing-md;
 
-    // Focused workspace - horizontal line
     &.focused {
       background-color: $white;
       min-width: $spacing-xl;

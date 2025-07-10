@@ -5,29 +5,15 @@
 // Control Panel Widget Styling
 // =============================================================================
 
-box.ControlPanel {
+.ControlPanel {
   @include card-base;
   margin: $spacing-sm $spacing-md;
 
-  box.widget {
+  .widget {
     @include card-base($padding: $spacing-xs);
   }
-}
 
-.control-panel-button {
-  @include button-base;
-  background-color: $bg-translucent;
-  border-radius: $radius-md;
-
-  &:hover:not(.active) {
-    background-color: $bg-quaternary;
-  }
-
-  &.active {
-    background-color: $bg-tertiary;
-
-    &:hover {
-      background-color: $bg-secondary;
-    }
+  .notification-section {
+    margin-bottom: $spacing-sm;
   }
 }

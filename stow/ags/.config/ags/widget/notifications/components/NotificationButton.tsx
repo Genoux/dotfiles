@@ -22,7 +22,6 @@ export default function NotificationButton() {
       onClicked={
         () => {
           toggleNotificationCenter()
-          console.log("Notification center toggled:", notificationCenterVisible.get())
         }
       }
       halign={Gtk.Align.CENTER}

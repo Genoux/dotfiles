@@ -5,6 +5,15 @@ export default function WindowTitle() {
   return (
     <box className="window-title">
       {bind(updateTrigger).as(() => {
+        if (!hypr) {
+          return (
+            <box spacing={8}>
+              <icon icon="desktop-symbolic" />
+              <label label="Desktop" />
+            </box>
+          );
+        }
+        
         const focusedClient = hypr.focusedClient;
         
         if (!focusedClient) {

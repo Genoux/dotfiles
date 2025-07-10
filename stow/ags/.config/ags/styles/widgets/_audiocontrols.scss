@@ -9,20 +9,8 @@ box.AudioPanel {
   padding: $spacing-md;
 
   scale {
-    padding: 0;
+    @include slider-base($spacing-md, $bg-tertiary, $white);
     margin-right: $spacing-sm;
-
-    trough {
-      min-height: $spacing-md;
-    }
-
-    highlight {
-      background-color: $white;
-    }
-
-    slider {
-      all: unset;
-    }
   }
 
   label.volume-label {

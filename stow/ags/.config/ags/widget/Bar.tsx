@@ -14,11 +14,6 @@ import { SystemTray, trayItems } from "./systemtray";
 import { CavaVisualizer, isPlaying } from "./cava";
 import { windowManager } from "./utils";
 
-function ControlPanelSection() {
-  return (
-    <ControlPanelButton />
-  );
-}
 
 function LeftSection() {
   return (
@@ -87,7 +82,7 @@ function BatterySection() {
 function RightSection() {
   return (
     <box className="bar-section" halign={Gtk.Align.END} spacing={0}>
-      <NotificationButton />
+      <ControlPanelButton />
       <KeyboardSwitcher />
       <AudioButton />
       <TimeDisplay />
@@ -122,7 +117,6 @@ export default function Bar({ gdkmonitor }: BarProps) {
     >
       <box className="bar-container" hexpand homogeneous>
         <box halign={Gtk.Align.START} spacing={4}>
-          <ControlPanelSection />
           <LeftSection />
         </box>
         <box halign={Gtk.Align.CENTER}>

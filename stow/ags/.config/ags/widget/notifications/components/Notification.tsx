@@ -114,7 +114,7 @@ export default function Notification({
                           GLib.spawn_command_line_async(`hyprctl dispatch focuswindow class:${appName}`);
                         }
                       } catch (focusError) {
-                        console.log("Could not focus window:", focusError);
+                        console.error("Could not focus window:", focusError);
                       }
                     }, 200);
 
@@ -128,7 +128,7 @@ export default function Notification({
                           notification.dismiss();
                         }
                       } catch (dismissError) {
-                        console.log(
+                        console.error(
                           "Could not dismiss notification:",
                           dismissError
                         );

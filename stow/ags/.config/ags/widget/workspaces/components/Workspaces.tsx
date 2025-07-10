@@ -7,6 +7,24 @@ export default function Workspaces() {
   return (
     <box className="workspaces" spacing={2}>
       {bind(workspaceClients).as(clientMap => {
+        if (!hypr) {
+          // Show placeholder workspaces when Hyprland is not available
+          return [1, 2, 3, 4, 5].map(id => (
+            <button
+              key={id}
+              widthRequest={32}
+              className="workspace"
+            >
+              <label
+                className="number"
+                label={id.toString()}
+                halign={Gtk.Align.CENTER}
+                valign={Gtk.Align.CENTER}
+              />
+            </button>
+          ))
+        }
+        
         const workspaces = hypr.get_workspaces()
           .filter(ws => ws.id > 0)
           .sort((a, b) => a.id - b.id)

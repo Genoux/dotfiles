@@ -20,6 +20,9 @@ export class AppProvider implements LauncherProvider {
   private apps = new Apps.Apps();
   private appUsage: AppUsage = {};
   private hypr = Hyprland.get_default();
+  private clientsCache: any[] = [];
+  private clientsCacheTime = 0;
+  private readonly CACHE_DURATION = 2000; // 2 seconds cache
 
   constructor() {
     this.loadUsageData();
@@ -212,9 +215,23 @@ export class AppProvider implements LauncherProvider {
     }
   }
 
+  private getCachedClients(): any[] {
+    const now = Date.now();
+    if (now - this.clientsCacheTime > this.CACHE_DURATION || this.clientsCache.length === 0) {
+      try {
+        this.clientsCache = this.hypr.clients;
+        this.clientsCacheTime = now;
+      } catch (error) {
+        console.warn("Failed to get clients:", error);
+        return [];
+      }
+    }
+    return this.clientsCache;
+  }
+
   private countAppWindows(app: Apps.Application): number {
     try {
-      const clients = this.hypr.clients;
+      const clients = this.getCachedClients();
       const classNames = this.getPossibleClassNames(app);
       let count = 0;
       
@@ -235,7 +252,7 @@ export class AppProvider implements LauncherProvider {
 
   private focusExistingWindow(app: Apps.Application): boolean {
     try {
-      const clients = this.hypr.clients;
+      const clients = this.getCachedClients();
       const classNames = this.getPossibleClassNames(app);
       
       for (const className of classNames) {

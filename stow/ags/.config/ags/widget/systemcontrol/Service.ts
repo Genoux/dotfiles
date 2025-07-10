@@ -7,7 +7,6 @@ import { showConfirmation } from "./components/ConfirmationOverlay"
 
 function executeSystemCommand(command: string, description: string) {
     try {
-        console.log(`Executing ${description}...`)
         GLib.spawn_command_line_async(command)
     } catch (error) {
         console.error(`Failed to execute ${description}:`, error)
@@ -19,7 +18,7 @@ function handleShutdown() {
         title: "Shutdown System",
         message: "Are you sure you want to shutdown?",
         onConfirm: () => executeSystemCommand("systemctl poweroff", "shutdown system"),
-        onCancel: () => console.log("Shutdown cancelled")
+        onCancel: () => console.info("Shutdown cancelled")
     })
 }
 
@@ -28,7 +27,7 @@ function handleSleep() {
         title: "Suspend System", 
         message: "Put the system to sleep?",
         onConfirm: () => executeSystemCommand("systemctl suspend", "suspend system"),
-        onCancel: () => console.log("Sleep cancelled")
+        onCancel: () => console.info("Sleep cancelled")
     })
 }
 

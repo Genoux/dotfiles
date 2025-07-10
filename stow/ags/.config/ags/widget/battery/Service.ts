@@ -4,7 +4,6 @@ import Battery from "gi://AstalBattery"
 let battery: any = null
 try {
     battery = new Battery.UPower()
-    console.log("Battery service initialized successfully")
 } catch (error) {
     console.error("Failed to initialize UPower battery service:", error)
     // Create a fallback object with empty devices

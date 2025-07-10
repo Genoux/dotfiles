@@ -5,7 +5,7 @@
 // Media Player Widget Styling
 // =============================================================================
 
-box.MediaPlayer {
+.MediaPlayer {
     border: none;
     border-radius: $radius-lg;
     padding: $spacing-lg;
@@ -13,107 +13,92 @@ box.MediaPlayer {
     background-position: center;
     background-repeat: no-repeat;
     background-color: $bg-primary;
+}
 
-    box.track-info {
-        margin-bottom: $spacing-sm;
-        min-width: 0;
-        
-        box.title-row {
-            margin-bottom: 1px;
-            min-width: 0;
-            
-            .player-indicator {
-                margin-left: $spacing-sm;
-                
-                icon {
-                    margin-right: $spacing-xs;
-                    color: $white;
-                    opacity: 0.9;
-                }
-                
-                .player-name {
-                    font-size: $font-size-sm;
-                    color: $text-secondary;
-                    opacity: 0.7;
-                    font-weight: normal;
-                }
-            }
-        }
-        
-        label.track-title {
-            font-weight: 600;
-            font-size: $font-size-md;
-            color: $white;
-            min-width: 0;
-            text-decoration: none;
-            transition: text-decoration $transition-fast;
-            
-            &:hover {
-                text-decoration: underline;
-            }
-        }
-        
-        label.track-artist {
-            font-size: $font-size-sm;
-            color: $white;
-            opacity: 0.9;
-            min-width: 0;
-        }
+.MediaPlayer__track-info {
+    margin-bottom: $spacing-sm;
+    min-width: 0;
+}
+
+.MediaPlayer__title-row {
+    margin-bottom: 1px;
+    min-width: 0;
+}
+
+.MediaPlayer__player-indicator {
+    margin-left: $spacing-sm;
+}
+
+.MediaPlayer__player-indicator icon {
+    @include icon-base($font-size-md, 0.9);
+    margin-right: $spacing-xs;
+    color: $white;
+}
+
+.MediaPlayer__player-name {
+    font-size: $font-size-sm;
+    color: $text-secondary;
+    opacity: 0.7;
+    font-weight: normal;
+}
+
+.MediaPlayer__track-title {
+    font-weight: 600;
+    font-size: $font-size-md;
+    color: $white;
+    min-width: 0;
+    text-decoration: none;
+    transition: $transition-hover;
+    
+    &:hover {
+        text-decoration: underline;
     }
+}
 
-    box.progress-with-time {
-        min-height: 2px;
-        
-        label.current-time,
-        label.total-time {
-            font-size: 11px;
-            opacity: 0.9;
-            color: $white;
-            text-shadow: 0 1px 2px $shadow-primary;
-            font-feature-settings: "tnum"; // Tabular numbers for consistent width
-        }
+.MediaPlayer__track-artist {
+    font-size: $font-size-sm;
+    color: $white;
+    opacity: 0.9;
+    min-width: 0;
+}
 
-        scale {
-            padding: 0;
+.MediaPlayer__progress-container {
+    min-height: 2px;
+}
 
-            trough {
-                min-height: $spacing-md;
-                background-color: rgba(255, 255, 255, 0.2);
-                border-radius: $radius-sm;
-            }
+.MediaPlayer__time-label {
+    font-size: $font-size-xs;
+    opacity: 0.9;
+    color: $white;
+    text-shadow: 0 1px 2px $shadow-primary;
+    font-feature-settings: "tnum"; // Tabular numbers for consistent width
+}
 
-            highlight {
-                background-color: $white;
-                border-radius: $radius-sm;
-            }
-
-            slider {
-                @include gtk-reset;
-                background-color: $white;
-                border-radius: 50%;
-                min-width: 6px;
-                min-height: 6px;
-                box-shadow: 0 2px 4px $shadow-tertiary;
-            }
-        }
+.MediaPlayer__progress-scale {
+    @include slider-base($spacing-md, rgba(255, 255, 255, 0.2), $white);
+    
+    slider {
+        min-width: 6px;
+        min-height: 6px;
+        box-shadow: 0 2px 4px $shadow-tertiary;
     }
+}
 
-    box.controls {
-        .play-btn {
-            background-color: $state-hover;
-            border-radius: $radius-xl;
-        }
-        
-        button {
-            @include button-base;
-            font-size: $font-size-lg;
-            margin: 0;
-            color: $white;
-            text-shadow: 0 1px 2px $shadow-primary;
-            
-            &:hover {
-                background-color: $state-hover;
-            }
-        }
+.MediaPlayer__controls {
+    .play-btn {
+        background-color: $state-hover;
+        border-radius: $radius-xl;
+    }
+}
+
+.MediaPlayer__control-button {
+    @include button-base;
+    font-size: $font-size-lg;
+    margin: 0;
+    color: $white;
+    text-shadow: 0 1px 2px $shadow-primary;
+    
+    &:hover {
+        background-color: $state-hover;
     }
 }

@@ -8,7 +8,8 @@ export function getVolumeIcon(volume: number, muted: boolean): string {
     if (volume > 0.6) return "audio-volume-high-symbolic"
     if (volume > 0.3) return "audio-volume-medium-symbolic"
     if (volume > 0) return "audio-volume-low-symbolic"
-    return "audio-volume-muted-symbolic"
+    // Show low volume icon even at 0 if not muted - only mute button should show muted icon
+    return "audio-volume-low-symbolic"
 }
 
 // Clamp volume to prevent going over 100%
@@ -48,7 +49,6 @@ export function setupVolumeLimiter(speaker: any) {
         if (speaker.volume > 1.0) {
             isLimiting = true
             speaker.volume = 1.0
-            console.log("Volume limited to 100%")
             
             // Clear any existing timeout
             if (limitTimeout) {
@@ -81,7 +81,6 @@ export function initializeAudioSystem() {
         
         if (speaker) {
             setupVolumeLimiter(speaker)
-            console.log("Audio system initialized with volume limiting")
             audioInitialized = true
         } else {
             console.warn("No speaker found for audio system initialization")

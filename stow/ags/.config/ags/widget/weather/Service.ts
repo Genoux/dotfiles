@@ -9,10 +9,10 @@ interface WeatherData {
     icon: string;
 }
 
-// Get location using IP geolocation with curl
+// Get location using IP geolocation with curl and timeout
 async function getLocation(): Promise<{ lat: number; lon: number; city: string }> {
     try {
-        const result = await execAsync(['curl', '-s', 'http://ip-api.com/json/']);
+        const result = await execAsync(['curl', '-s', '--max-time', '10', '--connect-timeout', '5', 'http://ip-api.com/json/']);
         const data = JSON.parse(result);
         return {
             lat: data.lat,
@@ -33,7 +33,7 @@ async function fetchWeather(): Promise<WeatherData> {
         
         // Using Open-Meteo API with curl (no API key required, more accurate)
         const url = `https://api.open-meteo.com/v1/forecast?latitude=${location.lat}&longitude=${location.lon}&current=temperature_2m,apparent_temperature,weather_code&timezone=auto`;
-        const result = await execAsync(['curl', '-s', url]);
+        const result = await execAsync(['curl', '-s', '--max-time', '15', '--connect-timeout', '8', url]);
         const data = JSON.parse(result);
         
         const current = data.current;
@@ -91,21 +91,45 @@ function getWeatherCondition(weatherCode: number): string {
     return 'unknown';
 }
 
-// Create a variable that polls weather data every 10 minutes
+// Create weather variables without automatic polling
 export const weather = Variable<WeatherData>({
     temperature: 0,
     feelsLike: 0,
-    location: 'Loading...',
-    condition: 'loading',
-    icon: '🌡️'
-}).poll(600000, fetchWeather); // Poll every 10 minutes
+    location: '',
+    condition: '',
+    icon: ''
+});
 
-// Helper function to get formatted weather string  
-export const weatherDisplay = Variable("🌡️ --°C").poll(600000, async () => {
-    try {
-        const data = await fetchWeather();
-        return `${data.icon} ${data.feelsLike}°C`;
-    } catch (error) {
-        return "🌡️ --°C";
-    }
-}); 
+export const weatherDisplay = Variable("🌡️ --°C");
+
+// Lazy loading state
+let weatherInitialized = false;
+let weatherInterval: number | null = null;
+
+// Initialize weather loading (call this when widget becomes visible)
+export function initializeWeather() {
+    if (weatherInitialized) return;
+    
+    weatherInitialized = true;
+    
+    // Initial fetch
+    fetchWeather().then(data => {
+        weather.set(data);
+        weatherDisplay.set(`${data.icon} ${data.feelsLike}°C`);
+    }).catch(error => {
+        console.error("Weather: Initial fetch failed:", error);
+        weatherDisplay.set("");
+    });
+    
+    // Start polling every 10 minutes
+    weatherInterval = setInterval(async () => {
+        try {
+            const data = await fetchWeather();
+            weather.set(data);
+            weatherDisplay.set(`${data.icon} ${data.feelsLike}°C`);
+        } catch (error) {
+            console.error("Weather: Polling failed:", error);
+            weatherDisplay.set("🌡️ --°C");
+        }
+    }, 600000); // 10 minutes
+}

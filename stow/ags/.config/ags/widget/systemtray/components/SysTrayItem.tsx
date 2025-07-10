@@ -12,7 +12,7 @@ export default function SysTrayItem({ item }: SysTrayItemProps) {
       item.activate(0, 0)
       hypr.dispatch("focuswindow", `class:${item.title}`)
     } catch (error) {
-      console.log("Failed to activate tray item:", error)
+      console.error("Failed to activate tray item:", error)
     }
   }
 
