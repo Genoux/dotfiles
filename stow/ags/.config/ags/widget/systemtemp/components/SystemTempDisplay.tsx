@@ -8,7 +8,6 @@ export default function SystemTempDisplay() {
         <button
             className="system-temp-display"
             halign={Gtk.Align.CENTER}
-            tooltip_text="System temperatures (CPU/GPU)"
         >
             <box spacing={4}>
                 <icon 

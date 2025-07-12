@@ -23,7 +23,8 @@
 @use "widgets/cava";
 
 * {
-  font-family: "SF Pro Display", monospace;
+  font-family: "SF Pro Text", monospace;
+  letter-spacing: 0.02em;
 }
 // Global GTK reset for common elements
 box,
@@ -36,7 +37,6 @@ viewport {
   @include mixins.gtk-reset;
 }
 
-// Only reset buttons, don't apply base styling globally
 button {
   @include mixins.button-base;
 }

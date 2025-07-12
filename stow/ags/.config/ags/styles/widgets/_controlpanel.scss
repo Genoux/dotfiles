@@ -5,15 +5,11 @@
 // Control Panel Widget Styling
 // =============================================================================
 
-.ControlPanel {
+.control-panel {
   @include card-base;
   margin: $spacing-sm $spacing-md;
 
   .widget {
     @include card-base($padding: $spacing-xs);
-  }
-
-  .notification-section {
-    margin-bottom: $spacing-sm;
   }
 }

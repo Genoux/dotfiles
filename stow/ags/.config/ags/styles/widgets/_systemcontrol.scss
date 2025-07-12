@@ -9,9 +9,6 @@
   padding: $spacing-md;
 
   .system-control-btn {
-    @include button-base;
-    @include text-secondary;
-    min-height: 40px;
 
     &:hover {
       color: $white;
@@ -46,8 +43,8 @@
 .inline-confirmation-overlay {
   .confirmation-header {
     .confirmation-title {
-      @include text-primary;
       font-size: $font-size-sm;
+      margin-bottom: $spacing-sm;
     }
   }
 

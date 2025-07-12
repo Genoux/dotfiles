@@ -8,7 +8,6 @@
 .workspaces {
   .workspace {
     border-radius: $radius-sm;
-    padding: 0 $spacing-md;
     background: transparent;
     transition: background-color $transition-normal;
 
@@ -24,7 +23,7 @@
   .dot {
     background-color: $white;
     border-radius: $radius-md;
-    transition: min-width 200ms cubic-bezier(0.25, 0.8, 0.25, 1);
+    transition: min-width $transition-normal;
     min-height: 2px;
     min-width: $spacing-md;
 

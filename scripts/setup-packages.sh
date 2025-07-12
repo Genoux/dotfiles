@@ -77,8 +77,20 @@ detect_gpu() {
 # Hardware-specific package filtering
 filter_packages_by_hardware() {
     local package_file="$1"
-    local temp_file=$(mktemp)
+    local temp_file
     local show_status="$2"  # Optional parameter to show status
+    
+    # Securely create temporary file with proper permissions
+    temp_file=$(mktemp --tmpdir="$HOME" "pkg-filter-$$-XXXXXXXX")
+    
+    # Trap to ensure cleanup on exit/error
+    trap 'rm -f "$temp_file" 2>/dev/null' EXIT INT TERM
+    
+    # Validate input file exists and is readable
+    if [[ ! -f "$package_file" || ! -r "$package_file" ]]; then
+        echo "Error: Package file not found or not readable: $package_file" >&2
+        return 1
+    fi
     
     # Get GPU info
     local gpu_info=$(detect_gpu)
@@ -123,6 +135,9 @@ filter_packages_by_hardware() {
     
     # Only echo the temp file path (this is what gets captured)
     echo "$temp_file"
+    
+    # Clear trap since we're returning the temp file path for caller to handle
+    trap - EXIT INT TERM
 }
 
 # Essential packages that should NEVER be removed
@@ -212,13 +227,31 @@ find_missing_deps() {
 cmd_get() {
     echo -e "${BLUE}📦 Getting all packages from your current system...${NC}"
 
+    # Get ALL AUR packages first to use for filtering
+    echo -e "${BLUE}🔍 Scanning AUR packages...${NC}"
+    local aur_packages_temp=$(mktemp)
+    pacman -Qm | awk '{print $1}' > "$aur_packages_temp"
+    
+    # Create escaped regex pattern for grep
+    local aur_pattern=""
+    if [[ -s "$aur_packages_temp" ]]; then
+        # Escape special regex characters in package names
+        aur_pattern=$(sed 's/[[\.*^$()+?{|]/\\&/g' "$aur_packages_temp" | paste -sd'|')
+    fi
+
     # Get ALL explicitly installed official packages (excluding AUR)
     echo -e "${BLUE}🔍 Scanning official packages...${NC}"
-    pacman -Qe | grep -v "$(pacman -Qm | cut -d' ' -f1 | paste -sd'|')" | awk '{print $1}' > packages.txt
+    if [[ -n "$aur_pattern" ]]; then
+        pacman -Qe | grep -v -E "^($aur_pattern) " | awk '{print $1}' > packages.txt
+    else
+        pacman -Qe | awk '{print $1}' > packages.txt
+    fi
 
-    # Get ALL AUR packages  
-    echo -e "${BLUE}🔍 Scanning AUR packages...${NC}"
-    pacman -Qm | awk '{print $1}' > aur-packages.txt
+    # Copy AUR packages to final file
+    cp "$aur_packages_temp" aur-packages.txt
+    
+    # Cleanup
+    rm -f "$aur_packages_temp"
 
     echo -e "${GREEN}✅ Package lists updated!${NC}"
     echo
@@ -234,11 +267,29 @@ cmd_get() {
 }
 
 cmd_get_quiet() {
+    # Get ALL AUR packages first to use for filtering
+    local aur_packages_temp=$(mktemp)
+    pacman -Qm | awk '{print $1}' > "$aur_packages_temp"
+    
+    # Create escaped regex pattern for grep
+    local aur_pattern=""
+    if [[ -s "$aur_packages_temp" ]]; then
+        # Escape special regex characters in package names
+        aur_pattern=$(sed 's/[[\.*^$()+?{|]/\\&/g' "$aur_packages_temp" | paste -sd'|')
+    fi
+    
     # Get ALL explicitly installed official packages (excluding AUR)
-    pacman -Qe | grep -v "$(pacman -Qm | cut -d' ' -f1 | paste -sd'|')" | awk '{print $1}' > packages.txt
+    if [[ -n "$aur_pattern" ]]; then
+        pacman -Qe | grep -v -E "^($aur_pattern) " | awk '{print $1}' > packages.txt
+    else
+        pacman -Qe | awk '{print $1}' > packages.txt
+    fi
 
-    # Get ALL AUR packages  
-    pacman -Qm | awk '{print $1}' > aur-packages.txt
+    # Copy AUR packages to final file
+    cp "$aur_packages_temp" aur-packages.txt
+    
+    # Cleanup
+    rm -f "$aur_packages_temp"
 
     echo -e "${GREEN}✅ Package lists synced${NC} (Official: $(wc -l < packages.txt), AUR: $(wc -l < aur-packages.txt))"
 }
@@ -351,8 +402,9 @@ cmd_install() {
     
     # Now try system update
     if ! sudo pacman -Syu --noconfirm; then
-        echo -e "  ${RED}⚠️  System update failed, retrying with overwrite...${NC}"
-        sudo pacman -Syu --noconfirm --overwrite="*"
+        echo -e "  ${RED}⚠️  System update failed, retrying with selective overwrite...${NC}"
+        # Only overwrite specific known-safe paths to avoid security issues
+        sudo pacman -Syu --noconfirm --overwrite="/usr/lib/firmware/*,/usr/share/*,/etc/ca-certificates/*"
     fi
     
     # Install missing official packages

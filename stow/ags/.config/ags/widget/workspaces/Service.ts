@@ -34,7 +34,8 @@ try {
     // Listen to all relevant events
     const events = [
         "client-added",
-        "client-removed", 
+        "client-removed",
+        "client-moved",
         "workspace-added",
         "workspace-removed"
     ]

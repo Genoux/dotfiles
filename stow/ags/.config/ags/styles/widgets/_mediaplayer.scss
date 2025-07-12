@@ -66,39 +66,13 @@
     min-height: 2px;
 }
 
-.MediaPlayer__time-label {
-    font-size: $font-size-xs;
-    opacity: 0.9;
-    color: $white;
-    text-shadow: 0 1px 2px $shadow-primary;
-    font-feature-settings: "tnum"; // Tabular numbers for consistent width
-}
-
 .MediaPlayer__progress-scale {
-    @include slider-base($spacing-md, rgba(255, 255, 255, 0.2), $white);
-    
-    slider {
-        min-width: 6px;
-        min-height: 6px;
-        box-shadow: 0 2px 4px $shadow-tertiary;
-    }
+    @include slider-base($spacing-md, $bg-quaternary, $white);
 }
 
-.MediaPlayer__controls {
-    .play-btn {
-        background-color: $state-hover;
-        border-radius: $radius-xl;
-    }
+.current-time,
+.total-time {
+    font-size: $font-size-sm;
 }
 
-.MediaPlayer__control-button {
-    @include button-base;
-    font-size: $font-size-lg;
-    margin: 0;
-    color: $white;
-    text-shadow: 0 1px 2px $shadow-primary;
-    
-    &:hover {
-        background-color: $state-hover;
-    }
-}
+

@@ -50,7 +50,7 @@ export default function NotificationCenter({ showCloseButton = true }: Notificat
                 windowManager.hide("*")
               }}
             >
-              <icon icon="close" />
+              <icon icon="window-close-symbolic" />
             </button>
           )}
         </box>

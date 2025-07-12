@@ -121,6 +121,7 @@ export function ProgressWithTime({
         halign={Gtk.Align.END}
       />
       <slider
+        className="MediaPlayer__progress-scale"
         hexpand
         visible={bind(player, "length").as((l) => l > 0)}
         value={bind(position)}
@@ -241,7 +242,7 @@ export default function MediaPlayer() {
         }
 
         const coverArtBackground = bind(activePlayer, "coverArt").as((c) => 
-          c ? `background-image: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.7)), url('${c}'); background-size: cover; background-position: center;` : ""
+          c ? `background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.8)), url('${c}'); background-size: cover; background-position: center;` : ""
         );
 
         return (

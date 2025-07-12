@@ -1,4 +1,4 @@
-import { App, Astal, Widget, Gdk } from "astal/gtk3"
+import { Astal, Widget, Gdk } from "astal/gtk3"
 import { Variable } from "astal"
 
 // Simple, clean interfaces
@@ -246,7 +246,7 @@ class UnifiedWindowManager {
 
   private applyCursorManagement(window: Widget.Window): void {
     // Optimized recursive function with depth limiting and caching
-    const applyToAllButtons = (widget: any, depth: number = 0) => {
+    const applyToAllButtons = (widget: Widget.Window, depth: number = 0) => {
       if (!widget || depth > 10) return // Limit recursion depth to prevent deep traversal
 
       // More efficient button detection
@@ -275,12 +275,12 @@ class UnifiedWindowManager {
 
       // Recursively apply to children with depth tracking
       if (widget.get_children) {
-        widget.get_children().forEach((child) => applyToAllButtons(child, depth + 1))
+        widget.get_children().forEach((child) => applyToAllButtons(child as Widget.Window, depth + 1))
       }
     }
 
     if (window.child) {
-      applyToAllButtons(window.child)
+      applyToAllButtons(window.child as Widget.Window)
     }
   }
 
