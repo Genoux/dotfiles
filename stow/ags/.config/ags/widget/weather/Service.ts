@@ -104,7 +104,7 @@ export const weatherDisplay = Variable("🌡️ --°C");
 
 // Lazy loading state
 let weatherInitialized = false;
-let weatherInterval: number | null = null;
+let weatherInterval: any | null = null;
 
 // Initialize weather loading (call this when widget becomes visible)
 export function initializeWeather() {

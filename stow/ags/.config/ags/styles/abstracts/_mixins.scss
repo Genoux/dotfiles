@@ -152,13 +152,9 @@
   
   slider {
     @include gtk-reset;
-    min-width: $spacing-md;
-    min-height: $spacing-md;
     border-radius: 50%;
     background-color: $highlight-color;
     transition: $transition-hover;
-    
-    margin-left: -#{$spacing-sm};
     
     &:hover {
       background-color: $accent-hover;
