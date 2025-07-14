@@ -39,7 +39,7 @@ export default function NotificationCenter({ showCloseButton = true }: Notificat
               });
             }}
           >
-            <label label="Clear All" />
+            <button label="Clear All" />
           </button>
           {showCloseButton && (
             <button

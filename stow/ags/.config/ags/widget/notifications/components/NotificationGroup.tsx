@@ -1,8 +1,8 @@
-import { bind, Variable } from "astal";
+import { bind, Variable, GLib } from "astal";
 import { Gtk } from "astal/gtk3";
-import { GLib } from "astal";
 import Notification from "./Notification";
 import { isGroupExpanded, setGroupExpanded } from "../Service";
+import { getNotificationIcon, getNotificationAppName } from "../utils";
 
 interface NotificationGroupProps {
   appName: string;
@@ -20,6 +20,7 @@ export default function NotificationGroup({
   const notificationCount = notifications.length;
   const latestNotification = notifications[0]; // Most recent notification
   const latestTime = GLib.DateTime.new_from_unix_local(latestNotification.time).format("%H:%M") || "";
+  const { useGIcon, iconValue } = getNotificationIcon(latestNotification);
 
   const toggleExpanded = () => {
     const newState = !isExpanded.get();
@@ -38,19 +39,18 @@ export default function NotificationGroup({
   };
 
   return (
-    <box className="notification-group" vertical spacing={4}>
-      {/* Group Header - Custom styling without notification borders */}
+    <box className="notification-group" vertical spacing={4} >
       <eventbox
         className="notification-group-header"
-        onButtonPressEvent={(_, event) => {
-          if ((event as any).button === 1) {
-            // Left click to expand/collapse
-            toggleExpanded();
-          }
-        }}
+        margin={8}
+        onButtonPressEvent={() => toggleExpanded()}
       >
         <box className="notification-group-header-content" spacing={4}>
-          <icon className="app-icon" icon={latestNotification.app_icon} />
+          {useGIcon ? (
+            <icon className="app-icon" gicon={iconValue} />
+          ) : (
+            <icon className="app-icon" icon={iconValue} />
+          )}
 
           <label
             className="app-name"
@@ -83,7 +83,8 @@ export default function NotificationGroup({
 
       {/* Expanded notifications list */}
       {bind(isExpanded).as(expanded => (
-        <box className="notification-group-expanded" spacing={4} vertical visible={expanded}>
+        <box className="notification-group-expanded" spacing={6} vertical visible={expanded} 
+        marginLeft={8} marginRight={12} marginBottom={12} >
           {notifications.map((notification, index) => (
             <box className="grouped-notification-wrapper">
               <Notification 

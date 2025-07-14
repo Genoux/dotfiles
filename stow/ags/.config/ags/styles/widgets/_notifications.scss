@@ -22,30 +22,41 @@
 
 .notification-center {
   @include card-base;
-  min-height: 300px;
-  min-width: 320px;
+  min-height: 400px;
+  min-width: 330px;
+
+  .timestamp {
+    font-size: $font-size-xs;
+    opacity: 0.7;
+    color: $text-secondary;
+  }
 
   &.floating {
     margin: $spacing-sm;
   }
 
   .notifications-header {
-    padding: $spacing-xl $spacing-lg;
+    padding: $spacing-md;
     border-bottom: $border-width solid $border-tertiary;
+
+    button {
+      font-size: $font-size-md;
+    }
 
     .notification-title {
       font-size: $font-size-lg;
       color: $white;
+    }
+
+    .notification-count {
+      font-size: $font-size-sm;
+      color: $text-secondary;
     }
   }
 
   .notification-list {
     background: transparent;
     border: none;
-
-    .notification-list-content {
-      margin: 0 6px 6px 6px;
-    }
 
     .no-notifications {
       color: $white;
@@ -57,6 +68,29 @@
     }
   }
 }
+
+// =============================================================================
+// Notification Group Component
+// =============================================================================
+
+.notification-group {
+  border: 1px solid $border-tertiary;
+  border-radius: $radius-md;
+  background-color: $bg-tertiary;
+
+  .notification-group-header {
+    padding: $spacing-xl;
+    .app-name {
+      padding-left: $spacing-xs;
+    }
+
+    .notification-group-expanded {
+      padding-right: $spacing-sm;
+    }
+  }
+  }
+
+ 
 
 // =============================================================================
 // Individual Notification Component
@@ -85,14 +119,10 @@ eventbox.notification {
 
   .notification-container {
     @include card-base;
-    border: 1px solid $border-tertiary;
-    background-color: $bg-tertiary;
-    border-radius: $radius-md;
-    transition: all $transition-fast;
-    min-width: 300px;
+    min-width: 280px;
 
     .notification-header {
-      padding-bottom: $spacing-lg;
+      padding-bottom: $spacing-md;
 
       .app-icon {
         min-width: 16px;
@@ -104,12 +134,6 @@ eventbox.notification {
         font-weight: 500;
         color: $white;
         font-size: $font-size-sm;
-      }
-
-      .timestamp {
-        font-size: $font-size-xs;
-        opacity: 0.7;
-        color: $text-secondary;
       }
     }
 

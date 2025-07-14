@@ -1,6 +1,7 @@
 import { GLib } from "astal";
 import { Gtk } from "astal/gtk3";
 import { dismissPopupNotification } from "./NotificationPopup";
+import { getNotificationIcon, getNotificationAppName } from "../utils";
 
 // Simple notification component following original NotificationItem structure
 export default function Notification({
@@ -11,6 +12,7 @@ export default function Notification({
   isInCenter?: boolean;
 }) {
   const time = GLib.DateTime.new_from_unix_local(notification.time).format("%H:%M") || "";
+  const { useGIcon, iconValue } = getNotificationIcon(notification);
 
   const actions = notification.get_actions?.() || [];
   return (
@@ -34,10 +36,14 @@ export default function Notification({
       <box className="notification-container" vertical>
         {/* Notification Header */}
         <box className="notification-header" spacing={4}>
-          <icon className="app-icon" icon={notification.app_icon || notification.app_name} />
+          {useGIcon ? (
+            <icon className="app-icon" gicon={iconValue} />
+          ) : (
+            <icon className="app-icon" icon={iconValue} />
+          )}
           <label
             className="app-name"
-            label={notification.app_name || "Unknown App"}
+            label={getNotificationAppName(notification)}
             hexpand
             halign={Gtk.Align.START}
           />
@@ -73,7 +79,7 @@ export default function Notification({
             />
           )}
 
-          <box className="text-content" vertical spacing={4}>
+          <box className="text-content" vertical spacing={0}>
             {notification.summary && (
               <label
                 className="summary"
