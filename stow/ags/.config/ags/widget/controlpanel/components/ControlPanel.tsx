@@ -3,6 +3,7 @@ import { MediaPlayer, hasMediaPlayers } from "../../mediaplayer"
 import AudioControls from "../../audiocontrols"
 import { NotificationCenterWidget } from "../../notifications"
 import { SystemControl } from "../../systemcontrol"
+import { BluetoothWidget } from "../../bluetooth"
 
 export default function ControlPanel() {
   return (
@@ -16,6 +17,9 @@ export default function ControlPanel() {
       </box>
       <box className="widget">
         <AudioControls />
+      </box>
+      <box className="widget">
+        <BluetoothWidget />
       </box>
       <box visible={bind(hasMediaPlayers).as((visible) => visible)}>
         <MediaPlayer />

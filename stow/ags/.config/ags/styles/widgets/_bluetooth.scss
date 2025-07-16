@@ -1,0 +1,204 @@
+@use "../abstracts/variables" as *;
+@use "../abstracts/mixins" as *;
+
+// =============================================================================
+// Bluetooth Widget Styling
+// =============================================================================
+
+.bluetooth-widget {
+  padding: $spacing-md;
+}
+
+.bluetooth-header {
+  border-radius: $radius-md;
+  padding: $spacing-sm;
+  
+  .bluetooth-icon {
+    @include status-indicator;
+    font-size: $font-size-lg;
+    
+    &.enabled {
+      color: $accent-primary;
+      opacity: 1;
+    }
+    
+    &.disabled {
+      color: $text-tertiary;
+      opacity: 0.5;
+    }
+  }
+  
+  .bluetooth-status-dot {
+    min-width: 6px;
+    min-height: 6px;
+    border-radius: 100px;
+    
+    &.active {
+      background-color: $success;
+    }
+    
+    &.inactive {
+      background-color: $text-tertiary;
+    }
+  }
+  
+  .bluetooth-title {
+    @include text-primary;
+  }
+  
+  .bluetooth-toggle-btn {
+    @include button-base;
+    border-radius: $radius-sm;
+    padding: 2px 8px;
+    min-width: 32px;
+    transition: $transition-hover;
+    background-color: $bg-tertiary;
+    .bluetooth-toggle-label {
+      @include text-secondary;
+      font-size: $font-size-xs;
+      font-weight: 600;
+    }
+    
+    &.on {
+      background-color: $white-translucent;
+    }
+
+   
+  }
+  
+  .bluetooth-expand-btn {
+    @include icon-button($size: $spacing-lg);
+    opacity: 0.7;
+    
+    &:hover {
+      opacity: 1;
+      background-color: $state-hover;
+    }
+  }
+}
+
+.bluetooth-expanded {
+  margin-top: $spacing-md;
+  padding: $spacing-md $spacing-xs 0 $spacing-xs;
+  border-top: 1px solid $border-secondary;
+}
+
+.bluetooth-scan-button {
+  @include interactive-element;
+  border-radius: $radius-sm;
+  padding: $spacing-md;
+  
+  .bluetooth-scan-icon {
+    @include icon-base($size: $font-size-md);
+    color: $accent-primary;
+    
+    &.scanning {
+      animation: pulse 1s ease-in-out infinite;
+    }
+  }
+  
+  .bluetooth-scan-label {
+    @include text-secondary;
+    font-size: $font-size-sm;
+  }
+}
+
+.bluetooth-devices {
+  margin-top: $spacing-xs;
+}
+
+.bluetooth-device {
+  @include interactive-element;
+  border-radius: $radius-sm;
+  padding: $spacing-sm;
+  margin-bottom: $spacing-xs;
+  transition: $transition-hover;
+  
+  &:hover:not(.connecting) {
+    background-color: $state-hover;
+  }
+  
+  &.connecting {
+    opacity: 0.7;
+    
+    .bluetooth-device-icon.connecting {
+      animation: pulse 1s ease-in-out infinite;
+    }
+  }
+  
+  .bluetooth-device-icon {
+    @include icon-base($size: $font-size-md);
+    
+    &.connected {
+      color: $accent-primary;
+      opacity: 1;
+    }
+    
+    &.paired {
+      color: $white;
+      opacity: 0.8;
+    }
+    
+    &.available {
+      color: $text-secondary;
+      opacity: 0.6;
+    }
+    
+    &.connecting {
+      color: $accent-primary;
+      opacity: 1;
+    }
+  }
+  
+  .bluetooth-device-name {
+    @include text-primary;
+    font-size: $font-size-sm;
+  }
+  
+  .bluetooth-device-status {
+    @include text-tertiary;
+    font-size: $font-size-xs;
+    
+    &.connected {
+      color: $accent-primary;
+    }
+    
+    &.paired {
+      color: $text-secondary;
+    }
+    
+    &.available {
+      color: $text-tertiary;
+    }
+    
+    &.connecting {
+      color: $accent-primary;
+      font-style: italic;
+    }
+  }
+  
+  .bluetooth-connected-indicator {
+    @include icon-base($size: $font-size-sm);
+    color: $accent-primary;
+    opacity: 1;
+  }
+}
+
+// Simple opacity animation for connecting state (GTK compatible)
+@keyframes pulse {
+  0% { opacity: 0.5; }
+  50% { opacity: 1; }
+  100% { opacity: 0.5; }
+}
+
+.bluetooth-empty {
+  @include text-tertiary;
+  padding: $spacing-md;
+}
+
+.bluetooth-disabled-message {
+  @include text-secondary;
+  padding: $spacing-md;
+  font-style: italic;
+  color: $text-tertiary;
+}
