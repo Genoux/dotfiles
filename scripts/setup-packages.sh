@@ -323,7 +323,13 @@ cmd_install() {
     echo -e "${BLUE}Step 2: Analyzing changes needed...${NC}"
     
     # Quick check of what would change
-    local current_official=($(pacman -Qe | grep -v "$(pacman -Qm | cut -d' ' -f1 | paste -sd'|')" | awk '{print $1}'))
+    local aur_pattern=$(pacman -Qm | cut -d' ' -f1 | paste -sd'|')
+    local current_official=()
+    if [[ -n "$aur_pattern" ]]; then
+        current_official=($(pacman -Qe | grep -v -E "^($aur_pattern) " | awk '{print $1}'))
+    else
+        current_official=($(pacman -Qe | awk '{print $1}'))
+    fi
     local current_aur=($(pacman -Qm | awk '{print $1}'))
     local filtered_wanted_official=($(grep -v '^#\|^$' "$filtered_packages"))
     local filtered_wanted_aur=($(grep -v '^#\|^$' "$filtered_aur_packages"))
@@ -467,7 +473,13 @@ cmd_install() {
     echo -e "${BLUE}📦 Removing unlisted packages...${NC}"
     
     # Get current packages (fresh after installs)
-    local current_official=($(pacman -Qe | grep -v "$(pacman -Qm | cut -d' ' -f1 | paste -sd'|')" | awk '{print $1}'))
+    local aur_pattern=$(pacman -Qm | cut -d' ' -f1 | paste -sd'|')
+    local current_official=()
+    if [[ -n "$aur_pattern" ]]; then
+        current_official=($(pacman -Qe | grep -v -E "^($aur_pattern) " | awk '{print $1}'))
+    else
+        current_official=($(pacman -Qe | awk '{print $1}'))
+    fi
     local current_aur=($(pacman -Qm | awk '{print $1}'))
     local wanted_official=($(grep -v '^#\|^$' "$filtered_packages"))
     local wanted_aur=($(grep -v '^#\|^$' "$filtered_aur_packages"))
@@ -528,7 +540,13 @@ cmd_check() {
     fi
     
     # Show current status
-    local current_official=($(pacman -Qe | grep -v "$(pacman -Qm | cut -d' ' -f1 | paste -sd'|')" | awk '{print $1}'))
+    local aur_pattern=$(pacman -Qm | cut -d' ' -f1 | paste -sd'|')
+    local current_official=()
+    if [[ -n "$aur_pattern" ]]; then
+        current_official=($(pacman -Qe | grep -v -E "^($aur_pattern) " | awk '{print $1}'))
+    else
+        current_official=($(pacman -Qe | awk '{print $1}'))
+    fi
     local current_aur=($(pacman -Qm | awk '{print $1}'))
     local wanted_official=($(grep -v '^#\|^$' packages.txt))
     local wanted_aur=($(grep -v '^#\|^$' aur-packages.txt))

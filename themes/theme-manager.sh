@@ -122,6 +122,22 @@ show_status() {
     fi
 }
 
+# Get current system theme information
+get_current_system_theme() {
+    local current_gtk_theme=""
+    local current_icon_theme=""
+    local current_cursor_theme=""
+    
+    # Get current themes from gsettings if available
+    if command -v gsettings &>/dev/null; then
+        current_gtk_theme=$(gsettings get org.gnome.desktop.interface gtk-theme 2>/dev/null | tr -d "'" || echo "unknown")
+        current_icon_theme=$(gsettings get org.gnome.desktop.interface icon-theme 2>/dev/null | tr -d "'" || echo "unknown")
+        current_cursor_theme=$(gsettings get org.gnome.desktop.interface cursor-theme 2>/dev/null | tr -d "'" || echo "unknown")
+    fi
+    
+    echo "GTK:$current_gtk_theme|Icons:$current_icon_theme|Cursor:$current_cursor_theme"
+}
+
 # List available themes with sources and current system theme
 list_themes() {
     echo -e "${BLUE}📋 Your Managed Themes:${NC}"
@@ -138,6 +154,33 @@ list_themes() {
     else
         echo -e "  ${RED}✗ No theme configuration found${NC}"
         echo
+    fi
+    
+    echo
+    
+    # Show current system theme
+    echo -e "${BLUE}🖥️  Current System Theme:${NC}"
+    local system_theme_info=$(get_current_system_theme)
+    local gtk_theme=$(echo "$system_theme_info" | grep -o 'GTK:[^|]*' | cut -d: -f2)
+    local icon_theme=$(echo "$system_theme_info" | grep -o 'Icons:[^|]*' | cut -d: -f2)
+    local cursor_theme=$(echo "$system_theme_info" | grep -o 'Cursor:[^|]*' | cut -d: -f2)
+    
+    if [[ "$gtk_theme" != "unknown" && -n "$gtk_theme" ]]; then
+        echo -e "  GTK Theme: ${GREEN}$gtk_theme${NC}"
+    else
+        echo -e "  GTK Theme: ${YELLOW}Not detected${NC}"
+    fi
+    
+    if [[ "$icon_theme" != "unknown" && -n "$icon_theme" ]]; then
+        echo -e "  Icon Theme: ${GREEN}$icon_theme${NC}"
+    else
+        echo -e "  Icon Theme: ${YELLOW}Not detected${NC}"
+    fi
+    
+    if [[ "$cursor_theme" != "unknown" && -n "$cursor_theme" ]]; then
+        echo -e "  Cursor Theme: ${GREEN}$cursor_theme${NC}"
+    else
+        echo -e "  Cursor Theme: ${YELLOW}Not detected${NC}"
     fi
     
     echo

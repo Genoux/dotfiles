@@ -42,6 +42,8 @@
     "shadow-primary": "shadow-primary",
     "shadow-secondary": "shadow-secondary",
     "shadow-tertiary": "shadow-tertiary",
-    "black": "black"
+    "black": "black",
+    "white-translucent": "white-translucent",
+    "black-translucent": "black-translucent"
   }
 } 

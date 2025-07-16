@@ -86,10 +86,14 @@ export function calculateGradientOpacity(index: number, totalBars: number): numb
   const distanceFromCenter = Math.abs(index - centerIndex)
   const maxDistance = Math.floor(totalBars / 2)
   
-  // Calculate opacity based on distance from center
-  // Center = 1.0, edges fade to 0.1
+  // Create dramatic center emphasis with very strong edge suppression
   const normalizedDistance = distanceFromCenter / maxDistance
-  return 1.0 - (normalizedDistance * 0.9) // 1.0 to 0.1
+  
+  // Use cubic falloff for very dramatic effect
+  const cubicFalloff = Math.pow(normalizedDistance, 3)
+  
+  // Center = 1.0, edges fade to 0.02 with cubic curve
+  return 1.0 - (cubicFalloff * 0.98) // 1.0 to 0.02
 }
 
  

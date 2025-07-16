@@ -145,7 +145,7 @@ export default function Notification({
                   }
                 }}
               >
-                <label label={action.label} />
+                <label label={action.label || 'View'} />
               </button>
             ))}
           </box>

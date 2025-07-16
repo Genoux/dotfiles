@@ -77,7 +77,14 @@ export default function ModularAppLauncher() {
                                 <entry
                                     className="search-entry"
                                     text={Service.text()}
-                                    onChanged={self => Service.setText(self.text)}
+                                    onChanged={self => {
+                                        let text = self.text
+                                        // Filter out spaces for calculator expressions
+                                        if (/^[\d+\-*/().,\s]+$/.test(text) && /[+\-*/()]/.test(text)) {
+                                            text = text.replace(/\s+/g, '')
+                                        }
+                                        Service.setText(text)
+                                    }}
                                     onActivate={() => Service.activateSelected()}
                                     setup={(self) => {
                                         entryRef = self
@@ -140,7 +147,7 @@ export default function ModularAppLauncher() {
                                         className="recent-app-item"
                                         hexpand
                                         onClick={() => Service.launchRecentApp(app)}>
-                                        <box spacing={8} halign={Gtk.Align.START}>
+                                        <box spacing={6} halign={Gtk.Align.START}>
                                             <icon
                                                 icon={app.icon}
                                             />

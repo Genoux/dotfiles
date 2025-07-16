@@ -58,41 +58,117 @@ detect_device_type() {
     echo "desktop"
 }
 
-# Detect connected monitors with enhanced capabilities
+# Get maximum refresh rate for a monitor resolution from hyprctl
+get_max_refresh_rate() {
+    local monitor_name="$1"
+    local target_resolution="$2"
+    local max_refresh=60.0
+    
+    # Use hyprctl to get available modes
+    if has_command hyprctl && hyprctl monitors &>/dev/null; then
+        local hypr_output=$(hyprctl monitors 2>/dev/null)
+        local in_monitor_section=false
+        local in_modes_section=false
+        
+        while IFS= read -r line; do
+            if [[ $line =~ ^Monitor\ $monitor_name\ \(ID ]]; then
+                in_monitor_section=true
+                in_modes_section=false
+            elif [[ $line =~ ^Monitor\ [^[:space:]]+\ \(ID ]] && [[ $in_monitor_section == true ]]; then
+                in_monitor_section=false
+                in_modes_section=false
+            elif [[ $in_monitor_section == true && $line =~ ^[[:space:]]*availableModes: ]]; then
+                in_modes_section=true
+                # Extract modes from the same line
+                local modes_line="${line#*availableModes: }"
+                # Parse all modes for our target resolution
+                while [[ $modes_line =~ $target_resolution@([0-9]+\.[0-9]+)Hz ]]; do
+                    local refresh_rate="${BASH_REMATCH[1]}"
+                    # Check if this is higher than our current max
+                    local refresh_int=$(echo "$refresh_rate" | sed 's/\.//' | sed 's/^0*//' | sed 's/^$/0/')
+                    local max_int=$(echo "$max_refresh" | sed 's/\.//' | sed 's/^0*//' | sed 's/^$/0/')
+                    if [[ $refresh_int -gt $max_int ]]; then
+                        max_refresh="$refresh_rate"
+                    fi
+                    # Remove the matched part and continue
+                    modes_line="${modes_line#*${BASH_REMATCH[0]}}"
+                done
+            fi
+        done <<< "$hypr_output"
+    fi
+    
+    echo "$max_refresh"
+}
+
+# Get preferred resolution and maximum refresh rate for a monitor
+get_monitor_best_mode() {
+    local monitor_name="$1"
+    local best_resolution="1920x1080"
+    local max_refresh="60.0"
+    
+    # Use hyprctl to get available modes and find the best one
+    if has_command hyprctl && hyprctl monitors &>/dev/null; then
+        local hypr_output=$(hyprctl monitors 2>/dev/null)
+        local in_monitor_section=false
+        local max_pixels=0
+        
+        while IFS= read -r line; do
+            if [[ $line =~ ^Monitor\ $monitor_name\ \(ID ]]; then
+                in_monitor_section=true
+            elif [[ $line =~ ^Monitor\ [^[:space:]]+\ \(ID ]] && [[ $in_monitor_section == true ]]; then
+                in_monitor_section=false
+            elif [[ $in_monitor_section == true && $line =~ ^[[:space:]]*availableModes: ]]; then
+                # Extract modes from the same line
+                local modes_line="${line#*availableModes: }"
+                
+                # Parse all available modes to find the best resolution
+                while [[ $modes_line =~ ([0-9]+x[0-9]+)@([0-9]+\.[0-9]+)Hz ]]; do
+                    local resolution="${BASH_REMATCH[1]}"
+                    local refresh_rate="${BASH_REMATCH[2]}"
+                    
+                    # Calculate total pixels
+                    local width=$(echo "$resolution" | cut -d'x' -f1)
+                    local height=$(echo "$resolution" | cut -d'x' -f2)
+                    local pixels=$((width * height))
+                    
+                    # If this resolution has more pixels, use it
+                    if [[ $pixels -gt $max_pixels ]]; then
+                        best_resolution="$resolution"
+                        max_pixels=$pixels
+                    fi
+                    
+                    # Remove the matched part and continue
+                    modes_line="${modes_line#*${BASH_REMATCH[0]}}"
+                done
+                break
+            fi
+        done <<< "$hypr_output"
+    fi
+    
+    # Get maximum refresh rate for the best resolution
+    max_refresh=$(get_max_refresh_rate "$monitor_name" "$best_resolution")
+    
+    echo "$best_resolution@$max_refresh"
+}
+
+# Detect connected monitors with enhanced capabilities and maximum refresh rates
 detect_monitors_enhanced() {
     local monitor_info=()
     
     if has_command hyprctl && hyprctl monitors &>/dev/null; then
-        # Parse hyprctl for detailed monitor info
-        local current_monitor=""
-        local current_resolution=""
-        local current_refresh=""
-        
+        # Get all monitor names first
+        local monitor_names=()
         while IFS= read -r line; do
             if [[ $line =~ ^Monitor\ ([^[:space:]]+)\ \(ID ]]; then
-                if [[ -n "$current_monitor" ]]; then
-                    monitor_info+=("$current_monitor:$current_resolution@$current_refresh")
-                fi
-                current_monitor="${BASH_REMATCH[1]}"
-                current_resolution=""
-                current_refresh=""
-            elif [[ -n "$current_monitor" && $line =~ ^[[:space:]]+([0-9]+x[0-9]+)@([0-9]+\.[0-9]+) ]]; then
-                current_resolution="${BASH_REMATCH[1]}"
-                current_refresh="${BASH_REMATCH[2]}"
+                monitor_names+=("${BASH_REMATCH[1]}")
             fi
         done <<< "$(hyprctl monitors 2>/dev/null)"
         
-        # Save last monitor
-        if [[ -n "$current_monitor" ]]; then
-            monitor_info+=("$current_monitor:$current_resolution@$current_refresh")
-        fi
-    else
-        # Fallback detection
-        while IFS= read -r line; do
-            if [[ $line =~ ^([^[:space:]]+)\ connected ]]; then
-                monitor_info+=("${BASH_REMATCH[1]}:preferred")
-            fi
-        done <<< "$(xrandr 2>/dev/null)"
+        # For each monitor, get the best mode with maximum refresh rate
+        for monitor_name in "${monitor_names[@]}"; do
+            local best_mode=$(get_monitor_best_mode "$monitor_name")
+            monitor_info+=("$monitor_name:$best_mode")
+        done
     fi
     
     # Return monitor info array
@@ -106,9 +182,10 @@ generate_monitor_config() {
     local config=""
     local x_offset=0
     
-    config+="# Auto-generated monitor configuration\n"
+    config+="# Auto-generated monitor configuration with maximum refresh rates\n"
     config+="# Generated on $(date)\n"
     config+="# Device type: $device_type\n"
+    config+="# Uses highest resolution and maximum refresh rate for each monitor\n"
     config+="# Only monitors are device-specific - input/appearance stay universal\n\n"
     
     # Device-specific scaling
@@ -191,7 +268,11 @@ if [[ "$QUIET" != true ]]; then
     echo
 fi
 
-# Get monitor information
+# Get monitor information with maximum refresh rates
+if [[ "$QUIET" != true ]]; then
+    log_info "Detecting monitors and maximum refresh rates..."
+fi
+
 monitor_info=($(detect_monitors_enhanced))
 
 if [[ ${#monitor_info[@]} -eq 0 ]]; then
@@ -199,7 +280,14 @@ if [[ ${#monitor_info[@]} -eq 0 ]]; then
     exit 1
 fi
 
-[[ "$QUIET" != true ]] && log_info "Detected monitors: $(echo "${monitor_info[@]}" | cut -d':' -f1 | tr '\n' ' ')"
+if [[ "$QUIET" != true ]]; then
+    log_info "Detected monitors with optimal settings:"
+    for info in "${monitor_info[@]}"; do
+        monitor_name=$(echo "$info" | cut -d':' -f1)
+        mode_info=$(echo "$info" | cut -d':' -f2)
+        log_info "  $monitor_name: $mode_info"
+    done
+fi
 
 # Generate configuration
 config=$(generate_monitor_config "${monitor_info[@]}")

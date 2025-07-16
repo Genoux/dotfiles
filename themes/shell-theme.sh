@@ -236,7 +236,15 @@ install_theme() {
             
             if [[ -n "$found_theme" ]]; then
                 gsettings set org.gnome.desktop.interface gtk-theme "$found_theme"
-                success "System theme set to: $found_theme"
+                
+                # Set color scheme based on theme type
+                if [[ "$found_theme" =~ -[Dd]ark || "$found_theme" =~ -dark ]]; then
+                    gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
+                    success "System theme set to: $found_theme (dark mode)"
+                else
+                    gsettings set org.gnome.desktop.interface color-scheme 'prefer-light'
+                    success "System theme set to: $found_theme (light mode)"
+                fi
             else
                 warning "Could not auto-detect theme name for $active_theme"
                 echo "  Use nwg-look to manually select the theme"

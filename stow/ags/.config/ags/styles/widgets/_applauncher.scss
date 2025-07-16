@@ -7,55 +7,46 @@
 
 .AppLauncher {
   .search-container {
-    background: $bg-secondary;
-    border-radius: $radius-md;
-    font-size: $font-size-xl;
+    border: 1px solid $border-secondary;
+    border-radius: $radius-lg;
+    background-color: $bg-translucent;
+    padding: $spacing-lg $spacing-xl;
 
-    .preview-overlay {
-      margin-left: $spacing-xl;
-    }
-    
     .typed-text {
       color: transparent;
     }
 
     .preview-completion {
       color: $text-tertiary;
-      opacity: 0.5;
     }
 
     .preview-result {
       color: $accent-primary;
-      font-family: "SF Mono", "Monaco", "Cascadia Code", monospace;
       font-size: $font-size-xl;
       font-weight: 600;
-      margin-right: $spacing-xl;
     }
 
     .preview-icon {
-      font-size: 18px;
-      margin-right: $spacing-xl;
+      font-size: 20px;
     }
 
     .search-entry,
     entry.search-entry {
       @include gtk-reset;
-      padding: $spacing-lg $spacing-xl;
-      font-size: $font-size-xl;
-      
+      background: transparent;
+      border: none;
+
       &:hover {
-        background-color: $bg-secondary;
-        border: 0px solid transparent;
-        outline: 0px solid transparent;
+        border: none;
+      }
+
+      &:focus {
+        border: none;
       }
     }
 
     .custom-placeholder {
       color: $text-tertiary;
-      padding-left: $spacing-xl;
-      padding-top: $spacing-lg;
-      padding-bottom: $spacing-lg;
-      opacity: 0.7;
     }
   }
 
@@ -67,22 +58,18 @@
     .recent-app-item {
       @include gtk-reset;
       padding: $spacing-lg;
-      transition: all $transition-fast;
-      background: $bg-secondary;
-      border-radius: $radius-md;
+      background: $bg-translucent;
+      border: 1px solid $border-secondary;
+      border-radius: $radius-lg;
+      transition: all $transition-normal;
 
       &:hover {
-        background-color: $bg-quaternary;
+        background: $white-translucent;
+        border: 1px solid $border-secondary;
       }
 
-      &:active {
-        background-color: $state-hover;
-      }
-
-      box {
-        icon {
-          font-size: $font-size-lg;
-        }
+      icon {
+        font-size: $font-size-lg;
       }
     }
   }

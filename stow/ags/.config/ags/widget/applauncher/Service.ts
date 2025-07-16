@@ -1,5 +1,6 @@
 import { App } from "astal/gtk3"
 import { Variable } from "astal"
+import { timeout } from "astal/time"
 import { LauncherProvider, SearchResult, PreviewContent } from "./types"
 import { AppProvider } from "./providers/AppProvider"
 import { CalculatorProvider } from "./providers/CalculatorProvider"
@@ -10,7 +11,7 @@ class SmartAppLauncherService {
     private static instance: SmartAppLauncherService
     private providers: LauncherProvider[] = []
     private appProvider: AppProvider
-    private searchTimeout: number | null = null
+    private searchTimeout: any = null
 
     // Core reactive state
     public text = Variable("")
@@ -60,20 +61,12 @@ class SmartAppLauncherService {
     private debouncedUpdatePreview(query: string) {
         // Clear any existing timeout
         if (this.searchTimeout !== null) {
-            clearTimeout(this.searchTimeout)
-        }
-
-        // For empty queries, update immediately
-        if (!query.trim()) {
-            this.previewContent.set(null)
-            return
-        }
-
-        // Debounce search for non-empty queries
-        this.searchTimeout = setTimeout(() => {
-            this.updatePreview(query)
+            this.searchTimeout.cancel()
             this.searchTimeout = null
-        }, 150) // 150ms debounce delay
+        }
+
+        // Update preview immediately
+        this.updatePreview(query)
     }
 
     private updatePreview(query: string) {

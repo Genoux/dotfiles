@@ -18,7 +18,7 @@ export default function SystemTray() {
   return (
     <box 
       className="system-tray" 
-      spacing={4}
+      spacing={0}
     >
       {bind(trayItems).as(items =>
         items.map((item) => (

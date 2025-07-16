@@ -7,7 +7,7 @@ export default function ControlPanelButton() {
       onClicked={toggleControlPanel}
       className={bind(controlPanelVisible).as((visible) => visible ? "active" : "")}
     >
-        <icon icon="document-properties-symbolic" />
+      <icon icon="view-grid-symbolic" />
     </button>
   )
 } 

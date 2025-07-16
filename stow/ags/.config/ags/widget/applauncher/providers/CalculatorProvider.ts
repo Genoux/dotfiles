@@ -7,8 +7,8 @@ export class CalculatorProvider implements LauncherProvider {
     canHandle(query: string): boolean {
         const trimmed = query.trim()
         
-        // Must contain only math characters
-        if (!/^[\d\s+\-*/().,]+$/.test(trimmed) || trimmed.length === 0) {
+        // Must contain only math characters (no spaces allowed)
+        if (!/^[\d+\-*/().,]+$/.test(trimmed) || trimmed.length === 0) {
             return false
         }
         

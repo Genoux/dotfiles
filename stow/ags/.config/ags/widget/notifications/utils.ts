@@ -1,5 +1,32 @@
 // Utility functions for notification components
 
+function getNotificationIconName(appName: string): string {
+  if (!appName || appName.trim() === '') {
+    return "application-x-executable-symbolic";
+  }
+  
+  const lower = appName.toLowerCase().trim();
+  
+  // Common app mappings
+  if (lower === 'slack') return 'slack';
+  if (lower === 'discord') return 'discord';
+  if (lower === 'firefox') return 'firefox';
+  if (lower === 'code') return 'visual-studio-code';
+  if (lower === 'spotify') return 'spotify';
+  if (lower === 'thunderbird') return 'thunderbird';
+  if (lower === 'chrome') return 'google-chrome';
+  if (lower === 'google-chrome') return 'google-chrome';
+  
+  // Clean up app name for icon usage
+  const iconName = lower
+    .replace(/\s+/g, '-')           // spaces to dashes
+    .replace(/[^a-z0-9\-_.]/g, '')  // remove invalid chars, keep dots and underscores
+    .replace(/^-+|-+$/g, '')        // remove leading/trailing dashes
+    .replace(/(-bin|-app|-desktop|-electron)$/, ''); // remove common suffixes
+  
+  return iconName || "application-x-executable-symbolic";
+}
+
 /**
  * Smart notification icon resolver
  * 
@@ -28,22 +55,16 @@ export function getNotificationIcon(notification: any): { useGIcon: boolean; ico
 
     // Try desktop_entry as icon name (some apps set this)
     if (notification.desktop_entry && notification.desktop_entry.trim() !== '') {
-      return { useGIcon: false, iconValue: notification.desktop_entry };
+      const iconName = getNotificationIconName(notification.desktop_entry);
+      return { useGIcon: false, iconValue: iconName };
     }
 
     // Try app_name as icon name (avoid generic names)
     if (notification.app_name && 
         notification.app_name !== "notify-send" && 
         notification.app_name.trim() !== '') {
-      // Clean up app name for icon usage
-      const iconName = notification.app_name.toLowerCase()
-        .replace(/\s+/g, '-')           // spaces to dashes
-        .replace(/[^a-z0-9\-_.]/g, '')  // remove invalid chars, keep dots and underscores
-        .replace(/^-+|-+$/g, '');       // remove leading/trailing dashes
-      
-      if (iconName.length > 0) {
-        return { useGIcon: false, iconValue: iconName };
-      }
+      const iconName = getNotificationIconName(notification.app_name);
+      return { useGIcon: false, iconValue: iconName };
     }
 
     // Try the icon property (less common but some notifications use it)

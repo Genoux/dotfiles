@@ -242,7 +242,7 @@ export default function MediaPlayer() {
         }
 
         const coverArtBackground = bind(activePlayer, "coverArt").as((c) => 
-          c ? `background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.8)), url('${c}'); background-size: cover; background-position: center;` : ""
+          c ? `background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.7)), url('${c}'); background-size: cover, 110%; background-position: center, center;` : ""
         );
 
         return (
