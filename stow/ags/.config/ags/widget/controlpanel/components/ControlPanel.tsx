@@ -13,14 +13,15 @@ export default function ControlPanel() {
         <NotificationCenterWidget />
       </box>
       <box className="widget">
+        <BluetoothWidget />
+      </box>
+      <box className="widget">
         <SystemControl />
       </box>
       <box className="widget">
         <AudioControls />
       </box>
-      <box className="widget">
-        <BluetoothWidget />
-      </box>
+      
       <box visible={bind(hasMediaPlayers).as((visible) => visible)}>
         <MediaPlayer />
       </box>

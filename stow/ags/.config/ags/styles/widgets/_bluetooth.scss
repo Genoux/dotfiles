@@ -110,7 +110,7 @@
 .bluetooth-device {
   @include interactive-element;
   border-radius: $radius-sm;
-  padding: $spacing-sm;
+  padding: $spacing-sm $spacing-md;
   margin-bottom: $spacing-xs;
   transition: $transition-hover;
   

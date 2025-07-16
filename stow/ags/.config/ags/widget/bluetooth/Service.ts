@@ -9,6 +9,11 @@ export const connectingDevices = Variable(new Set<string>())
 export const isScanning = Variable(false) // Manual tracking since API doesn't expose it reliably
 export const isExpanded = Variable(false) // Controls dropdown visibility
 
+// Periodically sync device states with system
+setInterval(() => {
+    bluetoothDevices.set(bluetooth.get_devices())
+}, 2000)
+
 bluetooth.connect("device-added", () => {
     bluetoothDevices.set(bluetooth.get_devices())
 })
@@ -16,6 +21,7 @@ bluetooth.connect("device-added", () => {
 bluetooth.connect("device-removed", () => {
     bluetoothDevices.set(bluetooth.get_devices())
 })
+
 
 bluetooth.connect("notify::powered", () => {
     bluetoothEnabled.set(bluetooth.get_is_powered())
@@ -74,8 +80,20 @@ export function toggleExpanded() {
 export async function connectDevice(device: any) {
     const deviceName = device.name || "Unknown Device"
     const deviceAddress = device.address
-    const isConnected = device.connected
-    const isPaired = device.paired
+    
+    // Get real-time device state from bluetoothctl
+    let isConnected = false
+    let isPaired = false
+    
+    try {
+        const deviceInfo = await execAsync(`bluetoothctl info ${deviceAddress}`)
+        isConnected = deviceInfo.includes("Connected: yes")
+        isPaired = deviceInfo.includes("Paired: yes")
+    } catch (error) {
+        // Fallback to API values if bluetoothctl fails
+        isConnected = device.connected
+        isPaired = device.paired
+    }
     
     console.log("Device name:", deviceName)
     console.log("Device address:", deviceAddress)
@@ -109,11 +127,21 @@ export async function connectDevice(device: any) {
             console.log(`Disconnecting from ${deviceName}...`)
             await execAsync(`bluetoothctl disconnect ${deviceAddress}`)
             console.log(`Disconnected from ${deviceName}`)
+            
+            // Force refresh device list after disconnect
+            setTimeout(() => {
+                bluetoothDevices.set(bluetooth.get_devices())
+            }, 1000)
         } else {
             // Connect to the paired device (this is the main use case)
             console.log(`Connecting to ${deviceName}...`)
             await execAsync(`bluetoothctl connect ${deviceAddress}`)
             console.log(`Connected to ${deviceName}`)
+            
+            // Force refresh device list after connect
+            setTimeout(() => {
+                bluetoothDevices.set(bluetooth.get_devices())
+            }, 1000)
         }
     } catch (error) {
         console.error(`Failed to handle device ${deviceName}:`, error)

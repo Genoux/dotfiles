@@ -21,7 +21,7 @@ export default function BluetoothDevice({ device }: BluetoothDeviceProps) {
             return device.connected ? "Disconnecting..." : "Connecting..."
         }
         if (device.connected) return "Connected"
-        if (device.paired) return "Disconnected"
+        if (device.paired) return "Paired"
         return "Click to pair"
     }
 

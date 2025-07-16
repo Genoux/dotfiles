@@ -14,20 +14,12 @@ export default function BluetoothWidget() {
                 className="bluetooth-header"
                 onButtonPressEvent={() => toggleExpanded()}
             >
-                <box spacing={8} halign={Gtk.Align.FILL}>
+                <box spacing={4} halign={Gtk.Align.FILL}>
                     <box spacing={6}>
                         <icon
                             icon={bind(bluetoothEnabled).as(() => getBluetoothIcon())}
                             className={bind(bluetoothEnabled).as(enabled =>
                                 `bluetooth-icon ${enabled ? 'enabled' : 'disabled'}`
-                            )}
-                        />
-                        <box
-                            heightRequest={8}
-                            widthRequest={8}
-                            valign={Gtk.Align.CENTER}
-                            className={bind(bluetoothEnabled).as(enabled =>
-                                `bluetooth-status-dot ${enabled ? 'active' : 'inactive'}`
                             )}
                         />
                     </box>
