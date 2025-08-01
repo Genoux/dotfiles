@@ -154,14 +154,17 @@ case "$1" in
         linked=false
         case "$config" in
             "system")
+                echo " 📁 $config:"
                 while IFS= read -r -d '' stow_file; do
                     relative_path="${stow_file#system/.config/}"
                     target_file="$HOME/.config/$relative_path"
                     if [[ -L "$target_file" ]]; then
-                        linked=true
-                        break
+                        echo "   ✅ $relative_path (linked)"
+                    else
+                        echo "   ⭕ $relative_path (not linked)"
                     fi
-                done < <(find system/.config -type f -print0 2>/dev/null)
+                done < <(find system/.config -type f -print0 2>/dev/null | sort -z)
+                continue
                 ;;
             "shell")
                 if [[ -L "$HOME/.zshrc" || -L "$HOME/.profile" || -L "$HOME/.zprofile" ]]; then
