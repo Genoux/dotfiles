@@ -1,1 +1,1 @@
-export { default as WindowTitle } from "./components/WindowTitle"
+export { WindowTitle } from "./components/WindowTitle";

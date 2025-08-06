@@ -1,18 +1,12 @@
-import { App } from "astal/gtk3"
+import app from "ags/gtk4/app"
 import style from "./styles/main.scss"
 import Bar from "./widget/Bar"
-import { NotificationPopup } from "./widget/notifications"
-import { AppLauncher } from "./widget/applauncher"
-import { OSD } from "./widget/osd"
+import { MediaPanel } from "./widget/mediaplayer"  // ← import your popup window
 
-App.start({
-    css: style,
-    main() {
-        App.get_monitors().map(monitor => {
-            Bar({ gdkmonitor: monitor })
-            NotificationPopup(monitor)
-            OSD(monitor)
-        })
-        AppLauncher()
-    },
+app.start({
+  css: style,
+  main() {
+    app.get_monitors().map(Bar)
+    MediaPanel()   // ← Add here as a global, NOT as a child of Bar!
+  },
 })

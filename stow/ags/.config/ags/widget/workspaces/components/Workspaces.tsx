@@ -1,84 +1,31 @@
-import { Gtk } from "astal/gtk3"
-import { bind } from "astal"
-import { workspaceClients, hypr } from "../Service"
+import { For } from "ags";
+import { Gtk } from "ags/gtk4";
+import { workspaces, focusedWorkspace } from "../service";
 
-// UI Component - 100% Pure UI
-export default function Workspaces() {
+export function Workspaces({ class: cls }: { class?: string }) {
   return (
-    <box className="workspaces" spacing={2}>
-      {bind(workspaceClients).as(clientMap => {
-        if (!hypr) {
-          // Show placeholder workspaces when Hyprland is not available
-          return [1, 2, 3, 4, 5].map(id => (
-            <button
-              key={id}
-              widthRequest={32}
-              className="workspace"
-            >
-              <label
-                className="number"
-                label={id.toString()}
-                halign={Gtk.Align.CENTER}
-                valign={Gtk.Align.CENTER}
-              />
-            </button>
-          ))
-        }
-        
-        const workspaces = hypr.get_workspaces()
-          .filter(ws => ws.id > 0)
-          .sort((a, b) => a.id - b.id)
-
-        // Find the highest workspace that has windows or is focused
-        const focusedWs = hypr.get_focused_workspace()
-        const maxOccupiedId = Math.max(
-          ...Array.from(clientMap.keys()),
-          focusedWs?.id || 1
-        )
-        
-        // Only show workspaces up to max occupied + 1
-        const relevantWorkspaces = workspaces.filter(ws => ws.id <= maxOccupiedId + 1)
-
-        return relevantWorkspaces.map(ws => {
-          const clientCount = clientMap.get(ws.id) || 0
-          const isOccupied = clientCount > 0
-
-          return (
-            <button
-              widthRequest={32}
-              className={bind(hypr, "focusedWorkspace").as(focused => {
-                const isFocused = focused?.id === ws.id
-                let classes = ["workspace"]
-                if (isFocused) classes.push("focused")
-                return classes.join(" ")
-              })}
-              onClicked={() => ws.focus()}
-            >
-              {isOccupied ? (
-                <box
-                  heightRequest={6}
-                  widthRequest={2}
-                  hexpand={false}
-                  vexpand={false}
-                  halign={Gtk.Align.CENTER}
-                  valign={Gtk.Align.CENTER}
-                  className={bind(hypr, "focusedWorkspace").as(focused => {
-                    const isFocused = focused?.id === ws.id
-                    return isFocused ? "dot focused" : "dot"
-                  })}
-                />
-              ) : (
-                <label
-                  className="number"
-                  label={ws.id.toString()}
-                  halign={Gtk.Align.CENTER}
-                  valign={Gtk.Align.CENTER}
-                />
+    <box class={`workspaces ${cls ?? ""}`} spacing={2}>
+      <For each={workspaces}>
+        {(ws) => (
+          <button
+            widthRequest={32}
+            class={focusedWorkspace((f) =>
+              f?.id === ws.id ? "workspace focused" : "workspace"
+            )}
+            onClicked={() => ws.focus()}
+          >
+            <box
+              heightRequest={6}
+              widthRequest={2}
+              halign={Gtk.Align.CENTER}
+              valign={Gtk.Align.CENTER}
+              class={focusedWorkspace((f) =>
+                f?.id === ws.id ? "dot focused" : "dot"
               )}
-            </button>
-          )
-        })
-      })}
+            />
+          </button>
+        )}
+      </For>
     </box>
-  )
-} 
+  );
+}

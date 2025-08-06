@@ -1,0 +1,2 @@
+singleton Settings Settings.qml
+singleton Components Components.qml

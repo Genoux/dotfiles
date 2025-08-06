@@ -1,12 +1,3 @@
-import { Variable } from "astal"
+import { createPoll } from "ags/time";
 
-// Widget Logic - 100% State & Business Logic
-export const time = Variable("").poll(1000, () => {
-    const now = new Date()
-    return now.toLocaleTimeString('en-US', { 
-        hour: '2-digit', 
-        minute: '2-digit',
-        hour12: false,
-        timeZone: 'America/Montreal'
-    })
-}) 
+export const time = createPoll("", 1000, ["date", "+%a %d - %H:%M"]);

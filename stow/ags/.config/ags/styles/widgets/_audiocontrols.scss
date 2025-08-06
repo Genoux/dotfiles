@@ -5,8 +5,14 @@
 // Audio Controls Widget Styling
 // =============================================================================
 
+// Audio Controls Window positioning - align to audio button in bar
+window.audio-controls-window {
+  margin-bottom: $spacing-md;
+}
+
 box.AudioPanel {
   padding: $spacing-md;
+  @include card-base;
 
   scale {
     @include slider-base($spacing-md, $bg-tertiary, $white);

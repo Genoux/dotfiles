@@ -1,18 +1,29 @@
-import { Gtk } from "astal/gtk3"
-import { weatherDisplay, weather, initializeWeather } from "../Service"
+import { With } from "ags";
+import { weather } from "../Service";
+import { Gtk } from "ags/gtk4";
 
-// UI Component - 100% Pure UI  
-export default function WeatherDisplay() {
-    return (
-        <button
-            className="weather-display"
-            halign={Gtk.Align.CENTER}
-            setup={(self) => {
-                // Initialize weather loading when widget is set up
-                initializeWeather();
-            }}
-        >
-            <label label={weatherDisplay()} />
-        </button>
-    )
-} 
+export function Weather({ class: cls }: { class?: string }) {
+  return (
+    <With value={weather}>
+      {(value) => {
+        const { icon, feelsLike, location } = value as {
+          icon: string;
+          feelsLike: number;
+          location: string;
+        };
+        return (
+          <box
+            class={`weather-widget ${cls ?? ""}`}
+            widthRequest={64}
+            homogeneous={true}
+          >
+            <box halign={Gtk.Align.CENTER} spacing={4}>
+              <label label={icon} />
+              <label label={`${feelsLike}°C`} />
+            </box>
+          </box>
+        );
+      }}
+    </With>
+  );
+}

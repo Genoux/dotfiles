@@ -5,44 +5,44 @@
 // Media Player Widget Styling
 // =============================================================================
 
-.MediaPlayer {
+.media-panel {
     border: none;
     border-radius: $radius-lg;
     padding: $spacing-lg;
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    background-color: $bg-primary;
+    background-color: $bg-translucent;
 }
 
-.MediaPlayer__track-info {
+.media-panel__track-info {
     margin-bottom: $spacing-sm;
     min-width: 0;
 }
 
-.MediaPlayer__title-row {
+.media-panel__title-row {
     margin-bottom: 1px;
     min-width: 0;
 }
 
-.MediaPlayer__player-indicator {
+.media-panel__player-indicator {
     margin-left: $spacing-sm;
 }
 
-.MediaPlayer__player-indicator icon {
+.media-panel__player-indicator image {
     @include icon-base($font-size-md, 0.9);
     margin-right: $spacing-xs;
     color: $white;
 }
 
-.MediaPlayer__player-name {
+.media-panel__player-name {
     font-size: $font-size-sm;
     color: $text-secondary;
     opacity: 0.7;
     font-weight: normal;
 }
 
-.MediaPlayer__track-title {
+.media-panel__track-title {
     font-weight: 600;
     font-size: $font-size-md;
     color: $white;
@@ -55,24 +55,101 @@
     }
 }
 
-.MediaPlayer__track-artist {
+.media-panel__track-artist {
     font-size: $font-size-sm;
     color: $white;
     opacity: 0.9;
     min-width: 0;
 }
 
-.MediaPlayer__progress-container {
+.media-panel__progress-container {
     min-height: 2px;
 }
 
-.MediaPlayer__progress-scale {
-    @include slider-base($spacing-md, $bg-quaternary, $white);
+.media-panel__progress-scale {
+    min-height: 4px;
+    background-color: $bg-quaternary;
+    border-radius: $radius-sm;
 }
 
-.current-time,
-.total-time {
+.media-panel__progress-fill {
+    min-height: 4px;
+    background-color: $white;
+    border-radius: $radius-sm;
+    transition: width 0.1s ease-out;
+}
+
+.media-panel__current-time,
+.media-panel__total-time {
     font-size: $font-size-sm;
 }
 
+// Main content container
+.media-panel__content {
+    // content styling inherited from parent
+}
 
+// Player container with background image
+.media-panel__player {
+    padding: $spacing-lg;
+    border-radius: $radius-lg;
+    min-height: 120px;
+}
+
+// No media state
+.media-panel__no-media {
+    font-size: $font-size-md;
+    color: $text-secondary;
+    opacity: 0.7;
+}
+
+// Album art container
+.media-panel__album-art {
+    border-radius: $radius-md;
+    
+    image {
+        border-radius: $radius-md;
+    }
+}
+
+.media-panel__controls {
+    margin-top: $spacing-sm;
+}
+
+.media-panel__control-btn {
+    @include button-base;
+    background-color: $bg-secondary;
+    color: $text-primary;
+    border-radius: $radius-md;
+    min-width: 40px;
+    min-height: 40px;
+    
+    &:hover {
+        background-color: $bg-tertiary;
+    }
+    
+    &:active {
+        background-color: $bg-quaternary;
+    }
+    
+    &:disabled {
+        opacity: 0.5;
+        background-color: $bg-secondary;
+    }
+    
+    image {
+        color: $white;
+    }
+}
+
+.media-panel__control-btn--play-pause {
+    background-color: $accent-primary;
+    
+    &:hover {
+        background-color: $accent-primary;
+    }
+    
+    &:active {
+        background-color: $accent-primary, 10%;
+    }
+}

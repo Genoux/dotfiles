@@ -1,10 +1,13 @@
 @use "../abstracts/variables" as *;
 @use "../abstracts/mixins" as *;
 
-window.Bar {  
+.bar {  
   @include text-primary;
-
-  .bar-container {
+  padding-left: $spacing-md;
+  padding-right: $spacing-md;
+  padding-top: $spacing-sm;
+  padding-bottom: $spacing-sm;
+  centerbox {
     .bar-section {
       padding: $spacing-sm;
       border-radius: $radius-md;

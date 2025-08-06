@@ -1,30 +1,23 @@
-// stow/ags/.config/ags/widget/systemtray/components/SystemTray.tsx
-import { bind, Variable } from "astal"
-import Tray from "gi://AstalTray"
-import SysTrayItem from "./SysTrayItem"
+import { For, With } from "ags";
+import { trayItems } from "../service";
+import Tray from "gi://AstalTray";
 
-const tray = Tray.get_default()
-export const trayItems = Variable(tray.get_items())
-
-tray.connect("item-added", () => {
-  trayItems.set(tray.get_items())
-})
-
-tray.connect("item-removed", () => {
-  trayItems.set(tray.get_items())
-})
-
-export default function SystemTray() {
+function TrayItemComponent({ item }: { item: Tray.TrayItem }) {
   return (
-    <box 
-      className="system-tray" 
-      spacing={0}
+    <button onClicked={() => item.activate(0, 0)} class="tray-button">
+      <image gicon={item.gicon} pixelSize={14} />
+    </button>
+  );
+}
+
+export function SystemTray({ class: cls }: { class?: string }) {
+  return (
+    <box
+      class={`system-tray ${cls ?? ""}`}
+      spacing={4}
+      visible={trayItems((items) => items.length > 0)}
     >
-      {bind(trayItems).as(items =>
-        items.map((item) => (
-          <SysTrayItem item={item} />
-        ))
-      )}
+      <For each={trayItems}>{(item) => <TrayItemComponent item={item} />}</For>
     </box>
-  )
+  );
 }

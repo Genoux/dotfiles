@@ -1,13 +1,15 @@
-import { Gtk } from "astal/gtk3"
-import { time } from "../Service"
+import { Gtk } from "ags/gtk4";
+import { time } from "../Service";
 
-// UI Component - 100% Pure UI
-export default function TimeDisplay() {
+export function TimeDisplay({ class: cls }: { class?: string }) {
   return (
-    <button
-      halign={Gtk.Align.CENTER}
-    >
-      <label label={time()} />
-    </button>
-  )
-} 
+    <box class={`time-display ${cls ?? ""}`}>
+      <menubutton halign={Gtk.Align.CENTER}>
+        <label label={time} />
+        <popover>
+          <Gtk.Calendar />
+        </popover>
+      </menubutton>
+    </box>
+  );
+}

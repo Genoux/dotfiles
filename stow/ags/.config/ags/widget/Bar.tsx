@@ -1,135 +1,49 @@
-import { App, Astal, Gtk, Gdk } from "astal/gtk3";
-import { bind } from "astal/binding";
+import app from "ags/gtk4/app";
+import { Astal, Gtk, Gdk } from "ags/gtk4";
+import { createPoll } from "ags/time";
 import { Workspaces } from "./workspaces";
+import { SystemTray } from "./systemtray";
 import { WindowTitle } from "./windowtitle";
-import { KeyboardSwitcher } from "./keyboardswitcher";
+import { CavaVisualizer } from "./cava";
+import { SystemTemp } from "./systemtemp";
+import { Weather } from "./weather";
 import { TimeDisplay } from "./timedisplay";
-import { WeatherDisplay } from "./weather";
-import { SystemTempDisplay } from "./systemtemp";
-import { BatteryDisplay, batteryVisible } from "./battery";
-import { AudioButton } from "./audiocontrols";
-import { ControlPanelButton } from "./controlpanel";
-import { NotificationButton } from "./notifications";
-import { SystemTray, trayItems } from "./systemtray";
-import { CavaVisualizer, isPlaying } from "./cava";
-import { windowManager } from "./utils";
+import { BluetoothButton } from "./bluetooth";
+import { MediaPlayerButton } from "./mediaplayer";
 
-
-function LeftSection() {
-  return (
-    <>
-      <box className="bar-section" halign={Gtk.Align.START} spacing={4}>
-        <Workspaces />
-      </box>
-      <SystemTraySection />
-    </>
-
-  );
-}
-
-function CenterSection() {
-  return (
-    <box className="bar-section">
-      <WindowTitle />
-    </box>
-  );
-}
-
-function CavaSection() {
-  return (
-    <box className="bar-section">
-      <CavaVisualizer />
-    </box>
-  );
-}
-
-function SystemTraySection() {
-  return (
-    <box className="bar-section" visible={bind(trayItems).as(items => items.length > 0)}>
-      <SystemTray />
-    </box>
-  );
-}
-
-function WeatherSection() {
-  return (
-    <box className="bar-section" spacing={4}>
-      <WeatherDisplay />
-    </box>
-  );
-}
-
-function SystemTempSection() {
-  return (
-    <box className="bar-section" halign={Gtk.Align.END} spacing={4}>
-      <SystemTempDisplay />
-    </box>
-  );
-}
-
-function BatterySection() {
-  return (
-    <box 
-      className="bar-section" 
-      spacing={4}
-      visible={batteryVisible}
-    >
-      <BatteryDisplay />
-    </box>
-  );
-}
-
-function RightSection() {
-  return (
-    <box className="bar-section" halign={Gtk.Align.END} spacing={0}>
-      <ControlPanelButton />
-      <KeyboardSwitcher />
-      <AudioButton />
-      <TimeDisplay />
-    </box>
-  );
-}
-
-interface BarProps {
-  gdkmonitor: Gdk.Monitor;
-}
-
-export default function Bar({ gdkmonitor }: BarProps) {
-  const { BOTTOM, LEFT, RIGHT } = Astal.WindowAnchor;
+export default function Bar(gdkmonitor: Gdk.Monitor) {
+  const { TOP, LEFT, RIGHT, BOTTOM } = Astal.WindowAnchor;
 
   return (
     <window
-      name="Bar"
-      className="Bar"
+      visible
+      name="bar"
+      class="bar"
       gdkmonitor={gdkmonitor}
       exclusivity={Astal.Exclusivity.EXCLUSIVE}
       anchor={BOTTOM | LEFT | RIGHT}
-      layer={Astal.Layer.OVERLAY}
-      heightRequest={24}
-      marginLeft={8}
-      marginRight={8}
-      marginTop={0}
-      marginBottom={6}
-      application={App}
-      onButtonPressEvent={() => {
-        windowManager.hide("*")
-      }}
+      application={app}
     >
-      <box className="bar-container" hexpand homogeneous>
-        <box halign={Gtk.Align.START} spacing={4}>
-          <LeftSection />
+      <centerbox cssName="centerbox">
+        <box $type="start" spacing={3}>
+          <Workspaces class="bar-section" />
+          <SystemTray class="bar-section" />
         </box>
-        <box halign={Gtk.Align.CENTER}>
-          <CenterSection />
+        <box $type="center">
+          <WindowTitle class="bar-section" />
         </box>
-        <box halign={Gtk.Align.END} spacing={4}>
-          <CavaSection />
-          <SystemTempSection />
-          <BatterySection />
-          <WeatherSection />
-          <RightSection />
+        <box $type="end" spacing={3} halign={Gtk.Align.END}>
+            <CavaVisualizer class="bar-section" />
+            <Weather class="bar-section" />
+            <SystemTemp class="bar-section" />
+            <TimeDisplay class="bar-section" />
+            <BluetoothButton class="bar-section" />
+            <MediaPlayerButton class="bar-section" />
+            
         </box>
-      </box>
+      </centerbox>
+      
     </window>
+    
   );
 }

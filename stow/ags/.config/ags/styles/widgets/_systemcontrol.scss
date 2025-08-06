@@ -7,6 +7,7 @@
 
 .system-control-container {
   padding: $spacing-md;
+  @include card-base;
 
   .system-control-btn {
 
