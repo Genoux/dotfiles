@@ -295,251 +295,54 @@ cmd_get_quiet() {
 }
 
 cmd_install() {
-    echo -e "${BLUE}🚀 Smart Package Sync (Auto-Get + Full Sync)${NC}"
+    echo -e "${BLUE}🚀 Smart Package Sync (System → Dotfiles + Dependencies)${NC}"
     echo
     
-    # Step 1: Always get current packages first (auto-sync lists)
+    # Step 1: Always sync package lists with current system first
     echo -e "${BLUE}Step 1: Syncing package lists with current system...${NC}"
     cmd_get_quiet
     echo
     
-    # Step 1.5: Filter packages based on hardware
-    echo -e "${BLUE}Step 1.5: Filtering packages based on hardware...${NC}"
-    
-    # Show hardware detection only once
-    local gpu_info=$(detect_gpu)
-    local has_nvidia=$(echo "$gpu_info" | grep -o 'nvidia:[^,]*' | cut -d: -f2)
-    if [[ "$has_nvidia" == "true" ]]; then
-        echo -e "${GREEN}🖥️  NVIDIA GPU detected - keeping NVIDIA packages${NC}"
-    else
-        echo -e "${YELLOW}🖥️  No NVIDIA GPU detected - filtering NVIDIA packages${NC}"
-    fi
-    
-    local filtered_packages=$(filter_packages_by_hardware packages.txt false)
-    local filtered_aur_packages=$(filter_packages_by_hardware aur-packages.txt false)
-    echo
-    
-    # Step 2: Quick analysis of changes needed
-    echo -e "${BLUE}Step 2: Analyzing changes needed...${NC}"
-    
-    # Quick check of what would change
-    local aur_pattern=$(pacman -Qm | cut -d' ' -f1 | paste -sd'|')
-    local current_official=()
-    if [[ -n "$aur_pattern" ]]; then
-        current_official=($(pacman -Qe | grep -v -E "^($aur_pattern) " | awk '{print $1}'))
-    else
-        current_official=($(pacman -Qe | awk '{print $1}'))
-    fi
-    local current_aur=($(pacman -Qm | awk '{print $1}'))
-    local filtered_wanted_official=($(grep -v '^#\|^$' "$filtered_packages"))
-    local filtered_wanted_aur=($(grep -v '^#\|^$' "$filtered_aur_packages"))
-    
-    # Count changes
-    local missing_count=0
-    local remove_count=0
-    
-    for pkg in "${filtered_wanted_official[@]}"; do
-        if [[ ! " ${current_official[*]} " =~ " ${pkg} " ]]; then
-            ((missing_count++))
-        fi
-    done
-    
-    for pkg in "${filtered_wanted_aur[@]}"; do
-        if [[ ! " ${current_aur[*]} " =~ " ${pkg} " ]]; then
-            ((missing_count++))
-        fi
-    done
-    
-    for pkg in "${current_official[@]}"; do
-        if [[ ! " ${filtered_wanted_official[*]} " =~ " ${pkg} " ]] && [[ ! " ${essential_packages[*]} " =~ " ${pkg} " ]]; then
-            ((remove_count++))
-        fi
-    done
-    
-    for pkg in "${current_aur[@]}"; do
-        if [[ ! " ${filtered_wanted_aur[*]} " =~ " ${pkg} " ]]; then
-            ((remove_count++))
-        fi
-    done
-    
-    if [[ $missing_count -eq 0 && $remove_count -eq 0 ]]; then
-        echo -e "${GREEN}✅ System is already perfectly synced!${NC}"
-        rm -f "$filtered_packages" "$filtered_aur_packages"
-        return 0
-    else
-        echo -e "${YELLOW}📊 Changes needed:${NC} Install $missing_count, Remove $remove_count packages"
-    fi
-    
-    # Step 3: Confirm if needed
-    if [[ "$FORCE" != true ]]; then
-        echo
-        echo -e "${YELLOW}⚠️  This will install missing packages and remove unlisted ones${NC}"
-        read -p "Continue with smart sync? (Y/n): " -n 1 -r
-        echo
-        if [[ $REPLY =~ ^[Nn]$ ]]; then
-            echo -e "${YELLOW}Smart sync cancelled.${NC}"
-            return 0
-        fi
-    fi
-    
-    echo
-    echo -e "${BLUE}Step 3: Executing smart sync...${NC}"
-    
-    # Find missing dependencies first
+    # Step 2: Find and install missing dependencies
+    echo -e "${BLUE}Step 2: Finding missing dependencies...${NC}"
     find_missing_deps
     
-    # Update system first
-    echo -e "${BLUE}📦 Updating system...${NC}"
+    # Step 3: System update
+    echo -e "${BLUE}Step 3: Updating system...${NC}"
+    echo -e "${YELLOW}Note: You may need to answer prompts for package conflicts/replacements${NC}"
     
-    # Check if we need to handle NVIDIA firmware conflicts during update
-    if pacman -Q linux-firmware &>/dev/null && ! pacman -Q linux-firmware-nvidia &>/dev/null; then
-        # Old linux-firmware installed but not new linux-firmware-nvidia
-        # This means we might hit the firmware conflict during update
-        echo -e "  ${YELLOW}⚠️  Detected NVIDIA firmware conflict, removing conflicting files...${NC}"
-        
-        # Remove the conflicting firmware directories that will be recreated
-        sudo rm -rf /usr/lib/firmware/nvidia/ad10* 2>/dev/null || true
-        sudo rm -rf /usr/lib/firmware/nvidia/ga10* 2>/dev/null || true
-        sudo rm -rf /usr/lib/firmware/nvidia/tu10* 2>/dev/null || true
-        sudo rm -rf /usr/lib/firmware/nvidia/gv100* 2>/dev/null || true
-        
-        echo -e "  ${GREEN}✅ Cleared conflicting NVIDIA firmware files${NC}"
-    fi
-    
-    # Now try system update
-    if ! sudo pacman -Syu --noconfirm; then
-        echo -e "  ${RED}⚠️  System update failed, retrying with selective overwrite...${NC}"
-        # Only overwrite specific known-safe paths to avoid security issues
-        sudo pacman -Syu --noconfirm --overwrite="/usr/lib/firmware/*,/usr/share/*,/etc/ca-certificates/*"
-    fi
-    
-    # Install missing official packages
-    echo -e "${BLUE}📦 Installing missing official packages...${NC}"
-    local missing_official=()
-    while read -r package; do
-        [[ "$package" =~ ^#.*$ ]] || [[ -z "$package" ]] && continue
-        if ! pacman -Q "$package" &>/dev/null; then
-            missing_official+=("$package")
-        fi
-    done < "$filtered_packages"
-
-    if [[ ${#missing_official[@]} -gt 0 ]]; then
-        echo -e "  ${YELLOW}Installing:${NC} ${missing_official[*]}"
-        
-        if sudo pacman -S --needed --noconfirm "${missing_official[@]}"; then
-            echo -e "  ${GREEN}✅ Official packages installed successfully${NC}"
-        else
-            echo -e "  ${RED}⚠️  Some official packages failed to install${NC}"
-        fi
+    # Interactive system update to handle conflicts
+    if sudo pacman -Syu; then
+        echo -e "  ${GREEN}✅ System updated successfully${NC}"
     else
-        echo -e "  ${GREEN}✅ All official packages already installed${NC}"
+        echo -e "  ${RED}⚠️  System update failed${NC}"
+        echo -e "  ${YELLOW}You may need to resolve conflicts manually${NC}"
     fi
-
-    # Install yay if not present
-    if ! command -v yay &> /dev/null; then
-        echo -e "${BLUE}📦 Installing yay (AUR helper)...${NC}"
-        sudo pacman -S --needed --noconfirm base-devel git
-        cd /tmp
-        git clone https://aur.archlinux.org/yay.git
-        cd yay
-        makepkg -si --noconfirm
-        cd "$DOTFILES_DIR"
-    fi
-
-    # Install missing AUR packages
-    if [[ -s "$filtered_aur_packages" ]]; then
-        echo -e "${BLUE}📦 Installing missing AUR packages...${NC}"
-        local missing_aur=()
-        while read -r package; do
-            [[ "$package" =~ ^#.*$ ]] || [[ -z "$package" ]] && continue
-            if ! pacman -Q "$package" &>/dev/null; then
-                missing_aur+=("$package")
-            fi
-        done < "$filtered_aur_packages"
-        
-        if [[ ${#missing_aur[@]} -gt 0 ]]; then
-            echo -e "  ${YELLOW}Installing from AUR:${NC} ${missing_aur[*]}"
-            if yay -S --needed --noconfirm "${missing_aur[@]}"; then
-                echo -e "  ${GREEN}✅ AUR packages installed successfully${NC}"
-            else
-                echo -e "  ${RED}⚠️  Some AUR packages failed to install${NC}"
-            fi
-        else
-            echo -e "  ${GREEN}✅ All AUR packages already installed${NC}"
-        fi
-    fi
-    
-    # Step 4: Remove unwanted packages (full sync)
-    echo -e "${BLUE}📦 Removing unlisted packages...${NC}"
-    
-    # Get current packages (fresh after installs)
-    local aur_pattern=$(pacman -Qm | cut -d' ' -f1 | paste -sd'|')
-    local current_official=()
-    if [[ -n "$aur_pattern" ]]; then
-        current_official=($(pacman -Qe | grep -v -E "^($aur_pattern) " | awk '{print $1}'))
-    else
-        current_official=($(pacman -Qe | awk '{print $1}'))
-    fi
-    local current_aur=($(pacman -Qm | awk '{print $1}'))
-    local wanted_official=($(grep -v '^#\|^$' "$filtered_packages"))
-    local wanted_aur=($(grep -v '^#\|^$' "$filtered_aur_packages"))
-    
-    # Find packages to remove
-    local to_remove_official=()
-    for pkg in "${current_official[@]}"; do
-        if [[ ! " ${wanted_official[*]} " =~ " ${pkg} " ]] && [[ ! " ${essential_packages[*]} " =~ " ${pkg} " ]]; then
-            to_remove_official+=("$pkg")
-        fi
-    done
-    
-    local to_remove_aur=()
-    for pkg in "${current_aur[@]}"; do
-        if [[ ! " ${wanted_aur[*]} " =~ " ${pkg} " ]]; then
-            to_remove_aur+=("$pkg")
-        fi
-    done
-    
-    # Remove packages
-    if [[ ${#to_remove_official[@]} -gt 0 ]]; then
-        echo -e "  ${YELLOW}Removing official:${NC} ${to_remove_official[*]}"
-        if sudo pacman -Rns --noconfirm "${to_remove_official[@]}"; then
-            echo -e "  ${GREEN}✅ Official packages removed${NC}"
-        else
-            echo -e "  ${YELLOW}⚠️  Some packages couldn't be removed (dependencies)${NC}"
-        fi
-    fi
-    
-    if [[ ${#to_remove_aur[@]} -gt 0 ]]; then
-        echo -e "  ${YELLOW}Removing AUR:${NC} ${to_remove_aur[*]}"
-        if sudo pacman -Rns --noconfirm "${to_remove_aur[@]}"; then
-            echo -e "  ${GREEN}✅ AUR packages removed${NC}"
-        else
-            echo -e "  ${YELLOW}⚠️  Some packages couldn't be removed (dependencies)${NC}"
-        fi
-    fi
-    
-    if [[ ${#to_remove_official[@]} -eq 0 && ${#to_remove_aur[@]} -eq 0 ]]; then
-        echo -e "  ${GREEN}✅ No packages to remove${NC}"
-    fi
-    
-    # Cleanup temporary files
-    rm -f "$filtered_packages" "$filtered_aur_packages"
     
     echo
     echo -e "${GREEN}🎉 Smart sync complete!${NC}"
-    echo -e "${BLUE}📊 Your system is now perfectly synced with your dotfiles${NC}"
+    echo -e "${BLUE}📊 Your dotfiles now reflect your current system${NC}"
+    echo -e "${BLUE}📊 Missing dependencies have been found and added${NC}"
 }
 
 cmd_check() {
-    echo -e "${BLUE}📊 Package Status & Preview${NC}"
+    echo -e "${BLUE}📊 Package Status & Sync Preview${NC}"
     echo
     
     if [[ ! -f "packages.txt" || ! -f "aur-packages.txt" ]]; then
-        echo -e "${RED}❌ Package files not found! Run '$0 get' first${NC}"
-        return 1
+        echo -e "${YELLOW}⚠️  Package files not found! They will be created on first sync.${NC}"
+        echo -e "${BLUE}📈 Current System:${NC}"
+        local aur_count=$(pacman -Qm | wc -l)
+        local official_count=$(pacman -Qe | wc -l)
+        echo "  Official packages: $((official_count - aur_count)) installed"
+        echo "  AUR packages: $aur_count installed"
+        echo "  Total: $official_count packages"
+        echo
+        echo -e "${GREEN}✅ Smart Sync will create package lists from your current system${NC}"
+        return 0
     fi
     
-    # Show current status
+    # Show current status vs dotfiles
     local aur_pattern=$(pacman -Qm | cut -d' ' -f1 | paste -sd'|')
     local current_official=()
     if [[ -n "$aur_pattern" ]]; then
@@ -548,94 +351,61 @@ cmd_check() {
         current_official=($(pacman -Qe | awk '{print $1}'))
     fi
     local current_aur=($(pacman -Qm | awk '{print $1}'))
-    local wanted_official=($(grep -v '^#\|^$' packages.txt))
-    local wanted_aur=($(grep -v '^#\|^$' aur-packages.txt))
+    local dotfiles_official=($(grep -v '^#\|^$' packages.txt))
+    local dotfiles_aur=($(grep -v '^#\|^$' aur-packages.txt))
     
     echo -e "${BLUE}📈 Current Status:${NC}"
-    echo "  Official packages: ${#current_official[@]} installed, ${#wanted_official[@]} in list"
-    echo "  AUR packages: ${#current_aur[@]} installed, ${#wanted_aur[@]} in list"
+    echo "  System:   Official ${#current_official[@]}, AUR ${#current_aur[@]} (total: $((${#current_official[@]} + ${#current_aur[@]})))"
+    echo "  Dotfiles: Official ${#dotfiles_official[@]}, AUR ${#dotfiles_aur[@]} (total: $((${#dotfiles_official[@]} + ${#dotfiles_aur[@]})))"
     echo
     
-    # Hardware filtering preview
-    echo -e "${BLUE}🔧 Hardware filtering...${NC}"
+    # Find differences between system and dotfiles
+    local added_to_system=()
+    local removed_from_system=()
     
-    # Show hardware detection only once
-    local gpu_info=$(detect_gpu)
-    local has_nvidia=$(echo "$gpu_info" | grep -o 'nvidia:[^,]*' | cut -d: -f2)
-    if [[ "$has_nvidia" == "true" ]]; then
-        echo -e "${GREEN}🖥️  NVIDIA GPU detected - keeping NVIDIA packages${NC}"
-    else
-        echo -e "${YELLOW}🖥️  No NVIDIA GPU detected - filtering NVIDIA packages${NC}"
-    fi
-    
-    local filtered_packages=$(filter_packages_by_hardware packages.txt false)
-    local filtered_aur_packages=$(filter_packages_by_hardware aur-packages.txt false)
-    echo
-    
-    # Find differences
-    local missing_official=()
-    local missing_aur=()
-    local to_remove_official=()
-    local to_remove_aur=()
-    
-    # Get filtered package lists
-    local filtered_wanted_official=($(grep -v '^#\|^$' "$filtered_packages"))
-    local filtered_wanted_aur=($(grep -v '^#\|^$' "$filtered_aur_packages"))
-    
-    # Find missing packages
-    for pkg in "${filtered_wanted_official[@]}"; do
-        if [[ ! " ${current_official[*]} " =~ " ${pkg} " ]]; then
-            missing_official+=("$pkg")
-        fi
-    done
-    
-    for pkg in "${filtered_wanted_aur[@]}"; do
-        if [[ ! " ${current_aur[*]} " =~ " ${pkg} " ]]; then
-            missing_aur+=("$pkg")
-        fi
-    done
-    
-    # Find packages to remove
+    # Packages added to system (not in dotfiles)
     for pkg in "${current_official[@]}"; do
-        if [[ ! " ${filtered_wanted_official[*]} " =~ " ${pkg} " ]] && [[ ! " ${essential_packages[*]} " =~ " ${pkg} " ]]; then
-            to_remove_official+=("$pkg")
+        if [[ ! " ${dotfiles_official[*]} " =~ " ${pkg} " ]]; then
+            added_to_system+=("$pkg")
         fi
     done
     
     for pkg in "${current_aur[@]}"; do
-        if [[ ! " ${filtered_wanted_aur[*]} " =~ " ${pkg} " ]]; then
-            to_remove_aur+=("$pkg")
+        if [[ ! " ${dotfiles_aur[*]} " =~ " ${pkg} " ]]; then
+            added_to_system+=("$pkg")
         fi
     done
     
-    # Show preview
-    echo -e "${BLUE}📋 Preview of Changes:${NC}"
+    # Packages removed from system (in dotfiles but not installed)
+    for pkg in "${dotfiles_official[@]}"; do
+        if [[ ! " ${current_official[*]} " =~ " ${pkg} " ]]; then
+            removed_from_system+=("$pkg")
+        fi
+    done
     
-    local total_install=$((${#missing_official[@]} + ${#missing_aur[@]}))
-    local total_remove=$((${#to_remove_official[@]} + ${#to_remove_aur[@]}))
+    for pkg in "${dotfiles_aur[@]}"; do
+        if [[ ! " ${current_aur[*]} " =~ " ${pkg} " ]]; then
+            removed_from_system+=("$pkg")
+        fi
+    done
     
-    if [[ $total_install -eq 0 && $total_remove -eq 0 ]]; then
-        echo -e "${GREEN}✅ System is perfectly synced! No changes needed.${NC}"
+    # Show what Smart Sync will do
+    echo -e "${BLUE}📋 Smart Sync Preview (System → Dotfiles):${NC}"
+    
+    if [[ ${#added_to_system[@]} -eq 0 && ${#removed_from_system[@]} -eq 0 ]]; then
+        echo -e "${GREEN}✅ System and dotfiles are already in sync!${NC}"
     else
-        echo -e "${YELLOW}📊 Changes needed:${NC} Install $total_install, Remove $total_remove packages"
+        if [[ ${#added_to_system[@]} -gt 0 ]]; then
+            echo -e "${GREEN}📝 Will ADD to dotfiles:${NC} ${added_to_system[*]}"
+        fi
+        
+        if [[ ${#removed_from_system[@]} -gt 0 ]]; then
+            echo -e "${YELLOW}📝 Will REMOVE from dotfiles:${NC} ${removed_from_system[*]}"
+        fi
+        
         echo
-        
-        if [[ ${#missing_official[@]} -gt 0 || ${#missing_aur[@]} -gt 0 ]]; then
-            echo -e "${GREEN}📦 TO INSTALL:${NC}"
-            [[ ${#missing_official[@]} -gt 0 ]] && echo -e "  Official (${#missing_official[@]}): ${missing_official[*]}"
-            [[ ${#missing_aur[@]} -gt 0 ]] && echo -e "  AUR (${#missing_aur[@]}): ${missing_aur[*]}"
-            echo
-        fi
-        
-        if [[ ${#to_remove_official[@]} -gt 0 || ${#to_remove_aur[@]} -gt 0 ]]; then
-            echo -e "${RED}🗑️  TO REMOVE:${NC}"
-            [[ ${#to_remove_official[@]} -gt 0 ]] && echo -e "  Official (${#to_remove_official[@]}): ${to_remove_official[*]}"
-            [[ ${#to_remove_aur[@]} -gt 0 ]] && echo -e "  AUR (${#to_remove_aur[@]}): ${to_remove_aur[*]}"
-        fi
+        echo -e "${BLUE}💡 After sync, dotfiles will match your current system exactly${NC}"
     fi
-    
-    # Cleanup temporary files
-    rm -f "$filtered_packages" "$filtered_aur_packages"
 }
 
 # Execute command

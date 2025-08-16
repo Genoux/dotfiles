@@ -32,8 +32,8 @@ show_menu() {
     echo "  1) Complete Setup           (everything: packages + shell + themes + configs)"
     echo
     echo "📦 PACKAGES:"
-    echo "  2) Smart Sync               (auto-sync packages)"
-    echo "  3) Package Check            (status + preview changes)"
+    echo "  2) Smart Sync               (system → dotfiles + dependencies)"
+    echo "  3) Package Check            (preview sync changes)"
     echo
     echo "🐚 SHELL:"
     echo "  z) Shell Setup              (zsh + Oh My Zsh + plugins)"
@@ -129,15 +129,18 @@ show_status() {
     # Config Status
     echo -e "${BLUE}⚙️  Config Status:${NC}"
     if [[ -d "$STOW_DIR" ]]; then
-        local total_configs=$(find "$STOW_DIR" -maxdepth 1 -type d ! -name ".*" ! -name "*manage-configs*" ! -path "$STOW_DIR" | wc -l)
-        local installed_configs=0
+        # Count config directories (excluding ags.bak which is backup)
+        local config_dirs=$(find "$STOW_DIR" -maxdepth 1 -type d ! -name ".*" ! -name "*manage-configs*" ! -name "*.bak" ! -path "$STOW_DIR" | wc -l)
         
-        installed_configs=$(cd "$STOW_DIR" && ./manage-configs.sh list 2>/dev/null | grep -c "✅" || echo "0")
+        # Count total linkable items (directories + system files)
+        local total_items=$(cd "$STOW_DIR" && ./manage-configs.sh list 2>/dev/null | grep -E "✅|❌" | wc -l || echo "0")
+        local installed_items=$(cd "$STOW_DIR" && ./manage-configs.sh list 2>/dev/null | grep -c "✅" || echo "0")
         
-        if [[ $installed_configs -eq $total_configs ]]; then
-            echo -e "   Configs: ${GREEN}✓ All $total_configs installed${NC}"
+        echo -e "   Config directories: ${GREEN}$config_dirs available${NC}"
+        if [[ $installed_items -eq $total_items ]]; then
+            echo -e "   Stowed items: ${GREEN}✓ All $total_items/$total_items linked${NC}"
         else
-            echo -e "   Configs: ${YELLOW}⚠ $installed_configs/$total_configs installed${NC}"
+            echo -e "   Stowed items: ${YELLOW}⚠ $installed_items/$total_items linked${NC}"
         fi
     else
         echo -e "   Configs: ${RED}stow/ directory missing${NC}"
@@ -333,12 +336,12 @@ while true; do
             echo -e "${GREEN}Complete setup finished!${NC}"
             ;;
         2)
-            echo -e "${BLUE}🚀 Running Smart Sync (the magic button!)${NC}"
+            echo -e "${BLUE}🚀 Smart Sync (System → Dotfiles + Dependencies)${NC}"
             cd "$SCRIPT_DIR"
             bash "$SCRIPTS_DIR/setup-packages.sh" install
             ;;
         3)
-            echo -e "${BLUE}📊 Package Check (Status + Preview)${NC}"
+            echo -e "${BLUE}📊 Package Check (Preview Sync Changes)${NC}"
             cd "$SCRIPT_DIR"
             bash "$SCRIPTS_DIR/setup-packages.sh" check
             ;;

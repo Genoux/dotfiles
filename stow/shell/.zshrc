@@ -180,11 +180,3 @@ ZSH_HIGHLIGHT_STYLES[double-quoted-argument]='fg=yellow'
 ZSH_HIGHLIGHT_STYLES[dollar-double-quoted-argument]='fg=cyan'
 ZSH_HIGHLIGHT_STYLES[back-quoted-argument]='fg=cyan'
 export PATH=~/.npm-global/bin:$PATH
-
-# pnpm
-export PNPM_HOME="/home/john/.local/share/pnpm"
-case ":$PATH:" in
-  *":$PNPM_HOME:"*) ;;
-  *) export PATH="$PNPM_HOME:$PATH" ;;
-esac
-# pnpm end

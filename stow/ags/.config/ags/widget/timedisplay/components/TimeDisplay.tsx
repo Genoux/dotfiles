@@ -4,7 +4,7 @@ import { time } from "../Service";
 export function TimeDisplay({ class: cls }: { class?: string }) {
   return (
     <box class={`time-display ${cls ?? ""}`}>
-      <menubutton halign={Gtk.Align.CENTER}>
+      <menubutton halign={Gtk.Align.CENTER} valign={Gtk.Align.CENTER}>
         <label label={time} />
         <popover>
           <Gtk.Calendar />

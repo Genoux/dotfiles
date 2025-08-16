@@ -1,121 +1,73 @@
 @use "../abstracts/variables" as *;
 @use "../abstracts/mixins" as *;
 
-// =============================================================================
-// Notification Button Styles (for bar button)
-// =============================================================================
-
+// Minimal, used by NotificationButton
 .NotificationButton {
-
-  .icon {
-    color: $white;
-  }
-
-  .badge {
-    @include badge;
-  }
+  .icon { color: $white; }
+  .badge { @include badge; }
+  @include button-base;
 }
 
-// =============================================================================
-// Notification Center Window
-// =============================================================================
-
+// Notification center window container (full height)
 .notification-center {
-  @include card-base;
-  min-height: 400px;
-  min-width: 330px;
-
-  .timestamp {
-    font-size: $font-size-xs;
-    opacity: 0.7;
-    color: $text-secondary;
-  }
-
-  &.floating {
-    margin: $spacing-sm;
-  }
+  @include panel-container;
+  min-width: 500px;
+  margin: 4px 4px 0px 4px;
 
   .notifications-header {
     padding: $spacing-md;
     border-bottom: $border-width solid $border-tertiary;
-
-    button {
-      font-size: $font-size-md;
-    }
-
-    .notification-title {
-      font-size: $font-size-lg;
-      color: $white;
-    }
-
-    .notification-count {
-      font-size: $font-size-sm;
-      color: $text-secondary;
-    }
+    .notification-title { font-size: $font-size-lg; color: $white; }
+    .notification-count { font-size: $font-size-sm; color: $text-secondary; }
   }
 
-  .notification-list {
+  .notification-list-scroll {
     background: transparent;
     border: none;
+    min-height: 600px;
+  }
 
-    .no-notifications {
-      color: $white;
+  .notification-list { background: transparent; border: none; padding: $spacing-sm; }
+}
 
-      .no-notifications-text {
-        font-size: $font-size-lg;
-        opacity: 0.8;
-      }
+// Notification rack - stacks live notifications
+.notification-rack {
+  .rack-container {
+    min-width: 320px;
+  }
+  
+  .debug-notification {
+    @include card-base($spacing-sm);
+    background-color: rgba(255, 100, 100, 0.8);
+    color: $white;
+    font-weight: bold;
+    padding: $spacing-sm;
+  }
+  
+  .rack-item {
+    margin-bottom: $spacing-sm;
+    
+    &:hover {
+      transform: translateX(-4px);
+      transition: transform 200ms ease;
     }
   }
 }
 
-// =============================================================================
-// Notification Group Component
-// =============================================================================
-
-.notification-group {
-  border: 1px solid $border-tertiary;
-  border-radius: $radius-md;
-  background-color: $bg-tertiary;
-
-  .notification-group-header {
-    padding: $spacing-xl;
-    .app-name {
-      padding-left: $spacing-xs;
-    }
-
-    .notification-group-expanded {
-      padding-right: $spacing-sm;
-    }
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
   }
+  to {
+    transform: translateX(0);
+    opacity: 1;
   }
+}
 
- 
-
-// =============================================================================
-// Individual Notification Component
-// =============================================================================
-
-eventbox.notification {
-
-  &:hover .notification-container {
-    background-color: $bg-quaternary;
-  }
-
-  &.clickable:hover .notification-container {
-    background-color: $bg-quaternary;
-  }
-
-  &.read .notification-container {
-    .app-name,
-    .summary {
-      opacity: 0.8;
-    }
-    
-    .body {
-      opacity: 0.6;
-    }
-  }
+// Shared notification card structure (popup, rack, and center items)
+.notification {
+  margin: $spacing-sm;
 
   .notification-container {
     @include card-base;
@@ -123,47 +75,22 @@ eventbox.notification {
 
     .notification-header {
       padding-bottom: $spacing-md;
-
-      .app-icon {
-        min-width: 16px;
-        min-height: 16px;
-        color: $white;
-      }
-
-      .app-name {
-        font-weight: 500;
-        color: $white;
-        font-size: $font-size-sm;
+      .app-icon { min-width: 16px; min-height: 16px; color: $white; }
+      .app-name { @include text-primary; font-weight: 600; }
+      .timestamp { @include text-tertiary; margin-left: auto; }
+      .close-btn { 
+        @include button-base;
+        padding: $spacing-xs;
+        opacity: 0.7;
+        &:hover { opacity: 1; }
       }
     }
 
     .notification-body {
-      .notification-image {
-        min-width: 48px;
-        min-height: 48px;
-        background-size: cover;
-        background-position: center;
-        border-radius: $radius-sm;
-      }
-
       .text-content {
-        .summary {
-          color: $white;
-          font-size: $font-size-md;
-          font-weight: 600;
-          margin-bottom: $spacing-xs;
-        }
-
-        .body {
-          color: $white;
-          font-size: $font-size-md;
-          opacity: 0.7;
-        }
+        .summary { color: $white; font-size: $font-size-md; font-weight: 600; margin-bottom: $spacing-xs; }
+        .body { color: $white; font-size: $font-size-md; opacity: 0.7; }
       }
-    }
-
-    .notification-actions {
-      padding-top: $spacing-md;
     }
   }
 }

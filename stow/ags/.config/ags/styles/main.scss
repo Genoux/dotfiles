@@ -37,6 +37,15 @@ viewport {
   @include mixins.gtk-reset;
 }
 
-button {
-  @include mixins.button-base;
+popover{
+  @include mixins.gtk-reset;
+  background-color: transparent;
+  border: none;
+  box-shadow: none;
+  margin: 0;
+  padding: 0;
+
+  button{
+    @include mixins.gtk-reset;
+  }
 }

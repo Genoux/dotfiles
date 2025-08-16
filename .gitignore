@@ -56,4 +56,4 @@ stow/hypr/.config/hypr/monitors.conf
 
 
 *.bak
-stow/ags/.config/ags/*
+#stow/ags/.config/ags/*

@@ -11,7 +11,7 @@ export function WindowTitle({ class: cls = "" }: { class?: string }) {
         return (
           <box class={`${cls}`} spacing={6} visible={!!c}>
             <image iconName={clsname} pixelSize={18} />
-            <label label={title} xalign={0.0} ellipsize={1} />
+            <label label={title} xalign={0.0} maxWidthChars={40} ellipsize={3} marginEnd={3}/>
           </box>
         );
       }}

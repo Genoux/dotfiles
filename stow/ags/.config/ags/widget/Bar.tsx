@@ -9,7 +9,8 @@ import { SystemTemp } from "./systemtemp";
 import { Weather } from "./weather";
 import { TimeDisplay } from "./timedisplay";
 import { BluetoothButton } from "./bluetooth";
-import { MediaPlayerButton } from "./mediaplayer";
+import { NotificationButton } from "./notifications";
+// MediaPanel window is instantiated globally in app.ts via MediaPopup
 
 export default function Bar(gdkmonitor: Gdk.Monitor) {
   const { TOP, LEFT, RIGHT, BOTTOM } = Astal.WindowAnchor;
@@ -22,6 +23,7 @@ export default function Bar(gdkmonitor: Gdk.Monitor) {
       gdkmonitor={gdkmonitor}
       exclusivity={Astal.Exclusivity.EXCLUSIVE}
       anchor={BOTTOM | LEFT | RIGHT}
+      heightRequest={48}
       application={app}
     >
       <centerbox cssName="centerbox">
@@ -29,21 +31,18 @@ export default function Bar(gdkmonitor: Gdk.Monitor) {
           <Workspaces class="bar-section" />
           <SystemTray class="bar-section" />
         </box>
-        <box $type="center">
+        <box $type="center" spacing={6}>
           <WindowTitle class="bar-section" />
         </box>
         <box $type="end" spacing={3} halign={Gtk.Align.END}>
-            <CavaVisualizer class="bar-section" />
-            <Weather class="bar-section" />
-            <SystemTemp class="bar-section" />
-            <TimeDisplay class="bar-section" />
-            <BluetoothButton class="bar-section" />
-            <MediaPlayerButton class="bar-section" />
-            
+          <NotificationButton class="bar-section" />
+          <CavaVisualizer class="bar-section" />
+          <Weather class="bar-section" />
+          <SystemTemp class="bar-section" />
+          <TimeDisplay class="bar-section" />
+          <BluetoothButton class="bar-section" />
         </box>
       </centerbox>
-      
     </window>
-    
   );
 }

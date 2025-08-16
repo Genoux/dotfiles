@@ -3,15 +3,16 @@
 
 .bar {  
   @include text-primary;
-  padding-left: $spacing-md;
-  padding-right: $spacing-md;
-  padding-top: $spacing-sm;
-  padding-bottom: $spacing-sm;
+  padding: $spacing-sm $spacing-md;
   centerbox {
     .bar-section {
       padding: $spacing-sm;
       border-radius: $radius-md;
       background: $bg-translucent;
+
+      button {
+        @include button-base;
+      }
     }
   }
 }

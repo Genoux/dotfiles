@@ -1,10 +1,21 @@
-import { For, With } from "ags";
+import { For } from "ags";
 import { trayItems } from "../service";
 import Tray from "gi://AstalTray";
+import Hyprland from "gi://AstalHyprland";
 
 function TrayItemComponent({ item }: { item: Tray.TrayItem }) {
   return (
-    <button onClicked={() => item.activate(0, 0)} class="tray-button">
+    <button
+      class="tray-button"
+      onClicked={() => {
+        try { item.activate(0, 0); } catch {}
+        try { (item as any).secondaryActivate?.(0, 0); } catch {}
+        try {
+          const hypr = Hyprland.get_default();
+          hypr?.dispatch?.("focuswindow", `class:${item.title}`);
+        } catch {}
+      }}
+    >
       <image gicon={item.gicon} pixelSize={14} />
     </button>
   );
