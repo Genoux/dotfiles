@@ -295,34 +295,116 @@ cmd_get_quiet() {
 }
 
 cmd_install() {
-    echo -e "${BLUE}🚀 Smart Package Sync (System → Dotfiles + Dependencies)${NC}"
+    echo -e "${BLUE}🚀 Smart Package Sync${NC}"
     echo
     
-    # Step 1: Always sync package lists with current system first
-    echo -e "${BLUE}Step 1: Syncing package lists with current system...${NC}"
-    cmd_get_quiet
+    # Check if package files exist
+    if [[ ! -f "packages.txt" || ! -f "aur-packages.txt" ]]; then
+        echo -e "${YELLOW}⚠️  Package files not found! Creating from current system...${NC}"
+        cmd_get_quiet
+        return 0
+    fi
+    
+    # Ask user which direction to sync
+    echo -e "${BLUE}Choose sync direction:${NC}"
+    echo "  1) System → Dotfiles  (update txt files with current system)"
+    echo "  2) Dotfiles → System  (install packages from txt files)"
+    echo "  3) System Update Only (just update packages, no sync)"
+    read -p "Choice (1-3): " sync_choice
     echo
     
-    # Step 2: Find and install missing dependencies
-    echo -e "${BLUE}Step 2: Finding missing dependencies...${NC}"
-    find_missing_deps
+    case "$sync_choice" in
+        1)
+            echo -e "${BLUE}Syncing: System → Dotfiles${NC}"
+            cmd_get_quiet
+            find_missing_deps
+            ;;
+        2)
+            echo -e "${BLUE}Syncing: Dotfiles → System${NC}"
+            install_from_dotfiles
+            ;;
+        3)
+            echo -e "${BLUE}System Update Only${NC}"
+            system_update_only
+            ;;
+        *)
+            echo -e "${RED}Invalid choice. Defaulting to System → Dotfiles${NC}"
+            cmd_get_quiet
+            find_missing_deps
+            ;;
+    esac
     
-    # Step 3: System update
-    echo -e "${BLUE}Step 3: Updating system...${NC}"
-    echo -e "${YELLOW}Note: You may need to answer prompts for package conflicts/replacements${NC}"
+    echo
+    echo -e "${GREEN}🎉 Package sync complete!${NC}"
+}
+
+install_from_dotfiles() {
+    # Install missing official packages
+    echo -e "${BLUE}Installing missing official packages...${NC}"
+    local missing_official=()
+    while read -r package; do
+        [[ "$package" =~ ^#.*$ ]] || [[ -z "$package" ]] && continue
+        if ! pacman -Q "$package" &>/dev/null; then
+            missing_official+=("$package")
+        fi
+    done < packages.txt
+
+    if [[ ${#missing_official[@]} -gt 0 ]]; then
+        echo -e "  ${YELLOW}Installing:${NC} ${missing_official[*]}"
+        if sudo pacman -S --needed --noconfirm "${missing_official[@]}"; then
+            echo -e "  ${GREEN}✅ Official packages installed${NC}"
+        else
+            echo -e "  ${RED}⚠️  Some official packages failed${NC}"
+        fi
+    else
+        echo -e "  ${GREEN}✅ All official packages already installed${NC}"
+    fi
+
+    # Install yay if not present and we have AUR packages
+    if [[ -s "aur-packages.txt" ]] && ! command -v yay &> /dev/null; then
+        echo -e "${BLUE}Installing yay (AUR helper)...${NC}"
+        sudo pacman -S --needed --noconfirm base-devel git
+        cd /tmp
+        git clone https://aur.archlinux.org/yay.git
+        cd yay
+        makepkg -si --noconfirm
+        cd "$DOTFILES_DIR"
+    fi
+
+    # Install missing AUR packages
+    if [[ -s "aur-packages.txt" ]]; then
+        echo -e "${BLUE}Installing missing AUR packages...${NC}"
+        local missing_aur=()
+        while read -r package; do
+            [[ "$package" =~ ^#.*$ ]] || [[ -z "$package" ]] && continue
+            if ! pacman -Q "$package" &>/dev/null; then
+                missing_aur+=("$package")
+            fi
+        done < aur-packages.txt
+        
+        if [[ ${#missing_aur[@]} -gt 0 ]]; then
+            echo -e "  ${YELLOW}Installing from AUR:${NC} ${missing_aur[*]}"
+            if yay -S --needed --noconfirm "${missing_aur[@]}"; then
+                echo -e "  ${GREEN}✅ AUR packages installed${NC}"
+            else
+                echo -e "  ${RED}⚠️  Some AUR packages failed${NC}"
+            fi
+        else
+            echo -e "  ${GREEN}✅ All AUR packages already installed${NC}"
+        fi
+    fi
     
-    # Interactive system update to handle conflicts
+    # Update system
+    system_update_only
+}
+
+system_update_only() {
+    echo -e "${BLUE}Updating system...${NC}"
     if sudo pacman -Syu; then
         echo -e "  ${GREEN}✅ System updated successfully${NC}"
     else
         echo -e "  ${RED}⚠️  System update failed${NC}"
-        echo -e "  ${YELLOW}You may need to resolve conflicts manually${NC}"
     fi
-    
-    echo
-    echo -e "${GREEN}🎉 Smart sync complete!${NC}"
-    echo -e "${BLUE}📊 Your dotfiles now reflect your current system${NC}"
-    echo -e "${BLUE}📊 Missing dependencies have been found and added${NC}"
 }
 
 cmd_check() {

@@ -36,21 +36,16 @@
     min-width: 320px;
   }
   
-  .debug-notification {
-    @include card-base($spacing-sm);
-    background-color: rgba(255, 100, 100, 0.8);
-    color: $white;
-    font-weight: bold;
-    padding: $spacing-sm;
-  }
+
   
   .rack-item {
     margin-bottom: $spacing-sm;
     
-    &:hover {
-      transform: translateX(-4px);
-      transition: transform 200ms ease;
-    }
+    // Hover animation disabled to prevent scaling effects
+    // &:hover {
+    //   transform: translateX(-4px);
+    //   transition: transform 200ms ease;
+    // }
   }
 }
 

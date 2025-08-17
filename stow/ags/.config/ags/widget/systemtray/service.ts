@@ -1,23 +1,26 @@
 import Tray from "gi://AstalTray";
-import { createPoll } from "ags/time";
 import { createBinding } from "ags";
 
-
-
 const tray = Tray.get_default();
-const items = tray.get_items();
-export const trayItems = createBinding(tray, "items")
-tray.connect("item-added", (_, id) => {
-    print("added:", id);
-    const items = tray.get_items();
-    print("items.length:", items.length);
-    for (const item of items) {
-      print("item typeof:", typeof item);
-      print("item GType:", item.constructor?.name);
+
+// Function to filter valid tray items
+function filterValidItems(items: Tray.TrayItem[]): Tray.TrayItem[] {
+  return items.filter(item => {
+    try {
+      // Check if item is valid and has necessary properties
+      return item && 
+             item.gicon && 
+             item.id && 
+             !item.get_property?.("invalid") && // Check if item is marked as invalid
+             item.get_property?.("status") !== "Passive"; // Filter out passive items
+    } catch (error) {
+      console.warn("Invalid tray item detected, filtering out:", error);
+      return false;
     }
   });
-  
+}
 
-tray.connect("item-removed", (k, v) => {
-  console.log("item-removed", k, v)
-})
+// Create binding that filters items
+export const trayItems = createBinding(tray, "items", (items: Tray.TrayItem[]) => {
+  return filterValidItems(items);
+});

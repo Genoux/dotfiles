@@ -5,7 +5,10 @@ import { createBinding, createState } from "ags";
 let notifd: any = null;
 try {
   notifd = Notifd.get_default();
-} catch {}
+  console.log("[Notifications] Successfully connected to Notifd");
+} catch (error) {
+  console.error("[Notifications] Failed to connect to Notifd:", error);
+}
 
 // Live list of notifications from the daemon or empty state fallback
 let __notifications: any;
@@ -21,55 +24,106 @@ export const notifications = __notifications;
 export const [rackNotifications, setRackNotifications] = createState<any[]>([]);
 export const [centerVisible, setCenterVisible] = createState(false);
 
-// Auto-dismiss timeout per notification
-const AUTO_DISMISS_TIME = 5000; // 5 seconds
-const dismissTimeouts = new Map<string, any>();
+// Debug: Log initial rack state
+console.log("[Notifications] Rack initialized, notifd available:", !!notifd);
+
+// Simple timeout tracking
+const BASE_DISMISS_TIME = 3000;
+const NOTIFICATION_INTERVAL = 2000;
+const timeouts = new Map<any, any>();
+let orderCounter = 0;
 
 // When a new notification arrives, add it to the rack
 try {
-  notifd?.connect?.("notified", (_: any, n: any) => {
-    console.log("[Notifications] New notification received:", n?.summary, n?.body);
-    // Add to rack
-    setRackNotifications(prev => {
-      const newRack = [...prev, n];
-      console.log("[Notifications] Rack now has", newRack.length, "notifications");
-      return newRack;
+  if (notifd) {
+    notifd.connect("notified", (_: any, id: number, is_new: boolean) => {
+      console.log("[Notifications] Notified signal - ID:", id, "is_new:", is_new);
+      
+      // Get the actual notification object using the ID
+      const notification = notifd.get_notification(id);
+      if (!notification) {
+        console.warn("[Notifications] Could not get notification with ID:", id);
+        return;
+      }
+      
+      console.log("[Notifications] Got notification:", notification.summary, notification.body);
+      
+      // Add to rack immediately
+      setRackNotifications(prev => [...prev, notification]);
+      
+      // Set individual timeout for this notification
+      const order = orderCounter++;
+      const dismissTime = BASE_DISMISS_TIME + (order * NOTIFICATION_INTERVAL);
+      
+      console.log("[Notifications] Will dismiss in:", dismissTime, "ms");
+      
+      const timeoutId = setTimeout(() => {
+        console.log("[Notifications] Auto-dismissing notification:", notification.summary);
+        removeFromRack(notification);
+      }, dismissTime);
+      
+      timeouts.set(notification, timeoutId);
     });
-    
-    // Set auto-dismiss timer
-    const timeoutId = setTimeout(() => {
-      dismissNotification(n);
-    }, AUTO_DISMISS_TIME);
-    
-    if (n?.id) {
-      dismissTimeouts.set(n.id, timeoutId);
-    }
-  });
-  console.log("[Notifications] Service connected to notifd:", !!notifd);
+    console.log("[Notifications] Service connected successfully");
+  } else {
+    console.log("[Notifications] No notifd available");
+  }
 } catch (error) {
   console.error("[Notifications] Failed to connect:", error);
+}
+
+function removeFromRack(notification: any) {
+  console.log("[Notifications] removeFromRack called for notification");
+  
+  // Clear timeout
+  const timeoutId = timeouts.get(notification);
+  if (timeoutId) {
+    clearTimeout(timeoutId);
+    timeouts.delete(notification);
+    console.log("[Notifications] Cleared timeout");
+  }
+  
+  // Get current state before removal
+  const currentNotifs = rackNotifications.get();
+  console.log("[Notifications] Current notifications count before removal:", currentNotifs.length);
+  
+  // Remove from rack
+  setRackNotifications(prev => {
+    const filtered = prev.filter(n => n !== notification);
+    console.log("[Notifications] Filtered notifications count:", filtered.length);
+    console.log("[Notifications] Was notification removed?", prev.length !== filtered.length);
+    
+    // Reset counter when empty
+    if (filtered.length === 0) {
+      orderCounter = 0;
+      console.log("[Notifications] All cleared, reset counter");
+    }
+    
+    return filtered;
+  });
+  
+  // Check state after update
+  setTimeout(() => {
+    const newCount = rackNotifications.get().length;
+    console.log("[Notifications] State after removal:", newCount);
+  }, 100);
+  
+  // System dismiss
+  try {
+    notification?.dismiss?.();
+  } catch (e) {
+    console.log("[Notifications] System dismiss failed");
+  }
 }
 
 // Legacy popup state for backward compatibility
 export const [lastPopup, setLastPopup] = createState<any | null>(null);
 export const [popupVisible, setPopupVisible] = createState(false);
 
-// Helpers to interact with notifications
+// Public function to dismiss notification (called from UI)
 export function dismissNotification(n: any) {
-  try { 
-    // Clear auto-dismiss timeout if exists
-    if (n?.id && dismissTimeouts.has(n.id)) {
-      const timeoutId = dismissTimeouts.get(n.id);
-      if (timeoutId) clearTimeout(timeoutId);
-      dismissTimeouts.delete(n.id);
-    }
-    
-    // Remove from rack
-    setRackNotifications(prev => prev.filter(item => item.id !== n.id));
-    
-    // Dismiss from system
-    n?.dismiss?.(); 
-  } catch {}
+  console.log("[Notifications] Manual dismiss requested");
+  removeFromRack(n);
 }
 
 export function invokeDefault(n: any) {
@@ -83,3 +137,25 @@ export function toggleNotificationCenter() {
   try { print(`[Notifications] centerVisible -> ${__centerShown}`); } catch {}
 }
 
+// Force clear all notifications (debug helper)
+export function clearAllNotifications() {
+  console.log("[Notifications] Force clearing all notifications");
+  
+  // Clear all timeouts
+  timeouts.forEach((timeoutId) => {
+    clearTimeout(timeoutId);
+  });
+  
+  timeouts.clear();
+  orderCounter = 0;
+  setRackNotifications([]);
+  
+  console.log("[Notifications] All notifications cleared");
+}
+
+// Add immediate clear function to call from console
+try {
+  (globalThis as any).clearNotifications = clearAllNotifications;
+} catch {
+  // Ignore if global assignment fails
+}
