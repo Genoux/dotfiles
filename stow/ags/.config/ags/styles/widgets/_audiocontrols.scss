@@ -2,7 +2,7 @@
 @use "../abstracts/mixins" as *;
 
 // =============================================================================
-// Audio Controls Widget Styling
+// AUDIO CONTROLS WIDGET
 // =============================================================================
 
 // Audio Controls Window positioning - align to audio button in bar
@@ -10,12 +10,15 @@ window.audio-controls-window {
   margin-bottom: $spacing-md;
 }
 
-box.AudioPanel {
-  padding: $spacing-md;
+.audio-panel {
   @include card-base;
+  @include flex-center;
+  padding: $spacing-md;
+  gap: $spacing-sm;
+  min-width: 200px;
 
-  scale {
-    @include slider-base($spacing-md, $bg-tertiary, $white);
+  .audio-panel__slider {
+    @include slider-base($spacing-md, $surface-container-low, $on-surface);
     margin-right: $spacing-sm;
     
     trough {
@@ -29,9 +32,30 @@ box.AudioPanel {
     }
   }
 
-  label.volume-label {
+  .audio-panel__volume-label {
+    @include text-secondary;
     font-size: $font-size-sm;
     opacity: 0.7;
     min-width: 35px;
+    text-align: right;
+  }
+  
+  .audio-panel__icon {
+    @include icon-base($font-size-md);
+    color: $on-surface;
+    min-width: $font-size-md;
+  }
+}
+
+// Legacy support - keeping old selectors for compatibility
+box.AudioPanel {
+  @extend .audio-panel;
+
+  scale {
+    @extend .audio-panel__slider;
+  }
+
+  label.volume-label {
+    @extend .audio-panel__volume-label;
   }
 }

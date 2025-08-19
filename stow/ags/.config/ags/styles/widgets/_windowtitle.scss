@@ -2,16 +2,46 @@
 @use "../abstracts/mixins" as *;
 
 // =============================================================================
-// Window Title Widget Styling
+// WINDOW TITLE WIDGET
 // =============================================================================
 
 .window-title {
-  box {
+  @include flex-center;
+  
+  .window-title__container {
+    @include flex-center;
     padding: 0 $spacing-md;
+    gap: $spacing-sm;
+    max-width: 300px;
+    
+    .window-title__icon {
+      @include icon-base($font-size-sm);
+      color: $on-surface;
+      opacity: 0.9;
+      min-width: $font-size-sm;
+    }
+    
+    .window-title__text {
+      @include text-primary;
+      font-size: $font-size-sm;
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 200px;
+    }
+  }
+  
+  // Legacy support
+  box {
+    @extend .window-title__container;
     
     icon {
-      color: $white;
-      opacity: 0.9;
+      @extend .window-title__icon;
+    }
+    
+    label {
+      @extend .window-title__text;
     }
   }
 }

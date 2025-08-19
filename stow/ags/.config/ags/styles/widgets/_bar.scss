@@ -1,18 +1,49 @@
 @use "../abstracts/variables" as *;
 @use "../abstracts/mixins" as *;
 
+// =============================================================================
+// BAR WIDGET
+// =============================================================================
+
 .bar {  
   @include text-primary;
   padding: $spacing-sm $spacing-md;
+  
   centerbox {
     .bar-section {
+      @include flex-center;
       padding: $spacing-sm;
       border-radius: $radius-md;
-      background: $bg-translucent;
+      background: $surface-container-lowest;
+      gap: $spacing-xs;
 
       button {
         @include button-base;
+        @include hover-state;
+        border-radius: $radius-sm;
+        
+        &.bar-section__button--active {
+          background: $pressed-overlay;
+          color: $primary;
+        }
       }
+      
+      .bar-section__separator {
+        @include separator;
+        margin: 0 $spacing-xs;
+      }
+    }
+    
+    .bar-section--left {
+      justify-content: flex-start;
+    }
+    
+    .bar-section--center {
+      justify-content: center;
+    }
+    
+    .bar-section--right {
+      justify-content: flex-end;
     }
   }
 }

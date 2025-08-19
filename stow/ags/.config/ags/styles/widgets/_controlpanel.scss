@@ -2,16 +2,47 @@
 @use "../abstracts/mixins" as *;
 
 // =============================================================================
-// Control Panel Widget Styling
+// CONTROL PANEL WIDGET
 // =============================================================================
 
 .control-panel {
   @include card-base;
   margin: $spacing-sm $spacing-md;
+  min-width: 320px;
 
-  .widget {
-    @include card-base($padding: $spacing-xs);
+  .control-panel__header {
+    @include flex-between;
+    @include text-heading;
+    padding: $spacing-md;
+    border-bottom: $border-width solid $outline-variant;
   }
 
- 
+  .control-panel__content {
+    padding: $spacing-md;
+    display: grid;
+    gap: $spacing-md;
+  }
+
+  .control-panel__widget {
+    @include card-base($padding: $spacing-sm);
+    background: $surface-container;
+    border: $border-width solid $outline-variant;
+    
+    &:hover {
+      background: $surface-container-high;
+      border-color: $outline;
+    }
+  }
+
+  .control-panel__section {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-sm;
+    
+    .control-panel__section-title {
+      @include text-secondary;
+      font-weight: 600;
+      margin-bottom: $spacing-xs;
+    }
+  }
 }

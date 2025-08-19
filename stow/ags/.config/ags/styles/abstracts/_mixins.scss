@@ -23,10 +23,23 @@
 
 // Card/container styling - used for panels, notifications, etc.
 @mixin card-base($padding: $spacing-md) {
-  background-color: $bg-translucent;
-  border: $border-width solid $border-tertiary;
+  background-color: $surface-container-lowest;
+  border: $border-width solid $outline;
   border-radius: $radius-lg;
   padding: $padding;
+}
+
+// Layout utilities
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 
@@ -44,11 +57,11 @@
 
   // Default states - can be overridden
   &:hover:not(.active) {
-    background-color: $state-hover;
+    background-color: $hover-overlay;
   }
 
   &.active {
-    background-color: $state-active;
+    background-color: $pressed-overlay;
   }
 }
 
@@ -64,7 +77,7 @@
 }
 
 // Colored button variants
-@mixin button-variant($bg-color, $hover-color, $text-color: $white) {
+@mixin button-variant($bg-color, $hover-color, $text-color: $on-surface) {
   @include button-base;
   background-color: $bg-color;
   color: $text-color;
@@ -82,19 +95,19 @@
 @mixin input-base {
   @include gtk-reset;
   padding: $spacing-sm $spacing-md;
-  background-color: $bg-secondary;
-  border: $border-width solid $border-tertiary;
+  background-color: $surface-bright;
+  border: $border-width solid $outline;
   border-radius: $radius-md;
-  color: $white;
+  color: $on-surface;
   transition: $transition-hover;
   
   &:focus {
-    border-color: $border-secondary;
+    border-color: $outline-variant;
     outline: none;
   }
   
   &:hover {
-    border-color: $border-secondary;
+    border-color: $outline-variant;
   }
 }
 
@@ -104,19 +117,38 @@
 
 // Text hierarchy mixins
 @mixin text-primary {
-  color: $white;
+  color: $on-surface;
   font-size: $font-size-sm;
   font-weight: 500;
 }
 
 @mixin text-secondary {
-  color: $text-secondary;
+  color: $on-surface-variant;
   font-size: $font-size-sm;
   font-weight: 400;
 }
 
 @mixin text-tertiary {
-  color: $text-tertiary;
+  color: $on-surface-dim;
+  font-size: $font-size-xs;
+  font-weight: 400;
+}
+
+// Text variants
+@mixin text-heading {
+  color: $on-surface;
+  font-size: $font-size-lg;
+  font-weight: 600;
+}
+
+@mixin text-body {
+  color: $on-surface;
+  font-size: $font-size-md;
+  font-weight: 400;
+}
+
+@mixin text-caption {
+  color: $on-surface-dim;
   font-size: $font-size-xs;
   font-weight: 400;
 }
@@ -126,7 +158,7 @@
 // =============================================================================
 
 // Slider/Scale styling - consistent across media player, audio controls, and OSD
-@mixin slider-base($height: $spacing-md, $bg-color: $bg-tertiary, $highlight-color: $white) {
+@mixin slider-base($height: $spacing-md, $bg-color: $surface-container-low, $highlight-color: $on-surface) {
   @include gtk-reset;
   
   trough {
@@ -156,7 +188,7 @@
     transition: $transition-hover;
     
     &:hover {
-      background-color: $accent-hover;
+      background-color: $primary-hover;
     }
   }
 }
@@ -178,7 +210,7 @@
   transition: $transition-hover;
   
   &:hover {
-    background-color: $state-hover;
+    background-color: $hover-overlay;
   }
 }
 
@@ -194,23 +226,23 @@
   
   &.active {
     opacity: 1;
-    color: $accent-primary;
+    color: $primary;
   }
 }
 
 // Panel container - for control panels, popups
 @mixin panel-container {
   @include card-base;
-  background-color: $bg-translucent;
-  border: $border-width solid $border-tertiary;
+  background-color: $surface-container-lowest;
+  border: $border-width solid $outline;
   
   &.active {
-    border-color: $border-secondary;
+    border-color: $outline-variant;
   }
 }
 
 // Hover state utility
-@mixin hover-state($bg-color: $state-hover) {
+@mixin hover-state($bg-color: $hover-overlay) {
   transition: $transition-state;
   
   &:hover {
@@ -221,12 +253,12 @@
 // Badge styling - for notifications, counts, etc.
 @mixin badge {
   font-size: $font-size-xs;
-  background-color: $state-hover;
+  background-color: $hover-overlay;
   font-weight: 600;
   padding: 0 $spacing-sm;
   border-radius: $radius-xs;
-  border: 1px solid $state-hover;
-  color: $white;
+  border: 1px solid $hover-overlay;
+  color: $on-surface;
   opacity: 0.7;
   
   label {
@@ -248,7 +280,43 @@
     }
 
     &:hover > box {
-      background-color: $bg-quaternary;
+      background-color: $surface-container-lowest;
     }
   }
+}
+
+// =============================================================================
+// UTILITY MIXINS
+// =============================================================================
+
+// Scroll area styling
+@mixin scroll-area {
+  background: transparent;
+  border: none;
+  
+  scrollbar {
+    background: transparent;
+    border: none;
+    
+    trough {
+      background: transparent;
+    }
+    
+    slider {
+      background: $on-surface-dim;
+      border-radius: $radius-xs;
+      min-width: $spacing-xs;
+      
+      &:hover {
+        background: $on-surface-variant;
+      }
+    }
+  }
+}
+
+// Separator styling
+@mixin separator {
+  background-color: $outline-variant;
+  min-height: $separator-width;
+  min-width: $separator-width;
 }

@@ -1,21 +1,22 @@
 {
+  "theme": "apple",
   "search": {
-    "delay": 100,
+    "delay": 50,
     "placeholder": "Search applications..."
   },
   "ui": {
     "width": 600,
     "height": 400,
-    "margin": 100,
+    "margin": 0,
     "anchors": {
-      "top": true,
+      "top": false,
       "left": false,
       "right": false,
       "bottom": false
     },
-    "show_initial_entries": true,
+    "show_initial_entries": false,
     "show_search": true,
-    "fullscreen": false
+    "fullscreen": true
   },
   "modules": [
     {

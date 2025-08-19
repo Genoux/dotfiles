@@ -1,0 +1,12 @@
+[Unit]
+Description=Auto-switch to Bluetooth audio when available
+Wants=pipewire.service
+After=pipewire.service
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/bt-audio-fix
+Environment=XDG_RUNTIME_DIR=/run/user/1000
+
+[Install]
+WantedBy=default.target

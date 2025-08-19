@@ -1,0 +1,27 @@
+{
+  "format": "rgba",
+  "target_file": "../stow/walker/.config/walker/themes/apple.css",
+  "syntax": {
+    "prefix": "@define-color ",
+    "separator": " ",
+    "suffix": ";",
+    "header": "/* Generated theme colors at: {{DATE}} */\n"
+  },
+  "variables": {
+    "foreground": "on-surface",
+    "background-low": "surface-container-low",
+    "background-lowest": "surface-container-lowest",
+    "accent": "primary",
+    "surface": "surface-container",
+    "surface-bright": "surface-bright",
+    "border": "outline",
+    "border-focus": "outline-variant",
+    "success": "success",
+    "warning": "warning",
+    "error": "error",
+    "shadow": "shadow-3",
+    "shadow-light": "shadow-1",
+    "hover": "hover-overlay",
+    "pressed": "pressed-overlay"
+  }
+}

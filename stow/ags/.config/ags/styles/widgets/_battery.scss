@@ -2,35 +2,70 @@
 @use "../abstracts/mixins" as *;
 
 // =============================================================================
-// Battery Widget Styling
+// BATTERY WIDGET
 // =============================================================================
 
 .battery-display {
   @include interactive-element;
+  @include flex-center;
   padding: $spacing-xs $spacing-sm;
   border-radius: $radius-sm;
   background: transparent;
+  gap: $spacing-xs;
+  transition: $transition-hover;
+  
+  &:hover {
+    background: $hover-overlay;
+  }
 }
 
 .battery-display__icon {
   @include status-indicator;
+  
+  &.battery-display__icon--charging {
+    color: $success;
+    animation: pulse 2s infinite;
+  }
+  
+  &.battery-display__icon--critical {
+    color: $error;
+    animation: pulse 1s infinite;
+  }
 }
 
 .battery-display__label {
-  &--critical {
+  @include text-primary;
+  font-size: $font-size-xs;
+  font-weight: 500;
+  
+  &.battery-display__label--critical {
     color: $error;
   }
   
-  &--low {
+  &.battery-display__label--low {
     color: $warning;
   }
   
-  &--medium {
-    color: $text-secondary;
+  &.battery-display__label--medium {
+    color: $on-surface-variant;
   }
   
-  &--high,
-  &--full {
-    color: $white;
+  &.battery-display__label--high,
+  &.battery-display__label--full {
+    color: $on-surface;
   }
+  
+  &.battery-display__label--charging {
+    color: $success;
+  }
+}
+
+// =============================================================================
+// BATTERY ANIMATIONS
+// =============================================================================
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
 } 

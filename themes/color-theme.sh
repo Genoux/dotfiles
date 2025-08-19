@@ -1,7 +1,6 @@
 #!/bin/bash
 
-# Theme Build Script
-# Generates app-specific color files from base.json and merges directly into target files
+# Theme Build Script - Generates app-specific color files from base.json
 
 set -e
 
@@ -9,12 +8,12 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BASE_JSON="$SCRIPT_DIR/base.json"
 APPS_DIR="$SCRIPT_DIR/apps"
 
-# Colors
+# Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
 log() {
     echo -e "${BLUE}[BUILD]${NC} $1"
@@ -43,8 +42,6 @@ if [ ! -d "$APPS_DIR" ]; then
     error "Apps directory not found: $APPS_DIR"
     exit 1
 fi
-
-# No longer creating theme directory - files merged directly into targets
 
 # Function to normalize rgba string (remove spaces)
 normalize_rgba() {
@@ -103,7 +100,7 @@ format_color() {
     esac
 }
 
-# Universal merge function - works with any text format
+# Merge theme content into target files
 merge_theme_into_target() {
     local generated_file="$1"
     local target_file="$2"
@@ -124,66 +121,52 @@ merge_theme_into_target() {
     
     log "Merging theme into: $target_file"
     
-    # Get format-specific markers from app config
-    local start_marker=$(jq -r '.merge_markers.start // "# THEME_COLORS_START"' "$app_config")
-    local end_marker=$(jq -r '.merge_markers.end // "# THEME_COLORS_END"' "$app_config")
+    # Hard coded markers based on file extension
+    local file_ext="${target_file##*.}"
+    local start_marker=""
+    local end_marker=""
+    
+    case "$file_ext" in
+        "scss"|"css") 
+            start_marker="/* ?!? */"
+            end_marker="/* !?! */"
+            ;;
+        "conf"|"toml") 
+            start_marker="# ?!?"
+            end_marker="# !?!"
+            ;;
+        *) 
+            start_marker="# ?!?"
+            end_marker="# !?!"
+            ;;
+    esac
     
     # Generate theme content with format-specific markers
     {
         echo "$start_marker"
         cat "$generated_file"
+        
+        # Check if config specifies a footer to add after content
+        local footer=$(jq -r '.syntax.footer // ""' "$app_config")
+        if [[ -n "$footer" && "$footer" != "null" ]]; then
+            echo "$footer"
+        fi
+        
         echo "$end_marker"
     } > "$generated_file.with_markers"
     
     if [ -f "$target_file" ]; then
-        # Replace existing section or append
-        if grep -q "$start_marker" "$target_file"; then
-            # Use awk for better handling of nested brackets
-            awk -v start="$start_marker" -v end="$end_marker" '
-                BEGIN { 
-                    in_section = 0
-                    bracket_count = 0 
-                }
-                $0 == start { 
-                    in_section = 1
-                    bracket_count = 0
-                    next 
-                }
-                in_section && $0 == end {
-                    # For exact string matches (like comments), stop immediately
-                    if (start !~ /\{/ || end !~ /\}/) {
-                        in_section = 0
-                        next
-                    }
-                    # For bracket-based matches, check if we are at the right level
-                    if (bracket_count == 0) {
-                        in_section = 0
-                        next
-                    }
-                }
-                in_section {
-                    # Count opening and closing braces for proper nesting
-                    for (i = 1; i <= length($0); i++) {
-                        char = substr($0, i, 1)
-                        if (char == "{") bracket_count++
-                        if (char == "}") bracket_count--
-                    }
-                    # If we hit the matching closing brace and end marker is "}"
-                    if (bracket_count == 0 && end == "}" && $0 ~ /^\s*\}/) {
-                        in_section = 0
-                        next
-                    }
-                    next
-                }
-                !in_section { print }
-            ' "$target_file" > "$target_file.tmp"
-            cat "$target_file.tmp" "$generated_file.with_markers" > "$target_file"
-            rm "$target_file.tmp"
-        else
-            # Append to end
-            echo "" >> "$target_file"
-            cat "$generated_file.with_markers" >> "$target_file"
-        fi
+        # Remove ALL existing theme sections using awk (more robust and handles special characters)
+        awk -v start="$start_marker" -v end="$end_marker" '
+        BEGIN { in_section = 0 }
+        $0 == start { in_section = 1; next }
+        $0 == end && in_section { in_section = 0; next }
+        !in_section { print }
+        ' "$target_file" > "$target_file.tmp"
+        
+        # Append new theme section
+        cat "$target_file.tmp" "$generated_file.with_markers" > "$target_file"
+        rm "$target_file.tmp"
     else
         # Create new file
         cat "$generated_file.with_markers" > "$target_file"
@@ -194,7 +177,7 @@ merge_theme_into_target() {
     success "Merged theme into $target_file"
 }
 
-# Universal generator - uses app-defined syntax patterns
+# Generate theme content using app-defined syntax
 generate_theme_file() {
     local app_config="$1"
     local output_file="$2"
@@ -240,7 +223,6 @@ generate_theme_file() {
 
 log "Starting theme build process..."
 log "Base colors: $BASE_JSON"
-log "Merging colors directly into target files..."
 
 # Process each app configuration
 for app_config in "$APPS_DIR"/*.json; do
@@ -269,5 +251,4 @@ for app_config in "$APPS_DIR"/*.json; do
     fi
 done
 
-success "Theme build completed successfully!"
-log "Colors have been merged directly into target files" 
+success "Theme build completed successfully!" 

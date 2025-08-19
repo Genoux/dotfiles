@@ -7,25 +7,31 @@
 
 .OSDWindow {
     .osd-container {
+        @include flex-center;
+        @include card-base;
         border-radius: $radius-md;
-        background: $bg-translucent;
+        background: $surface-container-lowest;
         margin-bottom: $spacing-2xl;
-        padding: 0 $spacing-xl;
+        padding: $spacing-md $spacing-xl;
+        gap: $spacing-md;
+        min-width: 200px;
         
         .osd-icon {
             @include icon-base($spacing-xl, 1.0);
-            color: $white;
+            color: $on-surface;
             min-width: $spacing-xl;
             min-height: $spacing-xl;
         }
         
         .osd-slider {
-            @include slider-base($spacing-md, $bg-tertiary, $white);
+            @include slider-base($spacing-md, $surface-container-low, $on-surface);
+            flex: 1;
         }
         
         .osd-label {
             @include text-primary;
             opacity: 0.7;
+            min-width: fit-content;
         }
     }
 }

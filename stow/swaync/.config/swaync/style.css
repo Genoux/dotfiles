@@ -1,0 +1,376 @@
+/* Clean minimalist SwayNC styling */
+
+/* ── Color Palette ──────────────────────────────────────────────── */
+@define-color theme_fg rgba(248, 248, 252, 0.98);
+@define-color theme_fg_secondary rgba(215, 220, 225, 0.78);
+@define-color theme_bg rgba(22, 22, 28, 0.22);
+@define-color popup_bg rgba(25, 25, 28, 0.3);
+@define-color module_bg rgba(20, 20, 20, 0.46);
+@define-color module_hover_bg transparent;
+@define-color button_bg rgba(130, 135, 145, 0.28);
+@define-color button_hover_bg rgba(150, 155, 165, 0.40);
+@define-color accent_color rgba(10, 132, 255, 0.8);
+@define-color accent_color_hover #198de5;
+@define-color border_light rgba(255, 255, 255, 0.18);
+@define-color border_dark rgba(0, 0, 0, 0.06);
+@define-color border_medium rgba(255, 255, 255, 0.09);
+@define-color icon_primary @theme_fg;
+@define-color icon_secondary rgba(215, 220, 225, 0.88);
+@define-color slider_trough_bg rgba(50, 55, 65, 0.35);
+@define-color slider_thumb_bg white;
+@define-color close_button_bg rgba(110, 110, 115, 0.15);
+@define-color close_button_hover_bg rgba(130, 130, 135, 0.30);
+@define-color mpris_player_bg rgba(0, 0, 0, 0.5);
+
+/* ── Base Reset ─────────────────────────────────────────────────── */
+* {
+  font-family: "SF Pro Text", -apple-system, system-ui, sans-serif;
+  font-size: 14px;
+  color: @theme_fg;
+  border: none;
+  border-radius: 0;
+  background: none;
+  padding: 0;
+  margin: 0;
+  box-shadow: none;
+  text-shadow: none;
+  outline: none;
+}
+
+/* ── Control Center Container ───────────────────────────────────── */
+.control-center {
+  background-color: @theme_bg;
+  border: 1px solid @border_medium;
+  border-top-color: @border_light;
+  border-bottom-color: @border_dark;
+  border-radius: 12px;
+  padding: 28px;
+  min-width: 400px;
+  min-height: 400px;
+  margin: 6px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.24);
+}
+
+/* ── Widget Modules ─────────────────────────────────────────────── */
+.widget-mpris,
+.widget-volume,
+.widget-backlight,
+.widget-buttons-grid {
+
+}
+
+.widget-volume, .widget-backlight { 
+  padding: 14px 18px; 
+}
+
+.widget-buttons-grid { 
+  padding: 12px; 
+}
+
+/* Widget Title */
+.widget-title {
+  background: transparent;
+  border: none;
+  padding: 4px 6px 12px 6px;
+  margin-bottom: 8px;
+}
+
+.widget-title label {
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: @theme_fg;
+  margin-left: 4px;
+}
+
+.widget-title button {
+  font-family: inherit;
+  font-size: 12px;
+  color: @theme_fg;
+  background-color: @button_bg;
+  border-radius: 10px;
+  padding: 7px 16px;
+  transition: background-color 0.15s ease;
+}
+
+.widget-title button:hover {
+  background-color: @button_hover_bg;
+}
+
+/* ── MPRIS Widget ───────────────────────────────────────────────── */
+.widget-mpris .widget-mpris-player {
+  border-radius: 12px;
+  border: 1px solid @border_medium;
+}
+
+.widget-mpris .widget-mpris-player > box {
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 12px;
+  padding: 16px;
+
+}
+
+.widget-mpris .widget-mpris-album-art {
+  min-width: 32px;
+  min-height: 32px;
+  border-radius: 6px;
+}
+
+.widget-mpris .widget-mpris-title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.widget-mpris .widget-mpris-subtitle {
+  font-size: 12px;
+  color: @theme_fg_secondary;
+}
+
+.widget-mpris button {
+  background: transparent;
+  border-radius: 6px;
+  padding: 6px;
+  color: @icon_secondary;
+  min-width: 10px;
+  min-height: 10px;
+  font-size: 12px;
+  transition: all 0.15s ease;
+}
+
+.widget-mpris button:hover {
+  background-color: @button_hover_bg;
+  color: @icon_primary;
+}
+
+/* ── Sliders ────────────────────────────────────────────────────── */
+.widget-volume label,
+.widget-backlight label {
+  font-size: 14px;
+  color: @icon_primary;
+  margin-right: 12px;
+}
+
+scale trough {
+  min-height: 8px;
+  border-radius: 3px;
+  background-color: @slider_trough_bg;
+}
+
+scale highlight {
+  background-color: @accent_color;
+  border-radius: 3px;
+}
+
+scale slider {
+  border-radius: 50%;
+  background-color: @slider_thumb_bg;
+  min-width: 14px;
+  min-height: 14px;
+  margin: -4px 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+/* ── Button Grid ────────────────────────────────────────────────── */
+.widget-buttons-grid > flowbox > flowboxchild {
+  padding: 2px;
+}
+
+.widget-buttons-grid > flowbox > flowboxchild > button {
+  background-color: @button_bg;
+  border-radius: 6px;
+  padding: 10px;
+  min-width: 20px;
+  min-height: 20px;
+  color: @icon_secondary;
+  transition: all 0.15s ease;
+}
+
+.widget-buttons-grid > flowbox > flowboxchild > button:hover {
+  background-color: @button_hover_bg;
+  color: @icon_primary;
+}
+
+.widget-buttons-grid > flowbox > flowboxchild > button.toggle:checked {
+  background-color: @accent_color;
+  color: white;
+}
+
+/* ── Notification Center ────────────────────────────────────────── */
+.control-center-list {
+  background-color: transparent;
+  padding: 0;
+}
+
+
+.control-center {
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.control-center .notification-background {
+  background-color: rgba(30, 30, 34, 0.2);
+  border: 1px solid transparent;
+  padding: 16px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.control-center .notification-row:hover .notification-background {
+  background-color: @module_bg;
+  border-color: @border_medium;
+}
+
+.control-center .notification .summary {
+  font-weight: 600;
+  color: @theme_fg;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.control-center .notification .body {
+  color: @theme_fg_secondary;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.control-center .notification .time {
+  font-size: 11px;
+  color: @theme_fg_secondary;
+  margin-left: auto;
+  align-self: center;
+}
+
+.control-center .close-button {
+  background: transparent;
+  border: none;
+  min-width: 16px;
+  min-height: 16px;
+  padding: 4px;
+  margin: 4px;
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  color: alpha(@theme_fg_secondary, 0.7);
+  transition: color 0.15s ease;
+}
+
+.control-center .close-button:hover {
+  color: @theme_fg;
+}
+
+.control-center .notification image {
+  margin-right: 12px;
+  min-width: 16px;
+  min-height: 16px;
+  border-radius: 4px;
+}
+
+/* ── Floating Notifications ────────────────────────────────────── */
+.floating-notifications .notification-row {
+  margin-bottom: 4px;
+}
+
+.floating-notifications .notification-background {
+  background-color: @popup_bg;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 12px;
+  margin: 4px 8px;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.floating-notifications .notification-row:hover .notification-background {
+  background-color: @theme_bg;
+  border-color: @border_medium;
+}
+
+.floating-notifications .notification .summary {
+  font-weight: 600;
+  color: @theme_fg;
+  font-size: 13px;
+  margin-bottom: 2px;
+}
+
+.floating-notifications .notification .body {
+  color: @theme_fg;
+  font-size: 12px;
+}
+
+.floating-notifications .notification .time {
+  font-size: 11px;
+  color: @icon_secondary;
+  margin-left: auto;
+  align-self: center;
+}
+
+.floating-notifications .notification image {
+  min-width: 16px;
+  min-height: 16px;
+  margin-right: 8px;
+  border-radius: 3px;
+}
+
+.floating-notifications .close-button {
+  background: transparent;
+  border: none;
+  min-width: 16px;
+  min-height: 16px;
+  padding: 4px;
+  margin: 4px;
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  color: alpha(@icon_secondary, 0.7);
+  transition: color 0.15s ease;
+}
+
+.floating-notifications .close-button:hover {
+  color: @theme_fg;
+}
+
+.floating-notifications .notification-action button {
+  font-size: 12px;
+  color: @theme_fg;
+  background-color: @button_bg;
+  border-radius: 6px;
+  padding: 6px 12px;
+  margin: 4px 4px 0 0;
+  transition: all 0.15s ease;
+}
+
+.floating-notifications .notification-action button:hover {
+  background-color: @button_hover_bg;
+}
+
+/* Override any default backgrounds */
+.notification-row .notification-background .notification {
+  background-color: transparent;
+}
+
+.notification-row .notification-background .notification .notification-default-action {
+  background-color: transparent;
+}
+
+.notification-row .notification-background .notification .notification-default-action:hover {
+  background-color: transparent;
+}
+/* ?!? */
+/* Generated theme colors at: Tue Aug 19 01:38:16 PM EDT 2025 */
+@define-color foreground rgba(250,250,250,1.0);
+@define-color background-low rgba(30,30,34,0.5);
+@define-color background-lowest rgba(30,30,34,0.3);
+@define-color accent rgba(180,180,180,0.85);
+@define-color surface rgba(32,32,36,0.15);
+@define-color surface-bright rgba(32,32,36,0.25);
+@define-color border rgba(255,255,255,0.06);
+@define-color border-focus rgba(255,255,255,0.12);
+@define-color success rgba(100,200,100,0.8);
+@define-color warning rgba(255,200,80,0.9);
+@define-color error rgba(255,100,100,0.85);
+@define-color shadow rgba(0,0,0,0.24);
+@define-color shadow-light rgba(0,0,0,0.08);
+@define-color hover rgba(255,255,255,0.025);
+@define-color pressed rgba(255,255,255,0.05);
+/* !?! */

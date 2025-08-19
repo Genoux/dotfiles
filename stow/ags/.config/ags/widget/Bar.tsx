@@ -9,7 +9,7 @@ import { SystemTemp } from "./systemtemp";
 import { Weather } from "./weather";
 import { TimeDisplay } from "./timedisplay";
 import { BluetoothButton } from "./bluetooth";
-import { NotificationButton } from "./notifications";
+import { NotificationPanelButton } from "./notificationpanel";
 // MediaPanel window is instantiated globally in app.ts via MediaPopup
 
 export default function Bar(gdkmonitor: Gdk.Monitor) {
@@ -34,11 +34,11 @@ export default function Bar(gdkmonitor: Gdk.Monitor) {
           <WindowTitle class="bar-section" />
         </box>
         <box $type="end" spacing={3} halign={Gtk.Align.END}>
-          <NotificationButton class="bar-section" />
           <CavaVisualizer class="bar-section" />
           <Weather class="bar-section" />
           <SystemTemp class="bar-section" />
           <TimeDisplay class="bar-section" />
+          <NotificationPanelButton class="bar-section" />
           <BluetoothButton class="bar-section" />
         </box>
       </centerbox>

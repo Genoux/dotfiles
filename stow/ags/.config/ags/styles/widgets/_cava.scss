@@ -2,25 +2,53 @@
 @use "../abstracts/mixins" as *;
 
 // =============================================================================
-// CAVA AUDIO VISUALIZER - CENTER-GROWING ROUNDED BARS
+// CAVA AUDIO VISUALIZER
 // =============================================================================
 
 .cava-island {
   .cava-wrapper {
-    padding-left: $spacing-sm;
-    padding-right: $spacing-sm;
+    @include button-base;
+    @include flex-center;
+    padding: $spacing-xs $spacing-sm;
+    gap: 1px;
+    border-radius: $radius-md;
+    transition: all $transition-fast;
+    
     .cava-bar {
-      background: white;
+      background: $on-surface;
       border-radius: $radius-xl;
       transition: all 0.1s ease-out;
       min-height: 2px; // Minimum height so bars never disappear
+      min-width: 2px;
+      opacity: 0.8;
+      
+      &.cava-bar--active {
+        background: $primary;
+        opacity: 1;
+      }
+      
+      &.cava-bar--high {
+        background: $success;
+      }
+      
+      &.cava-bar--peak {
+        background: $warning;
+      }
     }
-    @include button-base;
+   
   }
-  
 }
 
 .cava-island-empty {
   padding: 0;
   background: transparent;
+  
+  .cava-wrapper {
+    background: transparent;
+    padding: $spacing-xs;
+    
+    &:hover {
+      background: $hover-overlay;
+    }
+  }
 }

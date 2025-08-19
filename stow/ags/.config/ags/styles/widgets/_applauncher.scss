@@ -1,15 +1,24 @@
 @use "../abstracts/variables" as *;
 @use "../abstracts/mixins" as *;
 
+// =============================================================================
+// APP LAUNCHER WINDOW
+// =============================================================================
+
 .AppLauncherWindow {
-  background: $bg-translucent;
+  background: $surface-container-lowest;
 }
+
+// =============================================================================
+// APP LAUNCHER MAIN
+// =============================================================================
 
 .AppLauncher {
   .search-container {
-    border: 1px solid $border-secondary;
+    @include card-base;
+    border: 1px solid $outline-variant;
     border-radius: $radius-lg;
-    background-color: $bg-translucent;
+    background-color: $surface-container-lowest;
     padding: $spacing-lg $spacing-xl;
 
     .typed-text {
@@ -17,24 +26,28 @@
     }
 
     .preview-completion {
-      color: $text-tertiary;
+      @include text-tertiary;
     }
 
     .preview-result {
-      color: $accent-primary;
+      @include text-heading;
+      color: $primary;
       font-size: $font-size-xl;
       font-weight: 600;
     }
 
     .preview-icon {
       font-size: 20px;
+      color: $on-surface;
     }
 
     .search-entry,
     entry.search-entry {
       @include gtk-reset;
+      @include text-primary;
       background: transparent;
       border: none;
+      font-size: $font-size-lg;
 
       &:hover {
         border: none;
@@ -46,30 +59,59 @@
     }
 
     .custom-placeholder {
-      color: $text-tertiary;
+      @include text-tertiary;
     }
   }
 
+  // =============================================================================
+  // RECENT APPS SECTION
+  // =============================================================================
+  
   .recent-apps-container {
+    @include text-secondary;
     font-size: $font-size-md;
-    color: $text-secondary;
+
+    .recent-apps-header {
+      @include text-heading;
+      margin-bottom: $spacing-md;
+    }
+
+    .recent-apps-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: $spacing-md;
+    }
 
     button.recent-app-item,
     .recent-app-item {
-      @include gtk-reset;
+      @include card-base;
+      @include hover-state;
+      @include flex-center;
+      flex-direction: column;
       padding: $spacing-lg;
-      background: $bg-translucent;
-      border: 1px solid $border-secondary;
+      background: $surface-container-lowest;
+      border: 1px solid $outline-variant;
       border-radius: $radius-lg;
       transition: all $transition-normal;
+      gap: $spacing-sm;
+      min-height: 80px;
 
       &:hover {
-        background: $white-translucent;
-        border: 1px solid $border-secondary;
+        background: $transparent;
+        border: 1px solid $outline-variant;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px $shadow-2;
       }
 
-      icon {
-        font-size: $font-size-lg;
+      .recent-app-item__icon {
+        font-size: $font-size-xl;
+        color: $on-surface;
+      }
+      
+      .recent-app-item__name {
+        @include text-caption;
+        text-align: center;
+        word-wrap: break-word;
       }
     }
   }

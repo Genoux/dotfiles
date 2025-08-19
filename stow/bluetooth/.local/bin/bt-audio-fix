@@ -1,0 +1,52 @@
+#!/bin/bash
+# Bluetooth Audio Quick Fix Script
+# This script automatically switches audio to Bluetooth headphones when they're connected
+
+# Function to get connected Bluetooth audio devices
+get_bt_audio_devices() {
+    pactl list short sinks | grep "bluez_output" | grep -v "SUSPENDED"
+}
+
+# Function to set Bluetooth device as default if available
+set_bt_default() {
+    local bt_device=$(get_bt_audio_devices | head -n1 | awk '{print $2}')
+    if [ -n "$bt_device" ]; then
+        echo "Setting Bluetooth device as default: $bt_device"
+        pactl set-default-sink "$bt_device"
+        
+        # Move all currently playing streams to Bluetooth
+        pactl list short sink-inputs | while read input; do
+            input_id=$(echo "$input" | awk '{print $1}')
+            pactl move-sink-input "$input_id" "$bt_device" 2>/dev/null
+        done
+        
+        echo "Audio switched to Bluetooth headphones"
+        return 0
+    else
+        echo "No active Bluetooth audio devices found"
+        return 1
+    fi
+}
+
+# Main execution
+case "${1:-auto}" in
+    "list")
+        echo "Available Bluetooth audio devices:"
+        get_bt_audio_devices
+        ;;
+    "set"|"auto")
+        set_bt_default
+        ;;
+    "help"|"-h"|"--help")
+        echo "Usage: $0 [command]"
+        echo "Commands:"
+        echo "  auto/set - Switch to Bluetooth audio (default)"
+        echo "  list     - List available Bluetooth audio devices"
+        echo "  help     - Show this help message"
+        ;;
+    *)
+        echo "Unknown command: $1"
+        echo "Use '$0 help' for usage information"
+        exit 1
+        ;;
+esac

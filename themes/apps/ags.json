@@ -2,48 +2,52 @@
   "format": "rgba",
   "filename": "ags-colors.scss",
   "target_file": "../stow/ags/.config/ags/styles/abstracts/_variables.scss",
-  "merge_markers": {
-    "start": "// THEME_COLORS_START",
-    "end": "// THEME_COLORS_END"
-  },
   "syntax": {
     "prefix": "$",
     "separator": ": ",
     "suffix": ";",
-    "header": "// Generated theme colors - DO NOT EDIT MANUALLY"
+    "header": "// Generated theme colors at: {{DATE}} \n"
   },
   "variables": {
-    "white": "white",
-    "text-primary": "text-primary",
-    "text-secondary": "text-secondary",
-    "text-tertiary": "text-tertiary",
-    "text-disabled": "text-disabled",
-    "bg-primary": "background-primary",
-    "bg-secondary": "background-secondary",
-    "bg-tertiary": "background-tertiary",
-    "bg-quaternary": "background-quaternary",
-    "bg-translucent": "background-translucent",
-    "surface-primary": "surface-primary",
-    "surface-secondary": "surface-secondary",
-    "border-primary": "border-primary",
-    "border-secondary": "border-secondary",
-    "border-tertiary": "border-tertiary",
-    "border-focus": "border-focus",
-    "accent-primary": "accent-primary",
-    "accent-secondary": "accent-secondary",
-    "accent-hover": "accent-hover",
-    "accent-muted": "accent-muted",
-    "state-hover": "state-hover",
-    "state-active": "state-active",
-    "warning": "warning",
-    "error": "error",
+    "surface-dim": "surface-dim",
+    "surface": "surface",
+    "surface-bright": "surface-bright",
+    "surface-container-lowest": "surface-container-lowest",
+    "surface-container-low": "surface-container-low",
+    "surface-container": "surface-container",
+    "surface-container-high": "surface-container-high",
+    "surface-container-highest": "surface-container-highest",
+    
+    "on-surface": "on-surface",
+    "on-surface-variant": "on-surface-variant",
+    "on-surface-dim": "on-surface-dim",
+    "on-surface-disabled": "on-surface-disabled",
+    
+    "outline": "outline",
+    "outline-variant": "outline-variant",
+    
+    "primary": "primary",
+    "on-primary": "on-primary",
+    "primary-hover": "primary-hover",
+    "primary-focus": "primary-focus",
+    "hover-overlay": "hover-overlay",
+    "pressed-overlay": "pressed-overlay",
+    
     "success": "success",
+    "on-success": "on-success",
+    "warning": "warning",
+    "on-warning": "on-warning",
+    "error": "error",
+    "on-error": "on-error",
     "info": "info",
-    "shadow-primary": "shadow-primary",
-    "shadow-secondary": "shadow-secondary",
-    "shadow-tertiary": "shadow-tertiary",
+    "on-info": "on-info",
+    
+    "shadow-1": "shadow-1",
+    "shadow-2": "shadow-2",
+    "shadow-3": "shadow-3",
+    
+    "transparent": "transparent",
     "black": "black",
-    "white-translucent": "white-translucent",
-    "black-translucent": "black-translucent"
+    "white": "white"
   }
 } 

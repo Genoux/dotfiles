@@ -97,9 +97,8 @@ format = '[🐳 $context]($style) '
 disabled = false
 style = "bold info"
 format = '[⎈ $context\($namespace\)]($style) '
-
-# THEME_COLORS_START
-# Generated theme colors - DO NOT EDIT MANUALLY
+# ?!?
+# Generated theme colors at: Tue Aug 19 01:38:16 PM EDT 2025 
 
 [palettes.custom]
 primary = "#fafafa"
@@ -109,9 +108,8 @@ success = "#64c864"
 warning = "#ffc850"
 error = "#ff6464"
 info = "#9696c8"
-surface = "#1e1e22"
+surface = "#202024"
 on_surface = "#fafafa"
 background = "#19191c"
 on_background = "#fafafa"
-
-# THEME_COLORS_END
+# !?!
