@@ -9,17 +9,14 @@
 // WIDGETS - Import all widget styles
 // =============================================================================
 @use "widgets/bar";
-@use "widgets/audiocontrols";
 @use "widgets/battery";
 @use "widgets/mediaplayer";
 @use "widgets/windowtitle";
 @use "widgets/workspaces";
 @use "widgets/controlpanel";
 @use "widgets/systemcontrol";
-@use "widgets/applauncher";
 @use "widgets/osd";
 @use "widgets/cava";
-@use "widgets/bluetooth";
 
 * {
   font-family: "SF Pro Text", monospace;
@@ -32,7 +29,8 @@ eventbox,
 overlay,
 scrolled,
 scrolledwindow,
-viewport {
+viewport,
+tooltip, {
   @include mixins.gtk-reset;
 }
 

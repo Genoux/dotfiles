@@ -1,10 +1,28 @@
 #!/bin/bash
 # Bluetooth Audio Quick Fix Script
 # This script automatically switches audio to Bluetooth headphones when they're connected
+# and falls back to speakers when they're disconnected
+
+# Default fallback speakers
+DEFAULT_SPEAKERS="alsa_output.usb-Generic_USB_Audio-00.HiFi__Speaker__sink"
 
 # Function to get connected Bluetooth audio devices
 get_bt_audio_devices() {
     pactl list short sinks | grep "bluez_output" | grep -v "SUSPENDED"
+}
+
+# Function to set speakers as default
+set_speakers_default() {
+    echo "Setting speakers as default audio output"
+    pactl set-default-sink "$DEFAULT_SPEAKERS"
+    
+    # Move all currently playing streams to speakers
+    pactl list short sink-inputs | while read input; do
+        input_id=$(echo "$input" | awk '{print $1}')
+        pactl move-sink-input "$input_id" "$DEFAULT_SPEAKERS" 2>/dev/null
+    done
+    
+    echo "Audio switched to speakers"
 }
 
 # Function to set Bluetooth device as default if available
@@ -24,6 +42,7 @@ set_bt_default() {
         return 0
     else
         echo "No active Bluetooth audio devices found"
+        set_speakers_default
         return 1
     fi
 }
@@ -37,12 +56,16 @@ case "${1:-auto}" in
     "set"|"auto")
         set_bt_default
         ;;
+    "speakers")
+        set_speakers_default
+        ;;
     "help"|"-h"|"--help")
         echo "Usage: $0 [command]"
         echo "Commands:"
-        echo "  auto/set - Switch to Bluetooth audio (default)"
-        echo "  list     - List available Bluetooth audio devices"
-        echo "  help     - Show this help message"
+        echo "  auto/set  - Switch to Bluetooth audio if available, fallback to speakers (default)"
+        echo "  speakers  - Switch to speakers"
+        echo "  list      - List available Bluetooth audio devices"
+        echo "  help      - Show this help message"
         ;;
     *)
         echo "Unknown command: $1"

@@ -4,6 +4,11 @@ import Tray from "gi://AstalTray";
 import Hyprland from "gi://AstalHyprland";
 
 function TrayItemComponent({ item }: { item: Tray.TrayItem }) {
+  // Additional safety check - don't render if gicon is invalid
+  if (!item || !item.gicon) {
+    return null;
+  }
+
   return (
     <button
       class="tray-button"

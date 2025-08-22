@@ -20,9 +20,9 @@ $radius-xl: 16px;
 $separator-width: 1px;
 
 // Transitions
-$transition-fast: 50ms ease-in-out;
-$transition-normal: 200ms ease-in-out;
-$transition-slow: 300ms ease-in-out;
+$transition-fast: 0.1s ease-in-out;
+$transition-normal: 0.2s ease-in-out;
+$transition-slow: 0.3s ease-in-out;
 
 // Standardized transition patterns
 $transition-hover: all $transition-fast;
@@ -38,18 +38,18 @@ $font-size-md: 13px;
 $font-size-lg: 14px;
 $font-size-xl: 16px;
 /* ?!? */
-// Generated theme colors at: Tue Aug 19 01:38:15 PM EDT 2025 
+// Generated theme colors at: Wed Aug 20 11:53:02 AM EDT 2025 
 $surface-dim: rgba(19,19,22,1.0);
 $surface: rgba(25,25,28,0.96);
 $surface-bright: rgba(32,32,36,0.25);
-$surface-container-lowest: rgba(30,30,34,0.3);
-$surface-container-low: rgba(30,30,34,0.5);
+$surface-container-lowest: rgba(30,30,34,0.4);
+$surface-container-low: rgba(30,30,34,0.6);
 $surface-container: rgba(32,32,36,0.15);
 $surface-container-high: rgba(38,38,42,0.9);
 $surface-container-highest: rgba(46,46,50,0.94);
 $on-surface: rgba(250,250,250,1.0);
 $on-surface-variant: rgba(220,220,220,0.82);
-$on-surface-dim: rgba(180,180,180,0.68);
+$on-surface-dim: rgba(255,255,255,0.6);
 $on-surface-disabled: rgba(120,120,120,0.48);
 $outline: rgba(255,255,255,0.06);
 $outline-variant: rgba(255,255,255,0.12);
@@ -57,7 +57,7 @@ $primary: rgba(180,180,180,0.85);
 $on-primary: rgba(25,25,28,1.0);
 $primary-hover: rgba(200,200,200,0.90);
 $primary-focus: rgba(180,180,180,0.12);
-$hover-overlay: rgba(255,255,255,0.025);
+$hover-overlay: rgba(255,255,255,0.05);
 $pressed-overlay: rgba(255,255,255,0.05);
 $success: rgba(100,200,100,0.8);
 $on-success: rgba(0,50,0,1.0);

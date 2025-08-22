@@ -51,13 +51,13 @@
 @mixin button-base {
   @include gtk-reset;
   padding: $spacing-sm;
-  border-radius: $radius-sm;
-  transition: $transition-hover;
+  border-radius: $radius-xs;
   min-width: 16px;
+  transition: all 0.3s ease;
 
   // Default states - can be overridden
   &:hover:not(.active) {
-    background-color: $hover-overlay;
+    //background-color: $hover-overlay;
   }
 
   &.active {
@@ -243,7 +243,7 @@
 
 // Hover state utility
 @mixin hover-state($bg-color: $hover-overlay) {
-  transition: $transition-state;
+  transition: $transition-hover;
   
   &:hover {
     background-color: $bg-color;

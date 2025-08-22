@@ -7,7 +7,8 @@ FIXED_WALLPAPER="$DOWNLOAD_DIR/current_wallpaper.jpg" # Single fixed filename
 TEMP_WALLPAPER="$DOWNLOAD_DIR/temp_wallpaper.jpg" # Temporary file for processing
 
 # Search term - Change this to whatever you want to search for (can be overridden by config file)
-SEARCH_TERM="${SEARCH_TERM:-+forest +moutain +cloudy}"  # Default search term
+# Empty string will get random safe wallpapers (no sketchy/nsfw/anime/people)
+SEARCH_TERM="${SEARCH_TERM:-}"  # Default: empty for random safe wallpapers
 
 # Parse command line arguments
 # Check for config file, then environment variable, then default
@@ -332,39 +333,103 @@ apply_rounded_corners() {
     fi
 }
 
-# Function to download a wallpaper from Wallhaven
+# Function to download a wallpaper from Wallhaven or direct URL
 download_random_wallpaper() {
-    echo "Searching Wallhaven for: '$SEARCH_TERM'"
+    local selected_url="$SEARCH_TERM"
     
-    # Build Wallhaven API URL
-    local base_url="https://wallhaven.cc/api/v1/search"
-    local encoded_query=$(echo "$SEARCH_TERM" | sed 's/ /%20/g')
-    local api_url="${base_url}?apikey=${WALLHAVEN_API_KEY}&q=${encoded_query}&categories=100&purity=100&sorting=random"
-    
-    # Make API request
-    RESPONSE=$(curl -s "$api_url")
-    
-    # Check if we got results
-    if ! echo "$RESPONSE" | grep -q '"data":' || [ "$(echo "$RESPONSE" | jq -r '.data | length' 2>/dev/null)" = "0" ]; then
-        echo "No wallpapers found for search term: '$SEARCH_TERM'"
-        return 1
+    # Check if SEARCH_TERM contains multiple URLs (space or comma separated)
+    if [[ "$SEARCH_TERM" =~ https?:// ]] && [[ "$SEARCH_TERM" =~ [[:space:],].*https?:// ]]; then
+        echo "Multiple URLs detected, selecting one randomly..."
+        # Split by space or comma and filter URLs
+        local urls=()
+        IFS=$' \t\n,' read -ra ADDR <<< "$SEARCH_TERM"
+        for url in "${ADDR[@]}"; do
+            # Trim whitespace
+            url=$(echo "$url" | xargs)
+            if [[ "$url" =~ ^https?:// ]]; then
+                urls+=("$url")
+            fi
+        done
+        
+        if [ ${#urls[@]} -gt 0 ]; then
+            # Pick random URL from array
+            local random_index=$((RANDOM % ${#urls[@]}))
+            selected_url="${urls[$random_index]}"
+            echo "Selected URL ($((random_index + 1)) of ${#urls[@]}): $selected_url"
+        else
+            echo "Error: No valid URLs found in input"
+            return 1
+        fi
     fi
     
-    # Get the highest resolution wallpaper
-    if command -v jq &> /dev/null; then
-        IMAGE_URL=$(echo "$RESPONSE" | jq -r '.data[] | "\(.dimension_x)x\(.dimension_y) \(.path)"' | \
-            awk '{pixels = $1; gsub(/x/, "*", pixels); print pixels " " $2}' | \
-            sort -nr | head -1 | awk '{print $2}')
+    # Check if selected_url is a URL
+    if [[ "$selected_url" =~ ^https?:// ]]; then
+        # Check if it's a Wallhaven page URL
+        if [[ "$selected_url" =~ wallhaven\.cc/w/ ]]; then
+            echo "Extracting image from Wallhaven page: '$selected_url'"
+            # Extract the wallpaper ID from the URL (e.g., gwjq3d from https://wallhaven.cc/w/gwjq3d)
+            local wallpaper_id=$(echo "$selected_url" | grep -o '/w/[^/]*' | cut -d'/' -f3)
+            if [ -n "$wallpaper_id" ]; then
+                echo "Getting image URL for wallpaper ID: $wallpaper_id"
+                # Use Wallhaven API to get the actual image URL
+                local api_url="https://wallhaven.cc/api/v1/w/${wallpaper_id}"
+                RESPONSE=$(curl -s "$api_url")
+                IMAGE_URL=$(echo "$RESPONSE" | jq -r '.data.path' 2>/dev/null)
+                if [ "$IMAGE_URL" = "null" ] || [ -z "$IMAGE_URL" ]; then
+                    echo "Error: Could not extract image URL from Wallhaven page"
+                    return 1
+                fi
+                echo "Found image URL: $IMAGE_URL"
+            else
+                echo "Error: Could not extract wallpaper ID from URL"
+                return 1
+            fi
+        else
+            echo "Using direct image URL: '$selected_url'"
+            IMAGE_URL="$selected_url"
+        fi
     else
-        IMAGE_URL=$(echo "$RESPONSE" | grep -o '"path":"[^"]*' | cut -d'"' -f4 | head -1)
+        # Handle empty search term - get random safe wallpapers
+        if [ -z "$SEARCH_TERM" ] || [ "$SEARCH_TERM" = " " ]; then
+            echo "Getting random safe wallpaper (no sketchy/nsfw/anime/people content)"
+            # Build Wallhaven API URL for random safe content
+            # categories: 100 = General only (no Anime/People)
+            # purity: 100 = SFW only (no Sketchy/NSFW)
+            local base_url="https://wallhaven.cc/api/v1/search"
+            local api_url="${base_url}?apikey=${WALLHAVEN_API_KEY}&categories=100&purity=100&sorting=random"
+        else
+            echo "Searching Wallhaven for: '$SEARCH_TERM'"
+            # Build Wallhaven API URL
+            local base_url="https://wallhaven.cc/api/v1/search"
+            local encoded_query=$(echo "$SEARCH_TERM" | sed 's/ /%20/g')
+            local api_url="${base_url}?apikey=${WALLHAVEN_API_KEY}&q=${encoded_query}&categories=100&purity=100&sorting=random"
+        fi
+        
+        # Make API request
+        RESPONSE=$(curl -s "$api_url")
+        
+        # Check if we got results
+        if ! echo "$RESPONSE" | grep -q '"data":' || [ "$(echo "$RESPONSE" | jq -r '.data | length' 2>/dev/null)" = "0" ]; then
+            echo "No wallpapers found for search term: '$SEARCH_TERM'"
+            return 1
+        fi
+        
+        # Get the highest resolution wallpaper
+        if command -v jq &> /dev/null; then
+            IMAGE_URL=$(echo "$RESPONSE" | jq -r '.data[] | "\(.dimension_x)x\(.dimension_y) \(.path)"' | \
+                awk '{pixels = $1; gsub(/x/, "*", pixels); print pixels " " $2}' | \
+                sort -nr | head -1 | awk '{print $2}')
+        else
+            IMAGE_URL=$(echo "$RESPONSE" | grep -o '"path":"[^"]*' | cut -d'"' -f4 | head -1)
+        fi
+        
+        if [ -z "$IMAGE_URL" ]; then
+            echo "Error: Could not extract wallpaper URL"
+            return 1
+        fi
     fi
     
-    if [ -z "$IMAGE_URL" ]; then
-        echo "Error: Could not extract wallpaper URL"
-        return 1
-    fi
-    
-    echo "Downloading wallpaper..."
+    echo "Downloading wallpaper from: $IMAGE_URL"
     
     # Clean up old files
     rm -f "$FIXED_WALLPAPER" "$TEMP_WALLPAPER"
@@ -387,14 +452,20 @@ download_random_wallpaper() {
 # Give swww-daemon a moment to start if it just launched
 sleep 1
 
-echo "=== Wallhaven Wallpaper Downloader ==="
-echo "Search: '$SEARCH_TERM'"
+echo "=== Wallpaper Downloader ==="
+if [[ "$SEARCH_TERM" =~ ^https?:// ]]; then
+    echo "URL: '$SEARCH_TERM'"
+elif [ -z "$SEARCH_TERM" ] || [ "$SEARCH_TERM" = " " ]; then
+    echo "Mode: Random safe wallpaper"
+else
+    echo "Search: '$SEARCH_TERM'"
+fi
 if [ "$ENABLE_ROUNDED_CORNERS" = "true" ]; then
     echo "Mode: Rounded corners (${CORNER_RADIUS}px radius)"
 else
     echo "Mode: Full screen (no rounded corners)"
 fi
-echo "========================================"
+echo "=============================="
 
 # Download and set wallpaper
 if download_random_wallpaper; then
