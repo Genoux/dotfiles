@@ -10,6 +10,7 @@ import { Weather } from "./weather";
 import { TimeDisplay } from "./timedisplay";
 import { BluetoothButton } from "./bluetooth";
 import { NotificationPanelButton } from "./notificationpanel";
+import { VolumeButton } from "./volume";
 // MediaPanel window is instantiated globally in app.ts via MediaPopup
 
 export default function Bar(gdkmonitor: Gdk.Monitor) {
@@ -38,6 +39,7 @@ export default function Bar(gdkmonitor: Gdk.Monitor) {
           <Weather class="bar-section" />
           <SystemTemp class="bar-section" />
           <TimeDisplay class="bar-section" />
+          <VolumeButton class="bar-section" />
           <NotificationPanelButton class="bar-section" />
           <BluetoothButton class="bar-section" />
         </box>

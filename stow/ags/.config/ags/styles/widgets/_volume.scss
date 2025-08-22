@@ -1,0 +1,96 @@
+@use "../abstracts/variables" as *;
+@use "../abstracts/mixins" as *;
+
+// =============================================================================
+// VOLUME WIDGET
+// =============================================================================
+
+// Volume popup window
+.volume-popup {
+  @include text-primary;
+  
+  .volume-popup__container {
+    @include card-base($spacing-lg);
+    margin: $spacing-md;
+    min-width: 240px;
+    
+    // Animation
+    transition: all $transition-fast;
+  }
+}
+
+// Volume panel content - minimalist single row
+.volume-panel {
+  @include flex-center;
+  gap: $spacing-md;
+  
+  // Mute button
+  .volume-panel__mute-button {
+    @include button-base;
+    @include hover-state;
+    border-radius: $radius-sm;
+    background: transparent;
+    
+    &:hover {
+      background: $hover-overlay;
+    }
+  }
+  
+  // Minimalist thin slider
+  .volume-panel__slider {
+    flex: 1;
+    min-width: 100px;
+    min-height: 20px;
+    
+    trough {
+      min-height: 4px;
+      border-radius: $radius-xl;
+      background: rgba(255, 255, 255, 0.2);
+      // remove vertical margins so the knob aligns exactly under cursor
+      margin: 0;
+    }
+    
+    highlight {
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: $radius-xl;
+      min-height: 4px;
+    }
+    
+    slider {
+      min-width: 12px;
+      min-height: 12px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.9);
+      border: none;
+      // avoid negative margins that offset the pointer hotspot
+      margin: 0;
+      transition: all $transition-fast;
+      
+      &:hover {
+        background: $white;
+        transform: scale(1.1);
+      }
+      
+      &:active {
+        background: $white;
+        transform: scale(1.2);
+      }
+    }
+  }
+  
+  // Volume value
+  .volume-panel__value {
+    @include text-primary;
+    font-size: 0.85em;
+    font-weight: 500;
+    min-width: 35px;
+    text-align: right;
+    opacity: 0.9;
+  }
+}
+
+// Volume button in bar (if additional styling needed)
+.volume-button {
+  // Inherits from .bar-section button styles
+  // Add specific volume button styles here if needed
+}

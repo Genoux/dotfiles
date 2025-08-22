@@ -3,20 +3,19 @@
 // =============================================================================
 @use "abstracts/variables";
 @use "abstracts/mixins";
-@use "abstracts/animations";
 
 // =============================================================================
 // WIDGETS - Import all widget styles
 // =============================================================================
 @use "widgets/bar";
 @use "widgets/battery";
-@use "widgets/mediaplayer";
 @use "widgets/windowtitle";
 @use "widgets/workspaces";
 @use "widgets/controlpanel";
 @use "widgets/systemcontrol";
 @use "widgets/osd";
 @use "widgets/cava";
+@use "widgets/volume";
 
 * {
   font-family: "SF Pro Text", monospace;
