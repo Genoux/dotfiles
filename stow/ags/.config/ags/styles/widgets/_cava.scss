@@ -1,38 +1,24 @@
 @use "../abstracts/variables" as *;
+@use "../abstracts/theme" as *;
 @use "../abstracts/mixins" as *;
-
-// =============================================================================
-// CAVA AUDIO VISUALIZER
-// =============================================================================
 
 .cava-island {
   .cava-wrapper {
-    @include button-base;
-    @include flex-center;
     padding: $spacing-xs $spacing-sm;
-    gap: 1px;
     border-radius: $radius-md;
     transition: all $transition-fast;
     
     .cava-bar {
-      background: $on-surface;
+      background: $fg;
       border-radius: $radius-xl;
       transition: all 0.1s ease-out;
-      min-height: 2px; // Minimum height so bars never disappear
+      min-height: 2px;
       min-width: 2px;
       opacity: 0.8;
       
       &.cava-bar--active {
-        background: $primary;
+        background: $accent;
         opacity: 1;
-      }
-      
-      &.cava-bar--high {
-        background: $success;
-      }
-      
-      &.cava-bar--peak {
-        background: $warning;
       }
     }
    
@@ -46,7 +32,5 @@
   .cava-wrapper {
     background: transparent;
     padding: $spacing-xs;
-    
-   
   }
 }

@@ -8,8 +8,8 @@ const idxs = barsAccessor((b) => b.map((_, i) => i));
 
 export function CavaVisualizer({ class: cls }: { class?: string }) {
   return (
-   <button class={`cava-island ${cls ?? ""}`} onClicked={toggleMediaPanel}>
-     <box class="cava-wrapper" spacing={2}>
+   <button class={`cava-island `} onClicked={toggleMediaPanel}>
+     <box class={`cava-wrapper ${cls ?? ""}`} spacing={2}>
         <For each={idxs} id={(i) => i}>
           {(i) => {
             const h = barsAccessor((b) => b[i]);

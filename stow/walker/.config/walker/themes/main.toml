@@ -1,5 +1,4 @@
 # AUTO GENERATED. DO NOT EDIT. CHANGES WILL BE OVERWRITTEN.
-
 [ui.anchors]
 bottom = true
 left = true
@@ -25,11 +24,11 @@ h_expand = true
 [ui.window.box.bar.entry.icon]
 h_align = "center"
 h_expand = true
-pixel_size = 24
+pixel_size = 16
 theme = ""
 
 [ui.window.box.margins]
-top = 200
+top = 250
 
 [ui.window.box.ai_scroll]
 name = "aiScroll"
@@ -72,7 +71,7 @@ x_align = 0.5
 y_align = 0.5
 
 [ui.window.box.scroll.list.item.icon]
-pixel_size = 26
+pixel_size = 18
 theme = ""
 
 [ui.window.box.scroll.list.margins]

@@ -4,6 +4,8 @@ import { Gtk } from "ags/gtk4";
 
 export function Weather({ class: cls }: { class?: string }) {
   return (
+    <box>
+      <button>
     <With value={weather}>
       {(value) => {
         const { icon, feelsLike, location } = value as {
@@ -24,6 +26,8 @@ export function Weather({ class: cls }: { class?: string }) {
           </box>
         );
       }}
-    </With>
+      </With>
+      </button>
+    </box>
   );
 }

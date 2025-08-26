@@ -1,10 +1,6 @@
-@use "variables" as *;
+@use "../abstracts/variables" as *;
+@use "../abstracts/theme" as *;
 
-// =============================================================================
-// CORE RESET MIXINS
-// =============================================================================
-
-// Universal GTK reset - use for all unset elements
 @mixin gtk-reset {
   all: unset;
   padding: 0;
@@ -17,306 +13,61 @@
   font-weight: inherit;
 }
 
-// =============================================================================
-// LAYOUT MIXINS
-// =============================================================================
-
-// Card/container styling - used for panels, notifications, etc.
-@mixin card-base($padding: $spacing-md) {
-  background-color: $surface-container-lowest;
-  border: $border-width solid $outline;
-  border-radius: $radius-lg;
-  padding: $padding;
-}
-
-// Layout utilities
-@mixin flex-center {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-@mixin flex-between {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-
-// =============================================================================
-// INTERACTIVE ELEMENT MIXINS
-// =============================================================================
-
 // Base button reset and styling
 @mixin button-base {
   @include gtk-reset;
-  padding: $spacing-sm;
-  border-radius: $radius-xs;
-  min-width: 16px;
-  transition: all 0.3s ease;
-
-  // Default states - can be overridden
-  &:hover:not(.active) {
-    //background-color: $hover-overlay;
-  }
-
-  &.active {
-    background-color: $pressed-overlay;
-  }
-}
-
-// Icon button variant
-@mixin icon-button($size: $spacing-xl) {
-  @include button-base;
-  min-width: $size;
-  padding: $spacing-sm;
-  
-  icon {
-    font-size: $size;
-  }
-}
-
-// Colored button variants
-@mixin button-variant($bg-color, $hover-color, $text-color: $on-surface) {
-  @include button-base;
-  background-color: $bg-color;
-  color: $text-color;
-  
-  &:hover {
-    background-color: $hover-color;
-  }
-}
-
-// =============================================================================
-// FORM/INPUT MIXINS
-// =============================================================================
-
-// Input/entry styling
-@mixin input-base {
-  @include gtk-reset;
   padding: $spacing-sm $spacing-md;
-  background-color: $surface-bright;
-  border: $border-width solid $outline;
   border-radius: $radius-md;
-  color: $on-surface;
-  transition: $transition-hover;
-  
+  transition: $transition-fast;
+  cursor: pointer;
+
+  // Fix focus behavior - prevent focus grab
   &:focus {
-    border-color: $outline-variant;
     outline: none;
+    box-shadow: none;
   }
-  
+
+  // Ensure hover works properly after click
   &:hover {
-    border-color: $outline-variant;
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  &:active {
+    background: rgba(255, 255, 255, 0.1);
+    transform: scale(0.98);
+  }
+
+  // Maintain hover state even when focused
+  &:focus:hover {
+    background: rgba(255, 255, 255, 0.05);
   }
 }
 
-// =============================================================================
-// TEXT AND TYPOGRAPHY MIXINS
-// =============================================================================
+// Icon button specific styling
+@mixin icon-button {
+  @include button-base;
+  padding: $spacing-sm;
+  min-width: 24px;
+  min-height: 24px;
 
-// Text hierarchy mixins
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: scale(1.05);
+  }
+
+  &:active {
+    background: rgba(255, 255, 255, 0.15);
+    transform: scale(0.95);
+  }
+
+  &:focus:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: scale(1.05);
+  }
+}
+
 @mixin text-primary {
-  color: $on-surface;
+  color: $fg;
   font-size: $font-size-sm;
   font-weight: 500;
-}
-
-@mixin text-secondary {
-  color: $on-surface-variant;
-  font-size: $font-size-sm;
-  font-weight: 400;
-}
-
-@mixin text-tertiary {
-  color: $on-surface-dim;
-  font-size: $font-size-xs;
-  font-weight: 400;
-}
-
-// Text variants
-@mixin text-heading {
-  color: $on-surface;
-  font-size: $font-size-lg;
-  font-weight: 600;
-}
-
-@mixin text-body {
-  color: $on-surface;
-  font-size: $font-size-md;
-  font-weight: 400;
-}
-
-@mixin text-caption {
-  color: $on-surface-dim;
-  font-size: $font-size-xs;
-  font-weight: 400;
-}
-
-// =============================================================================
-// COMPONENT-SPECIFIC MIXINS
-// =============================================================================
-
-// Slider/Scale styling - consistent across media player, audio controls, and OSD
-@mixin slider-base($height: $spacing-md, $bg-color: $surface-container-low, $highlight-color: $on-surface) {
-  @include gtk-reset;
-  
-  trough {
-    min-height: $height;
-    background-color: $bg-color;
-    border-radius: $radius-sm;
-    transition: $transition-state;
-  }
-  
-  highlight {
-    background-color: $highlight-color;
-    border-radius: $radius-sm;
-    transition: $transition-state;
-    min-width: 0; // Allow highlight to be completely hidden at 0
-    
-    // Override GTK's minimum content requirements
-    outline: none;
-    min-height: 0;
-    padding: 0;
-    margin: 0;
-  }
-  
-  slider {
-    @include gtk-reset;
-    border-radius: 50%;
-    background-color: $highlight-color;
-    transition: $transition-hover;
-    
-    &:hover {
-      background-color: $primary-hover;
-    }
-  }
-}
-
-// Icon styling - consistent opacity and transitions
-@mixin icon-base($size: $font-size-lg, $opacity: 0.9) {
-  font-size: $size;
-  opacity: $opacity;
-  transition: $transition-opacity;
-  
-  &:hover {
-    opacity: 1;
-  }
-}
-
-// Interactive element base - for buttons, clickable items
-@mixin interactive-element {
-  @include button-base;
-  transition: $transition-hover;
-  
-  &:hover {
-    background-color: $hover-overlay;
-  }
-}
-
-// Status indicator - for battery, network, etc.
-@mixin status-indicator {
-  @include icon-base;
-  opacity: 0.9;
-  transition: $transition-opacity;
-  
-  &:hover {
-    opacity: 1;
-  }
-  
-  &.active {
-    opacity: 1;
-    color: $primary;
-  }
-}
-
-// Panel container - for control panels, popups
-@mixin panel-container {
-  @include card-base;
-  background-color: $surface-container-lowest;
-  border: $border-width solid $outline;
-  
-  &.active {
-    border-color: $outline-variant;
-  }
-}
-
-// Hover state utility
-@mixin hover-state($bg-color: $hover-overlay) {
-  transition: $transition-hover;
-  
-  &:hover {
-    background-color: $bg-color;
-  }
-}
-
-// Badge styling - for notifications, counts, etc.
-@mixin badge {
-  font-size: $font-size-xs;
-  background-color: $hover-overlay;
-  font-weight: 600;
-  padding: 0 $spacing-sm;
-  border-radius: $radius-xs;
-  border: 1px solid $hover-overlay;
-  color: $on-surface;
-  opacity: 0.7;
-  
-  label {
-    margin: 0;
-    padding: 0;
-    font-size: $font-size-xs;
-  }
-}
-
-// Notification/popup item base
-@mixin popup-item {
-  eventbox {
-    @include gtk-reset;
-
-    > box {
-      @include card-base;
-      min-width: 300px;
-      transition: $transition-hover;
-    }
-
-    &:hover > box {
-      background-color: $surface-container-lowest;
-    }
-  }
-}
-
-// =============================================================================
-// UTILITY MIXINS
-// =============================================================================
-
-// Scroll area styling
-@mixin scroll-area {
-  background: transparent;
-  border: none;
-  
-  scrollbar {
-    background: transparent;
-    border: none;
-    
-    trough {
-      background: transparent;
-    }
-    
-    slider {
-      background: $on-surface-dim;
-      border-radius: $radius-xs;
-      min-width: $spacing-xs;
-      
-      &:hover {
-        background: $on-surface-variant;
-      }
-    }
-  }
-}
-
-// Separator styling
-@mixin separator {
-  background-color: $outline-variant;
-  min-height: $separator-width;
-  min-width: $separator-width;
 }

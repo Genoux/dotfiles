@@ -23,25 +23,25 @@ export default function Bar(gdkmonitor: Gdk.Monitor) {
       class="bar"
       gdkmonitor={gdkmonitor}
       exclusivity={Astal.Exclusivity.EXCLUSIVE}
-      anchor={BOTTOM | LEFT | RIGHT}
+      anchor={TOP | LEFT | RIGHT}
       application={app}
     >
-      <centerbox cssName="centerbox">
+      <centerbox>
         <box $type="start" spacing={3}>
-          <Workspaces class="bar-section" />
-          <SystemTray class="bar-section" />
+          <Workspaces />
+          <SystemTray />
         </box>
         <box $type="center" spacing={6}>
-          <WindowTitle class="bar-section" />
+          <WindowTitle />
         </box>
         <box $type="end" spacing={3} halign={Gtk.Align.END}>
-          <CavaVisualizer class="bar-section" />
-          <Weather class="bar-section" />
-          <SystemTemp class="bar-section" />
-          <TimeDisplay class="bar-section" />
-          <VolumeButton class="bar-section" />
-          <NotificationPanelButton class="bar-section" />
-          <BluetoothButton class="bar-section" />
+          <CavaVisualizer />
+          <Weather />
+          <SystemTemp />
+          <TimeDisplay />
+          <VolumeButton  />
+          <NotificationPanelButton />
+          <BluetoothButton />
         </box>
       </centerbox>
     </window>

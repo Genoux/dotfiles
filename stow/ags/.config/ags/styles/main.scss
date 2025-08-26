@@ -1,47 +1,11 @@
-// =============================================================================
-// ABSTRACTS - Variables, mixins, functions first
-// =============================================================================
-@use "abstracts/variables";
-@use "abstracts/mixins";
+@use "./abstracts/mixins" as *;
 
-// =============================================================================
-// WIDGETS - Import all widget styles
-// =============================================================================
 @use "widgets/bar";
-@use "widgets/battery";
 @use "widgets/windowtitle";
 @use "widgets/workspaces";
-@use "widgets/controlpanel";
-@use "widgets/systemcontrol";
-@use "widgets/osd";
 @use "widgets/cava";
 @use "widgets/volume";
 
 * {
   font-family: "SF Pro Text", monospace;
-  letter-spacing: 0.02em;
-}
-// Global GTK reset for common elements
-box,
-window,
-eventbox,
-overlay,
-scrolled,
-scrolledwindow,
-viewport,
-tooltip, {
-  @include mixins.gtk-reset;
-}
-
-popover{
-  @include mixins.gtk-reset;
-  background-color: transparent;
-  border: none;
-  box-shadow: none;
-  margin: 0;
-  padding: 0;
-
-  button{
-    @include mixins.gtk-reset;
-  }
 }

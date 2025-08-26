@@ -5,7 +5,7 @@
 bars = 8
 
 [input]
-method = pulse 
+method = pulse
 
 [output]
 method = raw

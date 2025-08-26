@@ -1,35 +1,19 @@
 @use "../abstracts/variables" as *;
+@use "../abstracts/theme" as *;
 @use "../abstracts/mixins" as *;
 
-// =============================================================================
-// WORKSPACES WIDGET
-// =============================================================================
-
 .workspaces {
-  @include flex-center;
-  gap: $spacing-xs;
-  
+
   .workspace {
-    @include button-base;
-    @include hover-state;
     border-radius: $radius-sm;
-    background: transparent;
     padding: $spacing-sm;
     min-width: $spacing-lg;
     min-height: $spacing-lg;
     transition: background-color $transition-normal;
-
-    &:hover:not(.workspace--focused) {
-      background: $hover-overlay;
-    }
-
-    &.workspace--focused {
-      background: $pressed-overlay;
-    }
   }
 
   .workspace__indicator {
-    background-color: $on-surface-dim;
+    background-color: $fg-dim;
     border-radius: $radius-md;
     transition: min-width $transition-normal;
     min-height: 2px;
@@ -40,14 +24,14 @@
       min-width: $spacing-xl;
       min-height: 2px;
     }
-    
+
     &.workspace__indicator--occupied {
-      background-color: $on-surface-variant;
+      background-color: $fg-dim;
       min-width: $spacing-sm;
     }
-    
+
     &.workspace__indicator--empty {
-      background-color: $on-surface-dim;
+      background-color: $fg-dim;
       min-width: $spacing-xs;
     }
   }

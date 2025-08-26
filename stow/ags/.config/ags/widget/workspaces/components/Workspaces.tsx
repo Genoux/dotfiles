@@ -9,7 +9,7 @@ export function Workspaces({ class: cls }: { class?: string }) {
         {(ws) => (
           <button
             widthRequest={32}
-            class={focusedWorkspace((f) =>
+            class={focusedWorkspace((f: any) =>
               f?.id === ws.id ? "workspace workspace--focused" : "workspace"
             )}
             onClicked={() => ws.focus()}
@@ -19,7 +19,7 @@ export function Workspaces({ class: cls }: { class?: string }) {
               widthRequest={2}
               halign={Gtk.Align.CENTER}
               valign={Gtk.Align.CENTER}
-              class={focusedWorkspace((f) =>
+              class={focusedWorkspace((f: any) =>
                 f?.id === ws.id ? "workspace__indicator workspace__indicator--focused" : "workspace__indicator"
               )}
             />

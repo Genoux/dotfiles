@@ -401,27 +401,59 @@ while true; do
             ;;
         t|T)
             echo -e "${BLUE}🎨 Theme Management${NC}"
-            if [[ -f "$SCRIPT_DIR/themes/theme-manager.sh" ]]; then
-                cd "$SCRIPT_DIR/themes"
-                echo
-                echo "Choose an action:"
-                echo "  1) Install complete theme"
-                echo "  2) Install shell theme only"
-                echo "  3) Install colors only"
-                echo "  4) List themes + current system theme"
-                read -p "Action (1-4): " theme_action
-                
-                case "$theme_action" in
-                    1) bash theme-manager.sh install ;;
-                    2) bash theme-manager.sh install-shell ;;
-                    3) bash theme-manager.sh install-colors ;;
-                    4) bash theme-manager.sh list ;;
-                    *) echo -e "${YELLOW}Invalid option${NC}" ;;
-                esac
-                cd "$SCRIPT_DIR"
-            else
-                echo -e "${RED}❌ Theme manager not found${NC}"
-            fi
+            echo
+            echo "Choose theme system:"
+            echo "  1) System Theme Manager     (app colors, unified themes)"
+            echo "  2) GTK Theme Manager        (window decorations, icons)"
+            read -p "Theme system (1-2): " theme_system
+            
+            case "$theme_system" in
+                1)
+                    if [[ -f "$SCRIPT_DIR/themes/system.sh" ]]; then
+                        echo
+                        echo "System Theme Actions:"
+                        echo "  1) List all themes"
+                        echo "  2) Setup theme system"
+                        echo "  3) Switch theme"
+                        read -p "Action (1-3): " system_action
+                        
+                        case "$system_action" in
+                            1) bash "$SCRIPT_DIR/themes/system.sh" list ;;
+                            2) bash "$SCRIPT_DIR/themes/system.sh" setup ;;
+                            3) 
+                                echo
+                                bash "$SCRIPT_DIR/themes/system.sh" list
+                                echo
+                                read -p "Enter theme name: " theme_name
+                                if [[ -n "$theme_name" ]]; then
+                                    bash "$SCRIPT_DIR/themes/system.sh" switch "$theme_name"
+                                fi
+                                ;;
+                            *) echo -e "${YELLOW}Invalid option${NC}" ;;
+                        esac
+                    else
+                        echo -e "${RED}❌ System theme manager not found${NC}"
+                    fi
+                    ;;
+                2)
+                    if [[ -f "$SCRIPT_DIR/themes/gtk.sh" ]]; then
+                        echo
+                        echo "GTK Theme Actions:"
+                        echo "  1) Install themes"
+                        echo "  2) List themes"
+                        read -p "Action (1-2): " gtk_action
+                        
+                        case "$gtk_action" in
+                            1) bash "$SCRIPT_DIR/themes/gtk.sh" install ;;
+                            2) bash "$SCRIPT_DIR/themes/gtk.sh" list ;;
+                            *) echo -e "${YELLOW}Invalid option${NC}" ;;
+                        esac
+                    else
+                        echo -e "${RED}❌ GTK theme manager not found${NC}"
+                    fi
+                    ;;
+                *) echo -e "${YELLOW}Invalid option${NC}" ;;
+            esac
             ;;
         h|H)
             echo -e "${BLUE}🖥️  Hyprland Setup${NC}"

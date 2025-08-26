@@ -7,6 +7,8 @@ blueberry
 brightnessctl
 btop
 cava
+chromium
+cmatrix
 cpio
 cpupower
 ddcutil
@@ -66,6 +68,7 @@ kvantum
 kwidgetsaddons5
 kwindowsystem5
 kxmlgui5
+lazydocker
 lib32-mesa
 lib32-nvidia-utils
 libnotify
@@ -116,10 +119,14 @@ socat
 solid5
 spotify-launcher
 starship
+steam
 stow
+swaync
 swayosd
 swww
+tailscale
 tcpdump
+tigervnc
 ttf-montserrat
 ttf-nerd-fonts-symbols
 unzip
@@ -132,11 +139,13 @@ wget
 wireplumber
 woff2-font-awesome
 wol
+x11vnc
 xdg-desktop-portal
 xdg-desktop-portal-gtk
 xdg-desktop-portal-hyprland
 xdg-desktop-portal-wlr
 xorg-server
+xorg-server-xvfb
 xorg-xclock
 xorg-xinit
 xterm

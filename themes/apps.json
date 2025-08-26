@@ -1,0 +1,28 @@
+{
+  "apps": {
+    "yazi": {
+      "type": "direct",
+      "target": "~/.config/yazi/theme.toml"
+    },
+    "btop": {
+      "type": "themes_dir", 
+      "target": "~/.config/btop/themes/current.theme"
+    },
+    "ags": {
+       "type": "themes_dir", 
+      "target": "~/.config/ags/styles/abstracts/_theme.scss"
+    },
+    "hypr": {
+      "type": "centralized"
+    },
+    "kitty": {
+      "type": "centralized"
+    },
+    "swaync": {
+      "type": "centralized"
+    },
+    "walker": {
+      "type": "centralized"
+    }
+  }
+}

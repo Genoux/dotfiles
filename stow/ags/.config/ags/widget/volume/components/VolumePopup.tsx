@@ -11,13 +11,13 @@ export function VolumePopup() {
       class="volume-popup"
       application={app}
       visible={volumePanelVisible}
-      anchor={Astal.WindowAnchor.BOTTOM | Astal.WindowAnchor.RIGHT}
+      anchor={Astal.WindowAnchor.TOP | Astal.WindowAnchor.RIGHT}
       layer={Astal.Layer.OVERLAY}
       keymode={Astal.Keymode.ON_DEMAND}
       onCloseRequest={() => hideVolumePanel()}
     >
       <revealer
-        transitionType={Gtk.RevealerTransitionType.SLIDE_UP}
+        transitionType={Gtk.RevealerTransitionType.NONE}
         revealChild={volumePanelVisible}
       >
         <box class="volume-popup__container">

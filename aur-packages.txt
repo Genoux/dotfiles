@@ -11,6 +11,7 @@ caelestia-cli-git
 caelestia-shell-git
 caelestia-shell-git-debug
 caprine
+chrome-remote-desktop-debug
 claude-desktop-debug
 cursor-bin
 downgrade
@@ -24,7 +25,6 @@ gauntlet-bin-debug
 gitkraken
 google-breakpad
 grimblast-git
-lazydocker
 lazydocker-debug
 libastal-4-git
 libastal-4-git-debug
@@ -66,6 +66,8 @@ python-materialyoucolor
 python-materialyoucolor-debug
 python-nvidia-ml-py
 quickshell-git
+realvnc-vnc-server-debug
+rustdesk
 sherlock-launcher-bin
 simplescreenrecorder-debug
 slack-desktop
@@ -79,6 +81,8 @@ walker
 walker-debug
 wl-screenrec
 wl-screenrec-debug
+xrdp
+xrdp-debug
 yay-bin
 yay-bin-debug
 zen-browser-bin

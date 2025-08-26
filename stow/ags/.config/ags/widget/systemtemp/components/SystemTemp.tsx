@@ -14,7 +14,8 @@ function getIcon(status: string) {
 
 export function SystemTemp({ class: cls }: { class?: string }) {
   return (
-    <box class={`system-temp ${cls ?? ""}`}>
+    <box>
+    <button class={`system-temp ${cls ?? ""}`}>
       <With value={systemTemps}>
         {({ cpu, gpu, avg, status }) => (
           <box
@@ -32,6 +33,7 @@ export function SystemTemp({ class: cls }: { class?: string }) {
           </box>
         )}
       </With>
-    </box>
+      </button>
+      </box>
   );
 }
