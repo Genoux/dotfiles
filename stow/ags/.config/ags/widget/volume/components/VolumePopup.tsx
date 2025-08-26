@@ -7,7 +7,7 @@ import { VolumePanel } from "./VolumePanel";
 export function VolumePopup() {
   return (
     <window
-      name="volume-popup-window"
+      name="popup-window"
       class="volume-popup"
       application={app}
       visible={volumePanelVisible}
@@ -15,6 +15,7 @@ export function VolumePopup() {
       layer={Astal.Layer.OVERLAY}
       keymode={Astal.Keymode.ON_DEMAND}
       onCloseRequest={() => hideVolumePanel()}
+      onHide={() => hideVolumePanel()}
     >
       <revealer
         transitionType={Gtk.RevealerTransitionType.NONE}

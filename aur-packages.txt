@@ -7,6 +7,7 @@ aylurs-gtk-shell-git
 aylurs-gtk-shell-git-debug
 beekeeper-studio-bin
 beekeeper-studio-bin-debug
+better-control-git
 caelestia-cli-git
 caelestia-shell-git
 caelestia-shell-git-debug

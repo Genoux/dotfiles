@@ -9,7 +9,7 @@ export function BluetoothButton({
   return (
     <box class={`${cls}`}>
       <button
-        onClicked={() => GLib.spawn_command_line_async("blueberry")}
+        onClicked={() => GLib.spawn_command_line_async("launch-bluetui")}
       >
         <image
           iconName={isBluetoothOn((on) =>

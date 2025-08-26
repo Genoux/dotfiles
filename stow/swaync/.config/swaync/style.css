@@ -1,4 +1,5 @@
 @import "../themes/current/swaync.css";
+@use "sass:color";
 
 * {
   font-family: "SF Pro Text", monospace;
@@ -101,7 +102,7 @@
 
 /* Unified notification background */
 .notification-background {
-  background-color: @bg-card;
+  background-color: @bg;
   border: 1px solid @border;
   border-radius: 8px;
   padding: 10px;
@@ -111,7 +112,8 @@
 /* Unified notification hover state */
 .notification-row:hover .notification-background {
   background-color: @bg;
-  border: 1px solid @accent;
+  opacity: 0.9;
+  border: 1px solid color.adjust(@border, $alpha: +0.2);
 }
 
 /* Unified notification text elements */

@@ -9,13 +9,11 @@
 
   .volume-popup__container {
     border: $border-width solid $border;
-    border-radius: $radius-lg;
+    border-radius: $radius-md;
     padding: $spacing-sm;
-    margin: $spacing-md;
+    margin-right: $spacing-md;
     min-width: 240px;
-
-    // Animation
-    transition: all $transition-fast;
+    background: color.adjust($bg, $alpha: -0.3);
   }
 }
 

@@ -6,7 +6,7 @@ export function Workspaces({ class: cls }: { class?: string }) {
   return (
     <box class={`workspaces ${cls ?? ""}`} spacing={2}>
       <For each={workspaces}>
-        {(ws) => (
+        {(ws: any) => (
           <button
             widthRequest={32}
             class={focusedWorkspace((f: any) =>

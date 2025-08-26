@@ -1,0 +1,42 @@
+#!/bin/bash
+# Debug helper for system-window-manager
+# Run this on the desktop to see actual window properties
+
+echo "=== CURRENT WINDOWS ==="
+hyprctl clients -j | jq -r '.[] | "Class: \(.class)\nTitle: \(.title)\nAddress: \(.address)\n---"' 2>/dev/null || {
+    echo "jq not available, using basic output:"
+    hyprctl clients | grep -E "(class:|title:|Window)"
+}
+
+echo
+echo "=== WINDOW MANAGER CONFIG ==="
+config_file="${XDG_CONFIG_HOME:-$HOME/.config}/window-manager/config.json"
+if [[ -f "$config_file" ]]; then
+    echo "Config exists at: $config_file"
+    if command -v jq >/dev/null 2>&1; then
+        echo "Exclusive groups:"
+        jq -r '.exclusive_groups | to_entries[] | "\(.key):\n  \(.value.description)\n  Windows: \(.value.windows | length)"' "$config_file"
+    else
+        echo "Config file exists but jq not available for parsing"
+    fi
+else
+    echo "❌ Config not found at: $config_file"
+    echo "Run: system-window-manager config"
+fi
+
+echo
+echo "=== WINDOW MANAGER STATUS ==="
+log_file="${XDG_STATE_HOME:-$HOME/.local/state}/window-manager.log"
+if [[ -f "$log_file" ]]; then
+    echo "Recent log entries:"
+    tail -5 "$log_file"
+else
+    echo "❌ No log file found"
+fi
+
+echo
+echo "=== QUICK TEST ==="
+echo "1. Open walker or swaync"
+echo "2. Run this script again to see their window properties"
+echo "3. Update config with correct class/title names"
+echo "4. Test: Open one app, then the other - first should close"

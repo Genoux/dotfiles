@@ -1,0 +1,9 @@
+/* Dark theme variables for swayosd */
+@define-color fg rgba(250, 250, 250, 1.0);
+@define-color bg rgba(22, 22, 27, 0.8);
+@define-color bg-card rgba(38, 38, 42, 0.3);
+@define-color accent rgba(180, 180, 180, 1.0);
+@define-color border rgba(255, 255, 255, 0.1);
+@define-color red rgba(255, 100, 100, 1.0);
+@define-color green rgba(100, 200, 100, 1.0);
+@define-color yellow rgba(255, 220, 80, 1.0);

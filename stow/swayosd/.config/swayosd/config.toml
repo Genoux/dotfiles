@@ -1,0 +1,15 @@
+[server]
+# Margin from top (0.0 = top, 1.0 = bottom, 0.5 = center)
+top_margin = 0.85
+
+# Max volume percentage
+max_volume = 100
+
+# Show percentage in OSD
+show_percentage = true
+
+# Style file path (relative to config dir)
+style = "style.css"
+
+# Player control format
+playerctl_format = "{title} - {artist}"

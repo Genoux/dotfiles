@@ -3,11 +3,7 @@ import {
   currentIcon,
   currentMuted,
   setVolumeLevel,
-  toggleMute,
-  speaker,
-  audioService,
-  speakerVolume,
-  speakerMuted
+  toggleMute
 } from "../service";
 
 function clampVolume(volume: number): number {
@@ -23,15 +19,11 @@ export function VolumePanel({ class: cls = "" }: { class?: string } = {}) {
         class={currentMuted((muted: boolean) => `volume-panel__mute-button ${muted ? 'muted' : ''}`)}
         canFocus={false}
         onClicked={() => {
-          console.log("[VolumePanel] Mute button clicked, current state:", currentMuted.get());
           toggleMute();
         }}
       >
         <image
-          iconName={currentIcon((icon: string) => {
-            console.log("[VolumePanel] Icon updated to:", icon);
-            return icon;
-          })}
+          iconName={currentIcon((icon: string) => icon)}
           pixelSize={20}
         />
       </button>
@@ -43,14 +35,9 @@ export function VolumePanel({ class: cls = "" }: { class?: string } = {}) {
         min={0}
         max={1}
         step={0.01}
-        value={currentVolume((vol: number) => {
-          console.log("[VolumeSlider] Reactive value:", vol);
-          return clampVolume(vol);
-        })}
+        value={currentVolume((vol: number) => clampVolume(vol))}
         onChangeValue={(slider) => {
-          const value = slider.value;
-          console.log("[VolumeSlider] User changed value to:", value);
-          setVolumeLevel(clampVolume(value));
+          setVolumeLevel(clampVolume(slider.value));
         }}
       />
 

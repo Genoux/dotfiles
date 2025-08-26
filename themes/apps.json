@@ -5,11 +5,11 @@
       "target": "~/.config/yazi/theme.toml"
     },
     "btop": {
-      "type": "themes_dir", 
+      "type": "direct", 
       "target": "~/.config/btop/themes/current.theme"
     },
     "ags": {
-       "type": "themes_dir", 
+      "type": "direct", 
       "target": "~/.config/ags/styles/abstracts/_theme.scss"
     },
     "hypr": {
@@ -23,6 +23,17 @@
     },
     "walker": {
       "type": "centralized"
+    },
+    "swayosd": {
+      "type": "centralized"
+    },
+    "bluetui": {
+      "type": "direct",
+      "target": "~/.config/bluetui/config.toml"
+    },
+    "starship": {
+      "type": "direct",
+      "target": "~/.config/starship.toml"
     }
   }
 }

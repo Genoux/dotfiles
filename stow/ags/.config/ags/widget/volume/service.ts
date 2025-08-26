@@ -4,12 +4,8 @@ import { createBinding, createState } from "ags";
 // AstalWp (WirePlumber) service for audio control
 const wp = Wp.get_default();
 
-// Export the raw service in case components need direct access
-export const audioService = wp;
-
 // Get the default audio endpoint (usually speakers/headphones)
 export const speaker = createBinding(wp.audio, "default_speaker");
-export const microphone = createBinding(wp.audio, "default_microphone");
 
 // Direct volume and mute bindings for easier component use
 export const speakerVolume = speaker((spk) => spk?.volume ?? 0);
@@ -30,7 +26,6 @@ function syncFromSpeaker(spk: any) {
   if (!spk) return;
   const vol = clamp01(spk.volume ?? 0);
   const muted = !!(spk.mute ?? false);
-  console.log("[Volume] syncFromSpeaker -> vol:", vol, "muted:", muted);
   setCurrentVolume(vol);
   setCurrentMuted(muted);
   setCurrentIcon(getVolumeIcon(vol, muted));
@@ -38,35 +33,26 @@ function syncFromSpeaker(spk: any) {
 
 // Update icon when volume changes
 currentVolume((vol) => {
-  const newIcon = getVolumeIcon(vol, currentMuted.get());
-  console.log("[Volume] Volume changed to:", vol, "updating icon to:", newIcon);
-  setCurrentIcon(newIcon);
+  setCurrentIcon(getVolumeIcon(vol, currentMuted.get()));
   return vol;
 });
 
 // Update icon when mute changes  
 currentMuted((muted) => {
-  const newIcon = getVolumeIcon(currentVolume.get(), muted);
-  console.log("[Volume] Mute state changed to:", muted, "updating icon to:", newIcon);
-  setCurrentIcon(newIcon);
+  setCurrentIcon(getVolumeIcon(currentVolume.get(), muted));
   return muted;
 });
 
 // Wait for WirePlumber to be ready, then initialize
 wp.connect("ready", () => {
-  console.log("[Volume] WirePlumber is ready");
   const spk = wp.audio.default_speaker;
-  if (!spk) {
-    console.log("[Volume] No default speaker at ready - will rely on binding");
-    return;
+  if (spk) {
+    syncFromSpeaker(spk);
   }
-  console.log("[Volume] Found speaker at ready, raw volume:", spk.volume, "raw mute:", spk.mute);
-  syncFromSpeaker(spk);
 });
 
 // Also listen for speaker changes and property updates
 speaker((spk) => {
-  console.log("[Volume] speaker() binding fired. has speaker:", !!spk);
   if (!spk) return spk;
 
   // Initial sync
@@ -74,14 +60,11 @@ speaker((spk) => {
 
   // Listen for external changes
   spk.connect("notify::volume", () => {
-    console.log("[Volume] notify::volume ->", spk.volume);
     setCurrentVolume(clamp01(spk.volume ?? 0));
   });
 
   spk.connect("notify::mute", () => {
-    const newMuteState = !!(spk.mute ?? false);
-    console.log("[Volume] notify::mute ->", spk.mute, "setting currentMuted to:", newMuteState);
-    setCurrentMuted(newMuteState);
+    setCurrentMuted(!!(spk.mute ?? false));
   });
 
   return spk;
@@ -125,7 +108,6 @@ export function setVolumeLevel(level: number) {
     
     // If setting volume above 0 while muted, unmute first
     if (clampedLevel > 0 && spk.mute) {
-      console.log("[Volume] Auto-unmuting because volume set to:", clampedLevel);
       spk.set_mute(false);
       setCurrentMuted(false);
       newMuteState = false;
@@ -137,39 +119,31 @@ export function setVolumeLevel(level: number) {
     
     // Force icon update immediately for responsive UI using correct mute state
     const newIcon = getVolumeIcon(clampedLevel, newMuteState);
-    console.log("[Volume] setVolumeLevel - forcing icon update to:", newIcon, "volume:", clampedLevel, "muted:", newMuteState);
     setCurrentIcon(newIcon);
   }
 }
 
 export function toggleMute() {
   const spk = wp.audio.default_speaker;
-  console.log("[Volume] toggleMute called, speaker:", !!spk);
   if (spk) {
     const currentMute = !!spk.mute;
     const newMute = !currentMute;
-    console.log("[Volume] Toggling mute from", currentMute, "to", newMute);
     
     // Update local state immediately for UI responsiveness
-    console.log("[Volume] Setting currentMuted to:", newMute, "before hardware call");
     setCurrentMuted(newMute);
     
     // Force icon update immediately
     const newIcon = getVolumeIcon(currentVolume.get(), newMute);
-    console.log("[Volume] Forcing icon update to:", newIcon);
     setCurrentIcon(newIcon);
     
     // Try the mute operation
     try {
       spk.set_mute(newMute);
-      console.log("[Volume] set_mute() called successfully");
     } catch (error) {
       console.log("[Volume] Error setting mute:", error);
       // Revert local state on error
       setCurrentMuted(currentMute);
     }
-  } else {
-    console.log("[Volume] No speaker found for mute toggle");
   }
 }
 

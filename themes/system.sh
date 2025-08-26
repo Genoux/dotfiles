@@ -139,13 +139,6 @@ switch_theme() {
                         cp "$file" "$target"
                         log "Applied $app_name theme directly to $target"
                         ;;
-                    "themes_dir")
-                        local target=$(echo "$app_config" | jq -r '.target' | sed "s|~|$HOME|g")
-                        local target_dir=$(dirname "$target")
-                        mkdir -p "$target_dir"
-                        cp "$file" "$target"
-                        log "Applied $app_name theme to themes directory"
-                        ;;
                     "centralized"|*)
                         cp "$file" "$HOME/.config/themes/current/"
                         log "Copied $app_name theme (centralized)"

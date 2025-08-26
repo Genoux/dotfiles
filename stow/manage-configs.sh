@@ -11,6 +11,42 @@ for arg in "$@"; do
     esac
 done
 
+# Setup scripts function
+setup_scripts() {
+    echo "🔧 Setting up scripts..."
+    
+    # Make all scripts executable
+    if [[ -d "scripts/.local/bin" ]]; then
+        find "scripts/.local/bin" -type f -exec chmod +x {} \;
+        echo "✅ Made scripts executable"
+    fi
+    
+    # Ensure ~/.local/bin is in PATH
+    if ! echo "$PATH" | grep -q "$HOME/.local/bin"; then
+        echo "⚠️  Adding ~/.local/bin to PATH"
+        case "$SHELL" in
+            */zsh) 
+                if ! grep -q 'export PATH="$HOME/.local/bin:$PATH"' ~/.zshrc 2>/dev/null; then
+                    echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
+                    echo "✅ Added to ~/.zshrc"
+                fi
+                ;;
+            */bash) 
+                if ! grep -q 'export PATH="$HOME/.local/bin:$PATH"' ~/.bashrc 2>/dev/null; then
+                    echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+                    echo "✅ Added to ~/.bashrc"
+                fi
+                ;;
+            *)
+                echo "ℹ️  Please manually add ~/.local/bin to your PATH"
+                ;;
+        esac
+        echo "🔄 Restart your shell or run: source ~/.${SHELL##*/}rc"
+    else
+        echo "✅ ~/.local/bin already in PATH"
+    fi
+}
+
 # Simple conflict handling based on mode
 handle_conflict() {
     local target="$1"
@@ -85,6 +121,11 @@ case "$1" in
         exit 1
     elif [[ "$2" == "all" ]]; then
         echo "🔗 Installing all configs..."
+        # Setup scripts first if they exist
+        if [[ -d "scripts" ]]; then
+            setup_scripts
+        fi
+        
         for config in */; do
             config=${config%/}
             [[ "$config" == "manage-configs.sh" ]] && continue
@@ -107,6 +148,11 @@ case "$1" in
         if ! handle_config_conflicts "$2"; then
             echo "⏭️  Skipped $2"
             exit 0
+        fi
+        
+        # Special handling for scripts
+        if [[ "$2" == "scripts" ]]; then
+            setup_scripts
         fi
         
         if stow -t "$HOME" "$2" 2>/dev/null; then
@@ -181,6 +227,18 @@ case "$1" in
                         break
                     fi
                 done < <(find applications -type f -print0 2>/dev/null)
+                ;;
+            "scripts")
+                # Check if any script files are linked in ~/.local/bin
+                if [[ -d "scripts/.local/bin" ]]; then
+                    while IFS= read -r -d '' script_file; do
+                        script_name=$(basename "$script_file")
+                        if [[ -L "$HOME/.local/bin/$script_name" ]]; then
+                            linked=true
+                            break
+                        fi
+                    done < <(find scripts/.local/bin -type f -print0 2>/dev/null)
+                fi
                 ;;
             *)
                 if [ -L "$HOME/.config/$config" ]; then
