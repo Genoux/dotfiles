@@ -14,7 +14,7 @@
       "right": false,
       "bottom": false
     },
-    "show_initial_entries": false,
+    "show_initial_entries": true,
     "show_search": true,
     "fullscreen": true
   },
@@ -28,14 +28,48 @@
       }
     },
     {
-      "name": "runner",
-      "prefix": ">"
+      "name": "calculator",
+      "prefix": "="
     },
     {
-      "name": "calc",
-      "prefix": "="
+      "name": "finder",
+      "prefix": "/"
+    },
+    {
+      "name": "runner",
+      "prefix": "!"
+    },
+    {
+      "name": "websearch",
+      "prefix": "?"
+    },
+    {
+      "name": "clipboard",
+      "prefix": "clip"
+    },
+    {
+      "name": "emojis",
+      "prefix": ":"
     }
   ],
+  "builtins": {
+    "ai": {
+      "enabled": true,
+      "anthropic": {
+        "api_key_cmd": "echo $ANTHROPIC_API_KEY",
+        "prompts": [
+          {
+            "label": "General",
+            "prompt": "You are a helpful assistant. Keep answers concise."
+          },
+          {
+            "label": "Code Help",
+            "prompt": "You are a coding assistant. Provide clear, practical solutions."
+          }
+        ]
+      }
+    }
+  },
   "external": [],
   "list": {
     "height": 200,
@@ -50,10 +84,7 @@
     }
   },
   "applications": {
-    "hide_console": true,
-    "categories": {
-      "exclude": ["System", "Games"]
-    }
+    "hide_console": true
   },
   "clipboard": {
     "max_entries": 10,

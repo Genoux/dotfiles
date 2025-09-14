@@ -47,11 +47,34 @@ setup_scripts() {
     fi
 }
 
+# Clean broken symlinks function
+clean_broken_symlinks() {
+    local config="$1"
+    echo "🧹 Cleaning broken symlinks for $config..."
+
+    case "$config" in
+        "applications")
+            find "$HOME/.local/share/applications" -type l ! -e -delete 2>/dev/null
+            ;;
+        "scripts")
+            find "$HOME/.local/bin" -type l ! -e -delete 2>/dev/null
+            ;;
+        *)
+            # Clean broken symlinks in ~/.config for other configs
+            if [[ -d "$HOME/.config" ]]; then
+                find "$HOME/.config" -name "*$config*" -type l ! -e -delete 2>/dev/null
+            fi
+            ;;
+    esac
+}
+
 # Update desktop database function
 update_desktop_database() {
     echo "🗃️  Updating desktop database..."
     if command -v update-desktop-database >/dev/null 2>&1; then
-        update-desktop-database "$HOME/.local/share/applications" 2>/dev/null && \
+        # Clean broken symlinks first
+        find "$HOME/.local/share/applications" -type l ! -e -delete 2>/dev/null
+        update-desktop-database "$HOME/.local/share/applications" && \
         echo "✅ Desktop database updated"
     else
         echo "ℹ️  update-desktop-database not found, skipping"
@@ -142,12 +165,13 @@ case "$1" in
             [[ "$config" == "manage-configs.sh" ]] && continue
             
             echo "Linking $config..."
+            clean_broken_symlinks "$config"
             if ! handle_config_conflicts "$config"; then
                 echo "⏭️  Skipped $config"
                 continue
             fi
             
-            if stow -t "$HOME" "$config" 2>/dev/null; then
+            if stow -R -t "$HOME" "$config" 2>/dev/null; then
                 echo "✅ Successfully linked $config"
                 
                 # Update desktop database for applications
@@ -161,6 +185,7 @@ case "$1" in
         echo "🎉 All configs processed!"
     else
         echo "🔗 Linking $2..."
+        clean_broken_symlinks "$2"
         if ! handle_config_conflicts "$2"; then
             echo "⏭️  Skipped $2"
             exit 0
@@ -171,7 +196,7 @@ case "$1" in
             setup_scripts
         fi
         
-        if stow -t "$HOME" "$2" 2>/dev/null; then
+        if stow -R -t "$HOME" "$2" 2>/dev/null; then
             echo "✅ Successfully linked $2"
             if [ -L "$HOME/.config/$2" ]; then
                 echo "📁 Created: ~/.config/$2 -> $(readlink ~/.config/$2)"

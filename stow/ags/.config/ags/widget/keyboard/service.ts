@@ -32,7 +32,7 @@ export const [keyboardLayout, setKeyboardLayout] = createState<string>(getCurren
 export function switchKeyboardLayout(): void {
   try {
     // Use your exact binding command
-    GLib.spawn_command_line_async("hyprctl switchxkblayout keychron-keychron-k2 next");
+    GLib.spawn_command_line_async("hyprctl switchxkblayout next");
     
     // Toggle the display manually since we know it's just EN/FR
     setKeyboardLayout(current => current === "EN" ? "FR" : "EN");

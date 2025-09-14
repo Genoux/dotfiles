@@ -35,7 +35,4 @@ export function toggleMediaPanel() {
   if (player) {
     hypr.dispatch("focuswindow", `class:${player.entry}`);
   }
-  // __mediaVisible = !__mediaVisible;
-  // print(`[MediaPanel] toggle -> ${__mediaVisible ? "true" : "false"}`);
-  // setMediaPanelVisible(__mediaVisible);
 }

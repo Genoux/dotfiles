@@ -156,22 +156,9 @@ fi
 export XDG_RUNTIME_DIR=/run/user/$(id -u)
 export WAYLAND_DISPLAY=wayland-1
 
-# Steam fixes (cursor theme and display)
-export XCURSOR_THEME=AdwaitaLegacy
-
-# Force all GUI apps to use X11 (fixes Steam Wayland conflicts)
-export SDL_VIDEODRIVER=x11
-export GDK_BACKEND=x11
-export QT_QPA_PLATFORM=xcb
-export ELECTRON_OZONE_PLATFORM_HINT=x11
-
-# Steam-specific environment
-export STEAM_USE_DYNAMIC_VRS=0
-export __GL_THREADED_OPTIMIZATIONS=1
-
-
-
-
+# Walker launcher - needs Wayland backend for layer shell support
+export WALKER_GDK_BACKEND=wayland
+alias walker='GDK_BACKEND=$WALKER_GDK_BACKEND walker'
 
 
 # Override syntax highlighting colors

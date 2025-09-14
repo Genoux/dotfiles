@@ -1,8 +1,5 @@
 import GLib from "gi://GLib";
-import { createState } from "ags";
-import Hyprland from "gi://AstalHyprland";
-
-
+import { createPoll } from "ags/time";
 
 export enum ConnectionType {
   Wifi = "wifi",
@@ -10,18 +7,13 @@ export enum ConnectionType {
   None = "none"
 }
 
-export const [connectionType, setConnectionType] = createState<ConnectionType>(ConnectionType.None);
-export const [connectionIcon, setConnectionIcon] = createState<string>("network-offline-symbolic");
-
-function checkConnection() {
+function checkConnection(): string {
   try {
     // Check if we have an active network connection
     const [success, stdout] = GLib.spawn_command_line_sync("ip route get 8.8.8.8");
-    
+
     if (!success || !stdout) {
-      setConnectionType(ConnectionType.None);
-      setConnectionIcon("network-offline-symbolic");
-      return;
+      return "network-offline-symbolic";
     }
 
     const output = new TextDecoder().decode(stdout);
@@ -34,32 +26,28 @@ function checkConnection() {
 
       // Check if it's a wireless interface
       if (interfaceName.startsWith("wl") || interfaceName.startsWith("wlan") || interfaceName.includes("wifi")) {
-        setConnectionType(ConnectionType.Wifi);
-        setConnectionIcon("network-wireless-symbolic");
+        return "network-wireless-symbolic";
       } else if (interfaceName.startsWith("eth") || interfaceName.startsWith("en") || interfaceName.startsWith("enp")) {
-        setConnectionType(ConnectionType.Ethernet);
-        setConnectionIcon("network-wired-symbolic");
+        return "network-wired-symbolic";
       } else {
         // For other interfaces like tailscale, bridge, etc., default to ethernet
-        setConnectionType(ConnectionType.Ethernet);
-        setConnectionIcon("network-wired-symbolic");
+        return "network-wired-symbolic";
       }
     } else {
-      setConnectionType(ConnectionType.None);
-      setConnectionIcon("network-offline-symbolic");
+      return "network-offline-symbolic";
     }
   } catch (error) {
     console.error("Network check error:", error);
-    setConnectionType(ConnectionType.None);
-    setConnectionIcon("network-offline-symbolic");
+    return "network-offline-symbolic";
   }
 }
 
-checkConnection();
-GLib.timeout_add(GLib.PRIORITY_DEFAULT, 5000, () => {
-  checkConnection();
-  return true;
-});
+// Poll connection every 5 seconds
+export const connectionIcon = createPoll(
+  "network-offline-symbolic",
+  5000,
+  checkConnection
+);
 
 export function getConnectionIcon(): string {
   return connectionIcon.get();

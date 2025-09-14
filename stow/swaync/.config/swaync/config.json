@@ -7,7 +7,7 @@
   "layer-shell": true,
   "cssPriority": "user",
   "control-center-width": 300,
-  "control-center-height": 600,
+  "control-center-height": 800,
   "control-center-margin-top": 6,
   "control-center-margin-bottom": 6,
   "control-center-margin-right": 6,

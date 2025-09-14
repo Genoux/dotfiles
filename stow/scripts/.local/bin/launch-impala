@@ -16,7 +16,7 @@ else
     export PATH="$HOME/.cargo/bin:$PATH"
 
     # Launch new instance with proper error handling
-    kitty --title "$TERMINAL_TITLE" --hold -e bash -c "
+    ${TERMINAL:-xterm} --title "$TERMINAL_TITLE" --hold -e bash -c "
         echo 'Starting impala...'
         if command -v impala >/dev/null 2>&1; then
             impala
