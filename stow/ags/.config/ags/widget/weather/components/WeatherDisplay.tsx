@@ -1,11 +1,11 @@
 import { With } from "ags";
-import { weather } from "../Service";
+import { weather, openWeatherApp } from "../Service";
 import { Gtk } from "ags/gtk4";
 
 export function Weather({ class: cls }: { class?: string }) {
   return (
     <box>
-      <button>
+      <button onClicked={openWeatherApp}>
     <With value={weather}>
       {(value) => {
         const { icon, feelsLike, location } = value as {
@@ -15,9 +15,7 @@ export function Weather({ class: cls }: { class?: string }) {
         };
         return (
           <box
-            class={`weather-widget ${cls ?? ""}`}
-            widthRequest={64}
-            homogeneous={true}
+            class={`${cls ?? ""}`}
           >
             <box halign={Gtk.Align.CENTER} spacing={4}>
               <label label={icon} />

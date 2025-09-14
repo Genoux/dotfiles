@@ -1,5 +1,4 @@
 @import "../themes/current/swaync.css";
-@use "sass:color";
 
 * {
   font-family: "SF Pro Text", monospace;
@@ -34,13 +33,13 @@
 
 .widget-title label {
   font-family: inherit;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 400;
   color: @fg;
 }
 
 .widget-title button {
-  font-size: 12px;
+  font-size: 11px;
   color: @fg;
   background-color: @bg-card;
   transition: all 0.15s ease;
@@ -52,10 +51,14 @@
 }
 
 .widget-dnd {
-  font-size: 12px;
   padding-top: 16px;
+  margin-top: 16px;
   border-top: 1px solid @border;
   color: @fg;
+}
+
+.widget-dnd label{
+  font-size: 12px;
 }
 
 .widget-dnd>switch {
@@ -63,7 +66,7 @@
   border: 1px solid @accent;
   background-color: @bg-card;
   transition: all 0.3s ease;
-  min-width: 16px;
+  min-width: 14px;
   min-height: 6px;
 }
 
@@ -113,7 +116,7 @@
 .notification-row:hover .notification-background {
   background-color: @bg;
   opacity: 0.9;
-  border: 1px solid color.adjust(@border, $alpha: +0.2);
+  border: 1px solid alpha(@border, 0.8);
 }
 
 /* Unified notification text elements */
@@ -156,8 +159,8 @@
 
 /* Unified notification image */
 .notification image {
-  min-width: 14px;
-  min-height: 14px;
+  min-width: 12px;
+  min-height: 12px;
   border-radius: 4px;
   margin-right: 10px;
 }
@@ -197,4 +200,21 @@
 
 .notification-row .notification-background .notification .notification-default-action:hover {
   background-color: transparent;
+}
+/* allow label area to shrink */
+.notification .notification-content { min-width: 0; }
+
+/* clamp + ellipsis */
+.control-center .notification .summary,
+.floating-notifications .notification .summary {
+  min-width: 0;
+  -gtk-label-ellipsize: end;
+  -gtk-label-lines: 1;
+}
+
+.control-center .notification .body,
+.floating-notifications .notification .body {
+  min-width: 0;
+  -gtk-label-ellipsize: end;
+  -gtk-label-lines: 3;
 }

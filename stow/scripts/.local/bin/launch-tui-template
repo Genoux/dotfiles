@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# Generic TUI launcher with single instance support
+# Usage: APP_NAME="appname" TERMINAL_TITLE="title" COMMAND="command" ./launch-tui-template
+
+APP_NAME="${APP_NAME:-app}"
+TERMINAL_TITLE="${TERMINAL_TITLE:-$APP_NAME}"
+COMMAND="${COMMAND:-$APP_NAME}"
+
+# Check if the application is already running
+if hyprctl clients | grep -q "^[[:space:]]*title: $TERMINAL_TITLE$"; then
+    # Focus the existing window
+    hyprctl dispatch focuswindow title:"$TERMINAL_TITLE"
+else
+    # Launch new instance with EGL error suppression
+    kitty --title "$TERMINAL_TITLE" -e $COMMAND 2>/dev/null &
+fi

@@ -1,0 +1,27 @@
+#!/bin/bash
+
+if [[ $# -lt 1 ]]; then
+    echo "Usage: $0 <url> [custom_title]"
+    exit 1
+fi
+
+url="$1"
+custom_title="$2"
+
+browser=$(xdg-settings get default-web-browser)
+
+case $browser in
+google-chrome* | brave-browser* | microsoft-edge* | opera* | vivaldi*) ;;
+*) browser="chromium.desktop" ;;
+esac
+
+flags="--enable-features=UseOzonePlatform --ozone-platform=wayland"
+if [[ -n "$custom_title" ]]; then
+    flags="$flags --force-app-mode --app-window-title=$custom_title"
+fi
+
+if [[ -f ~/.config/electron-flags.conf ]]; then
+    flags="$flags $(grep -v '^#' ~/.config/electron-flags.conf | tr '\n' ' ')"
+fi
+
+exec setsid $(sed -n 's/^Exec=\([^ ]*\).*/\1/p' {~/.local,~/.nix-profile,/usr}/share/applications/$browser 2>/dev/null | head -1) $flags --app="$url" "${@:3}" &

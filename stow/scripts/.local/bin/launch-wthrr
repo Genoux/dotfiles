@@ -1,0 +1,42 @@
+#!/bin/bash
+
+# Launch wthrr with single instance support
+
+TERMINAL_TITLE="wthrr"
+
+# Check if wthrr is already running (simplified check)
+window_address=$(hyprctl clients -j | jq -r '.[] | select(.title == "wthrr") | .address' | head -1)
+if [ -n "$window_address" ]; then
+    # Focus the existing window using address
+    hyprctl dispatch focuswindow address:"$window_address"
+    echo "Focused existing wthrr window"
+else
+    # Ensure terminal is available, fallback to alternatives
+    if command -v kitty >/dev/null 2>&1; then
+        TERM_CMD="kitty"
+    elif command -v alacritty >/dev/null 2>&1; then
+        TERM_CMD="alacritty"
+    elif command -v wezterm >/dev/null 2>&1; then
+        TERM_CMD="wezterm"
+    else
+        TERM_CMD="${TERMINAL:-xterm}"
+    fi
+    
+    echo "Launching wthrr in $TERM_CMD..."
+    
+    # Set environment variables to fix EGL/GPU issues
+    export LIBGL_ALWAYS_SOFTWARE=1
+    export __GL_THREADED_OPTIMIZATIONS=0
+    export MESA_GL_VERSION_OVERRIDE=3.3
+    
+    # Launch new instance with better error handling
+    if [[ "$TERM_CMD" == "kitty" ]]; then
+        # For kitty, redirect stderr to suppress EGL warnings
+        $TERM_CMD --title "$TERMINAL_TITLE" -e sh -c "wthrr -u c,mph -f d; echo 'Press any key to close...'; read -n 1" 2>/dev/null &
+    else
+        # For other terminals
+        $TERM_CMD --title "$TERMINAL_TITLE" -e sh -c "wthrr -u c,mph -f d; echo 'Press any key to close...'; read -n 1" &
+    fi
+    
+    echo "Launched wthrr (PID: $!)"
+fi

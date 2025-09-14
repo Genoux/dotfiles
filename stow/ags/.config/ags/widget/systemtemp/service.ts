@@ -20,7 +20,7 @@ function getGpuTemp(): number {
       "nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader,nounits"
     )[1];
     if (!out) return 0;
-    const temp = parseInt(new TextDecoder().decode(out).trim());
+    const temp = parseInt(new TextDecoder().decode(out!).trim());
     return isNaN(temp) ? 0 : temp;
   } catch (e) {
     return 0;
@@ -45,7 +45,7 @@ export const systemTemps = createPoll(
     try {
       const out = GLib.spawn_command_line_sync("sensors")[1];
       if (out) cpu = parseCpuTemp(new TextDecoder().decode(out));
-    } catch (e) {}
+    } catch (e) { }
 
     // GPU temp
     const gpu = getGpuTemp();
@@ -57,3 +57,11 @@ export const systemTemps = createPoll(
     return { cpu, gpu, avg, status };
   }
 );
+
+export function openSystemMonitor() {
+  try {
+    GLib.spawn_command_line_async(`${GLib.get_home_dir()}/.local/bin/launch-btop`);
+  } catch (error) {
+    console.error("Failed to launch btop:", error);
+  }
+}

@@ -441,11 +441,13 @@ while true; do
                         echo "GTK Theme Actions:"
                         echo "  1) Install themes"
                         echo "  2) List themes"
-                        read -p "Action (1-2): " gtk_action
+                        echo "  3) Set theme"
+                        read -p "Action (1-3): " gtk_action
                         
                         case "$gtk_action" in
                             1) bash "$SCRIPT_DIR/themes/gtk.sh" install ;;
                             2) bash "$SCRIPT_DIR/themes/gtk.sh" list ;;
+                            3) bash "$SCRIPT_DIR/themes/gtk.sh" select ;;
                             *) echo -e "${YELLOW}Invalid option${NC}" ;;
                         esac
                     else

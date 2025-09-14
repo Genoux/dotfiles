@@ -12,7 +12,7 @@ export function NotificationPanelButton({
       >
         <image
           iconName="notification-symbolic"
-          pixelSize={12}
+          pixelSize={11}
         />
       </button>
     </box>

@@ -16,58 +16,7 @@
 // Base button reset and styling
 @mixin button-base {
   @include gtk-reset;
-  padding: $spacing-sm $spacing-md;
-  border-radius: $radius-md;
+  border-radius: $radius-sm;
   transition: $transition-fast;
-  cursor: pointer;
-
-  // Fix focus behavior - prevent focus grab
-  &:focus {
-    outline: none;
-    box-shadow: none;
-  }
-
-  // Ensure hover works properly after click
-  &:hover {
-    background: rgba(255, 255, 255, 0.05);
-  }
-
-  &:active {
-    background: rgba(255, 255, 255, 0.1);
-    transform: scale(0.98);
-  }
-
-  // Maintain hover state even when focused
-  &:focus:hover {
-    background: rgba(255, 255, 255, 0.05);
-  }
-}
-
-// Icon button specific styling
-@mixin icon-button {
-  @include button-base;
-  padding: $spacing-sm;
-  min-width: 24px;
-  min-height: 24px;
-
-  &:hover {
-    background: rgba(255, 255, 255, 0.08);
-    transform: scale(1.05);
-  }
-
-  &:active {
-    background: rgba(255, 255, 255, 0.15);
-    transform: scale(0.95);
-  }
-
-  &:focus:hover {
-    background: rgba(255, 255, 255, 0.08);
-    transform: scale(1.05);
-  }
-}
-
-@mixin text-primary {
-  color: $fg;
-  font-size: $font-size-sm;
-  font-weight: 500;
+  padding: 4px;
 }

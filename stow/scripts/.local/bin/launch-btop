@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# Launch btop with single instance support
+
+TERMINAL_TITLE="btop"
+COMMAND="btop"
+
+# Check if btop is already running
+if hyprctl clients | grep -q "^[[:space:]]*title: $TERMINAL_TITLE$"; then
+    # Focus the existing window
+    hyprctl dispatch focuswindow title:"$TERMINAL_TITLE"
+else
+    # Launch new instance with proper environment
+    kitty --title "$TERMINAL_TITLE" --hold -e "$COMMAND" 2>/dev/null &
+fi

@@ -1,0 +1,17 @@
+{
+  "active_theme": "vinceliuice/MacTahoe-complete",
+  "themes": {
+    "vinceliuice/MacTahoe-complete": {
+      "name": "MacTahoe Dark",
+      "description": "Complete MacOS Tahoe theme with GTK styling and icons",
+      "gtk": {
+        "repo": "https://github.com/vinceliuice/MacTahoe-gtk-theme.git",
+        "install_cmd": "./install.sh -l"
+      },
+      "icons": {
+        "repo": "https://github.com/vinceliuice/MacTahoe-icon-theme.git",
+        "install_cmd": "./install.sh"
+      }
+    }
+  }
+}

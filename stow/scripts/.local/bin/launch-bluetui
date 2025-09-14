@@ -1,23 +1,15 @@
 #!/bin/bash
-# Launch bluetui in Kitty with custom class for window rules
 
-# Check if bluetui window already exists
-if hyprctl clients | grep -q "class: bluetui"; then
-    # Focus existing window
-    hyprctl dispatch focuswindow "class:bluetui"
-    exit 0
+# Launch bluetui with single instance support
+
+TERMINAL_TITLE="bluetui"
+COMMAND="bluetui"
+
+# Check if bluetui is already running
+if hyprctl clients | grep -q "^[[:space:]]*title: $TERMINAL_TITLE$"; then
+    # Focus the existing window
+    hyprctl dispatch focuswindow title:"$TERMINAL_TITLE"
+else
+    # Launch new instance with proper environment
+    kitty --title "$TERMINAL_TITLE" --hold -e "$COMMAND" 2>/dev/null &
 fi
-
-exec kitty \
-    --class=bluetui \
-    --title="Bluetooth Manager" \
-    --single-instance \
-    -o window_padding_width=2 \
-    -o window_padding_height=0 \
-    -o placement_strategy=center \
-    -o hide_window_decorations=yes \
-    -o remember_window_size=no \
-    -o scrollback_lines=0 \
-    -o adjust_line_height=0 \
-    -o adjust_column_width=0 \
-    bluetui

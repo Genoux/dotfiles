@@ -3,3 +3,5 @@ inode/directory=yazi.desktop
 
 [Default Applications]
 inode/directory=yazi.desktop
+x-scheme-handler/gitkraken=GitKraken.desktop
+x-scheme-handler/clickup=ClickUp.desktop

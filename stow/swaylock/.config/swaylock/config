@@ -1,0 +1,49 @@
+daemonize
+ignore-empty-password
+show-failed-attempts
+
+# Background with blur effects
+screenshots
+effect-blur=5x3
+effect-vignette=0.2:0.5
+
+# Date and time display - Apple style
+clock
+datestr=%A, %B %e
+timestr=%I:%M %p
+
+# Hide keyboard layout
+hide-keyboard-layout
+
+# Clean minimal white indicator - Apple thin style
+indicator
+indicator-radius=80
+indicator-thickness=3
+line-uses-inside
+
+# Clean white colors - Apple minimal
+inside-color=00000000
+ring-color=ffffff33
+text-color=ffffffe6
+key-hl-color=ffffff55
+bs-hl-color=ffffff55
+separator-color=00000000
+
+# Wrong password - subtle red
+inside-wrong-color=00000000
+ring-wrong-color=ff555577
+text-wrong-color=ff5555ee
+
+# Verifying - subtle white
+inside-ver-color=00000000
+ring-ver-color=ffffff66
+text-ver-color=ffffffe6
+
+# Clear state - minimal white
+inside-clear-color=00000000
+ring-clear-color=ffffff33
+text-clear-color=ffffffe6
+
+# Apple-style typography
+font=SF Pro Display
+font-size=48

@@ -1,0 +1,60 @@
+#!/bin/bash
+
+# Pick random wallpaper from saves folder and copy to current
+# This replaces the old SUPER+ALT+W functionality
+
+WALLPAPER_DIR="$HOME/.config/hypr/wallpapers"
+SAVES_DIR="$WALLPAPER_DIR/saves"
+CURRENT_DIR="$WALLPAPER_DIR/current"
+CURRENT_WALLPAPER="$CURRENT_DIR/current_wallpaper.jpg"
+
+# Colors for output
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+NC='\033[0m'
+
+# Create directories if they don't exist
+mkdir -p "$SAVES_DIR" "$CURRENT_DIR"
+
+# Check if saves directory has any images
+if [ ! -d "$SAVES_DIR" ] || [ -z "$(find "$SAVES_DIR" -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.webp" \) 2>/dev/null)" ]; then
+    echo -e "${RED}❌ No wallpapers found in saves folder: $SAVES_DIR${NC}"
+    echo -e "${YELLOW}💡 Add some wallpapers to the saves folder first${NC}"
+    exit 1
+fi
+
+# Get all image files from saves directory
+mapfile -t wallpapers < <(find "$SAVES_DIR" -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.webp" \) 2>/dev/null)
+
+if [ ${#wallpapers[@]} -eq 0 ]; then
+    echo -e "${RED}❌ No valid image files found in saves folder${NC}"
+    exit 1
+fi
+
+# Pick a random wallpaper
+random_index=$((RANDOM % ${#wallpapers[@]}))
+selected_wallpaper="${wallpapers[$random_index]}"
+wallpaper_name=$(basename "$selected_wallpaper")
+
+echo -e "${GREEN}🎲 Picking random wallpaper from saves...${NC}"
+echo -e "${YELLOW}📁 Found ${#wallpapers[@]} wallpapers in saves folder${NC}"
+echo -e "${GREEN}✨ Selected: $wallpaper_name${NC}"
+
+# Copy the selected wallpaper to current directory
+if cp "$selected_wallpaper" "$CURRENT_WALLPAPER"; then
+    echo -e "${GREEN}📋 Copied to current wallpaper${NC}"
+    
+    # Set the wallpaper using swww
+    if command -v swww &> /dev/null; then
+        echo -e "${GREEN}🖼️  Setting wallpaper...${NC}"
+        swww img "$CURRENT_WALLPAPER" --transition-type grow --transition-pos 0.2,0.2 --transition-step 90
+        echo -e "${GREEN}✅ Wallpaper set successfully!${NC}"
+    else
+        echo -e "${YELLOW}⚠️  swww not found, wallpaper copied but not set${NC}"
+        echo -e "${YELLOW}💡 Install swww or manually set the wallpaper${NC}"
+    fi
+else
+    echo -e "${RED}❌ Failed to copy wallpaper${NC}"
+    exit 1
+fi

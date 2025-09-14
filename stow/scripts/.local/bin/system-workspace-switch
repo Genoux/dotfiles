@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# Smart workspace switcher that hides special workspaces  
+# Usage: system-workspace-switch <workspace_number>
+
+WORKSPACE="$1"
+
+if [[ -z "$WORKSPACE" ]]; then
+    echo "Usage: $0 <workspace_number>"
+    exit 1
+fi
+
+# Check if currently in a special workspace and hide it
+if hyprctl activewindow 2>/dev/null | grep -q "workspace: special"; then
+    # Hide the special workspace (toggle to close it)
+    hyprctl dispatch togglespecialworkspace >/dev/null 2>&1
+fi
+
+# Switch to the target workspace
+hyprctl dispatch workspace "$WORKSPACE"

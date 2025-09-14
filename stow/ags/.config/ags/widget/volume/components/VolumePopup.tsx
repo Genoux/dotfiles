@@ -12,8 +12,10 @@ export function VolumePopup() {
       application={app}
       visible={volumePanelVisible}
       anchor={Astal.WindowAnchor.TOP | Astal.WindowAnchor.RIGHT}
-      layer={Astal.Layer.OVERLAY}
-      keymode={Astal.Keymode.ON_DEMAND}
+      layer={Astal.Layer.TOP}
+      keymode={Astal.Keymode.NONE}
+      exclusivity={Astal.Exclusivity.IGNORE}
+      marginTop={45}
       onCloseRequest={() => hideVolumePanel()}
       onHide={() => hideVolumePanel()}
     >

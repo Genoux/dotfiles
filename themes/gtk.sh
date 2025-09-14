@@ -128,9 +128,100 @@ check_component_status() {
     esac
 }
 
+# Clean up themes not in config
+cleanup_old_themes() {
+    log "Cleaning up themes not in config..."
+    
+    # Get themes that should exist (from config)
+    local config_themes=()
+    while IFS= read -r theme; do
+        local theme_config=$(get_theme_config "$theme")
+        
+        # Collect GTK theme names
+        if echo "$theme_config" | jq -e '.gtk' > /dev/null; then
+            local gtk_repo=$(echo "$theme_config" | jq -r '.gtk.repo')
+            # Extract theme name patterns from repo URL
+            case "$gtk_repo" in
+                *"MacTahoe"*) config_themes+=("MacTahoe-Dark" "MacTahoe-Light" "MacTahoe-Dark-solid" "MacTahoe-Light-solid") ;;
+                *"WhiteSur"*) config_themes+=("WhiteSur" "WhiteSur-Dark" "WhiteSur-Light" "WhiteSur-dark" "WhiteSur-light") ;;
+            esac
+        fi
+        
+        # Collect icon theme names  
+        if echo "$theme_config" | jq -e '.icons' > /dev/null; then
+            local icons_repo=$(echo "$theme_config" | jq -r '.icons.repo')
+            case "$icons_repo" in
+                *"MacTahoe"*) config_themes+=("MacTahoe" "MacTahoe-dark" "MacTahoe-light") ;;
+                *"WhiteSur"*) config_themes+=("WhiteSur" "WhiteSur-dark" "WhiteSur-light") ;;
+            esac
+        fi
+    done < <(jq -r '.themes | keys[]' "$CONFIG_FILE")
+    
+    # Check installed GTK themes
+    if [[ -d "$HOME/.themes" ]]; then
+        for installed_theme in "$HOME/.themes"/*; do
+            if [[ -d "$installed_theme" ]]; then
+                local theme_name=$(basename "$installed_theme")
+                local should_keep=false
+                
+                # Check if this theme should be kept
+                for config_theme in "${config_themes[@]}"; do
+                    if [[ "$theme_name" == "$config_theme"* ]] || [[ "$config_theme" == "$theme_name"* ]]; then
+                        should_keep=true
+                        break
+                    fi
+                done
+                
+                if [[ "$should_keep" == false ]]; then
+                    warning "Removing unused GTK theme: $theme_name"
+                    rm -rf "$installed_theme"
+                fi
+            fi
+        done
+    fi
+    
+    # Check installed icon themes
+    if [[ -d "$HOME/.local/share/icons" ]]; then
+        for installed_theme in "$HOME/.local/share/icons"/*; do
+            if [[ -d "$installed_theme" ]]; then
+                local theme_name=$(basename "$installed_theme")
+                local should_keep=false
+                
+                # Skip system themes
+                case "$theme_name" in
+                    "default"|"hicolor"|"Adwaita"|"breeze"*) should_keep=true ;;
+                esac
+                
+                if [[ "$should_keep" == false ]]; then
+                    # Check if this theme should be kept
+                    for config_theme in "${config_themes[@]}"; do
+                        if [[ "$theme_name" == "$config_theme"* ]] || [[ "$config_theme" == "$theme_name"* ]]; then
+                            should_keep=true
+                            break
+                        fi
+                    done
+                    
+                    if [[ "$should_keep" == false ]]; then
+                        warning "Removing unused icon theme: $theme_name"
+                        rm -rf "$installed_theme"
+                    fi
+                fi
+            fi
+        done
+    fi
+    
+    success "Theme cleanup completed"
+}
+
 # Install active theme
 install_theme() {
     local force="$1"
+    
+    # Clean up old themes first (unless --no-cleanup is specified)
+    if [[ "$force" != "--no-cleanup" ]]; then
+        cleanup_old_themes
+        echo
+    fi
     
     log "Installing all themes from config..."
     echo
@@ -357,7 +448,138 @@ set_theme() {
     jq ".active_theme = \"$theme_name\"" "$CONFIG_FILE" > "$CONFIG_FILE.tmp" && mv "$CONFIG_FILE.tmp" "$CONFIG_FILE"
     success "Active theme set to: $theme_name"
     echo
-    echo "Run './theme-manager.sh install' to install the new theme"
+    echo "Run './gtk.sh install' to install the new theme"
+}
+
+# Interactive theme selector with auto-install
+select_theme() {
+    local current_theme=$(get_active_theme)
+    
+    echo -e "${BLUE}🎨 Theme Selector${NC}"
+    echo
+    echo -e "Current active theme: ${GREEN}$current_theme${NC}"
+    echo
+    
+    # Get available themes into array
+    local themes=()
+    while IFS= read -r theme; do
+        themes+=("$theme")
+    done < <(jq -r '.themes | keys[]' "$CONFIG_FILE")
+    
+    if [[ ${#themes[@]} -eq 0 ]]; then
+        error "No themes found in config"
+        exit 1
+    fi
+    
+    echo "Available themes:"
+    for i in "${!themes[@]}"; do
+        local theme="${themes[i]}"
+        local theme_config=$(get_theme_config "$theme")
+        local name=$(echo "$theme_config" | jq -r '.name')
+        local desc=$(echo "$theme_config" | jq -r '.description')
+        
+        if [[ "$theme" == "$current_theme" ]]; then
+            echo -e "  ${GREEN}$((i+1))) $name${NC} (current)"
+        else
+            echo -e "  $((i+1))) $name"
+        fi
+        echo -e "      ${YELLOW}→${NC} $desc"
+        echo
+    done
+    
+    echo -n "Select theme (1-${#themes[@]}, or 0 to cancel): "
+    read -r choice
+    
+    # Handle cancel
+    if [[ "$choice" == "0" ]]; then
+        log "Selection cancelled"
+        exit 0
+    fi
+    
+    # Validate choice
+    if ! [[ "$choice" =~ ^[0-9]+$ ]] || [[ "$choice" -lt 1 ]] || [[ "$choice" -gt ${#themes[@]} ]]; then
+        error "Invalid choice"
+        exit 1
+    fi
+    
+    local selected_theme="${themes[$((choice-1))]}"
+    
+    # Don't change if same theme
+    if [[ "$selected_theme" == "$current_theme" ]]; then
+        log "Theme '$selected_theme' is already active"
+        exit 0
+    fi
+    
+    # Set the new theme
+    set_theme "$selected_theme"
+    
+    # Clean up old themes first
+    echo
+    log "Cleaning up old themes..."
+    cleanup_old_themes
+    
+    # Install only the selected theme
+    echo
+    log "Installing selected theme..."
+    install_single_theme "$selected_theme"
+}
+
+# Install specific theme only
+install_single_theme() {
+    local theme_name="$1"
+    local force="$2"
+    
+    if [[ -z "$theme_name" ]]; then
+        error "Theme name required"
+        return 1
+    fi
+    
+    if ! theme_exists "$theme_name"; then
+        error "Theme '$theme_name' not found in config"
+        return 1
+    fi
+    
+    local theme_config=$(get_theme_config "$theme_name")
+    local theme_display_name=$(echo "$theme_config" | jq -r '.name')
+    
+    log "Installing: $theme_display_name"
+    echo
+    
+    local failed=0
+    
+    # Install GTK theme if it exists
+    if echo "$theme_config" | jq -e '.gtk' > /dev/null; then
+        local gtk_repo=$(echo "$theme_config" | jq -r '.gtk.repo')
+        local gtk_cmd=$(echo "$theme_config" | jq -r '.gtk.install_cmd')
+        
+        install_component "GTK theme" "$gtk_repo" "$gtk_cmd" "$theme_name" || ((failed++))
+    fi
+    
+    # Install icons if they exist
+    if echo "$theme_config" | jq -e '.icons' > /dev/null; then
+        local icons_repo=$(echo "$theme_config" | jq -r '.icons.repo')
+        local icons_cmd=$(echo "$theme_config" | jq -r '.icons.install_cmd')
+        
+        install_component "Icon theme" "$icons_repo" "$icons_cmd" "$theme_name" || ((failed++))
+    fi
+    
+    # Install cursors if they exist
+    if echo "$theme_config" | jq -e '.cursors' > /dev/null; then
+        local cursors_repo=$(echo "$theme_config" | jq -r '.cursors.repo')
+        local cursors_cmd=$(echo "$theme_config" | jq -r '.cursors.install_cmd')
+        
+        install_component "Cursor theme" "$cursors_repo" "$cursors_cmd" "$theme_name" || ((failed++))
+    fi
+    
+    if [[ $failed -eq 0 ]]; then
+        success "Theme '$theme_display_name' installed successfully!"
+        
+        # Apply the theme automatically
+        apply_theme "$theme_name"
+    else
+        error "$failed component(s) failed to install for '$theme_display_name'"
+        return 1
+    fi
 }
 
 # Show help
@@ -367,10 +589,11 @@ show_help() {
     echo "Usage: $0 [command] [options]"
     echo
     echo "Commands:"
-    echo "  install [--force]    Install active theme"
+    echo "  install [--force]    Install active theme (auto-cleanup old themes)"
     echo "  list                 List available themes with sources"
     echo "  status               Show installation status"
     echo "  set <theme>          Set active theme"
+    echo "  select               Interactive theme selector (auto-cleanup old themes)"
     echo "  help                 Show this help"
     echo
     echo "Examples:"
@@ -401,6 +624,9 @@ main() {
                 exit 1
             fi
             set_theme "$2"
+            ;;
+        "select")
+            select_theme
             ;;
         "help"|*)
             show_help

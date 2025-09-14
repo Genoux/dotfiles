@@ -1,4 +1,4 @@
-import { toggleVolumePanel, currentIcon, toggleMute } from "../service";
+import { toggleVolumePanel, currentIcon, openVolumeManager } from "../service";
 
 export function VolumeButton({
   class: cls = "",
@@ -8,12 +8,13 @@ export function VolumeButton({
   return (
     <box class={`${cls}`}>
       <button 
-        onClicked={toggleMute}
+        canFocus={true}
+        onClicked={openVolumeManager}
       >
-        <image
-          iconName={currentIcon((icon: string) => icon)}
-          pixelSize={16}
-        />
+          <image
+            iconName={currentIcon((icon: string) => icon)}
+            pixelSize={13}
+          />
       </button>
     </box>
   );

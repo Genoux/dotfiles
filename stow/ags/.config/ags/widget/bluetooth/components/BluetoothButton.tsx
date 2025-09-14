@@ -1,5 +1,5 @@
 import GLib from "gi://GLib";
-import { isBluetoothOn } from "../service";
+import { isBluetoothOn, openBluetoothManager } from "../service";
 
 export function BluetoothButton({
   class: cls = "",
@@ -9,14 +9,13 @@ export function BluetoothButton({
   return (
     <box class={`${cls}`}>
       <button
-        onClicked={() => GLib.spawn_command_line_async("launch-bluetui")}
+        onClicked={openBluetoothManager}
       >
         <image
           iconName={isBluetoothOn((on) =>
             on ? "bluetooth-active-symbolic" : "bluetooth-disabled-symbolic"
           )}
-          pixelSize={16}
-          css="transform: scale(0.8);" // adjust as needed
+          pixelSize={12}
         />
       </button>
     </box>

@@ -3,35 +3,39 @@
 @use "../abstracts/mixins" as *;
 
 .workspaces {
+  border-radius: $radius-sm;
+  padding: $spacing-xs;
 
   .workspace {
-    border-radius: $radius-sm;
-    padding: $spacing-sm;
     min-width: $spacing-lg;
+    background-color: transparent;
     min-height: $spacing-lg;
-    transition: background-color $transition-normal;
+    transition: all 0.12s ease-in-out;
+    &:hover .workspace__indicator--occupied {
+      background-color: white;
+    }
   }
 
   .workspace__indicator {
     background-color: $fg-dim;
     border-radius: $radius-md;
-    transition: min-width $transition-normal;
     min-height: 2px;
-    min-width: $spacing-md;
+    min-width: $spacing-xs; // Default to smallest size
 
     &.workspace__indicator--focused {
       background-color: $white;
-      min-width: $spacing-xl;
+      min-width: $spacing-lg;
       min-height: 2px;
     }
 
     &.workspace__indicator--occupied {
+      transition: all 0.12s ease-in-out;
       background-color: $fg-dim;
-      min-width: $spacing-sm;
+      min-width: $spacing-md;
     }
 
     &.workspace__indicator--empty {
-      background-color: $fg-dim;
+      background-color: rgba($fg-dim, 0.5); // Make empty workspaces more subtle
       min-width: $spacing-xs;
     }
   }

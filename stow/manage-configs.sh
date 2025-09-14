@@ -47,6 +47,17 @@ setup_scripts() {
     fi
 }
 
+# Update desktop database function
+update_desktop_database() {
+    echo "🗃️  Updating desktop database..."
+    if command -v update-desktop-database >/dev/null 2>&1; then
+        update-desktop-database "$HOME/.local/share/applications" 2>/dev/null && \
+        echo "✅ Desktop database updated"
+    else
+        echo "ℹ️  update-desktop-database not found, skipping"
+    fi
+}
+
 # Simple conflict handling based on mode
 handle_conflict() {
     local target="$1"
@@ -138,6 +149,11 @@ case "$1" in
             
             if stow -t "$HOME" "$config" 2>/dev/null; then
                 echo "✅ Successfully linked $config"
+                
+                # Update desktop database for applications
+                if [[ "$config" == "applications" ]]; then
+                    update_desktop_database
+                fi
             else
                 echo "❌ Failed to link $config"
             fi
@@ -159,6 +175,11 @@ case "$1" in
             echo "✅ Successfully linked $2"
             if [ -L "$HOME/.config/$2" ]; then
                 echo "📁 Created: ~/.config/$2 -> $(readlink ~/.config/$2)"
+            fi
+            
+            # Update desktop database for applications
+            if [[ "$2" == "applications" ]]; then
+                update_desktop_database
             fi
         else
             echo "❌ Failed to link $2"
@@ -218,15 +239,15 @@ case "$1" in
                 fi
                 ;;
             "applications")
-                # Check if any application files are linked dynamically
-                while IFS= read -r -d '' stow_file; do
-                    relative_path="${stow_file#applications/}"
-                    target_file="$HOME/$relative_path"
-                    if [[ -L "$target_file" ]]; then
-                        linked=true
-                        break
-                    fi
-                done < <(find applications -type f -print0 2>/dev/null)
+                # Check if any symlinks exist that point to the applications directory
+                if [[ -d "$HOME/.local/share/applications" ]]; then
+                    while IFS= read -r -d '' target_file; do
+                        if [[ -L "$target_file" ]] && [[ "$(readlink "$target_file")" == *"dotfiles/stow/applications"* ]]; then
+                            linked=true
+                            break
+                        fi
+                    done < <(find "$HOME/.local/share/applications" -name "*.desktop" -print0 2>/dev/null)
+                fi
                 ;;
             "scripts")
                 # Check if any script files are linked in ~/.local/bin
@@ -241,7 +262,10 @@ case "$1" in
                 fi
                 ;;
             *)
-                if [ -L "$HOME/.config/$config" ]; then
+                # Check for any symlinks pointing to this stow package in common locations
+                if find "$HOME/.config" "$HOME/.local" -maxdepth 3 -type l 2>/dev/null | xargs readlink 2>/dev/null | grep -q "dotfiles/stow/$config" 2>/dev/null; then
+                    linked=true
+                elif [ -L "$HOME/.config/$config" ]; then
                     linked=true
                 fi
                 ;;

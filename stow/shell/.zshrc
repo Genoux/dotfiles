@@ -156,6 +156,19 @@ fi
 export XDG_RUNTIME_DIR=/run/user/$(id -u)
 export WAYLAND_DISPLAY=wayland-1
 
+# Steam fixes (cursor theme and display)
+export XCURSOR_THEME=AdwaitaLegacy
+
+# Force all GUI apps to use X11 (fixes Steam Wayland conflicts)
+export SDL_VIDEODRIVER=x11
+export GDK_BACKEND=x11
+export QT_QPA_PLATFORM=xcb
+export ELECTRON_OZONE_PLATFORM_HINT=x11
+
+# Steam-specific environment
+export STEAM_USE_DYNAMIC_VRS=0
+export __GL_THREADED_OPTIMIZATIONS=1
+
 
 
 
@@ -179,4 +192,9 @@ ZSH_HIGHLIGHT_STYLES[single-quoted-argument]='fg=yellow'
 ZSH_HIGHLIGHT_STYLES[double-quoted-argument]='fg=yellow'
 ZSH_HIGHLIGHT_STYLES[dollar-double-quoted-argument]='fg=cyan'
 ZSH_HIGHLIGHT_STYLES[back-quoted-argument]='fg=cyan'
+export PATH=~/.npm-global/bin:$PATH
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 export PATH=~/.npm-global/bin:$PATH

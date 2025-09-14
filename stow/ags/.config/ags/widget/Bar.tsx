@@ -11,7 +11,8 @@ import { TimeDisplay } from "./timedisplay";
 import { BluetoothButton } from "./bluetooth";
 import { NotificationPanelButton } from "./notificationpanel";
 import { VolumeButton } from "./volume";
-// MediaPanel window is instantiated globally in app.ts via MediaPopup
+import { InternetButton } from "./internet";
+import { KeyboardButton } from "./keyboard";
 
 export default function Bar(gdkmonitor: Gdk.Monitor) {
   const { TOP, LEFT, RIGHT, BOTTOM } = Astal.WindowAnchor;
@@ -23,11 +24,11 @@ export default function Bar(gdkmonitor: Gdk.Monitor) {
       class="bar"
       gdkmonitor={gdkmonitor}
       exclusivity={Astal.Exclusivity.EXCLUSIVE}
-      anchor={TOP | LEFT | RIGHT}
+      anchor={BOTTOM | LEFT | RIGHT}
       application={app}
     >
       <centerbox>
-        <box $type="start" spacing={3}>
+        <box $type="start" spacing={4}>
           <Workspaces />
           <SystemTray />
         </box>
@@ -36,12 +37,14 @@ export default function Bar(gdkmonitor: Gdk.Monitor) {
         </box>
         <box $type="end" spacing={3} halign={Gtk.Align.END}>
           <CavaVisualizer />
+          <VolumeButton  />
+          <InternetButton />
+          <BluetoothButton />
+          <KeyboardButton />
           <Weather />
           <SystemTemp />
           <TimeDisplay />
-          <VolumeButton  />
           <NotificationPanelButton />
-          <BluetoothButton />
         </box>
       </centerbox>
     </window>

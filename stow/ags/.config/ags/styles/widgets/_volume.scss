@@ -5,8 +5,6 @@
 @use "sass:color";
 
 .volume-popup {
-  @include text-primary;
-
   .volume-popup__container {
     border: $border-width solid $border;
     border-radius: $radius-md;
@@ -67,9 +65,5 @@
         background: $white;
       }
     }
-  }
-
-  .volume-panel__value {
-    @include text-primary;
   }
 }

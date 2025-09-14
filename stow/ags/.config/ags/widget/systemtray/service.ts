@@ -11,9 +11,9 @@ function filterValidItems(items: Tray.TrayItem[]): Tray.TrayItem[] {
       // More strict validation - ensure gicon is actually valid and not null/undefined
       const hasValidGicon = item && item.gicon && item.gicon.toString() !== "null";
       const hasValidId = item && item.id && item.id.length > 0;
-      const isNotInvalid = !item.get_property?.("invalid");
-      const isNotPassive = item.get_property?.("status") !== "Passive";
-      
+      const isNotInvalid = !(item as any).invalid;
+      const isNotPassive = (item as any).status !== "Passive";
+
       return hasValidGicon && hasValidId && isNotInvalid && isNotPassive;
     } catch (error) {
       console.warn("Invalid tray item detected, filtering out:", error);
@@ -28,7 +28,7 @@ function filterValidItems(items: Tray.TrayItem[]): Tray.TrayItem[] {
       const title = item.title || "untitled";
       const id = item.id || "unknown";
       const identifier = `${title}:${id}`;
-      
+
       if (seenIdentifiers.has(identifier)) {
         return false; // Skip duplicate
       }
@@ -44,6 +44,6 @@ function filterValidItems(items: Tray.TrayItem[]): Tray.TrayItem[] {
 }
 
 // Create binding that filters items
-export const trayItems = createBinding(tray, "items", (items: Tray.TrayItem[]) => {
+export const trayItems = createBinding(tray, "items").as((items: Tray.TrayItem[]) => {
   return filterValidItems(items);
 });

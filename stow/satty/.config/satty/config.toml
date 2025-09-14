@@ -1,0 +1,6 @@
+[general]
+early-exit = true
+copy-command = "wl-copy"
+initial-tool = "crop"
+default-hide-toolbars = false
+fullscreen = false

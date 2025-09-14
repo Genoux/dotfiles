@@ -1,4 +1,5 @@
 @use "./abstracts/mixins" as *;
+@use "./abstracts/variables" as *;
 
 @use "widgets/bar";
 @use "widgets/windowtitle";
@@ -8,4 +9,12 @@
 
 * {
   font-family: "SF Pro Text", monospace;
+  letter-spacing: 0.04em; 
+  font-size: 11.5px;
+  font-weight: 400;
+}
+
+// Apply button reset to all button elements
+button {
+  @include button-base;
 }

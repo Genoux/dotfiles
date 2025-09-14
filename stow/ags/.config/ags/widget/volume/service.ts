@@ -1,5 +1,6 @@
 import Wp from "gi://AstalWp";
 import { createBinding, createState } from "ags";
+import GLib from "gi://GLib";
 
 // AstalWp (WirePlumber) service for audio control
 const wp = Wp.get_default();
@@ -18,6 +19,9 @@ export const [currentMuted, setCurrentMuted] = createState(false);
 // Derived state for icon - needs to react to both volume and mute changes
 export const [currentIcon, setCurrentIcon] = createState("audio-volume-muted-symbolic");
 
+// Debug initial state
+console.log("[Volume Debug] Initial state - Volume: 0, Muted: false, Icon: audio-volume-muted-symbolic");
+
 function clamp01(value: number): number {
   return Math.max(0, Math.min(1, value));
 }
@@ -26,6 +30,7 @@ function syncFromSpeaker(spk: any) {
   if (!spk) return;
   const vol = clamp01(spk.volume ?? 0);
   const muted = !!(spk.mute ?? false);
+  console.log(`[Volume Debug] syncFromSpeaker - Volume: ${vol}, Muted: ${muted}, Raw mute: ${spk.mute}`);
   setCurrentVolume(vol);
   setCurrentMuted(muted);
   setCurrentIcon(getVolumeIcon(vol, muted));
@@ -45,26 +50,38 @@ currentMuted((muted) => {
 
 // Wait for WirePlumber to be ready, then initialize
 wp.connect("ready", () => {
+  console.log("[Volume Debug] WirePlumber ready event fired");
   const spk = wp.audio.default_speaker;
+  console.log("[Volume Debug] Default speaker:", spk);
   if (spk) {
     syncFromSpeaker(spk);
+  } else {
+    console.log("[Volume Debug] No default speaker found on ready");
   }
 });
 
 // Also listen for speaker changes and property updates
 speaker((spk) => {
-  if (!spk) return spk;
+  if (!spk) {
+    console.log("[Volume Debug] Speaker binding returned null");
+    return spk;
+  }
 
+  console.log("[Volume Debug] Speaker binding updated, speaker:", spk);
   // Initial sync
   syncFromSpeaker(spk);
 
   // Listen for external changes
   spk.connect("notify::volume", () => {
-    setCurrentVolume(clamp01(spk.volume ?? 0));
+    const newVol = clamp01(spk.volume ?? 0);
+    console.log("[Volume Debug] Volume notify event, new volume:", newVol);
+    setCurrentVolume(newVol);
   });
 
   spk.connect("notify::mute", () => {
-    setCurrentMuted(!!(spk.mute ?? false));
+    const newMute = !!(spk.mute ?? false);
+    console.log("[Volume Debug] Mute notify event, new mute:", newMute);
+    setCurrentMuted(newMute);
   });
 
   return spk;
@@ -166,5 +183,13 @@ export function getVolumeIcon(volume?: number, muted?: boolean): string {
     return "audio-volume-medium-symbolic";
   } else {
     return "audio-volume-low-symbolic";
+  }
+}
+
+export function openVolumeManager() {
+  try {
+      GLib.spawn_command_line_async(`${GLib.get_home_dir()}/.local/bin/launch-wiremix`);
+  } catch (error) {
+    console.error("Failed to launch launch-wiremix:", error);
   }
 }
