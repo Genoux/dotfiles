@@ -46,13 +46,44 @@
     {
       "name": "clipboard",
       "prefix": "clip"
-    },
-    {
-      "name": "emojis",
-      "prefix": ":"
     }
   ],
   "builtins": {
+    "emojis": {
+      "name": "emojis",
+      "prefix": ":",
+      "src_options": {
+        "max_entries": 0
+      }
+    },
+    "finder": {
+      "name": "finder",
+      "prefix": "/",
+      "src_options": {
+        "max_entries": 0
+      }
+    },
+    "calculator": {
+      "name": "calculator",
+      "prefix": "=",
+      "src_options": {
+        "max_entries": 0
+      }
+    },
+    "websearch": {
+      "name": "websearch",
+      "prefix": "?",
+      "src_options": {
+        "max_entries": 0
+      }
+    },
+    "clipboard": {
+      "name": "clipboard",
+      "prefix": "clip",
+      "src_options": {
+        "max_entries": 0
+      }
+    },
     "ai": {
       "enabled": true,
       "anthropic": {
