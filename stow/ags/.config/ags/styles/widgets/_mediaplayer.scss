@@ -1,0 +1,11 @@
+@use "../abstracts/variables" as *;
+@use "../abstracts/theme" as *;
+@use "../abstracts/mixins" as *;
+
+.mediaplayer {
+  .media-control {
+    &:hover {
+      opacity: 0.6;
+    }
+  }
+}

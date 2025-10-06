@@ -13,6 +13,7 @@ import { NotificationPanelButton } from "./notificationpanel";
 import { VolumeButton } from "./volume";
 import { InternetButton } from "./internet";
 import { KeyboardButton } from "./keyboard";
+import { MediaPlayerButton } from "./mediaplayer";
 
 export default function Bar(gdkmonitor: Gdk.Monitor) {
   const { TOP, LEFT, RIGHT, BOTTOM } = Astal.WindowAnchor;
@@ -36,8 +37,10 @@ export default function Bar(gdkmonitor: Gdk.Monitor) {
           <WindowTitle />
         </box>
         <box $type="end" spacing={3} halign={Gtk.Align.END}>
+          <MediaPlayerButton />
+
           <CavaVisualizer />
-          <VolumeButton  />
+          <VolumeButton />
           <InternetButton />
           <BluetoothButton />
           <KeyboardButton />
