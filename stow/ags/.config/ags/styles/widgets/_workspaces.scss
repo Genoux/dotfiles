@@ -10,22 +10,29 @@
     min-width: $spacing-lg;
     background-color: transparent;
     min-height: $spacing-lg;
-    transition: all 0.12s ease-in-out;
+    transition: all 0.1s ease-in-out;
+
     &:hover .workspace__indicator--occupied {
       background-color: white;
     }
+
+    &:hover:not(.workspace--focused) {
+      background-color: rgba($white, 0.05);
+    }
+
   }
 
   .workspace__indicator {
     background-color: $fg-dim;
     border-radius: $radius-md;
-    min-height: 2px;
-    min-width: $spacing-xs; // Default to smallest size
+    min-width: $spacing-xs;
+
 
     &.workspace__indicator--focused {
       background-color: $white;
-      min-width: $spacing-lg;
-      min-height: 2px;
+      min-width: 8px;
+      min-height: 8px;
+      border-radius: 50%;
     }
 
     &.workspace__indicator--occupied {
@@ -35,8 +42,16 @@
     }
 
     &.workspace__indicator--empty {
-      background-color: rgba($fg-dim, 0.5); // Make empty workspaces more subtle
+      background-color: rgba($fg-dim, 0.5);
       min-width: $spacing-xs;
+    }
+  }
+
+  .workspace__number {
+    &--focused {
+      background-color: rgba($white, 0.05);
+      border-radius: $radius-sm;
+      padding: 2px 6px;
     }
   }
 }

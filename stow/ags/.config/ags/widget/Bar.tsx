@@ -29,7 +29,7 @@ export default function Bar(gdkmonitor: Gdk.Monitor) {
       application={app}
     >
       <centerbox>
-        <box $type="start" spacing={4}>
+        <box $type="start">
           <Workspaces />
           <SystemTray />
         </box>
@@ -38,7 +38,6 @@ export default function Bar(gdkmonitor: Gdk.Monitor) {
         </box>
         <box $type="end" spacing={3} halign={Gtk.Align.END}>
           <MediaPlayerButton />
-
           <CavaVisualizer />
           <VolumeButton />
           <InternetButton />

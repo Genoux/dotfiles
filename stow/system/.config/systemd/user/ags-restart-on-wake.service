@@ -1,0 +1,11 @@
+[Unit]
+Description=Restart AGS after suspend
+After=suspend.target hibernate.target hybrid-sleep.target suspend-then-hibernate.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/pkill -f "ags run"
+ExecStart=/usr/bin/ags run /home/john/.config/ags
+
+[Install]
+WantedBy=suspend.target hibernate.target hybrid-sleep.target suspend-then-hibernate.target

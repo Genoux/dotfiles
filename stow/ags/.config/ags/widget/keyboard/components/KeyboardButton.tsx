@@ -7,7 +7,7 @@ export function KeyboardButton({ class: cls }: { class?: string }) {
       class={`keyboard-button ${cls ?? ""}`}
       onClicked={switchKeyboardLayout}
     >
-      <label label={keyboardLayout} />
+      <label label={keyboardLayout((layout) => layout)} />
     </button>
   );
 }

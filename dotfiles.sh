@@ -331,7 +331,7 @@ while true; do
             done
             echo "🎉 All configs processed!"
             cd "$SCRIPT_DIR"  # Return to dotfiles root
-            
+
             echo
             echo -e "${GREEN}Complete setup finished!${NC}"
             ;;

@@ -1,43 +1,48 @@
 import { For } from "ags";
 import { Gtk } from "ags/gtk4";
-import { workspaces, focusedWorkspace, workspaceClients } from "../service";
+import Hyprland from "gi://AstalHyprland";
+import { focusedWorkspace, workspaces, hypr } from "../service";
 
 export function Workspaces({ class: cls }: { class?: string }) {
   return (
     <box class={`workspaces ${cls ?? ""}`} spacing={2}>
       <For each={workspaces}>
-        {(ws: any) => (
-          <button
-            widthRequest={12}
-            class={focusedWorkspace((f: any) =>
-              f?.id === ws.id ? "workspace workspace--focused" : "workspace"
-            )}
-            onClicked={() => {
-              try {
-                ws.focus();
-              } catch (e) {
-                console.warn(`Failed to focus workspace ${ws.id}:`, e);
-              }
-            }}
-          >
-            <box
-              heightRequest={6}
-              widthRequest={2}
-              halign={Gtk.Align.CENTER}
-              valign={Gtk.Align.CENTER}
-              class={focusedWorkspace((f: any) => {
-                const isFocused = f?.id === ws.id;
-                if (isFocused) {
-                  return "workspace__indicator workspace__indicator--focused";
+        {(ws: Hyprland.Workspace) => {
+          const wsId = Number(ws.id);
+          const hasClients = hypr ? hypr.get_clients().some((c: any) => Number(c.workspace?.id) === wsId) : false;
+
+          return (
+            // biome-ignore lint/a11y/useButtonType: GTK buttons don't support type prop
+            <button
+              class={focusedWorkspace((f: Hyprland.Workspace) =>
+                Number(f?.id) === wsId ? "workspace workspace--focused" : "workspace"
+              )}
+              onClicked={() => {
+                try {
+                  ws.focus();
+                } catch (e) {
+                  console.warn(`Failed to focus workspace ${wsId}:`, e);
                 }
-                
-                // For now, assume non-focused workspaces are occupied if they exist
-                // This will give proper animations while we work on client detection
-                return "workspace__indicator workspace__indicator--occupied";
-              })}
-            />
-          </button>
-        )}
+              }}
+            >
+              <box
+                halign={Gtk.Align.CENTER}
+                valign={Gtk.Align.CENTER}
+                class={focusedWorkspace((f: Hyprland.Workspace) => {
+                  const isFocused = Number(f?.id) === wsId;
+                  if (isFocused && hasClients) {
+                    return "workspace__indicator workspace__indicator--focused";
+                  }
+                  return isFocused ? "workspace__number workspace__number--focused" : "workspace__number";
+                })}
+              >
+                <box visible={focusedWorkspace((f: Hyprland.Workspace) => Number(f?.id) !== wsId || !hasClients)}>
+                  <label label={String(wsId)} />
+                </box>
+              </box>
+            </button>
+          );
+        }}
       </For>
     </box>
   );

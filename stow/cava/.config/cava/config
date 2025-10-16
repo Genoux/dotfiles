@@ -6,8 +6,6 @@ bars = 8
 
 [input]
 method = pulse
-source = auto
-sample_rate = 44100
 
 [output]
 method = raw
@@ -18,7 +16,7 @@ ascii_max_range = 1000
 ; mode = normal
 
 # Accepts only non-negative values.
-#framerate = 60
+framerate = 60
 
 # 'autosens' will attempt to decrease sensitivity if the bars peak. 1 = on, 0 = off
 # new as of 0.6.0 autosens of low values (dynamic range)
@@ -79,28 +77,24 @@ ascii_max_range = 1000
 # Gradient mode, only hex defined colors are supported,
 # background must also be defined in hex or remain commented out. 1 = on, 0 = off.
 # You can define as many as 8 different colors. They range from bottom to top of screen
-; gradient = 0
+; gradient = 1
 
 [smoothing]
 
 # Percentage value for integral smoothing. Takes values from 0 - 100.
 # Higher values means smoother, but less precise. 0 to disable.
 # DEPRECATED as of 0.8.0, use noise_reduction instead
-; integral = 77
+; integral = 12
 
 # Disables or enables the so-called "Monstercat smoothing" with or without "waves". Set to 0 to disable.
 ; monstercat = 0
 ; waves = 0
 
-# Set gravity percentage for "drop off". Higher values means bars will drop faster.
-# Accepts only non-negative values. 50 means half gravity, 200 means double. Set to 0 to disable "drop off".
-# DEPRECATED as of 0.8.0, use noise_reduction instead
-; gravity = 100
 
 # Noise reduction, int 0 - 100. default 77
 # the raw visualization is very noisy, this factor adjusts the integral and gravity filters to keep the signal smooth
 # 100 will be very slow and smooth, 0 will be fast but noisy.
-; noise_reduction = 77
+; noise_reduction = 2
 
 [eq]
 
