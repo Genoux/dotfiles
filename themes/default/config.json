@@ -1,0 +1,27 @@
+{
+  "$schema": "Theme configuration",
+  "description": "Default dark theme",
+  
+  "mappings": {
+    "ags.scss": "~/.config/ags/style.scss",
+    "hypr.conf": "~/.config/hypr/theme.conf",
+    "kitty.conf": "~/.config/kitty/theme.conf",
+    "starship.toml": "~/.config/starship.toml",
+    "swaync.css": "~/.config/swaync/style.css",
+    "swayosd.css": "~/.config/swayosd/style.css",
+    "yazi.toml": "~/.config/yazi/theme.toml"
+  },
+  
+  "gtk": {
+    "name": "MacTahoe Dark",
+    "theme": "MacTahoe-Dark",
+    "icons": "MacTahoe-dark",
+    "install": {
+      "gtk_repo": "https://github.com/vinceliuice/MacTahoe-gtk-theme.git",
+      "gtk_cmd": "./install.sh -l",
+      "icons_repo": "https://github.com/vinceliuice/MacTahoe-icon-theme.git",
+      "icons_cmd": "./install.sh"
+    }
+  }
+}
+

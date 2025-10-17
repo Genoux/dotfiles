@@ -1,87 +1,9 @@
-/* SwayOSD Theme - Managed by dotfiles theme system */
-@import "../../../themes/current/swayosd.css";
-@use "sass:color";
-
-/* Main window styling */
-window {
-  background-color: @bg;
-  border-radius: 12px;
-  border: 1px solid @border;
-  padding: 20px;
-  font-family: "SF Pro Text", sans-serif;
-  font-size: 14px;
-  color: @fg;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-}
-
-/* Progress bar container */
-#container {
-  background-color: @bg-card;
-  border-radius: 8px;
-  padding: 8px;
-  margin: 8px 0;
-}
-
-/* Progress bar styling */
-progressbar {
-  min-height: 6px;
-  border-radius: 3px;
-  background-color: @border;
-}
-
-progressbar>progress {
-  background-color: @accent;
-  border-radius: 3px;
-  min-height: 6px;
-}
-
-/* Icon styling */
-image {
-  color: @fg;
-  padding-right: 12px;
-  -gtk-icon-size: 24px;
-}
-
-/* Label styling */
-label {
-  color: @fg;
-  font-weight: 500;
-  margin: 4px 0;
-}
-
-/* Specific styling for different OSD types */
-.capslock,
-.numlock,
-.scrolllock {
-  background-color: color.adjust(@yellow, $alpha: -0.8);
-  border: 1px solid color.adjust(@yellow, $alpha: -0.7);
-}
-
-.capslock label,
-.numlock label,
-.scrolllock label {
-  color: @yellow;
-}
-
-/* Volume specific styling */
-.volume {
-  min-width: 200px;
-}
-
-.volume progressbar>progress {
-  background-color: @green;
-}
-
-/* Brightness specific styling */
-.brightness {
-  min-width: 200px;
-}
-
-.brightness progressbar>progress {
-  background-color: @yellow;
-}
-
-/* Muted state */
-.muted progressbar>progress {
-  background-color: @red;
-}
+/* Dark theme variables for swayosd */
+@define-color fg rgba(250, 250, 250, 1.0);
+@define-color bg rgba(22, 22, 27, 0.8);
+@define-color bg-card rgba(38, 38, 42, 0.3);
+@define-color accent rgba(180, 180, 180, 1.0);
+@define-color border rgba(255, 255, 255, 0.1);
+@define-color red rgba(255, 100, 100, 1.0);
+@define-color green rgba(100, 200, 100, 1.0);
+@define-color yellow rgba(255, 220, 80, 1.0);

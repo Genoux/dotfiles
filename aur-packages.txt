@@ -77,11 +77,11 @@ pgadmin4-server-debug
 phonon-qt5
 phonon-qt5-vlc
 postman-bin
+python310
 python-gpustat
 python-materialyoucolor
 python-materialyoucolor-debug
 python-nvidia-ml-py
-python310
 quickshell-git
 realvnc-vnc-server-debug
 rustdesk

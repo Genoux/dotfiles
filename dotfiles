@@ -1,0 +1,420 @@
+#!/bin/bash
+# Dotfiles Daily Management CLI
+
+# Get dotfiles directory
+export DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Load helpers
+source "$DOTFILES_DIR/install/helpers/all.sh"
+
+# Initialize logging for daily operations
+init_logging "daily"
+
+# Ensure gum is available
+ensure_gum
+
+# Show usage
+show_usage() {
+    if command -v gum &>/dev/null; then
+        gum style --bold "Dotfiles Manager"
+        echo
+        gum style --foreground 240 "Usage: dotfiles <command> [subcommand] [options]"
+        echo
+        echo "Commands:"
+        echo
+        echo -e "\e[38;5;14m  status\e[0m\e[38;5;240m               Show system state\e[0m"
+        echo -e "\e[38;5;14m  install\e[0m\e[38;5;240m              Run full installation\e[0m"
+        echo
+        echo -e "\e[38;5;14m  packages\e[0m\e[38;5;240m             Manage packages\e[0m"
+        echo "    install                Install from txt files"
+        echo "    sync                   Update txt files from system"
+        echo "    update                 System update (yay -Syu)"
+        echo "    status                 Show package info"
+        echo
+        echo -e "\e[38;5;14m  config\e[0m\e[38;5;240m               Manage configurations\e[0m"
+        echo "    link [name]            Link configs (all or specific)"
+        echo "    unlink [name]          Unlink configs"
+        echo "    status                 Show link status"
+        echo
+        echo -e "\e[38;5;14m  theme\e[0m\e[38;5;240m                Manage theme\e[0m"
+        echo "    apply                  Apply theme files"
+        echo "    install-gtk            Install GTK theme"
+        echo "    status                 Show theme info"
+        echo
+        echo -e "\e[38;5;14m  shell\e[0m\e[38;5;240m                Shell management\e[0m"
+        echo "    setup                  Setup zsh + omz + plugins"
+        echo "    status                 Show shell info"
+        echo
+        echo -e "\e[38;5;14m  hyprland\e[0m\e[38;5;240m             Hyprland configuration\e[0m"
+        echo "    setup                  Configure monitors"
+        echo "    status                 Show Hyprland info"
+        echo
+        echo -e "\e[38;5;14m  menu\e[0m\e[38;5;240m                 Show interactive menu\e[0m"
+    else
+        echo "Dotfiles Manager"
+        echo ""
+        echo "Usage: dotfiles <command> [subcommand] [options]"
+        echo ""
+        echo "Commands:"
+        echo "  status                    Show system state"
+        echo "  install                   Run full installation"
+        echo ""
+        echo "  packages                  Manage packages"
+        echo "    install                 Install from txt files"
+        echo "    sync                    Update txt files from system"
+        echo "    update                  System update (yay -Syu)"
+        echo "    status                  Show package info"
+        echo ""
+        echo "  config                    Manage configurations"
+        echo "    link [name]             Link configs (all or specific)"
+        echo "    unlink [name]           Unlink configs"
+        echo "    status                  Show link status"
+        echo ""
+        echo "  theme                     Manage theme"
+        echo "    apply                   Apply theme files"
+        echo "    install-gtk             Install GTK theme"
+        echo "    status                  Show theme info"
+        echo ""
+        echo "  shell                     Shell management"
+        echo "    setup                   Setup zsh + omz + plugins"
+        echo "    status                  Show shell info"
+        echo ""
+        echo "  hyprland                  Hyprland configuration"
+        echo "    setup                   Configure monitors"
+        echo "    status                  Show Hyprland info"
+        echo ""
+        echo "  menu                      Show interactive menu"
+    fi
+}
+
+# Show overall system status
+show_status() {
+    clear_screen "System Status"
+    
+    # Hardware info
+    show_hardware_info
+    
+    # Package status
+    source "$DOTFILES_DIR/lib/package.sh"
+    packages_status
+    echo
+    
+    # Config status
+    source "$DOTFILES_DIR/lib/config.sh"
+    config_status
+    echo
+    
+    # Theme status
+    source "$DOTFILES_DIR/lib/theme.sh"
+    theme_status
+    echo
+    
+    # Shell status
+    source "$DOTFILES_DIR/lib/shell.sh"
+    shell_status
+    echo
+    
+    # Hyprland status
+    source "$DOTFILES_DIR/lib/hyprland.sh"
+    hyprland_status
+}
+
+# Interactive menu
+show_menu() {
+    while true; do
+        clear_screen "Dotfiles Manager"
+        
+        local action=$(choose_option \
+            "📊 System Status" \
+            "🚀 Full Install" \
+            "" \
+            "📦 Manage Packages" \
+            "⚙️ Manage Configs" \
+            "🎨 Manage Themes" \
+            "🐚 Shell Setup" \
+            "🖥️ Hyprland Setup" \
+            "" \
+            "❌ Exit")
+        
+        case "$action" in
+            "📊 System Status")
+                show_status
+                echo
+                read -p "Press Enter to continue..."
+                ;;
+            "🚀 Full Install")
+                clear_screen
+                if confirm "Run full installation?"; then
+                    bash "$DOTFILES_DIR/install.sh"
+                fi
+                ;;
+            "📦 Manage Packages")
+                menu_packages
+                ;;
+            "⚙️ Manage Configs")
+                menu_configs
+                ;;
+            "🎨 Manage Themes")
+                menu_themes
+                ;;
+            "🐚 Shell Setup")
+                menu_shell
+                ;;
+            "🖥️ Hyprland Setup")
+                menu_hyprland
+                ;;
+            "❌ Exit")
+                log_info "Goodbye!"
+                exit 0
+                ;;
+        esac
+    done
+}
+
+# Package management menu
+menu_packages() {
+    while true; do
+        clear_screen "Package Management"
+        
+        # Show current package count
+        source "$DOTFILES_DIR/lib/package.sh"
+        local pkg_count=$(grep -cvE '^#|^$' "$DOTFILES_DIR/packages.txt" 2>/dev/null || echo 0)
+        local aur_count=$(grep -cvE '^#|^$' "$DOTFILES_DIR/aur-packages.txt" 2>/dev/null || echo 0)
+        show_info "Current" "$pkg_count official, $aur_count AUR packages"
+        echo
+        
+        local action=$(choose_option \
+            "📥 Install from lists (txt → system)" \
+            "📝 Update lists (system → txt)" \
+            "⬆️  System update (yay -Syu)" \
+            "📊 Show package status" \
+            "← Back")
+        
+        case "$action" in
+            "📥 Install from lists (txt → system)")
+                clear_screen
+                packages_install
+                echo
+                read -p "Press Enter to continue..."
+                ;;
+            "📝 Update lists (system → txt)")
+                clear_screen
+                packages_sync
+                echo
+                read -p "Press Enter to continue..."
+                ;;
+            "⬆️  System update (yay -Syu)")
+                clear_screen
+                packages_update
+                echo
+                read -p "Press Enter to continue..."
+                ;;
+            "📊 Show package status")
+                clear_screen
+                packages_status
+                echo
+                read -p "Press Enter to continue..."
+                ;;
+            "← Back")
+                return
+                ;;
+        esac
+    done
+}
+
+# Config management menu
+menu_configs() {
+    while true; do
+        clear_screen "Config Management"
+        
+        source "$DOTFILES_DIR/lib/config.sh"
+        config_status
+        echo
+        
+        local action=$(choose_option \
+            "🔗 Link all configs" \
+            "🔗 Link specific config" \
+            "🔓 Unlink specific config" \
+            "🔓 Unlink all configs" \
+            "← Back")
+        
+        case "$action" in
+            "🔗 Link all configs")
+                clear_screen
+                config_link_all
+                echo
+                read -p "Press Enter to continue..."
+                ;;
+            "🔗 Link specific config")
+                config_select "link"
+                ;;
+            "🔓 Unlink specific config")
+                config_select "unlink"
+                ;;
+            "🔓 Unlink all configs")
+                clear_screen
+                if confirm "Unlink all configs?"; then
+                    config_unlink_all
+                fi
+                echo
+                read -p "Press Enter to continue..."
+                ;;
+            "← Back")
+                return
+                ;;
+        esac
+    done
+}
+
+# Theme management menu
+menu_themes() {
+    while true; do
+        clear_screen "Theme Management"
+        
+        source "$DOTFILES_DIR/lib/theme.sh"
+        theme_status
+        echo
+        
+        local action=$(choose_option \
+            "📋 List all themes" \
+            "🎨 Switch theme" \
+            "← Back")
+        
+        case "$action" in
+            "📋 List all themes")
+                clear_screen
+                theme_list
+                echo
+                read -p "Press Enter to continue..."
+                ;;
+            "🎨 Switch theme")
+                theme_select
+                ;;
+            "← Back")
+                return
+                ;;
+        esac
+    done
+}
+
+# Shell management menu
+menu_shell() {
+    clear_screen "Shell Setup"
+    
+    source "$DOTFILES_DIR/lib/shell.sh"
+    shell_status
+    echo
+    
+    if confirm "Run shell setup?"; then
+        shell_setup
+    fi
+    
+    echo
+    read -p "Press Enter to continue..."
+}
+
+# Hyprland management menu
+menu_hyprland() {
+    clear_screen "Hyprland Setup"
+    
+    source "$DOTFILES_DIR/lib/hyprland.sh"
+    hyprland_status
+    echo
+    
+    if confirm "Run Hyprland setup?"; then
+        hyprland_setup
+    fi
+    
+    echo
+    read -p "Press Enter to continue..."
+}
+
+# Main command routing
+main() {
+    local command="${1:-menu}"
+    local subcommand="${2:-}"
+    local arg3="${3:-}"
+    
+    case "$command" in
+        status)
+            show_status
+            ;;
+        install)
+            bash "$DOTFILES_DIR/install.sh"
+            ;;
+        packages|pkg)
+            source "$DOTFILES_DIR/lib/package.sh"
+            case "$subcommand" in
+                install) packages_install ;;
+                sync) packages_sync ;;
+                update) packages_update ;;
+                status|"") packages_status ;;
+                *) log_error "Unknown subcommand: $subcommand"; show_usage; exit 1 ;;
+            esac
+            ;;
+        config|cfg)
+            source "$DOTFILES_DIR/lib/config.sh"
+            case "$subcommand" in
+                link) 
+                    if [[ -n "$arg3" ]]; then
+                        config_link "$arg3"
+                    else
+                        config_link_all
+                    fi
+                    ;;
+                unlink)
+                    if [[ -n "$arg3" ]]; then
+                        config_unlink "$arg3"
+                    else
+                        config_unlink_all
+                    fi
+                    ;;
+                status|"") config_status ;;
+                *) log_error "Unknown subcommand: $subcommand"; show_usage; exit 1 ;;
+            esac
+            ;;
+        theme)
+            source "$DOTFILES_DIR/lib/theme.sh"
+            case "$subcommand" in
+                apply) theme_apply ;;
+                install-gtk) theme_install_gtk ;;
+                status|"") theme_status ;;
+                *) log_error "Unknown subcommand: $subcommand"; show_usage; exit 1 ;;
+            esac
+            ;;
+        shell)
+            source "$DOTFILES_DIR/lib/shell.sh"
+            case "$subcommand" in
+                setup) shell_setup ;;
+                status|"") shell_status ;;
+                *) log_error "Unknown subcommand: $subcommand"; show_usage; exit 1 ;;
+            esac
+            ;;
+        hyprland)
+            source "$DOTFILES_DIR/lib/hyprland.sh"
+            case "$subcommand" in
+                setup) hyprland_setup ;;
+                status|"") hyprland_status ;;
+                *) log_error "Unknown subcommand: $subcommand"; show_usage; exit 1 ;;
+            esac
+            ;;
+        menu)
+            show_menu
+            ;;
+        help|--help|-h|"")
+            show_usage
+            ;;
+        *)
+            log_error "Unknown command: $command"
+            show_usage
+            exit 1
+            ;;
+    esac
+    
+    # Finish logging
+    finish_logging
+}
+
+# Run main
+main "$@"
+
