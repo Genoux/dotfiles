@@ -19,11 +19,9 @@ try {
   print(`Could not read cava config, using default BAR_COUNT: ${e}`);
 }
 
-export const [barsAccessor, setBars] = createState<number[]>(
-  Array(BAR_COUNT).fill(0)
-);
+export const [barsAccessor, setBars] = createState<number[]>(Array(BAR_COUNT).fill(0));
 
-const norm = (v: number) => Math.round(2 + (Math.min(v, 1000) / 1000) * 14);
+const norm = (v: number) => Math.round(2 + (Math.min(v, 1000) / 1000) * 10);
 
 subprocess(
   ["cava", "-p", CFG],
@@ -37,5 +35,3 @@ subprocess(
   },
   (err) => console.error("cava crash:", err)
 );
-
-export { BAR_COUNT };

@@ -4,11 +4,7 @@ import GLib from "gi://GLib";
 export const bluetooth = Bluetooth.get_default();
 import { createBinding } from "ags";
 
-export const isBluetoothOn = createBinding(
-  bluetooth as any,
-  "is-powered"
-);
-
+export const isBluetoothOn = createBinding(bluetooth as any, "is-powered");
 
 export function openBluetoothManager() {
   try {

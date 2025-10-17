@@ -3,47 +3,32 @@ import { createBinding } from "ags";
 
 const tray = Tray.get_default();
 
-// Function to filter valid tray items
+// Filter and deduplicate tray items
 function filterValidItems(items: Tray.TrayItem[]): Tray.TrayItem[] {
-  // First filter for basic validity with strict gicon validation
-  const validItems = items.filter(item => {
+  const validItems = items.filter((item) => {
     try {
-      // More strict validation - ensure gicon is actually valid and not null/undefined
-      const hasValidGicon = item && item.gicon && item.gicon.toString() !== "null";
-      const hasValidId = item && item.id && item.id.length > 0;
-      const isNotInvalid = !(item as any).invalid;
-      const isNotPassive = (item as any).status !== "Passive";
-
-      return hasValidGicon && hasValidId && isNotInvalid && isNotPassive;
-    } catch (error) {
-      console.warn("Invalid tray item detected, filtering out:", error);
+      return item && item.gicon && item.id;
+    } catch {
       return false;
     }
   });
 
-  // Deduplicate items by both title and id to prevent multiple empty icons from the same app
-  const seenIdentifiers = new Set<string>();
-  const deduplicatedItems = validItems.filter(item => {
-    try {
-      const title = item.title || "untitled";
-      const id = item.id || "unknown";
-      const identifier = `${title}:${id}`;
-
-      if (seenIdentifiers.has(identifier)) {
-        return false; // Skip duplicate
-      }
-      seenIdentifiers.add(identifier);
-      return true;
-    } catch (error) {
-      console.warn("Error processing tray item identifier:", error);
-      return false;
-    }
+  // Deduplicate by id
+  const seen = new Set<string>();
+  return validItems.filter((item) => {
+    if (seen.has(item.id)) return false;
+    seen.add(item.id);
+    return true;
   });
-
-  return deduplicatedItems;
 }
 
-// Create binding that filters items
-export const trayItems = createBinding(tray, "items").as((items: Tray.TrayItem[]) => {
-  return filterValidItems(items);
-});
+export const trayItems = createBinding(tray, "items").as(filterValidItems);
+
+// Handle tray item click - activates/focuses the app
+export function handleTrayClick(item: Tray.TrayItem) {
+  try {
+    item.activate(0, 0);
+  } catch (error) {
+    console.error(`Failed to activate tray item ${item.id}:`, error);
+  }
+}

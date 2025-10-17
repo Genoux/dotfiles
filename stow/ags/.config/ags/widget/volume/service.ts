@@ -19,25 +19,21 @@ function getVolumeIcon(volume: number, muted: boolean): string {
 }
 
 // Poll volume state every 200ms for responsive updates
-export const currentIcon = createPoll(
-  "audio-volume-high-symbolic",
-  200,
-  () => {
-    try {
-      const spk = wp.audio.default_speaker;
-      if (spk) {
-        const volume = spk.volume;
-        const muted = spk.mute;
-        const icon = getVolumeIcon(volume, muted);
-        return icon;
-      }
-      return "audio-volume-high-symbolic";
-    } catch (error) {
-      console.error("Volume poll error:", error);
-      return "audio-volume-high-symbolic";
+export const currentIcon = createPoll("audio-volume-high-symbolic", 200, () => {
+  try {
+    const spk = wp.audio.default_speaker;
+    if (spk) {
+      const volume = spk.volume;
+      const muted = spk.mute;
+      const icon = getVolumeIcon(volume, muted);
+      return icon;
     }
+    return "audio-volume-high-symbolic";
+  } catch (error) {
+    console.error("Volume poll error:", error);
+    return "audio-volume-high-symbolic";
   }
-);
+});
 
 export function openVolumeManager() {
   try {

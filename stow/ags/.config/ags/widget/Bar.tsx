@@ -1,6 +1,5 @@
 import app from "ags/gtk4/app";
 import { Astal, Gtk, Gdk } from "ags/gtk4";
-import { createPoll } from "ags/time";
 import { Workspaces } from "./workspaces";
 import { SystemTray } from "./systemtray";
 import { WindowTitle } from "./windowtitle";
@@ -33,12 +32,11 @@ export default function Bar(gdkmonitor: Gdk.Monitor) {
           <Workspaces />
           <SystemTray />
         </box>
-        <box $type="center" spacing={6}>
+        <box $type="center" spacing={6} valign={Gtk.Align.CENTER}>
           <WindowTitle />
         </box>
         <box $type="end" spacing={3} halign={Gtk.Align.END}>
           <MediaPlayerButton />
-          <CavaVisualizer />
           <VolumeButton />
           <InternetButton />
           <BluetoothButton />

@@ -1,14 +1,10 @@
-import { Gtk } from "ags/gtk4";
-import { openCalendar, time } from "../Service";
+import { openCalendar, time } from "../service";
+import { Button } from "../../../lib/components";
 
 export function TimeDisplay({ class: cls }: { class?: string }) {
   return (
-    <box hexpand={true} vexpand={true} class={`time-display ${cls ?? ""}`}>
-      <button halign={Gtk.Align.CENTER} valign={Gtk.Align.CENTER} onClicked={openCalendar}>
-        <box orientation={Gtk.Orientation.HORIZONTAL} spacing={6}>
-          <label label={time((time) => time)} />
-        </box>
-      </button>
-    </box>
+    <Button class={`time-display ${cls ?? ""}`} onClicked={openCalendar}>
+      <label label={time((t) => t)} />
+    </Button>
   );
 }

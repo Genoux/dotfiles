@@ -3,9 +3,20 @@
 @use "../abstracts/mixins" as *;
 
 .mediaplayer {
+  border: $border-width solid rgba(white, 0.05);
+  border-radius: $radius-sm;
+  padding: $spacing-sm;
+  background: rgba(black, 0.05);
+
+  .media-info {
+    font-size: 12px;
+    font-weight: 400;
+    color: $fg;
+  }
+
   .media-control {
     &:hover {
-      opacity: 0.6;
+      background: rgba(white, 0.05);
     }
   }
 }

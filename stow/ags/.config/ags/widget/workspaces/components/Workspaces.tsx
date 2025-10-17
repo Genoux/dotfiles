@@ -1,46 +1,40 @@
 import { For } from "ags";
 import { Gtk } from "ags/gtk4";
 import Hyprland from "gi://AstalHyprland";
-import { focusedWorkspace, workspaces, hypr } from "../service";
+import { focusedWorkspace, workspaces } from "../service";
+import { workspaceHasClients } from "../../../lib/hyprland";
+import { Button } from "../../../lib/components";
 
 export function Workspaces({ class: cls }: { class?: string }) {
   return (
     <box class={`workspaces ${cls ?? ""}`} spacing={2}>
       <For each={workspaces}>
         {(ws: Hyprland.Workspace) => {
-          const wsId = Number(ws.id);
-          const hasClients = hypr ? hypr.get_clients().some((c: any) => Number(c.workspace?.id) === wsId) : false;
+          const wsId = ws.id;
+          const hasClients = workspaceHasClients(wsId);
 
           return (
-            // biome-ignore lint/a11y/useButtonType: GTK buttons don't support type prop
-            <button
-              class={focusedWorkspace((f: Hyprland.Workspace) =>
-                Number(f?.id) === wsId ? "workspace workspace--focused" : "workspace"
+            <Button
+              class={focusedWorkspace((f) =>
+                f?.id === wsId ? "workspace workspace--focused" : "workspace"
               )}
-              onClicked={() => {
-                try {
-                  ws.focus();
-                } catch (e) {
-                  console.warn(`Failed to focus workspace ${wsId}:`, e);
-                }
-              }}
+              onClicked={() => ws.focus()}
             >
               <box
                 halign={Gtk.Align.CENTER}
                 valign={Gtk.Align.CENTER}
-                class={focusedWorkspace((f: Hyprland.Workspace) => {
-                  const isFocused = Number(f?.id) === wsId;
-                  if (isFocused && hasClients) {
-                    return "workspace__indicator workspace__indicator--focused";
-                  }
-                  return isFocused ? "workspace__number workspace__number--focused" : "workspace__number";
+                class={focusedWorkspace((f) => {
+                  const isFocused = f?.id === wsId;
+                  return isFocused
+                    ? "workspace__indicator workspace__indicator--focused"
+                    : "workspace__number";
                 })}
               >
-                <box visible={focusedWorkspace((f: Hyprland.Workspace) => Number(f?.id) !== wsId || !hasClients)}>
+                <box visible={focusedWorkspace((f) => f?.id !== wsId)}>
                   <label label={String(wsId)} />
                 </box>
               </box>
-            </button>
+            </Button>
           );
         }}
       </For>

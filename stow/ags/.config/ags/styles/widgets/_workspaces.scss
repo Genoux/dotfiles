@@ -19,14 +19,12 @@
     &:hover:not(.workspace--focused) {
       background-color: rgba($white, 0.05);
     }
-
   }
 
   .workspace__indicator {
     background-color: $fg-dim;
     border-radius: $radius-md;
     min-width: $spacing-xs;
-
 
     &.workspace__indicator--focused {
       background-color: $white;

@@ -1,78 +1,63 @@
 import Mpris from "gi://AstalMpris";
-import { createBinding, createState } from "ags";
-import { createPoll } from "ags/time";
-import Hyprland from "gi://AstalHyprland";
+import { createState } from "ags";
+import { hypr } from "../../lib/hyprland";
 
-// Astal MPRIS service
 const mpris = Mpris.get_default();
 
-const POLL_INTERVAL = 200;
+// Use counter to force reactive updates when player state changes
+const [updateId, setUpdateId] = createState(0);
+const forceUpdate = () => setUpdateId((id) => id + 1);
 
-// Reactive list of players
-export const players = createBinding(mpris, "players");
+// Listen to player changes
+mpris.connect("notify::players", forceUpdate);
 
-// Export the raw service in case components need direct access
-export const mprisService = mpris;
+// Also listen to each player's property changes
+const setupPlayerWatchers = () => {
+  mpris.players.forEach((player) => {
+    player.connect("notify::playback-status", forceUpdate);
+    player.connect("notify::title", forceUpdate);
+    player.connect("notify::artist", forceUpdate);
+  });
+};
+setupPlayerWatchers();
+mpris.connect("notify::players", setupPlayerWatchers);
 
-// Helper function to get the active player
+// Get the active player (playing or first available)
 export function getActivePlayer() {
   const playerList = mpris.players;
   return playerList.find((p) => p.playbackStatus === Mpris.PlaybackStatus.PLAYING) || playerList[0];
 }
 
-// Poll current player state every POLL_INTERVAL
-export const currentPlayerInfo = createPoll(
-  "No media",
-  POLL_INTERVAL,
-  () => {
-    try {
-      const player = getActivePlayer();
-      if (!player) return "No media";
-      const title = player.title || "Unknown";
-      const artist = player.artist || "Unknown Artist";
-      return `${title} - ${artist}`;
-    } catch (error) {
-      return "No media";
-    }
-  }
-);
+// Reactive player info
+export const currentPlayerInfo = updateId(() => {
+  const player = getActivePlayer();
+  if (!player) return "No media";
+  const title = player.title || "Unknown";
+  const artist = player.artist || "Unknown Artist";
+  return `${title} - ${artist}`;
+});
 
-export const currentPlayerPlayIcon = createPoll(
-  "⏸",
-  POLL_INTERVAL,
-  () => {
-    try {
-      const player = getActivePlayer();
-      if (!player) return "⏸";
-      return player.playbackStatus === Mpris.PlaybackStatus.PLAYING ? "⏸" : "▶";
-    } catch (error) {
-      return "⏸";
-    }
-  }
-);
+// Reactive play icon
+export const currentPlayerPlayIcon = updateId(() => {
+  const player = getActivePlayer();
+  if (!player) return "⏸";
+  return player.playbackStatus === Mpris.PlaybackStatus.PLAYING ? "⏸" : "▶";
+});
 
-// Visibility state for the media panel (toggled by CAVA click)
+// Media panel visibility
 export const [mediaPanelVisible, setMediaPanelVisible] = createState(false);
 
-const hypr = Hyprland.get_default();
-
-let __mediaVisible = false;
 export function showMediaPanel() {
-  __mediaVisible = true;
-  print(`[MediaPanel] show`);
   setMediaPanelVisible(true);
 }
 
 export function hideMediaPanel() {
-  __mediaVisible = false;
-  print(`[MediaPanel] hide`);
   setMediaPanelVisible(false);
 }
 
 export function toggleMediaPanel() {
-  const players = mprisService.players;
-  const player = players.find((p) => p.playbackStatus === Mpris.PlaybackStatus.PLAYING);
-  if (player) {
+  const player = mpris.players.find((p) => p.playbackStatus === Mpris.PlaybackStatus.PLAYING);
+  if (player && hypr) {
     hypr.dispatch("focuswindow", `class:${player.entry}`);
   }
 }

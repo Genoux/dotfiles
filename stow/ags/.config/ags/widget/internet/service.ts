@@ -1,12 +1,6 @@
 import GLib from "gi://GLib";
 import { createPoll } from "ags/time";
 
-export enum ConnectionType {
-  Wifi = "wifi",
-  Ethernet = "ethernet",
-  None = "none"
-}
-
 function checkConnection(): string {
   try {
     // Check if we have an active network connection
@@ -25,9 +19,17 @@ function checkConnection(): string {
       const interfaceName = match[1];
 
       // Check if it's a wireless interface
-      if (interfaceName.startsWith("wl") || interfaceName.startsWith("wlan") || interfaceName.includes("wifi")) {
+      if (
+        interfaceName.startsWith("wl") ||
+        interfaceName.startsWith("wlan") ||
+        interfaceName.includes("wifi")
+      ) {
         return "network-wireless-symbolic";
-      } else if (interfaceName.startsWith("eth") || interfaceName.startsWith("en") || interfaceName.startsWith("enp")) {
+      } else if (
+        interfaceName.startsWith("eth") ||
+        interfaceName.startsWith("en") ||
+        interfaceName.startsWith("enp")
+      ) {
         return "network-wired-symbolic";
       } else {
         // For other interfaces like tailscale, bridge, etc., default to ethernet
@@ -43,15 +45,7 @@ function checkConnection(): string {
 }
 
 // Poll connection every 5 seconds
-export const connectionIcon = createPoll(
-  "network-offline-symbolic",
-  5000,
-  checkConnection
-);
-
-export function getConnectionIcon(): string {
-  return connectionIcon.get();
-}
+export const connectionIcon = createPoll("network-offline-symbolic", 5000, checkConnection);
 
 export function openInternetManager() {
   try {

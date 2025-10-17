@@ -1,1 +1,1 @@
-export { TimeDisplay } from "./components/TimeDisplay"
+export { TimeDisplay } from "./components/TimeDisplay";

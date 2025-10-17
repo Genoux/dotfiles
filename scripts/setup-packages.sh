@@ -400,7 +400,7 @@ install_from_dotfiles() {
 
 system_update_only() {
     echo -e "${BLUE}Updating system...${NC}"
-    if sudo pacman -Syu; then
+    if yay -Syu --noconfirm; then
         echo -e "  ${GREEN}✅ System updated successfully${NC}"
     else
         echo -e "  ${RED}⚠️  System update failed${NC}"

@@ -1,1 +1,1 @@
-export { Weather } from "./components/WeatherDisplay" 
+export { Weather } from "./components/WeatherDisplay";

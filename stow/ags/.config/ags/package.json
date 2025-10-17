@@ -1,9 +1,14 @@
 {
   "scripts": {
     "start": "ags run --gtk 4",
-    "dev": "ags run --gtk 4 & inotifywait -m -r -e modify,create,delete,move . --exclude '(node_modules|.git|dist|build)' | while read -r directory events filename; do case \"$filename\" in *.ts|*.tsx|*.js|*.jsx|*.scss|*.css|*.json) echo \"File changed: $filename\"; ags quit 2>/dev/null; sleep 0.3; ags run --gtk 4 & ;; esac; done"
-},
+    "dev": "ags quit 2>/dev/null; ags run --gtk 4 & inotifywait -m -r -e close_write . --exclude '(node_modules|.git|dist|build)' | while read -r directory events filename; do case \"$filename\" in *.ts|*.tsx|*.js|*.jsx|*.scss|*.css|*.json) echo \"File changed: $filename\"; ags quit 2>/dev/null; sleep 0.3; ags run --gtk 4 & ;; esac; done",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,scss,css}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,scss,css}\""
+  },
   "dependencies": {
     "ags": "*"
+  },
+  "devDependencies": {
+    "prettier": "^3.1.1"
   }
 }

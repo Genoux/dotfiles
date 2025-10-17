@@ -3,32 +3,25 @@
 @use "../abstracts/mixins" as *;
 
 .cava-island {
-  .cava-wrapper {
-    padding: $spacing-xs $spacing-sm;
-    border-radius: $radius-md;
-    transition: all $transition-fast;
-    
-    .cava-bar {
-      background: $fg;
-      border-radius: $radius-xl;
-      transition: all 0.1s ease-out;
-      min-height: 2px;
-      min-width: 2px;
-      opacity: 0.8;
-      
-      &.cava-bar--active {
-        background: $accent;
-        opacity: 1;
-      }
+  .cava-bar {
+    background: $fg;
+    border-radius: $radius-xl;
+    transition: all 0.1s ease-out;
+    min-height: 2px;
+    min-width: 2px;
+    opacity: 0.8;
+
+    &.cava-bar--active {
+      background: $accent;
+      opacity: 1;
     }
-   
   }
 }
 
 .cava-island-empty {
   padding: 0;
   background: transparent;
-  
+
   .cava-wrapper {
     background: transparent;
     padding: $spacing-xs;

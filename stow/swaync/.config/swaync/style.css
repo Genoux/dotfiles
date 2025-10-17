@@ -20,6 +20,7 @@
   border: 1px solid @border;
   border-radius: 8px;
   padding: 16px;
+  margin: 6px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
 }
 
@@ -138,7 +139,6 @@
   font-weight: 400;
   color: @fg;
   opacity: 0.7;
-  margin-left: auto;
   margin-right: 18px;
 }
 
@@ -159,10 +159,10 @@
 
 /* Unified notification image */
 .notification image {
-  min-width: 12px;
-  min-height: 12px;
-  border-radius: 4px;
-  margin-right: 10px;
+  min-width: 16px;
+  min-height: 16px;
+  border-radius: 3px;
+  margin-right: 8px;
 }
 
 /* Unified notification action buttons */
@@ -208,13 +208,9 @@
 .control-center .notification .summary,
 .floating-notifications .notification .summary {
   min-width: 0;
-  -gtk-label-ellipsize: end;
-  -gtk-label-lines: 1;
 }
 
 .control-center .notification .body,
 .floating-notifications .notification .body {
   min-width: 0;
-  -gtk-label-ellipsize: end;
-  -gtk-label-lines: 3;
 }
