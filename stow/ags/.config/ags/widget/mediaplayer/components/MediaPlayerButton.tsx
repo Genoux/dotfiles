@@ -1,4 +1,5 @@
 import { Gtk } from "ags/gtk4";
+import { createPoll } from "ags/time";
 import {
   getActivePlayer,
   currentPlayerInfo,
@@ -6,8 +7,35 @@ import {
   toggleMediaPanel,
 } from "../service";
 import { CavaVisualizer } from "../../cava";
-import { truncateText } from "../../../utils";
 import { Button } from "../../../lib/components";
+
+const MAX_LENGTH = 30;
+let scrollPos = 0;
+let lastText = "";
+
+const scrollingText = createPoll("", 400, () => {
+  const player = getActivePlayer();
+  if (!player) return "no media";
+
+  const title = player.title || "Unknown";
+  const artist = player.artist || "Unknown Artist";
+  const info = `${title} - ${artist}`.toLowerCase();
+
+  if (info !== lastText) {
+    scrollPos = 0;
+    lastText = info;
+  }
+
+  if (info.length <= MAX_LENGTH) {
+    return info;
+  }
+
+  const paddedText = info + " • ";
+  scrollPos = (scrollPos + 1) % paddedText.length;
+
+  const result = paddedText.slice(scrollPos) + paddedText.slice(0, scrollPos);
+  return result.slice(0, MAX_LENGTH);
+});
 
 export function MediaPlayerButton({ class: cls = "" }: { class?: string }) {
   return (
@@ -17,8 +45,8 @@ export function MediaPlayerButton({ class: cls = "" }: { class?: string }) {
           <CavaVisualizer />
           <label
             class="media-info"
-            label={currentPlayerInfo((info) => truncateText(info, 20).toLowerCase())}
-            justify={Gtk.Justification.CENTER}
+            label={scrollingText((text) => text)}
+            justify={Gtk.Justification.LEFT}
           />
         </box>
       </Button>
