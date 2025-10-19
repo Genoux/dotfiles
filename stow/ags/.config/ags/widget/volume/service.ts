@@ -1,5 +1,5 @@
 import Wp from "gi://AstalWp";
-import { createPoll } from "ags/time";
+import { createState } from "ags";
 import GLib from "gi://GLib";
 
 const wp = Wp.get_default();
@@ -18,22 +18,52 @@ function getVolumeIcon(volume: number, muted: boolean): string {
   }
 }
 
-// Poll volume state every 200ms for responsive updates
-export const currentIcon = createPoll("audio-volume-high-symbolic", 200, () => {
+function updateIcon(): string {
   try {
     const spk = wp.audio.default_speaker;
     if (spk) {
-      const volume = spk.volume;
-      const muted = spk.mute;
-      const icon = getVolumeIcon(volume, muted);
-      return icon;
+      return getVolumeIcon(spk.volume, spk.mute);
     }
     return "audio-volume-high-symbolic";
   } catch (error) {
-    console.error("Volume poll error:", error);
+    console.error("Volume update error:", error);
     return "audio-volume-high-symbolic";
   }
+}
+
+// Use reactive state with signal-based updates instead of polling
+export const [currentIcon, setCurrentIcon] = createState(updateIcon());
+
+// Track speaker handlers to prevent duplicate connections
+let speakerHandlerIds: number[] = [];
+
+// Setup signal handlers for reactive updates
+function setupSpeakerSignals() {
+  // Disconnect old handlers
+  const oldSpk = wp.audio.default_speaker;
+  if (oldSpk && speakerHandlerIds.length > 0) {
+    speakerHandlerIds.forEach((id) => oldSpk.disconnect(id));
+    speakerHandlerIds = [];
+  }
+
+  // Connect new handlers
+  const spk = wp.audio.default_speaker;
+  if (spk) {
+    speakerHandlerIds = [
+      spk.connect("notify::volume", () => setCurrentIcon(updateIcon())),
+      spk.connect("notify::mute", () => setCurrentIcon(updateIcon())),
+    ];
+  }
+}
+
+// Listen for default speaker property changes
+wp.audio.connect("notify::default-speaker", () => {
+  setCurrentIcon(updateIcon());
+  setupSpeakerSignals();
 });
+
+// Setup initial speaker signals
+setupSpeakerSignals();
 
 export function openVolumeManager() {
   try {

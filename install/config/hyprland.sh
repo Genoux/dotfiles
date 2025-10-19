@@ -18,5 +18,5 @@ if ! hyprctl version &>/dev/null 2>&1; then
 fi
 
 log_info "Setting up Hyprland monitors..."
-hyprland_setup
+hyprland_setup true  # Auto-confirm during installation
 

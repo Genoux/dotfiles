@@ -187,6 +187,8 @@ generate_monitor_config() {
 
 # Setup Hyprland monitors
 hyprland_setup() {
+    local auto_confirm="${1:-false}"
+    
     log_section "Hyprland Monitor Setup"
     
     check_hyprland || return 1
@@ -213,7 +215,7 @@ hyprland_setup() {
     
     echo
     
-    if confirm "Generate monitor configuration?"; then
+    if [[ "$auto_confirm" == "true" ]] || confirm "Generate monitor configuration?"; then
         # Ensure directory exists
         ensure_directory "$(dirname "$MONITORS_CONF")"
         
@@ -231,8 +233,12 @@ hyprland_setup() {
         # Reload if Hyprland is running
         if hyprctl version &>/dev/null; then
             echo
-            if confirm "Reload Hyprland configuration?"; then
+            if [[ "$auto_confirm" == "true" ]] || confirm "Reload Hyprland configuration?"; then
+                log_info "Reloading Hyprland (screen may flash briefly)..."
+                sleep 0.5
                 hyprctl reload 2>/dev/null && log_success "Configuration reloaded" || log_warning "Failed to reload"
+                # Give time for screen to stabilize
+                sleep 1.5
             fi
         fi
     else

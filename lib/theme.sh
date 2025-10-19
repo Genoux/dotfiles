@@ -128,9 +128,6 @@ theme_apply() {
 
         echo
         log_info "Restart applications to see changes:"
-        log_info "  • AGS: ags quit && ags"
-        log_info "  • Kitty: Close and reopen terminal"
-        log_info "  • SwayNC: killall swaync && swaync"
 
         return 0
     else

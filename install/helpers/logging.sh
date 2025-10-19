@@ -53,12 +53,12 @@ run_logged() {
     log_info "Running: $(basename "$script")"
     log_to_file "INFO" "Starting: $script ${args[*]}"
     
-    # Run the script and capture output
-    if bash "$script" "${args[@]}" >> "$DOTFILES_LOG_FILE" 2>&1; then
+    # Run the script and show output to screen + log file
+    if bash "$script" "${args[@]}" 2>&1 | tee -a "$DOTFILES_LOG_FILE"; then
         log_to_file "SUCCESS" "Completed: $script"
         return 0
     else
-        local exit_code=$?
+        local exit_code=${PIPESTATUS[0]}
         log_to_file "ERROR" "Failed: $script (exit code: $exit_code)"
         return $exit_code
     fi

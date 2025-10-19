@@ -116,28 +116,47 @@ log_info "Installation started at $(date)"
 log_info "Logs: $DOTFILES_LOG_FILE"
 echo
 
+# Show installation phases
+if command -v gum &>/dev/null; then
+    gum style --foreground 14 "Installation will proceed through 3 phases:"
+    echo "  1. Package Installation"
+    echo "  2. Configuration Linking"
+    echo "  3. Final Setup"
+    echo
+fi
+
 # Phase 1: Packages
 if ! $SKIP_PACKAGES; then
-    log_section "Phase 1: Packages"
+    log_section "Phase 1/3: Package Installation"
+    log_info "Installing system packages from packages.txt and aur-packages.txt"
+    echo
     source "$DOTFILES_INSTALL/packages/all.sh"
     echo
+    log_success "✓ Phase 1 complete"
+    echo
 else
-    log_info "Skipping package installation"
+    log_info "Skipping package installation (--skip-packages)"
     echo
 fi
 
 # Phase 2: Configuration
 if ! $SKIP_CONFIGS; then
-    log_section "Phase 2: Configuration"
+    log_section "Phase 2/3: Configuration Setup"
+    log_info "Linking configurations, applying theme, and setting up environment"
+    echo
     source "$DOTFILES_INSTALL/config/all.sh"
     echo
+    log_success "✓ Phase 2 complete"
+    echo
 else
-    log_info "Skipping configuration"
+    log_info "Skipping configuration (--skip-configs)"
     echo
 fi
 
 # Phase 3: Post-installation
-log_section "Phase 3: Finishing Up"
+log_section "Phase 3/3: Final Setup"
+log_info "Completing installation and verifying setup"
+echo
 source "$DOTFILES_INSTALL/post/all.sh"
 
 # Finish logging

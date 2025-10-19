@@ -3,7 +3,6 @@ import { Astal, Gtk, Gdk } from "ags/gtk4";
 import { Workspaces } from "./workspaces";
 import { SystemTray } from "./systemtray";
 import { WindowTitle } from "./windowtitle";
-import { CavaVisualizer } from "./cava";
 import { SystemTemp } from "./systemtemp";
 import { Weather } from "./weather";
 import { TimeDisplay } from "./timedisplay";
@@ -27,26 +26,32 @@ export default function Bar(gdkmonitor: Gdk.Monitor) {
       anchor={BOTTOM | LEFT | RIGHT}
       application={app}
     >
-      <centerbox>
-        <box $type="start">
-          <Workspaces />
-          <SystemTray />
-        </box>
-        <box $type="center" spacing={6} valign={Gtk.Align.CENTER}>
-          <WindowTitle />
-        </box>
-        <box $type="end" spacing={3} halign={Gtk.Align.END}>
-          <MediaPlayerButton />
-          <VolumeButton />
-          <InternetButton />
-          <BluetoothButton />
-          <KeyboardButton />
-          <Weather />
-          <SystemTemp />
-          <TimeDisplay />
-          <NotificationPanelButton />
-        </box>
-      </centerbox>
+      <Gtk.Revealer
+        revealChild={true}
+        transitionType={Gtk.RevealerTransitionType.CROSSFADE}
+        transitionDuration={400}
+      >
+        <centerbox>
+          <box $type="start">
+            <Workspaces />
+            <SystemTray />
+          </box>
+          <box $type="center" spacing={6} valign={Gtk.Align.CENTER}>
+            <WindowTitle />
+          </box>
+          <box $type="end" spacing={4} halign={Gtk.Align.END}>
+            <MediaPlayerButton />
+            <VolumeButton />
+            <InternetButton />
+            <BluetoothButton />
+            <KeyboardButton />
+            <Weather />
+            <SystemTemp />
+            <TimeDisplay />
+            <NotificationPanelButton />
+          </box>
+        </centerbox>
+      </Gtk.Revealer>
     </window>
   );
 }

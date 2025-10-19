@@ -7,7 +7,7 @@ const tray = Tray.get_default();
 function filterValidItems(items: Tray.TrayItem[]): Tray.TrayItem[] {
   const validItems = items.filter((item) => {
     try {
-      return item && item.gicon && item.id;
+      return item && item.id;
     } catch {
       return false;
     }
@@ -24,11 +24,3 @@ function filterValidItems(items: Tray.TrayItem[]): Tray.TrayItem[] {
 
 export const trayItems = createBinding(tray, "items").as(filterValidItems);
 
-// Handle tray item click - activates/focuses the app
-export function handleTrayClick(item: Tray.TrayItem) {
-  try {
-    item.activate(0, 0);
-  } catch (error) {
-    console.error(`Failed to activate tray item ${item.id}:`, error);
-  }
-}

@@ -1,0 +1,17 @@
+[Unit]
+Description=AGS (Aylur's GTK Shell)
+Documentation=https://github.com/aylur/ags
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/ags run
+Restart=always
+RestartSec=2
+KillMode=mixed
+TimeoutStopSec=5
+
+[Install]
+WantedBy=graphical-session.target
+

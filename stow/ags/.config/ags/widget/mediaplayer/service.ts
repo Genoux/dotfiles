@@ -11,14 +11,27 @@ const forceUpdate = () => setUpdateId((id) => id + 1);
 // Listen to player changes
 mpris.connect("notify::players", forceUpdate);
 
-// Also listen to each player's property changes
+// Track player handlers to prevent duplicate connections
+const playerHandlers = new Map<Mpris.Player, number[]>();
+
 const setupPlayerWatchers = () => {
+  // Disconnect old handlers
+  playerHandlers.forEach((handlers, player) => {
+    handlers.forEach((handlerId) => player.disconnect(handlerId));
+  });
+  playerHandlers.clear();
+
+  // Connect new handlers
   mpris.players.forEach((player) => {
-    player.connect("notify::playback-status", forceUpdate);
-    player.connect("notify::title", forceUpdate);
-    player.connect("notify::artist", forceUpdate);
+    const handlers = [
+      player.connect("notify::playback-status", forceUpdate),
+      player.connect("notify::title", forceUpdate),
+      player.connect("notify::artist", forceUpdate),
+    ];
+    playerHandlers.set(player, handlers);
   });
 };
+
 setupPlayerWatchers();
 mpris.connect("notify::players", setupPlayerWatchers);
 

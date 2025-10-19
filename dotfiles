@@ -1,8 +1,15 @@
 #!/bin/bash
 # Dotfiles Daily Management CLI
 
-# Get dotfiles directory
-export DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Get dotfiles directory (follow symlinks)
+SCRIPT_PATH="${BASH_SOURCE[0]}"
+while [[ -L "$SCRIPT_PATH" ]]; do
+    SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
+    SCRIPT_PATH="$(readlink "$SCRIPT_PATH")"
+    [[ "$SCRIPT_PATH" != /* ]] && SCRIPT_PATH="$SCRIPT_DIR/$SCRIPT_PATH"
+done
+export DOTFILES_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
+export DOTFILES_INSTALL="$DOTFILES_DIR/install"
 
 # Load helpers
 source "$DOTFILES_DIR/install/helpers/all.sh"
@@ -122,50 +129,75 @@ show_status() {
 # Interactive menu
 show_menu() {
     while true; do
-        clear_screen "Dotfiles Manager"
+        clear
+        if command -v gum &>/dev/null && [[ -f "$DOTFILES_DIR/system.txt" ]]; then
+            gum style --foreground 212 < "$DOTFILES_DIR/system.txt"
+            echo
+        fi
         
-        local action=$(choose_option \
-            "📊 System Status" \
-            "🚀 Full Install" \
-            "" \
-            "📦 Manage Packages" \
-            "⚙️ Manage Configs" \
-            "🎨 Manage Themes" \
-            "🐚 Shell Setup" \
-            "🖥️ Hyprland Setup" \
-            "" \
-            "❌ Exit")
+        local action
+        if command -v gum &>/dev/null; then
+            action=$(gum choose --selected "System Status" \
+                "System Status" \
+                "Full Install" \
+                "" \
+                "Packages" \
+                "Configs" \
+                "Themes" \
+                "Shell" \
+                "Hyprland" \
+                "" \
+                "Exit")
+        else
+            action=$(choose_option \
+                "System Status" \
+                "Full Install" \
+                "" \
+                "Packages" \
+                "Configs" \
+                "Themes" \
+                "Shell" \
+                "Hyprland" \
+                "" \
+                "Exit")
+        fi
+        
+        [[ -z "$action" ]] && exit 0  # ESC pressed
         
         case "$action" in
-            "📊 System Status")
+            "System Status")
                 show_status
                 echo
                 read -p "Press Enter to continue..."
                 ;;
-            "🚀 Full Install")
+            "Full Install")
                 clear_screen
                 if confirm "Run full installation?"; then
                     bash "$DOTFILES_DIR/install.sh"
                 fi
                 ;;
-            "📦 Manage Packages")
+            "Packages")
                 menu_packages
                 ;;
-            "⚙️ Manage Configs")
+            "Configs")
                 menu_configs
                 ;;
-            "🎨 Manage Themes")
+            "Themes")
                 menu_themes
                 ;;
-            "🐚 Shell Setup")
+            "Shell")
                 menu_shell
                 ;;
-            "🖥️ Hyprland Setup")
+            "Hyprland")
                 menu_hyprland
                 ;;
-            "❌ Exit")
-                log_info "Goodbye!"
+            "Exit")
+                clear
+                log_success "Goodbye!"
                 exit 0
+                ;;
+            "")
+                continue
                 ;;
         esac
     done
@@ -174,48 +206,50 @@ show_menu() {
 # Package management menu
 menu_packages() {
     while true; do
-        clear_screen "Package Management"
+        clear_screen "Packages"
         
         # Show current package count
         source "$DOTFILES_DIR/lib/package.sh"
         local pkg_count=$(grep -cvE '^#|^$' "$DOTFILES_DIR/packages.txt" 2>/dev/null || echo 0)
         local aur_count=$(grep -cvE '^#|^$' "$DOTFILES_DIR/aur-packages.txt" 2>/dev/null || echo 0)
-        show_info "Current" "$pkg_count official, $aur_count AUR packages"
+        show_info "Tracked" "$pkg_count official + $aur_count AUR"
         echo
         
         local action=$(choose_option \
-            "📥 Install from lists (txt → system)" \
-            "📝 Update lists (system → txt)" \
-            "⬆️  System update (yay -Syu)" \
-            "📊 Show package status" \
-            "← Back")
+            "Install from lists" \
+            "Sync lists from system" \
+            "Update system" \
+            "Show status" \
+            "Back")
+        
+        [[ -z "$action" ]] && return  # ESC pressed
         
         case "$action" in
-            "📥 Install from lists (txt → system)")
+            "Install from lists")
                 clear_screen
                 packages_install
                 echo
                 read -p "Press Enter to continue..."
                 ;;
-            "📝 Update lists (system → txt)")
+            "Sync lists from system")
                 clear_screen
                 packages_sync
                 echo
                 read -p "Press Enter to continue..."
                 ;;
-            "⬆️  System update (yay -Syu)")
+            "Update system")
                 clear_screen
                 packages_update
                 echo
                 read -p "Press Enter to continue..."
                 ;;
-            "📊 Show package status")
+            "Show status")
                 clear_screen
                 packages_status
                 echo
                 read -p "Press Enter to continue..."
                 ;;
-            "← Back")
+            "Back")
                 return
                 ;;
         esac
@@ -225,33 +259,43 @@ menu_packages() {
 # Config management menu
 menu_configs() {
     while true; do
-        clear_screen "Config Management"
+        clear_screen "Configs"
         
         source "$DOTFILES_DIR/lib/config.sh"
-        config_status
+        
+        # Show summary only
+        local configs=($(get_configs))
+        local linked_count=0
+        for config in "${configs[@]}"; do
+            is_config_linked "$config" && ((linked_count++))
+        done
+        show_info "Status" "$linked_count/${#configs[@]} linked"
         echo
         
         local action=$(choose_option \
-            "🔗 Link all configs" \
-            "🔗 Link specific config" \
-            "🔓 Unlink specific config" \
-            "🔓 Unlink all configs" \
-            "← Back")
+            "Link all" \
+            "Link specific" \
+            "Unlink specific" \
+            "Unlink all" \
+            "Show details" \
+            "Back")
+        
+        [[ -z "$action" ]] && return  # ESC pressed
         
         case "$action" in
-            "🔗 Link all configs")
+            "Link all")
                 clear_screen
                 config_link_all
                 echo
                 read -p "Press Enter to continue..."
                 ;;
-            "🔗 Link specific config")
+            "Link specific")
                 config_select "link"
                 ;;
-            "🔓 Unlink specific config")
+            "Unlink specific")
                 config_select "unlink"
                 ;;
-            "🔓 Unlink all configs")
+            "Unlink all")
                 clear_screen
                 if confirm "Unlink all configs?"; then
                     config_unlink_all
@@ -259,7 +303,13 @@ menu_configs() {
                 echo
                 read -p "Press Enter to continue..."
                 ;;
-            "← Back")
+            "Show details")
+                clear_screen
+                config_status
+                echo
+                read -p "Press Enter to continue..."
+                ;;
+            "Back")
                 return
                 ;;
         esac
@@ -269,28 +319,44 @@ menu_configs() {
 # Theme management menu
 menu_themes() {
     while true; do
-        clear_screen "Theme Management"
+        clear_screen "Themes"
         
         source "$DOTFILES_DIR/lib/theme.sh"
-        theme_status
+        
+        # Show quick status
+        local theme_dir="$DOTFILES_DIR/themes/default"
+        local theme_files=$(ls "$theme_dir" 2>/dev/null | wc -l)
+        show_info "Active theme" "default ($theme_files files)"
         echo
         
         local action=$(choose_option \
-            "📋 List all themes" \
-            "🎨 Switch theme" \
-            "← Back")
+            "Apply theme" \
+            "Install GTK theme" \
+            "Show details" \
+            "Back")
+        
+        [[ -z "$action" ]] && return  # ESC pressed
         
         case "$action" in
-            "📋 List all themes")
+            "Apply theme")
                 clear_screen
-                theme_list
+                theme_apply
                 echo
                 read -p "Press Enter to continue..."
                 ;;
-            "🎨 Switch theme")
-                theme_select
+            "Install GTK theme")
+                clear_screen
+                theme_install_gtk
+                echo
+                read -p "Press Enter to continue..."
                 ;;
-            "← Back")
+            "Show details")
+                clear_screen
+                theme_status
+                echo
+                read -p "Press Enter to continue..."
+                ;;
+            "Back")
                 return
                 ;;
         esac

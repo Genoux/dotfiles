@@ -9,7 +9,9 @@
     "starship.toml": "~/.config/starship.toml",
     "swaync.css": "~/.config/swaync/style.css",
     "swayosd.css": "~/.config/swayosd/style.css",
-    "yazi.toml": "~/.config/yazi/theme.toml"
+    "yazi.toml": "~/.config/yazi/theme.toml",
+    "pacseek.json": "~/.config/pacseek/config.json",
+    "cursor.json": "~/.config/Code/User/settings.json"
   },
   
   "gtk": {

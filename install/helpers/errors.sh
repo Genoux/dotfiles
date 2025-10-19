@@ -127,7 +127,10 @@ check_prerequisites() {
     fi
     
     # Check internet connection (for package installs)
-    if ! ping -c 1 -W 2 archlinux.org &>/dev/null; then
+    # Use timeout + ping to IP address to avoid DNS resolution hangs
+    if timeout 3 ping -c 1 -W 2 1.1.1.1 &>/dev/null; then
+        : # Connection OK
+    else
         log_warning "No internet connection detected"
         log_info "Some operations may fail"
     fi

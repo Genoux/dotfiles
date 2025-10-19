@@ -1,0 +1,22 @@
+#!/bin/bash
+# Desktop launcher wrapper for dotfiles menu with fixed window size
+
+DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Terminal configuration
+TERMINAL="kitty"
+WINDOW_TITLE="Dotfiles Manager"
+WINDOW_CLASS="dotfiles-manager"
+
+# Window size (columns x rows)
+WINDOW_COLS=80
+WINDOW_ROWS=25
+
+# Launch in kitty with fixed size
+exec kitty \
+    --class="$WINDOW_CLASS" \
+    --title="$WINDOW_TITLE" \
+    --override "remember_window_size=no" \
+    --override "initial_window_width=${WINDOW_COLS}c" \
+    --override "initial_window_height=${WINDOW_ROWS}c" \
+    "$DOTFILES_DIR/dotfiles" menu

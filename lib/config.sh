@@ -110,6 +110,20 @@ config_link() {
                     log_info "Updated desktop database"
                 fi
                 ;;
+            "system")
+                # Enable user systemd services
+                if [[ -d "$HOME/.config/systemd/user" ]]; then
+                    log_info "Enabling user systemd services..."
+                    for service in "$HOME/.config/systemd/user"/*.service; do
+                        if [[ -f "$service" ]]; then
+                            local service_name=$(basename "$service")
+                            systemctl --user enable --now "$service_name" 2>/dev/null && \
+                                log_success "Enabled $service_name" || \
+                                log_warning "Could not enable $service_name"
+                        fi
+                    done
+                fi
+                ;;
         esac
         
         return 0
@@ -131,6 +145,24 @@ config_unlink() {
     fi
     
     cd "$STOW_DIR"
+    
+    # Pre-unlink actions
+    case "$config" in
+        "system")
+            # Disable user systemd services first
+            if [[ -d "$HOME/.config/systemd/user" ]]; then
+                log_info "Disabling user systemd services..."
+                for service in "$HOME/.config/systemd/user"/*.service; do
+                    if [[ -f "$service" ]]; then
+                        local service_name=$(basename "$service")
+                        systemctl --user disable --now "$service_name" 2>/dev/null && \
+                            log_success "Disabled $service_name" || \
+                            log_warning "Could not disable $service_name"
+                    fi
+                done
+            fi
+            ;;
+    esac
     
     log_info "Unlinking $config..."
     if stow -D -t "$HOME" "$config" 2>/dev/null; then
@@ -227,31 +259,26 @@ config_select() {
         return 1
     fi
     
-    # Add status indicators
-    local display_configs=()
-    for config in "${configs[@]}"; do
-        if is_config_linked "$config"; then
-            display_configs+=("✓ $config (linked)")
-        else
-            display_configs+=("○ $config (not linked)")
-        fi
-    done
-    display_configs+=("← Back")
+    # Simple config list
+    local display_configs=("${configs[@]}")
+    display_configs+=("Back")
     
     clear_screen "Select Config"
     local choice=$(choose_option "${display_configs[@]}")
     
-    if [[ "$choice" == "← Back" ]]; then
+    [[ -z "$choice" ]] && return 0  # ESC pressed
+    
+    if [[ "$choice" == "Back" ]]; then
         return 0
     fi
     
-    # Extract config name (remove status indicators)
-    local selected=$(echo "$choice" | sed 's/^[✓○] //' | sed 's/ (.*//')
-    
     if [[ "$action" == "link" ]]; then
-        config_link "$selected"
+        config_link "$choice"
     else
-        config_unlink "$selected"
+        config_unlink "$choice"
     fi
+    
+    echo
+    read -p "Press Enter to continue..."
 }
 

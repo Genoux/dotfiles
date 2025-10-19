@@ -83,13 +83,13 @@ filter_packages_by_hardware() {
     local package_file="$1"
     local temp_file
     
-    # Create temporary file
+    # Create temporary file (caller is responsible for cleanup)
     temp_file=$(mktemp)
-    trap 'rm -f "$temp_file"' RETURN
     
     # Validate input file
     if [[ ! -f "$package_file" || ! -r "$package_file" ]]; then
-        log_error "Package file not found or not readable: $package_file"
+        log_error "Package file not found or not readable: $package_file" >&2
+        rm -f "$temp_file"
         return 1
     fi
     
@@ -105,20 +105,24 @@ filter_packages_by_hardware() {
     if has_nvidia_gpu; then
         # Keep all packages if NVIDIA is present
         cp "$package_file" "$temp_file"
-        log_info "NVIDIA GPU detected - keeping NVIDIA packages"
+        log_info "NVIDIA GPU detected - keeping NVIDIA packages" >&2
     else
         # Filter out NVIDIA packages if no NVIDIA hardware
-        log_info "No NVIDIA GPU detected - filtering NVIDIA packages"
+        log_info "No NVIDIA GPU detected - filtering NVIDIA packages" >&2
         
         while IFS= read -r line; do
-            # Skip comments and empty lines
-            [[ "$line" =~ ^#.*$ ]] || [[ -z "$line" ]] && continue
+            # Keep comments and empty lines as-is
+            if [[ "$line" =~ ^#.*$ || -z "$line" ]]; then
+                echo "$line" >> "$temp_file"
+                continue
+            fi
             
+            # Check if this is a NVIDIA package to filter
             local should_keep=true
             for nvidia_pkg in "${nvidia_packages[@]}"; do
                 if [[ "$line" == "$nvidia_pkg" ]]; then
                     should_keep=false
-                    log_info "  Skipping: $nvidia_pkg (no NVIDIA hardware)"
+                    log_info "  Skipping: $nvidia_pkg (no NVIDIA hardware)" >&2
                     break
                 fi
             done

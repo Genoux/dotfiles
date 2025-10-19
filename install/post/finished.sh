@@ -1,7 +1,15 @@
 #!/bin/bash
 # Show completion message
 
-clear_screen
+# Wait a moment for screen to stabilize after Hyprland reload
+sleep 1
+
+# Clear screen (helpers already loaded by install.sh)
+if command -v clear_screen &>/dev/null; then
+    clear_screen
+else
+    clear
+fi
 
 if command -v gum &>/dev/null; then
     gum style \
@@ -45,4 +53,19 @@ else
     echo "Logs: $DOTFILES_LOG_FILE"
     echo ""
 fi
+
+echo
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo
+
+# Wait for user acknowledgment
+if command -v gum &>/dev/null; then
+    gum style --foreground 14 "Press any key to continue..."
+    read -n 1 -s -r
+else
+    read -n 1 -s -r -p "Press any key to continue..."
+fi
+
+echo
+echo "Done! 🎉"
 

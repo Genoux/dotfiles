@@ -39,6 +39,9 @@ packages_install() {
         packages+=("$pkg")
     done < "$filtered_packages"
     
+    # Clean up temp file
+    rm -f "$filtered_packages"
+    
     # Read AUR packages
     local aur_packages=()
     while IFS= read -r pkg; do
@@ -61,9 +64,13 @@ packages_install() {
     # Install missing official packages
     if [[ ${#missing_official[@]} -gt 0 ]]; then
         log_info "Installing ${#missing_official[@]} official packages..."
+        echo
+        log_info "Packages to install: ${missing_official[*]}"
+        echo
         if confirm "Install ${#missing_official[@]} official packages?"; then
-            run_with_spinner "Installing official packages" \
-                sudo pacman -S --needed --noconfirm "${missing_official[@]}"
+            log_info "Installing official packages (this may take a while)..."
+            sudo pacman -S --needed --noconfirm "${missing_official[@]}"
+            echo
             log_success "Official packages installed"
         else
             log_warning "Skipped official package installation"
@@ -78,14 +85,15 @@ packages_install() {
     if [[ ${#aur_packages[@]} -gt 0 ]]; then
         if ! command -v yay &>/dev/null; then
             log_info "Installing yay (AUR helper)..."
-            run_with_spinner "Installing yay" bash -c '
-                sudo pacman -S --needed --noconfirm base-devel git
-                cd /tmp
-                rm -rf yay
-                git clone https://aur.archlinux.org/yay.git
-                cd yay
-                makepkg -si --noconfirm
-            '
+            echo
+            sudo pacman -S --needed --noconfirm base-devel git
+            cd /tmp
+            rm -rf yay
+            git clone https://aur.archlinux.org/yay.git
+            cd yay
+            makepkg -si --noconfirm
+            cd -
+            echo
             log_success "yay installed"
             echo
         fi
@@ -101,9 +109,13 @@ packages_install() {
         # Install missing AUR packages
         if [[ ${#missing_aur[@]} -gt 0 ]]; then
             log_info "Installing ${#missing_aur[@]} AUR packages..."
+            echo
+            log_info "Packages to install: ${missing_aur[*]}"
+            echo
             if confirm "Install ${#missing_aur[@]} AUR packages?"; then
-                run_with_spinner "Installing AUR packages" \
-                    yay -S --needed --noconfirm "${missing_aur[@]}"
+                log_info "Installing AUR packages (this may take a while)..."
+                yay -S --needed --noconfirm "${missing_aur[@]}"
+                echo
                 log_success "AUR packages installed"
             else
                 log_warning "Skipped AUR package installation"
@@ -193,16 +205,28 @@ packages_update() {
     
     if ! command -v yay &>/dev/null; then
         log_warning "yay not found, using pacman only"
+        echo
         if confirm "Update system with pacman?"; then
-            run_with_spinner "Updating system" sudo pacman -Syu --noconfirm
+            log_info "Updating system packages..."
+            echo
+            sudo pacman -Syu --noconfirm
+            echo
+            log_success "System update complete"
+        else
+            log_info "Update cancelled"
         fi
     else
-        if confirm "Update system with yay?"; then
-            run_with_spinner "Updating system" yay -Syu --noconfirm
+        echo
+        if confirm "Update system with yay (includes AUR)?"; then
+            log_info "Updating all packages (official + AUR)..."
+            echo
+            yay -Syu --noconfirm
+            echo
+            log_success "System update complete"
+        else
+            log_info "Update cancelled"
         fi
     fi
-    
-    log_success "System update complete"
 }
 
 # Show package status
