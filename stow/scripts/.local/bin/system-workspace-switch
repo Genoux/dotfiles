@@ -7,13 +7,15 @@
 
 WORKSPACE=$1
 
-# Close special workspace if currently visible on monitor
+# Switch to target workspace FIRST (single atomic operation)
+# This prevents rapid focus changes that overwhelm AGS
+hyprctl dispatch workspace "$WORKSPACE"
+
+# THEN close special workspace if it was visible
+# This happens after focus is already on the target workspace
 SPECIAL_VISIBLE=$(hyprctl monitors -j | jq -r '.[].specialWorkspace.name' | grep -v '^$')
 
 if [ -n "$SPECIAL_VISIBLE" ]; then
     SPECIAL_NAME=${SPECIAL_VISIBLE#special:}
     [ "$SPECIAL_NAME" = "special" ] && hyprctl dispatch togglespecialworkspace || hyprctl dispatch togglespecialworkspace "$SPECIAL_NAME"
 fi
-
-# Switch to target workspace
-hyprctl dispatch workspace "$WORKSPACE"

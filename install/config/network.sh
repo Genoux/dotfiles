@@ -82,13 +82,45 @@ EOF
     fi
     
     log_success "NetworkManager dispatcher script installed"
-    
+
+    # NetworkManager resume hook - restart NetworkManager after sleep/suspend
+    log_info "Installing NetworkManager resume hook..."
+
+    sudo tee /etc/systemd/system/network-resume-hook.service >/dev/null <<'EOF'
+[Unit]
+Description=Network Resume Hook - Restart NetworkManager after sleep
+After=suspend.target hibernate.target hybrid-sleep.target suspend-then-hibernate.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/systemctl restart NetworkManager.service
+
+[Install]
+WantedBy=suspend.target hibernate.target hybrid-sleep.target suspend-then-hibernate.target
+EOF
+
+    if [[ $? -eq 0 ]]; then
+        log_success "NetworkManager resume hook installed"
+    else
+        graceful_error "Failed to install NetworkManager resume hook"
+        return 1
+    fi
+
+    # Enable the resume hook
+    if sudo systemctl enable network-resume-hook.service >/dev/null 2>&1; then
+        log_success "NetworkManager resume hook enabled"
+    else
+        graceful_error "Failed to enable NetworkManager resume hook"
+        return 1
+    fi
+
     # Reload systemd
     log_info "Reloading systemd daemon..."
     sudo systemctl daemon-reload
-    
+
     log_success "Network configuration complete"
-    log_info "Changes will take effect on next boot"
+    log_info "Boot fix will take effect on next boot"
+    log_info "Resume hook will take effect on next suspend/resume"
 }
 
 # Run setup when script is executed (not just sourced)

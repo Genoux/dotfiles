@@ -80,12 +80,10 @@ config_link() {
     
     cd "$STOW_DIR"
     
-    # Handle conflicts
-    if ! $force; then
-        if is_config_linked "$config"; then
-            log_info "$config is already linked"
-            return 0
-        fi
+    # Check if already linked (for messaging only)
+    local already_linked=false
+    if is_config_linked "$config"; then
+        already_linked=true
     fi
     
     # Special handling for scripts
@@ -97,10 +95,21 @@ config_link() {
         fi
     fi
     
-    # Stow the config
-    log_info "Linking $config..."
-    if stow -R -t "$HOME" "$config" 2>/dev/null; then
-        log_success "$config linked successfully"
+    # Stow the config (always restow to pick up new files)
+    if $already_linked; then
+        log_info "Re-stowing $config (updating symlinks)..."
+    else
+        log_info "Linking $config..."
+    fi
+    
+    # Try with --adopt to handle conflicts (adopts existing files into stow dir)
+    local stow_output
+    if stow_output=$(stow -R --adopt -t "$HOME" "$config" 2>&1); then
+        if $already_linked; then
+            log_success "$config re-stowed successfully"
+        else
+            log_success "$config linked successfully"
+        fi
         
         # Post-link actions
         case "$config" in
@@ -111,15 +120,30 @@ config_link() {
                 fi
                 ;;
             "system")
-                # Enable user systemd services
+                # Enable user systemd services (only if not already enabled/running)
                 if [[ -d "$HOME/.config/systemd/user" ]]; then
-                    log_info "Enabling user systemd services..."
+                    log_info "Checking user systemd services..."
                     for service in "$HOME/.config/systemd/user"/*.service; do
                         if [[ -f "$service" ]]; then
                             local service_name=$(basename "$service")
-                            systemctl --user enable --now "$service_name" 2>/dev/null && \
-                                log_success "Enabled $service_name" || \
-                                log_warning "Could not enable $service_name"
+                            
+                            # Check if already enabled
+                            if systemctl --user is-enabled "$service_name" &>/dev/null; then
+                                # Check if running
+                                if systemctl --user is-active "$service_name" &>/dev/null; then
+                                    log_info "$service_name already enabled and running"
+                                else
+                                    # Enabled but not running - start it
+                                    systemctl --user start "$service_name" 2>/dev/null && \
+                                        log_success "Started $service_name" || \
+                                        log_warning "Could not start $service_name"
+                                fi
+                            else
+                                # Not enabled - enable and start
+                                systemctl --user enable --now "$service_name" 2>/dev/null && \
+                                    log_success "Enabled and started $service_name" || \
+                                    log_warning "Could not enable $service_name"
+                            fi
                         fi
                     done
                 fi
@@ -128,7 +152,7 @@ config_link() {
         
         return 0
     else
-        graceful_error "Failed to link $config" "There may be conflicting files. Use --force to overwrite."
+        graceful_error "Failed to link $config" "$stow_output"
         return 1
     fi
 }

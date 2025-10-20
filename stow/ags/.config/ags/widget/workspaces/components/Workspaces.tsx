@@ -1,5 +1,6 @@
 import { For } from "ags";
 import { Gtk } from "ags/gtk4";
+import { execAsync } from "ags/process";
 import Hyprland from "gi://AstalHyprland";
 import { focusedWorkspace, workspaces } from "../service";
 import { Button } from "../../../lib/components";
@@ -18,7 +19,9 @@ export function Workspaces({ class: cls }: { class?: string }) {
               class={isFocused((focused) =>
                 focused ? "workspace workspace--focused" : "workspace"
               )}
-              onClicked={() => ws.focus()}
+              onClicked={() =>
+                execAsync(["system-workspace-switch", String(wsId)])
+              }
             >
               <box
                 halign={Gtk.Align.CENTER}

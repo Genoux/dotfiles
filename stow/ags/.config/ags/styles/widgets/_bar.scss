@@ -5,7 +5,7 @@
 
 .bar {
   background-color: rgba(255, 255, 255, 0.0);
-  padding: $spacing-sm $spacing-md;
+  padding: 0 $spacing-md $spacing-sm;
 
   // Smooth transitions for all bar animations
   transition: all 400ms cubic-bezier(0.4, 0.0, 0.2, 1),
