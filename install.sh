@@ -69,6 +69,8 @@ if command -v gum &>/dev/null; then
         "$(gum style --bold --foreground 212 'Dotfiles Installation')" \
         "" \
         "This will set up your system with:" \
+        "  • Mirror updates & database sync" \
+        "  • Smart package reconciliation" \
         "  • Packages from packages.txt & aur-packages.txt" \
         "  • Configurations via GNU Stow" \
         "  • Shell setup (zsh + Oh My Zsh)" \
@@ -83,6 +85,8 @@ else
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
     echo "This will set up your system with:"
+    echo "  • Mirror updates & database sync"
+    echo "  • Smart package reconciliation"
     echo "  • Packages from packages.txt & aur-packages.txt"
     echo "  • Configurations via GNU Stow"
     echo "  • Shell setup (zsh + Oh My Zsh)"

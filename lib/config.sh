@@ -5,6 +5,13 @@
 DOTFILES_DIR="$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" && pwd)"
 STOW_DIR="$DOTFILES_DIR/stow"
 
+# Validate stow directory exists
+if [[ ! -d "$STOW_DIR" ]]; then
+    echo "ERROR: Stow directory not found: $STOW_DIR"
+    echo "Your dotfiles repository may be corrupted or incomplete."
+    exit 1
+fi
+
 # Source helpers if not already loaded
 if [[ -z "${DOTFILES_HELPERS_LOADED:-}" ]]; then
     source "$DOTFILES_DIR/install/helpers/all.sh"
@@ -18,6 +25,161 @@ check_stow() {
         return 1
     fi
     return 0
+}
+
+# Interactive config management with checkboxes
+config_manage_interactive() {
+    check_stow || return 1
+
+    local configs=($(get_configs))
+    local options=()
+
+    # Build options and pre-selections simultaneously
+    local pre_selected=()
+    for config in "${configs[@]}"; do
+        if is_config_linked "$config"; then
+            local option="$config (linked)"
+            options+=("$option")
+            pre_selected+=("$option")
+        else
+            options+=("$config")
+        fi
+    done
+
+    local selected=()
+    if command -v gum &>/dev/null; then
+        log_info "Select configs to LINK (space to toggle, enter to apply)"
+        log_warning "Unchecked configs will be UNLINKED"
+        echo
+
+        # Build gum command with proper selections
+        local gum_args=(--no-limit --height=15)
+        for item in "${pre_selected[@]}"; do
+            gum_args+=(--selected="$item")
+        done
+
+        # Execute gum choose with pre-selections
+        readarray -t selected < <(gum choose "${gum_args[@]}" "${options[@]}")
+        local gum_exit=$?
+
+        # Check if user cancelled (ESC pressed)
+        if [[ $gum_exit -ne 0 ]]; then
+            echo
+            log_info "Cancelled - no changes made"
+            return 0
+        fi
+
+        # If nothing selected but we had options, user cancelled
+        if [[ ${#selected[@]} -eq 0 && ${#options[@]} -gt 0 ]]; then
+            echo
+            log_info "Cancelled - no changes made"
+            return 0
+        fi
+    else
+        log_warning "Interactive selection requires 'gum'"
+        return 1
+    fi
+
+    echo
+
+    # Confirmation before applying changes
+    local will_link=0
+    local will_unlink=0
+
+    for config in "${configs[@]}"; do
+        local is_selected=false
+        for sel in "${selected[@]}"; do
+            local sel_name="${sel%% (*}"
+            if [[ "$sel_name" == "$config" ]]; then
+                is_selected=true
+                break
+            fi
+        done
+
+        if $is_selected; then
+            if ! is_config_linked "$config"; then
+                ((will_link++))
+            fi
+        else
+            if is_config_linked "$config"; then
+                ((will_unlink++))
+            fi
+        fi
+    done
+
+    if [[ $will_link -gt 0 ]] || [[ $will_unlink -gt 0 ]]; then
+        log_warning "Changes to apply:"
+        [[ $will_link -gt 0 ]] && log_info "  • Will link: $will_link configs"
+        [[ $will_unlink -gt 0 ]] && log_warning "  • Will unlink: $will_unlink configs"
+        echo
+
+        if ! confirm "Apply these changes?"; then
+            log_info "Cancelled - no changes made"
+            return 0
+        fi
+    fi
+
+    echo
+    log_section "Applying Changes"
+
+    # Determine what to link and unlink
+    local to_link=()
+    local to_unlink=()
+
+    for config in "${configs[@]}"; do
+        local config_option="$config"
+        if is_config_linked "$config"; then
+            config_option="$config (linked)"
+        fi
+
+        local is_selected=false
+        for sel in "${selected[@]}"; do
+            local sel_name="${sel%% (*}"
+            if [[ "$sel_name" == "$config" ]]; then
+                is_selected=true
+                break
+            fi
+        done
+
+        if $is_selected; then
+            if ! is_config_linked "$config"; then
+                to_link+=("$config")
+            fi
+        else
+            if is_config_linked "$config"; then
+                to_unlink+=("$config")
+            fi
+        fi
+    done
+
+    # Apply changes
+    local changes=0
+
+    if [[ ${#to_link[@]} -gt 0 ]]; then
+        log_info "Linking ${#to_link[@]} configs..."
+        echo
+        for config in "${to_link[@]}"; do
+            config_link "$config"
+            ((changes++))
+        done
+        echo
+    fi
+
+    if [[ ${#to_unlink[@]} -gt 0 ]]; then
+        log_info "Unlinking ${#to_unlink[@]} configs..."
+        echo
+        for config in "${to_unlink[@]}"; do
+            config_unlink "$config"
+            ((changes++))
+        done
+        echo
+    fi
+
+    if [[ $changes -eq 0 ]]; then
+        log_success "No changes needed"
+    else
+        log_success "Applied $changes changes"
+    fi
 }
 
 # Get list of available configs
@@ -101,14 +263,43 @@ config_link() {
     else
         log_info "Linking $config..."
     fi
-    
-    # Try with --adopt to handle conflicts (adopts existing files into stow dir)
+
+    # Try stow - on conflict, backup and use repo version (repo is source of truth)
     local stow_output
-    if stow_output=$(stow -R --adopt -t "$HOME" "$config" 2>&1); then
+    if stow_output=$(stow -R -t "$HOME" "$config" 2>&1); then
         if $already_linked; then
             log_success "$config re-stowed successfully"
         else
             log_success "$config linked successfully"
+        fi
+    elif echo "$stow_output" | grep -q "existing target"; then
+        # Conflict detected - backup existing files and force repo version
+        log_warning "$config has conflicts with existing files"
+        log_info "Backing up existing files to ~/.config-backup/"
+
+        # Create backup directory
+        local backup_dir="$HOME/.config-backup/$(date +%Y%m%d-%H%M%S)"
+        mkdir -p "$backup_dir"
+
+        # Find conflicting files and backup
+        echo "$stow_output" | grep "existing target" | while read -r line; do
+            local target_file=$(echo "$line" | sed 's/.*existing target is neither a link nor a directory: //')
+            if [[ -f "$target_file" ]] || [[ -d "$target_file" ]]; then
+                local rel_path="${target_file#$HOME/}"
+                local backup_path="$backup_dir/$rel_path"
+                mkdir -p "$(dirname "$backup_path")"
+                mv "$target_file" "$backup_path"
+                log_info "  Backed up: $rel_path"
+            fi
+        done
+
+        # Now stow should work
+        if stow -R -t "$HOME" "$config" 2>&1; then
+            log_success "$config linked (conflicts backed up)"
+            log_info "Backup location: $backup_dir"
+        else
+            log_error "Failed to link $config even after backup"
+            return 1
         fi
         
         # Post-link actions

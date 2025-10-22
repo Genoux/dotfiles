@@ -260,9 +260,9 @@ menu_packages() {
 menu_configs() {
     while true; do
         clear_screen "Configs"
-        
+
         source "$DOTFILES_DIR/lib/config.sh"
-        
+
         # Show summary only
         local configs=($(get_configs))
         local linked_count=0
@@ -271,29 +271,28 @@ menu_configs() {
         done
         show_info "Status" "$linked_count/${#configs[@]} linked"
         echo
-        
+
         local action=$(choose_option \
+            "Manage links" \
             "Link all" \
-            "Link specific" \
-            "Unlink specific" \
             "Unlink all" \
             "Show details" \
             "Back")
-        
+
         [[ -z "$action" ]] && return  # ESC pressed
-        
+
         case "$action" in
+            "Manage links")
+                clear_screen
+                config_manage_interactive
+                echo
+                read -p "Press Enter to continue..."
+                ;;
             "Link all")
                 clear_screen
                 config_link_all
                 echo
                 read -p "Press Enter to continue..."
-                ;;
-            "Link specific")
-                config_select "link"
-                ;;
-            "Unlink specific")
-                config_select "unlink"
                 ;;
             "Unlink all")
                 clear_screen

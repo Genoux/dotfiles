@@ -33,9 +33,12 @@ install_omz() {
     fi
     
     log_info "Installing Oh My Zsh..."
-    
+    echo
+
+    log_info "Downloading installer..."
     local temp_file=$(mktemp)
-    if curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh > "$temp_file"; then
+    if curl -# -fL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh > "$temp_file"; then
+        echo
         # Run installer in unattended mode
         run_with_spinner "Installing Oh My Zsh" \
             env RUNZSH=no CHSH=no sh "$temp_file"
@@ -99,7 +102,7 @@ install_plugins() {
         fi
         
         log_info "  → Installing $plugin_name..."
-        if git clone --depth=1 "$plugin_url" "$plugin_dir" &>/dev/null; then
+        if git clone --depth=1 --progress "$plugin_url" "$plugin_dir" 2>&1 | grep -E 'Cloning|Receiving|remote:'; then
             log_success "  ✓ $plugin_name installed"
             ((installed++))
         else

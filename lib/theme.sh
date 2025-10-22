@@ -196,35 +196,46 @@ theme_install_gtk() {
     local failed=0
 
     # Install GTK theme
-    log_info "Installing GTK theme..."
+    log_info "Installing GTK theme from repository..."
     local repo_name=$(basename "$gtk_repo" .git)
+    echo
 
-    if git clone --depth=1 "$gtk_repo" "$temp_dir/$repo_name" &>/dev/null; then
+    if git clone --depth=1 --progress "$gtk_repo" "$temp_dir/$repo_name"; then
+        echo
         cd "$temp_dir/$repo_name"
-        if eval "$gtk_cmd" &>/dev/null; then
-            log_success "  ✓ GTK theme installed"
+        log_info "Running GTK theme install script..."
+        if eval "$gtk_cmd"; then
+            echo
+            log_success "GTK theme installed"
         else
-            log_error "  ✗ GTK theme install failed"
+            echo
+            log_error "GTK theme install failed"
             ((failed++))
         fi
-        cd - &>/dev/null
+        cd - >/dev/null
     else
-        log_error "  ✗ Failed to clone GTK repo"
+        echo
+        log_error "Failed to clone GTK repository"
         ((failed++))
     fi
 
     # Install icon theme
     if [[ -n "$icons_repo" ]]; then
         echo
-        log_info "Installing icon theme..."
+        log_info "Installing icon theme from repository..."
         local repo_name=$(basename "$icons_repo" .git)
+        echo
 
-        if git clone --depth=1 "$icons_repo" "$temp_dir/$repo_name" &>/dev/null; then
+        if git clone --depth=1 --progress "$icons_repo" "$temp_dir/$repo_name"; then
+            echo
             cd "$temp_dir/$repo_name"
-            if eval "$icons_cmd" &>/dev/null; then
-                log_success "  ✓ Icon theme installed"
+            log_info "Running icon theme install script..."
+            if eval "$icons_cmd"; then
+                echo
+                log_success "Icon theme installed"
             else
-                log_error "  ✗ Icon theme install failed"
+                echo
+                log_error "Icon theme install failed"
                 ((failed++))
             fi
             cd - &>/dev/null

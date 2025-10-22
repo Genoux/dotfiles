@@ -18,8 +18,6 @@ export function WindowTitle({ class: cls = "" }: { class?: string }) {
           const title = c?.get_title() || "";
           return truncateText(title.trim(), 54);
         })}
-        xalign={0.0}
-        marginEnd={3}
       />
     </box>
   );

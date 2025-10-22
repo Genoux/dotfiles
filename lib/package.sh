@@ -14,15 +14,158 @@ fi
 PACKAGES_FILE="$DOTFILES_DIR/packages.txt"
 AUR_PACKAGES_FILE="$DOTFILES_DIR/aur-packages.txt"
 
+# Prepare system for package installation
+packages_prepare() {
+    log_section "Preparing System"
+
+    # Check if mirrors need updating (older than 7 days)
+    local mirrorlist="/etc/pacman.d/mirrorlist"
+    local needs_update=false
+
+    if [[ -f "$mirrorlist" ]]; then
+        local mirror_age=$(($(date +%s) - $(stat -c %Y "$mirrorlist")))
+        local seven_days=$((7 * 24 * 60 * 60))
+
+        if [[ $mirror_age -gt $seven_days ]]; then
+            needs_update=true
+            log_info "Mirror list is older than 7 days"
+        else
+            log_success "Mirror list is recent (updated $(date -d @$(stat -c %Y "$mirrorlist") '+%Y-%m-%d'))"
+        fi
+    else
+        needs_update=true
+    fi
+
+    if $needs_update; then
+        log_info "Updating pacman mirrors..."
+        echo
+
+        if ! command -v reflector &>/dev/null; then
+            log_info "Installing reflector for mirror management..."
+            sudo pacman -S --needed --noconfirm reflector
+            echo
+        fi
+
+        # Backup existing mirrorlist
+        sudo cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.backup
+
+        log_info "Ranking mirrors by speed..."
+        if ! sudo reflector \
+            --country US \
+            --age 6 \
+            --protocol https \
+            --sort rate \
+            --fastest 10 \
+            --connection-timeout 3 \
+            --download-timeout 5 \
+            --save /etc/pacman.d/mirrorlist.new; then
+            log_error "Reflector failed, keeping existing mirrors"
+            sudo rm -f /etc/pacman.d/mirrorlist.new
+        elif [[ ! -s /etc/pacman.d/mirrorlist.new ]]; then
+            log_error "Generated mirrorlist is empty, restoring backup"
+            sudo rm -f /etc/pacman.d/mirrorlist.new
+        else
+            # Atomic move
+            sudo mv /etc/pacman.d/mirrorlist.new /etc/pacman.d/mirrorlist
+            echo
+            log_success "Mirrors updated and ranked"
+        fi
+    fi
+    echo
+
+    # Sync package databases
+    log_info "Synchronizing package databases..."
+    sudo pacman -Sy --noconfirm
+    echo
+    log_success "Package databases synchronized"
+    echo
+}
+
+# Clean packages not in dotfiles lists
+packages_clean() {
+    log_section "Cleaning Packages"
+
+    # Check if package files exist
+    if [[ ! -f "$PACKAGES_FILE" ]] || [[ ! -f "$AUR_PACKAGES_FILE" ]]; then
+        log_warning "Package lists not found, skipping clean"
+        return
+    fi
+
+    # Read desired packages
+    local desired_official=()
+    while IFS= read -r pkg; do
+        [[ -z "$pkg" ]] && continue
+        [[ "$pkg" =~ ^#.*$ ]] && continue
+        desired_official+=("$pkg")
+    done < "$PACKAGES_FILE"
+
+    local desired_aur=()
+    while IFS= read -r pkg; do
+        [[ -z "$pkg" ]] && continue
+        [[ "$pkg" =~ ^#.*$ ]] && continue
+        desired_aur+=("$pkg")
+    done < "$AUR_PACKAGES_FILE"
+
+    # Get currently installed explicitly installed packages
+    local installed_official=()
+    while IFS= read -r pkg; do
+        installed_official+=("$pkg")
+    done < <(pacman -Qeq | grep -vf <(pacman -Qmq))
+
+    local installed_aur=()
+    while IFS= read -r pkg; do
+        installed_aur+=("$pkg")
+    done < <(pacman -Qmq)
+
+    # Find packages to remove
+    local to_remove=()
+
+    for pkg in "${installed_official[@]}"; do
+        if [[ ! " ${desired_official[@]} " =~ " ${pkg} " ]]; then
+            to_remove+=("$pkg")
+        fi
+    done
+
+    for pkg in "${installed_aur[@]}"; do
+        if [[ ! " ${desired_aur[@]} " =~ " ${pkg} " ]]; then
+            to_remove+=("$pkg")
+        fi
+    done
+
+    if [[ ${#to_remove[@]} -gt 0 ]]; then
+        log_warning "Found ${#to_remove[@]} packages not in your dotfiles lists"
+        echo
+        log_info "Packages to remove:"
+        printf '  - %s\n' "${to_remove[@]}"
+        echo
+
+        if confirm "Remove these packages?"; then
+            log_info "Removing packages..."
+            sudo pacman -Rns --noconfirm "${to_remove[@]}"
+            echo
+            log_success "Packages removed"
+        else
+            log_warning "Skipped package removal"
+        fi
+    else
+        log_success "No extra packages found"
+    fi
+
+    echo
+}
+
 # Install packages from lists
 packages_install() {
+    # Always prepare system first
+    packages_prepare
+
     log_section "Installing Packages"
-    
+
     # Check if package files exist
     if [[ ! -f "$PACKAGES_FILE" ]]; then
         fatal_error "packages.txt not found in $DOTFILES_DIR"
     fi
-    
+
     if [[ ! -f "$AUR_PACKAGES_FILE" ]]; then
         fatal_error "aur-packages.txt not found in $DOTFILES_DIR"
     fi
@@ -52,7 +195,182 @@ packages_install() {
     
     log_info "Found ${#packages[@]} official packages and ${#aur_packages[@]} AUR packages"
     echo
-    
+
+    # Check for packages not in lists
+    log_info "Checking for unlisted packages..."
+    local installed_official=()
+    while IFS= read -r pkg; do
+        installed_official+=("$pkg")
+    done < <(pacman -Qeq | grep -vf <(pacman -Qmq))
+
+    local installed_aur=()
+    while IFS= read -r pkg; do
+        installed_aur+=("$pkg")
+    done < <(pacman -Qmq)
+
+    local unlisted=()
+    for pkg in "${installed_official[@]}"; do
+        if [[ ! " ${packages[@]} " =~ " ${pkg} " ]]; then
+            unlisted+=("$pkg:official")
+        fi
+    done
+
+    for pkg in "${installed_aur[@]}"; do
+        if [[ ! " ${aur_packages[@]} " =~ " ${pkg} " ]]; then
+            unlisted+=("$pkg:aur")
+        fi
+    done
+
+    if [[ ${#unlisted[@]} -gt 0 ]]; then
+        log_warning "Found ${#unlisted[@]} packages not in your dotfiles lists"
+        echo
+        log_info "Unlisted packages:"
+        for entry in "${unlisted[@]}"; do
+            local pkg="${entry%%:*}"
+            local type="${entry##*:}"
+            printf '  - %s (%s)\n' "$pkg" "$type"
+        done
+        echo
+
+        if command -v gum &>/dev/null; then
+            local choice=$(gum choose --header "What would you like to do?" \
+                "Add all to package lists" \
+                "Select which to keep (unchecked will be removed)" \
+                "Skip for now")
+        else
+            echo "What would you like to do?"
+            echo "  1) Add all to package lists"
+            echo "  2) Select which to keep (unchecked will be removed)"
+            echo "  3) Skip for now"
+            read -p "Choice [1-3]: " choice_num
+            case "$choice_num" in
+                1) choice="Add all to package lists" ;;
+                2) choice="Select which to keep (unchecked will be removed)" ;;
+                *) choice="Skip for now" ;;
+            esac
+        fi
+
+        case "$choice" in
+            "Add all to package lists")
+                for entry in "${unlisted[@]}"; do
+                    local pkg="${entry%%:*}"
+                    local type="${entry##*:}"
+                    if [[ "$type" == "aur" ]]; then
+                        echo "$pkg" >> "$AUR_PACKAGES_FILE"
+                    else
+                        echo "$pkg" >> "$PACKAGES_FILE"
+                    fi
+                done
+                sort -u "$PACKAGES_FILE" -o "$PACKAGES_FILE"
+                sort -u "$AUR_PACKAGES_FILE" -o "$AUR_PACKAGES_FILE"
+                log_success "Added ${#unlisted[@]} packages to your lists"
+                ;;
+            "Select which to keep (unchecked will be removed)")
+                echo
+                local options=()
+                for entry in "${unlisted[@]}"; do
+                    local pkg="${entry%%:*}"
+                    local type="${entry##*:}"
+                    options+=("$pkg ($type)")
+                done
+
+                local selected=()
+                local cancelled=false
+
+                if command -v gum &>/dev/null; then
+                    log_info "Select packages to KEEP (space to select, enter to confirm)"
+                    log_warning "Unchecked packages will be REMOVED from your system"
+                    echo
+                    readarray -t selected < <(gum choose --no-limit "${options[@]}" 2>/dev/null)
+                    local gum_exit=$?
+
+                    # Check if user cancelled (ESC pressed)
+                    if [[ $gum_exit -ne 0 ]]; then
+                        echo
+                        log_info "Cancelled - no changes made"
+                        cancelled=true
+                    fi
+                else
+                    log_warning "Interactive selection requires 'gum'. Adding all packages..."
+                    selected=("${options[@]}")
+                fi
+
+                # Skip rest of logic if cancelled - use early termination of case branch
+                if ! $cancelled; then
+                    # Add selected packages to lists
+                    local added_count=0
+                for item in "${selected[@]}"; do
+                    local pkg="${item%% (*}"
+                    local type="${item##*(}"
+                    type="${type%)}"
+
+                    if [[ "$type" == "aur" ]]; then
+                        echo "$pkg" >> "$AUR_PACKAGES_FILE"
+                    else
+                        echo "$pkg" >> "$PACKAGES_FILE"
+                    fi
+                    ((added_count++))
+                done
+
+                if [[ $added_count -gt 0 ]]; then
+                    sort -u "$PACKAGES_FILE" -o "$PACKAGES_FILE"
+                    sort -u "$AUR_PACKAGES_FILE" -o "$AUR_PACKAGES_FILE"
+                fi
+
+                # Remove unselected packages
+                local to_remove=()
+                for entry in "${unlisted[@]}"; do
+                    local pkg="${entry%%:*}"
+                    local type="${entry##*:}"
+                    local item="$pkg ($type)"
+                    local found=false
+
+                    for sel in "${selected[@]}"; do
+                        if [[ "$sel" == "$item" ]]; then
+                            found=true
+                            break
+                        fi
+                    done
+
+                    if ! $found; then
+                        to_remove+=("$pkg")
+                    fi
+                done
+
+                echo
+                if [[ ${#to_remove[@]} -gt 0 ]]; then
+                    log_warning "About to remove ${#to_remove[@]} unchecked packages:"
+                    printf '  - %s\n' "${to_remove[@]}"
+                    echo
+
+                    if confirm "Remove these ${#to_remove[@]} packages?"; then
+                        log_info "Removing packages..."
+                        sudo pacman -Rns --noconfirm "${to_remove[@]}"
+                        echo
+                        log_success "Kept $added_count packages, removed ${#to_remove[@]} packages"
+                    else
+                        log_info "Cancelled removal - packages kept"
+                        if [[ $added_count -gt 0 ]]; then
+                            log_success "Added $added_count packages to your lists"
+                        fi
+                    fi
+                    elif [[ $added_count -gt 0 ]]; then
+                        log_success "Added $added_count packages to your lists"
+                    else
+                        log_info "No packages selected - none added or removed"
+                    fi
+                fi  # End of if ! $cancelled
+                ;;
+            *)
+                log_info "Skipped unlisted packages"
+                ;;
+        esac
+        echo
+    else
+        log_success "All installed packages are in your dotfiles lists"
+        echo
+    fi
+
     # Find missing official packages
     local missing_official=()
     for pkg in "${packages[@]}"; do
@@ -68,8 +386,9 @@ packages_install() {
         log_info "Packages to install: ${missing_official[*]}"
         echo
         if confirm "Install ${#missing_official[@]} official packages?"; then
-            log_info "Installing official packages (this may take a while)..."
-            sudo pacman -S --needed --noconfirm "${missing_official[@]}"
+            log_info "Installing official packages..."
+            echo
+            sudo pacman -S --needed "${missing_official[@]}"
             echo
             log_success "Official packages installed"
         else
@@ -86,11 +405,16 @@ packages_install() {
         if ! command -v yay &>/dev/null; then
             log_info "Installing yay (AUR helper)..."
             echo
-            sudo pacman -S --needed --noconfirm base-devel git
+            log_info "Installing base-devel and git..."
+            sudo pacman -S --needed base-devel git
+            echo
+            log_info "Cloning yay repository..."
             cd /tmp
             rm -rf yay
-            git clone https://aur.archlinux.org/yay.git
+            git clone --depth=1 --progress https://aur.archlinux.org/yay.git
             cd yay
+            echo
+            log_info "Building yay from source..."
             makepkg -si --noconfirm
             cd -
             echo
@@ -113,8 +437,9 @@ packages_install() {
             log_info "Packages to install: ${missing_aur[*]}"
             echo
             if confirm "Install ${#missing_aur[@]} AUR packages?"; then
-                log_info "Installing AUR packages (this may take a while)..."
-                yay -S --needed --noconfirm "${missing_aur[@]}"
+                log_info "Installing AUR packages..."
+                echo
+                yay -S --needed "${missing_aur[@]}"
                 echo
                 log_success "AUR packages installed"
             else
