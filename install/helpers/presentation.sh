@@ -18,6 +18,67 @@ export PURPLE='\033[0;35m'
 export GRAY='\033[0;90m'
 export NC='\033[0m'
 
+# Centered box UI helpers
+export BOX_WIDTH=70
+
+get_terminal_dimensions() {
+    export TERM_WIDTH=$(tput cols 2>/dev/null || echo 80)
+    export TERM_HEIGHT=$(tput lines 2>/dev/null || echo 24)
+}
+
+box_padding() {
+    local box_padding=$(( (TERM_WIDTH - BOX_WIDTH) / 2 ))
+    [[ $box_padding -lt 0 ]] && box_padding=0
+    echo "$box_padding"
+}
+
+box_line() {
+    local padding=$(box_padding)
+    printf "%*s%s\n" $padding "" "$1"
+}
+
+center_in_box() {
+    local text="$1"
+    local padding=$(box_padding)
+    local content_width=$((BOX_WIDTH - 4))
+    local text_padding=$(( (content_width - ${#text}) / 2 ))
+    [[ $text_padding -lt 0 ]] && text_padding=0
+    printf "%*s│ %*s%s%*s │\n" $padding "" $text_padding "" "$text" $((content_width - text_padding - ${#text})) ""
+}
+
+left_in_box() {
+    local text="$1"
+    local padding=$(box_padding)
+    local content_width=$((BOX_WIDTH - 4))
+    local remaining=$((content_width - ${#text}))
+    [[ $remaining -lt 0 ]] && remaining=0
+    printf "%*s│ %s%*s │\n" $padding "" "$text" $remaining ""
+}
+
+box_empty() {
+    box_line "│$(printf ' %.0s' {1..68})│"
+}
+
+box_top() {
+    box_line "╭$(printf '─%.0s' {1..68})╮"
+}
+
+box_bottom() {
+    box_line "╰$(printf '─%.0s' {1..68})╯"
+}
+
+box_divider() {
+    box_line "├$(printf '─%.0s' {1..68})┤"
+}
+
+vertical_center() {
+    local content_lines="$1"
+    get_terminal_dimensions
+    local padding_top=$(( (TERM_HEIGHT - content_lines) / 2 ))
+    [[ $padding_top -lt 0 ]] && padding_top=0
+    for ((i = 0; i < padding_top; i++)); do echo; done
+}
+
 # Logging functions
 log_info() {
     if command -v gum &>/dev/null; then
@@ -118,12 +179,11 @@ get_input() {
     fi
 }
 
-# Menu selection
+# Menu selection with consistent styling
 choose_option() {
     if command -v gum &>/dev/null; then
-        gum choose "$@"
+        gum choose --header "" --height 15 --cursor.foreground 212 "$@"
     else
-        # Fallback to simple menu
         local options=("$@")
         select opt in "${options[@]}"; do
             if [[ -n "$opt" ]]; then
@@ -131,6 +191,15 @@ choose_option() {
                 break
             fi
         done
+    fi
+}
+
+# Multi-select menu
+choose_option_multi() {
+    if command -v gum &>/dev/null; then
+        gum choose --no-limit --height 15 --cursor.foreground 212 "$@"
+    else
+        echo "$@"
     fi
 }
 
@@ -152,11 +221,63 @@ clear_screen() {
 show_info() {
     local key="$1"
     local value="$2"
-    
+
     if command -v gum &>/dev/null; then
         echo "$(gum style --foreground 240 "$key:")  $(gum style --foreground 15 "$value")"
     else
         echo -e "${GRAY}$key:${NC} $value"
+    fi
+}
+
+# Run command with clean UI: header + muted boxed output
+run_with_clean_ui() {
+    local title="$1"
+    local command="$2"
+
+    if command -v gum &>/dev/null; then
+        # Show header with border
+        gum style \
+            --border double \
+            --border-foreground 212 \
+            --padding "0 2" \
+            --bold \
+            "$title"
+        echo
+
+        # Show muted "Output:" label
+        gum style --foreground 240 "Output:"
+        echo
+
+        # Run command and show output as faint/muted
+        eval "$command" 2>&1 | while IFS= read -r line; do
+            gum style --faint "  $line"
+        done
+
+        echo
+    else
+        # Fallback without gum
+        echo "━━━ $title ━━━"
+        echo
+        eval "$command"
+        echo
+    fi
+}
+
+# Run command with spinner and scrolling output
+run_with_spinner_box() {
+    local title="$1"
+    local command="$2"
+    local max_lines="${3:-15}"  # Show last 15 lines by default
+
+    if command -v gum &>/dev/null; then
+        # Use gum spin with output shown
+        gum spin --spinner dot --title "$title" --show-output -- bash -c "$command"
+    else
+        # Fallback without gum
+        echo "⟳ $title"
+        echo "─────────────────────────────"
+        eval "$command"
+        echo "─────────────────────────────"
     fi
 }
 

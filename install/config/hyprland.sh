@@ -1,6 +1,12 @@
 #!/bin/bash
 # Setup Hyprland monitors
 
+# Source helpers first
+if [[ -z "${DOTFILES_HELPERS_LOADED:-}" ]]; then
+    source "$DOTFILES_INSTALL/helpers/all.sh"
+    export DOTFILES_HELPERS_LOADED=true
+fi
+
 # Source hyprland library
 source "$DOTFILES_DIR/lib/hyprland.sh"
 

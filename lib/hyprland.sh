@@ -249,30 +249,40 @@ hyprland_setup() {
 # Show Hyprland status
 hyprland_status() {
     log_section "Hyprland Status"
-    
+
     if ! command -v hyprctl &>/dev/null; then
         show_info "Hyprland" "✗ Not installed"
         return 1
     fi
-    
-    show_info "Hyprland" "✓ Installed"
-    
-    # Check if running
+
+    # Get version
+    local version=$(hyprctl version 2>/dev/null | head -1 | grep -oP 'Hyprland \K\d+\.\d+\.\d+' || echo "unknown")
+    show_info "Version" "$version"
+
+    # Check if running and show monitors
     if hyprctl version &>/dev/null 2>&1; then
-        show_info "Status" "Running"
-        
-        # Show monitor config
-        if [[ -f "$MONITORS_CONF" ]]; then
-            show_info "Monitor config" "✓ Configured"
-        else
-            show_info "Monitor config" "✗ Not configured"
-        fi
-        
-        # Show active monitors
-        local monitor_count=$(hyprctl monitors 2>/dev/null | grep -c "^Monitor")
-        show_info "Active monitors" "$monitor_count"
+        echo
+        log_info "Monitors:"
+
+        # Parse monitor info
+        local current_monitor=""
+        local current_res=""
+        local current_refresh=""
+
+        while IFS= read -r line; do
+            # Monitor name line: "Monitor eDP-1 (ID 0):"
+            if [[ $line =~ ^Monitor\ ([^[:space:]]+)\ \(ID ]]; then
+                current_monitor="${BASH_REMATCH[1]}"
+            # Resolution line: "  1920x1080@60.00000 at 0x0"
+            elif [[ $line =~ ^[[:space:]]+([0-9]+x[0-9]+)@([0-9]+\.[0-9]+) ]]; then
+                current_res="${BASH_REMATCH[1]}"
+                current_refresh=$(printf "%.0f" "${BASH_REMATCH[2]}")
+                printf "  \033[94m%s\033[0m \033[90m%s @ %sHz\033[0m\n" "$current_monitor" "$current_res" "$current_refresh"
+            fi
+        done < <(hyprctl monitors 2>/dev/null)
     else
-        show_info "Status" "Not running"
+        echo
+        show_info "Status" "Not running (start Hyprland to see details)"
     fi
 }
 

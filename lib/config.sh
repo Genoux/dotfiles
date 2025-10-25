@@ -48,12 +48,14 @@ config_manage_interactive() {
 
     local selected=()
     if command -v gum &>/dev/null; then
-        log_info "Select configs to LINK (space to toggle, enter to apply)"
-        log_warning "Unchecked configs will be UNLINKED"
+        clear
+        echo
+        printf "\033[94mSelect configs to link\033[0m\n"
+        printf "\033[90m(space to toggle, enter to apply - unchecked will be unlinked)\033[0m\n"
         echo
 
-        # Build gum command with proper selections
-        local gum_args=(--no-limit --height=15)
+        # Build gum command with pre-selections
+        local gum_args=(--no-limit --height 15 --cursor.foreground 212)
         for item in "${pre_selected[@]}"; do
             gum_args+=(--selected="$item")
         done
@@ -64,16 +66,14 @@ config_manage_interactive() {
 
         # Check if user cancelled (ESC pressed)
         if [[ $gum_exit -ne 0 ]]; then
-            echo
-            log_info "Cancelled - no changes made"
-            return 0
+            # Return 1 to skip "Press Enter"
+            return 1
         fi
 
         # If nothing selected but we had options, user cancelled
         if [[ ${#selected[@]} -eq 0 && ${#options[@]} -gt 0 ]]; then
-            echo
-            log_info "Cancelled - no changes made"
-            return 0
+            # Return 1 to skip "Press Enter"
+            return 1
         fi
     else
         log_warning "Interactive selection requires 'gum'"
@@ -114,8 +114,8 @@ config_manage_interactive() {
         echo
 
         if ! confirm "Apply these changes?"; then
-            log_info "Cancelled - no changes made"
-            return 0
+            # Return 1 to skip "Press Enter"
+            return 1
         fi
     fi
 
@@ -193,18 +193,6 @@ is_config_linked() {
     local config="$1"
     
     case "$config" in
-        "system")
-            # Check if any system config file is linked
-            if [[ -d "$STOW_DIR/system/.config" ]]; then
-                for file in "$STOW_DIR/system/.config"/*; do
-                    local basename=$(basename "$file")
-                    if [[ -L "$HOME/.config/$basename" ]]; then
-                        return 0
-                    fi
-                done
-            fi
-            return 1
-            ;;
         "shell")
             [[ -L "$HOME/.zshrc" ]] || [[ -L "$HOME/.profile" ]] || [[ -L "$HOME/.zprofile" ]]
             ;;
@@ -266,12 +254,15 @@ config_link() {
 
     # Try stow - on conflict, backup and use repo version (repo is source of truth)
     local stow_output
+    local stow_success=false
+
     if stow_output=$(stow -R -t "$HOME" "$config" 2>&1); then
         if $already_linked; then
             log_success "$config re-stowed successfully"
         else
             log_success "$config linked successfully"
         fi
+        stow_success=true
     elif echo "$stow_output" | grep -q "existing target"; then
         # Conflict detected - backup existing files and force repo version
         log_warning "$config has conflicts with existing files"
@@ -297,12 +288,18 @@ config_link() {
         if stow -R -t "$HOME" "$config" 2>&1; then
             log_success "$config linked (conflicts backed up)"
             log_info "Backup location: $backup_dir"
+            stow_success=true
         else
             log_error "Failed to link $config even after backup"
             return 1
         fi
-        
-        # Post-link actions
+    else
+        graceful_error "Failed to link $config" "$stow_output"
+        return 1
+    fi
+
+    # Post-link actions (run after successful stow)
+    if $stow_success; then
         case "$config" in
             "applications")
                 if command -v update-desktop-database &>/dev/null; then
@@ -310,42 +307,37 @@ config_link() {
                     log_info "Updated desktop database"
                 fi
                 ;;
-            "system")
-                # Enable user systemd services (only if not already enabled/running)
-                if [[ -d "$HOME/.config/systemd/user" ]]; then
-                    log_info "Checking user systemd services..."
-                    for service in "$HOME/.config/systemd/user"/*.service; do
-                        if [[ -f "$service" ]]; then
-                            local service_name=$(basename "$service")
-                            
-                            # Check if already enabled
-                            if systemctl --user is-enabled "$service_name" &>/dev/null; then
-                                # Check if running
-                                if systemctl --user is-active "$service_name" &>/dev/null; then
-                                    log_info "$service_name already enabled and running"
-                                else
-                                    # Enabled but not running - start it
-                                    systemctl --user start "$service_name" 2>/dev/null && \
-                                        log_success "Started $service_name" || \
-                                        log_warning "Could not start $service_name"
-                                fi
-                            else
-                                # Not enabled - enable and start
-                                systemctl --user enable --now "$service_name" 2>/dev/null && \
-                                    log_success "Enabled and started $service_name" || \
-                                    log_warning "Could not enable $service_name"
-                            fi
-                        fi
-                    done
-                fi
-                ;;
         esac
-        
-        return 0
-    else
-        graceful_error "Failed to link $config" "$stow_output"
-        return 1
+
+        # Enable user systemd services if present (for any config that has them)
+        if [[ -d "$HOME/.config/systemd/user" ]]; then
+            for service in "$HOME/.config/systemd/user"/*.service; do
+                if [[ -f "$service" ]]; then
+                    local service_name=$(basename "$service")
+
+                    # Check if this service was just linked by this config
+                    if readlink "$service" 2>/dev/null | grep -q "dotfiles/stow/$config"; then
+                        # Check if already enabled
+                        if systemctl --user is-enabled "$service_name" &>/dev/null; then
+                            if systemctl --user is-active "$service_name" &>/dev/null; then
+                                log_info "$service_name already enabled and running"
+                            else
+                                systemctl --user start "$service_name" 2>/dev/null && \
+                                    log_success "Started $service_name" || \
+                                    log_warning "Could not start $service_name"
+                            fi
+                        else
+                            systemctl --user enable --now "$service_name" 2>/dev/null && \
+                                log_success "Enabled and started $service_name" || \
+                                log_warning "Could not enable $service_name"
+                        fi
+                    fi
+                fi
+            done
+        fi
     fi
+
+    return 0
 }
 
 # Unlink a config
@@ -361,23 +353,20 @@ config_unlink() {
     
     cd "$STOW_DIR"
     
-    # Pre-unlink actions
-    case "$config" in
-        "system")
-            # Disable user systemd services first
-            if [[ -d "$HOME/.config/systemd/user" ]]; then
-                log_info "Disabling user systemd services..."
-                for service in "$HOME/.config/systemd/user"/*.service; do
-                    if [[ -f "$service" ]]; then
-                        local service_name=$(basename "$service")
-                        systemctl --user disable --now "$service_name" 2>/dev/null && \
-                            log_success "Disabled $service_name" || \
-                            log_warning "Could not disable $service_name"
-                    fi
-                done
+    # Pre-unlink actions - disable user systemd services if they belong to this config
+    if [[ -d "$HOME/.config/systemd/user" ]]; then
+        for service in "$HOME/.config/systemd/user"/*.service; do
+            if [[ -f "$service" ]]; then
+                # Check if this service belongs to the config being unlinked
+                if readlink "$service" 2>/dev/null | grep -q "dotfiles/stow/$config"; then
+                    local service_name=$(basename "$service")
+                    systemctl --user disable --now "$service_name" 2>/dev/null && \
+                        log_success "Disabled $service_name" || \
+                        log_warning "Could not disable $service_name"
+                fi
             fi
-            ;;
-    esac
+        done
+    fi
     
     log_info "Unlinking $config..."
     if stow -D -t "$HOME" "$config" 2>/dev/null; then
@@ -477,7 +466,7 @@ config_select() {
     # Simple config list
     local display_configs=("${configs[@]}")
     display_configs+=("Back")
-    
+
     clear_screen "Select Config"
     local choice=$(choose_option "${display_configs[@]}")
     

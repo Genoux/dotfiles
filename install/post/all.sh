@@ -1,5 +1,6 @@
 #!/bin/bash
 # Post-installation tasks
 
-run_logged "$DOTFILES_INSTALL/post/finished.sh"
+# Run finished screen directly (not logged) to preserve terminal input
+bash "$DOTFILES_INSTALL/post/finished.sh"
 

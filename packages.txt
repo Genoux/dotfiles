@@ -97,6 +97,7 @@ linux-firmware
 lutris
 lxappearance
 lxsession
+mako
 mesa-utils
 nano
 nautilus

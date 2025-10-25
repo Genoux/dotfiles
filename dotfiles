@@ -33,8 +33,7 @@ show_usage() {
         echo -e "\e[38;5;14m  install\e[0m\e[38;5;240m              Run full installation\e[0m"
         echo
         echo -e "\e[38;5;14m  packages\e[0m\e[38;5;240m             Manage packages\e[0m"
-        echo "    install                Install from txt files"
-        echo "    sync                   Update txt files from system"
+        echo "    manage                 Interactive package management (default)"
         echo "    update                 System update (yay -Syu)"
         echo "    status                 Show package info"
         echo
@@ -67,8 +66,7 @@ show_usage() {
         echo "  install                   Run full installation"
         echo ""
         echo "  packages                  Manage packages"
-        echo "    install                 Install from txt files"
-        echo "    sync                    Update txt files from system"
+        echo "    manage                  Interactive package management (default)"
         echo "    update                  System update (yay -Syu)"
         echo "    status                  Show package info"
         echo ""
@@ -137,10 +135,9 @@ show_menu() {
         
         local action
         if command -v gum &>/dev/null; then
-            action=$(gum choose --selected "System Status" \
+            action=$(gum choose --header "" --selected "System Status" \
                 "System Status" \
                 "Full Install" \
-                "" \
                 "Packages" \
                 "Configs" \
                 "Themes" \
@@ -152,7 +149,6 @@ show_menu() {
             action=$(choose_option \
                 "System Status" \
                 "Full Install" \
-                "" \
                 "Packages" \
                 "Configs" \
                 "Themes" \
@@ -172,9 +168,7 @@ show_menu() {
                 ;;
             "Full Install")
                 clear_screen
-                if confirm "Run full installation?"; then
-                    bash "$DOTFILES_DIR/install.sh"
-                fi
+                bash "$DOTFILES_DIR/install.sh"
                 ;;
             "Packages")
                 menu_packages
@@ -216,32 +210,29 @@ menu_packages() {
         echo
         
         local action=$(choose_option \
-            "Install from lists" \
-            "Sync lists from system" \
+            "Manage packages" \
             "Update system" \
             "Show status" \
             "Back")
-        
+
         [[ -z "$action" ]] && return  # ESC pressed
-        
+
         case "$action" in
-            "Install from lists")
+            "Manage packages")
                 clear_screen
-                packages_install
-                echo
-                read -p "Press Enter to continue..."
-                ;;
-            "Sync lists from system")
-                clear_screen
-                packages_sync
-                echo
-                read -p "Press Enter to continue..."
+                packages_manage
+                if [[ $? -eq 0 ]]; then
+                    echo
+                    read -p "Press Enter to continue..."
+                fi
                 ;;
             "Update system")
                 clear_screen
                 packages_update
-                echo
-                read -p "Press Enter to continue..."
+                if [[ $? -eq 0 ]]; then
+                    echo
+                    read -p "Press Enter to continue..."
+                fi
                 ;;
             "Show status")
                 clear_screen
@@ -285,22 +276,28 @@ menu_configs() {
             "Manage links")
                 clear_screen
                 config_manage_interactive
-                echo
-                read -p "Press Enter to continue..."
+                if [[ $? -eq 0 ]]; then
+                    echo
+                    read -p "Press Enter to continue..."
+                fi
                 ;;
             "Link all")
                 clear_screen
                 config_link_all
-                echo
-                read -p "Press Enter to continue..."
+                if [[ $? -eq 0 ]]; then
+                    echo
+                    read -p "Press Enter to continue..."
+                fi
                 ;;
             "Unlink all")
                 clear_screen
                 if confirm "Unlink all configs?"; then
                     config_unlink_all
                 fi
-                echo
-                read -p "Press Enter to continue..."
+                if [[ $? -eq 0 ]]; then
+                    echo
+                    read -p "Press Enter to continue..."
+                fi
                 ;;
             "Show details")
                 clear_screen
@@ -340,14 +337,18 @@ menu_themes() {
             "Apply theme")
                 clear_screen
                 theme_apply
-                echo
-                read -p "Press Enter to continue..."
+                if [[ $? -eq 0 ]]; then
+                    echo
+                    read -p "Press Enter to continue..."
+                fi
                 ;;
             "Install GTK theme")
                 clear_screen
                 theme_install_gtk
-                echo
-                read -p "Press Enter to continue..."
+                if [[ $? -eq 0 ]]; then
+                    echo
+                    read -p "Press Enter to continue..."
+                fi
                 ;;
             "Show details")
                 clear_screen
@@ -364,34 +365,92 @@ menu_themes() {
 
 # Shell management menu
 menu_shell() {
-    clear_screen "Shell Setup"
-    
-    source "$DOTFILES_DIR/lib/shell.sh"
-    shell_status
-    echo
-    
-    if confirm "Run shell setup?"; then
-        shell_setup
-    fi
-    
-    echo
-    read -p "Press Enter to continue..."
+    while true; do
+        clear_screen "Shell"
+
+        source "$DOTFILES_DIR/lib/shell.sh"
+
+        # Show quick status
+        if command -v zsh &>/dev/null; then
+            local version=$(zsh --version | cut -d' ' -f2)
+            show_info "Version" "$version"
+        else
+            show_info "Status" "not installed"
+        fi
+        echo
+
+        local action=$(choose_option \
+            "Setup shell" \
+            "Show details" \
+            "Back")
+
+        [[ -z "$action" ]] && return  # ESC pressed
+
+        case "$action" in
+            "Setup shell")
+                clear_screen
+                shell_setup
+                if [[ $? -eq 0 ]]; then
+                    echo
+                    read -p "Press Enter to continue..."
+                fi
+                ;;
+            "Show details")
+                clear_screen
+                shell_status
+                echo
+                read -p "Press Enter to continue..."
+                ;;
+            "Back")
+                return
+                ;;
+        esac
+    done
 }
 
 # Hyprland management menu
 menu_hyprland() {
-    clear_screen "Hyprland Setup"
-    
-    source "$DOTFILES_DIR/lib/hyprland.sh"
-    hyprland_status
-    echo
-    
-    if confirm "Run Hyprland setup?"; then
-        hyprland_setup
-    fi
-    
-    echo
-    read -p "Press Enter to continue..."
+    while true; do
+        clear_screen "Hyprland"
+
+        source "$DOTFILES_DIR/lib/hyprland.sh"
+
+        # Show quick status
+        if command -v hyprctl &>/dev/null; then
+            local version=$(hyprctl version 2>/dev/null | head -1 | grep -oP 'Hyprland \K\d+\.\d+\.\d+' || echo "unknown")
+            show_info "Version" "$version"
+        else
+            show_info "Status" "not installed"
+        fi
+        echo
+
+        local action=$(choose_option \
+            "Setup Hyprland" \
+            "Show details" \
+            "Back")
+
+        [[ -z "$action" ]] && return  # ESC pressed
+
+        case "$action" in
+            "Setup Hyprland")
+                clear_screen
+                hyprland_setup
+                if [[ $? -eq 0 ]]; then
+                    echo
+                    read -p "Press Enter to continue..."
+                fi
+                ;;
+            "Show details")
+                clear_screen
+                hyprland_status
+                echo
+                read -p "Press Enter to continue..."
+                ;;
+            "Back")
+                return
+                ;;
+        esac
+    done
 }
 
 # Main command routing
@@ -410,10 +469,13 @@ main() {
         packages|pkg)
             source "$DOTFILES_DIR/lib/package.sh"
             case "$subcommand" in
+                manage|"") packages_manage ;;
+                update) packages_update ;;
+                status) packages_status ;;
+                # Legacy commands still work
                 install) packages_install ;;
                 sync) packages_sync ;;
-                update) packages_update ;;
-                status|"") packages_status ;;
+                clean) packages_clean_unlisted ;;
                 *) log_error "Unknown subcommand: $subcommand"; show_usage; exit 1 ;;
             esac
             ;;

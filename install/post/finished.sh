@@ -1,71 +1,58 @@
 #!/bin/bash
-# Show completion message
 
-# Wait a moment for screen to stabilize after Hyprland reload
-sleep 1
-
-# Clear screen (helpers already loaded by install.sh)
-if command -v clear_screen &>/dev/null; then
-    clear_screen
-else
+show_completion_screen() {
     clear
-fi
-
-if command -v gum &>/dev/null; then
-    gum style \
-        --border double \
-        --border-foreground 10 \
-        --padding "1 2" \
-        --margin "1 0" \
-        "$(gum style --bold --foreground 10 '✓ Installation Complete!')" \
-        "" \
-        "Your dotfiles have been successfully installed." \
-        "" \
-        "$(gum style --foreground 240 'Next steps:')" \
-        "  • Log out and back in for shell changes" \
-        "  • Start Hyprland: uwsm start hyprland-uwsm.desktop" \
-        "  • Configure monitors: dotfiles hyprland setup" \
-        "" \
-        "$(gum style --foreground 240 'Daily commands:')" \
-        "  • dotfiles status      # Show system state" \
-        "  • dotfiles packages    # Manage packages" \
-        "  • dotfiles theme       # Switch themes" \
-        "" \
-        "$(gum style --foreground 240 'Logs:')" \
-        "  • $DOTFILES_LOG_FILE"
-else
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo "✓ Installation Complete!"
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo ""
-    echo "Your dotfiles have been successfully installed."
-    echo ""
+    echo
+    # Green check, blue text for completion
+    printf "\033[92m✓\033[0m \033[94mInstallation Complete\033[0m\n"
+    echo
+    # Blue text for results
+    printf "\033[94mInstalled:\033[0m\n"
+    echo "  • Packages"
+    echo "  • Configurations"
+    echo "  • Theme"
+    echo
     echo "Next steps:"
-    echo "  • Log out and back in for shell changes"
+    echo "  • Reboot or log out and back in"
     echo "  • Start Hyprland: uwsm start hyprland-uwsm.desktop"
-    echo "  • Configure monitors: dotfiles hyprland setup"
-    echo ""
-    echo "Daily commands:"
-    echo "  • dotfiles status      # Show system state"
-    echo "  • dotfiles packages    # Manage packages"
-    echo "  • dotfiles theme       # Switch themes"
-    echo ""
-    echo "Logs: $DOTFILES_LOG_FILE"
-    echo ""
-fi
+    echo
+    echo "[L] View install log  [Q] Quit"
+    echo
+}
 
-echo
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo
+view_install_log() {
+    local log_file="${DOTFILES_INSTALL_LOG:-$HOME/.local/state/dotfiles/install.log}"
 
-# Wait for user acknowledgment
-if command -v gum &>/dev/null; then
-    gum style --foreground 14 "Press any key to continue..."
-    read -n 1 -s -r
-else
-    read -n 1 -s -r -p "Press any key to continue..."
-fi
+    if [[ ! -f "$log_file" ]]; then
+        clear
+        echo
+        echo "Install log not found"
+        echo
+        read -n 1 -s -r -p "Press any key to continue..."
+        return
+    fi
 
-echo
-echo "Done! 🎉"
+    clear
+    if command -v less &>/dev/null; then
+        less "$log_file"
+    else
+        cat "$log_file"
+        echo
+        read -n 1 -s -r -p "Press any key to continue..."
+    fi
+}
 
+while true; do
+    show_completion_screen
+
+    read -n 1 -s -r key
+    case "${key,,}" in
+        l)
+            view_install_log
+            ;;
+        q|$'\n'|$'\x0a')
+            clear
+            break
+            ;;
+    esac
+done

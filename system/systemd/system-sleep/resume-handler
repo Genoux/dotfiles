@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+# System resume handler
+# Restores network and user session state after suspend/hibernate
+
+case "$1/$2" in
+  pre/*)
+    # Before suspend - save connected Bluetooth devices for each user
+    for user_dir in /run/user/*; do
+      [ -d "$user_dir" ] || continue
+      uid=$(basename "$user_dir")
+      user_name=$(id -nu "$uid" 2>/dev/null) || continue
+
+      # Get user's connected Bluetooth devices (with proper D-Bus environment)
+      bt_devices=$(XDG_RUNTIME_DIR="$user_dir" su "$user_name" -c "bluetoothctl devices Connected 2>/dev/null | awk '{print \\\$2}'")
+
+      if [ -n "$bt_devices" ]; then
+        echo "$bt_devices" > "/tmp/bt-connected-$uid"
+        logger -t resume-handler "Saved BT devices for $user_name: $bt_devices"
+      fi
+    done
+    ;;
+
+  post/*)
+    # After resume - restore system and user state
+
+    # Restart NetworkManager (non-blocking)
+    systemctl restart NetworkManager &
+
+    # Restart user services and reconnect Bluetooth for each user
+    for user_dir in /run/user/*; do
+      [ -d "$user_dir" ] || continue
+      uid=$(basename "$user_dir")
+      user_name=$(id -nu "$uid" 2>/dev/null) || continue
+
+      # Restart AGS for this user (wait for monitors to be ready)
+      logger -t resume-handler "Scheduling AGS restart for user $user_name"
+      # Use systemd-run to run a script that waits for monitors
+      systemd-run --user --machine="$user_name@.host" /bin/bash -c '
+        # Wait for Hyprland monitors to be available (max 10 seconds)
+        for i in {1..20}; do
+          if hyprctl monitors -j 2>/dev/null | grep -q "id"; then
+            logger -t resume-handler "Monitors ready, restarting AGS"
+            systemctl --user restart ags.service
+            exit 0
+          fi
+          sleep 0.5
+        done
+        logger -t resume-handler "Timeout waiting for monitors, restarting AGS anyway"
+        systemctl --user restart ags.service
+      ' 2>&1 | logger -t resume-handler &
+
+      # Reconnect Bluetooth devices
+      bt_file="/tmp/bt-connected-$uid"
+      if [ -f "$bt_file" ]; then
+        while read -r mac; do
+          [ -n "$mac" ] && XDG_RUNTIME_DIR="$user_dir" su "$user_name" -c "bluetoothctl connect $mac" &
+        done < "$bt_file"
+        rm -f "$bt_file"
+      fi
+    done
+    ;;
+esac

@@ -7,7 +7,6 @@ import { SystemTemp } from "./systemtemp";
 import { Weather } from "./weather";
 import { TimeDisplay } from "./timedisplay";
 import { BluetoothButton } from "./bluetooth";
-import { NotificationPanelButton } from "./notificationpanel";
 import { VolumeButton } from "./volume";
 import { InternetButton } from "./internet";
 import { KeyboardButton } from "./keyboard";
@@ -48,7 +47,6 @@ export default function Bar(gdkmonitor: Gdk.Monitor) {
             <Weather />
             <SystemTemp />
             <TimeDisplay />
-            <NotificationPanelButton />
           </box>
         </centerbox>
       </Gtk.Revealer>

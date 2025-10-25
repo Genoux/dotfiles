@@ -20,15 +20,11 @@ init_logging() {
         export DOTFILES_LOG_FILE="$DOTFILES_DAILY_LOG"
     fi
     
-    # Create log file if it doesn't exist
-    touch "$DOTFILES_LOG_FILE" 2>/dev/null || {
+    # Overwrite log file (fresh start each session)
+    echo "=== Session started: $(date '+%Y-%m-%d %H:%M:%S') ===" > "$DOTFILES_LOG_FILE" 2>/dev/null || {
         log_warning "Could not create log file: $DOTFILES_LOG_FILE"
         return 1
     }
-    
-    # Write session start marker
-    echo "" >> "$DOTFILES_LOG_FILE"
-    echo "=== Session started: $(date '+%Y-%m-%d %H:%M:%S') ===" >> "$DOTFILES_LOG_FILE"
     
     # Export start time
     export DOTFILES_SESSION_START=$(date +%s)
@@ -44,24 +40,93 @@ log_to_file() {
     fi
 }
 
+# Start live log monitor (simple spinner + last 20 lines)
+start_log_monitor() {
+    # Get terminal dimensions
+    local term_height=$(tput lines 2>/dev/null || echo 24)
+    local term_width=$(tput cols 2>/dev/null || echo 80)
+    local log_lines=$((term_height - 3))
+
+    # Use alternate screen and hide cursor
+    tput smcup 2>/dev/null
+    tput civis 2>/dev/null  # Hide cursor
+    clear
+
+    (
+        # Disable error handling in monitor subprocess
+        set +eEo pipefail
+
+        local spinners=("⠋" "⠙" "⠹" "⠸" "⠼" "⠴" "⠦" "⠧" "⠇" "⠏")
+        local spinner_index=0
+
+        while true; do
+            # Get current step
+            local current_step=$(grep -o "Starting: .*" "$DOTFILES_LOG_FILE" 2>/dev/null | tail -1 | sed 's/Starting: //' | sed 's/\.sh$//' || echo "dotfiles")
+
+            # Move cursor to home (0,0) and clear screen
+            tput cup 0 0 2>/dev/null
+            tput ed 2>/dev/null
+
+            # Print spinner line (blue)
+            local status_line="${spinners[$spinner_index]} Installing ${current_step}..."
+            if [ ${#status_line} -gt $term_width ]; then
+                status_line="${status_line:0:$term_width}"
+            fi
+            printf "\033[94m%s\033[0m\n" "$status_line"
+
+            # Blank line
+            echo
+
+            # Print log lines (gray) - use tail directly
+            tail -n $log_lines "$DOTFILES_LOG_FILE" 2>/dev/null | while IFS= read -r line; do
+                # Truncate if needed
+                if [ ${#line} -gt $term_width ]; then
+                    line="${line:0:$term_width}"
+                fi
+                printf "\033[90m%s\033[0m\n" "$line"
+            done
+
+            # Next spinner
+            spinner_index=$(( (spinner_index + 1) % ${#spinners[@]} ))
+            sleep 0.1
+        done
+    ) &
+    export DOTFILES_LOG_MONITOR_PID=$!
+}
+
+# Stop live log monitor
+stop_log_monitor() {
+    if [ -n "${DOTFILES_LOG_MONITOR_PID:-}" ]; then
+        kill $DOTFILES_LOG_MONITOR_PID 2>/dev/null || true
+        wait $DOTFILES_LOG_MONITOR_PID 2>/dev/null || true
+        unset DOTFILES_LOG_MONITOR_PID
+    fi
+
+    # Restore terminal
+    tput cnorm 2>/dev/null  # Show cursor
+    tput rmcup 2>/dev/null  # Exit alternate screen
+    clear
+}
+
 # Run a command with logging
 run_logged() {
     local script="$1"
     shift
     local args=("$@")
-    
-    log_info "Running: $(basename "$script")"
-    log_to_file "INFO" "Starting: $script ${args[*]}"
-    
-    # Run the script and show output to screen + log file
-    if bash "$script" "${args[@]}" 2>&1 | tee -a "$DOTFILES_LOG_FILE"; then
-        log_to_file "SUCCESS" "Completed: $script"
-        return 0
+
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting: $script" >> "$DOTFILES_LOG_FILE"
+
+    # Run script and redirect all output to log
+    bash "$script" "${args[@]}" </dev/null >> "$DOTFILES_LOG_FILE" 2>&1
+    local exit_code=$?
+
+    if [ $exit_code -eq 0 ]; then
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Completed: $script" >> "$DOTFILES_LOG_FILE"
     else
-        local exit_code=${PIPESTATUS[0]}
-        log_to_file "ERROR" "Failed: $script (exit code: $exit_code)"
-        return $exit_code
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Failed: $script (exit code: $exit_code)" >> "$DOTFILES_LOG_FILE"
     fi
+
+    return $exit_code
 }
 
 # Finish logging session

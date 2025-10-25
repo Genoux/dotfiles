@@ -177,42 +177,41 @@ shell_setup() {
 # Show shell status
 shell_status() {
     log_section "Shell Status"
-    
-    # Check zsh
+
+    # Check zsh version
     if command -v zsh &>/dev/null; then
-        show_info "zsh" "✓ Installed ($(zsh --version | cut -d' ' -f2))"
+        local version=$(zsh --version | cut -d' ' -f2)
+        show_info "Version" "$version"
     else
         show_info "zsh" "✗ Not installed"
+        return 1
     fi
-    
-    # Check Oh My Zsh
-    if is_omz_installed; then
-        show_info "Oh My Zsh" "✓ Installed"
-    else
-        show_info "Oh My Zsh" "✗ Not installed"
-    fi
-    
+
     # Check default shell
     local current_shell=$(getent passwd "$USER" | cut -d: -f7 2>/dev/null || echo "$SHELL")
     local shell_name=$(basename "$current_shell")
     show_info "Default shell" "$shell_name"
-    
-    # Count plugins
+
+    # List installed plugins
     if is_omz_installed && [[ -f "$PLUGINS_FILE" ]]; then
-        local total_plugins=$(grep -cvE '^#|^$' "$PLUGINS_FILE")
-        local installed_plugins=0
-        
+        echo
+        log_info "Plugins:"
+
+        local has_plugins=false
         while IFS= read -r plugin_line; do
             [[ -z "$plugin_line" ]] && continue
             [[ "$plugin_line" =~ ^#.*$ ]] && continue
-            
+
             local plugin_name=$(echo "$plugin_line" | cut -d':' -f1)
             if is_plugin_installed "$plugin_name"; then
-                ((installed_plugins++))
+                printf "  \033[94m%s\033[0m\n" "$plugin_name"
+                has_plugins=true
             fi
         done < "$PLUGINS_FILE"
-        
-        show_info "Plugins" "$installed_plugins/$total_plugins installed"
+
+        if [[ "$has_plugins" == false ]]; then
+            printf "  \033[90mNo plugins installed\033[0m\n"
+        fi
     fi
 }
 
