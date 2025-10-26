@@ -16,7 +16,7 @@ export function SystemTemp({ class: cls }: { class?: string }) {
       <With value={systemTemps}>
         {({ avg, status }) => (
           <box class={`system-temps ${status}`} halign={Gtk.Align.CENTER} spacing={2}>
-            <image gicon={Gio.icon_new_for_string(icons[status])} pixelSize={12} />
+            <image gicon={Gio.icon_new_for_string(icons[status] || "temperature-normal-symbolic")} pixelSize={12} />
             <label label={`${avg}°C`} />
           </box>
         )}

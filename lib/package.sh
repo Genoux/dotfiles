@@ -37,7 +37,14 @@ ensure_yay_installed() {
     echo
 
     log_info "Building yay from source..."
-    makepkg -si --noconfirm
+    # Build package first (non-interactive)
+    makepkg -s --noconfirm
+    echo
+    
+    log_info "Installing yay package..."
+    # Install the built package (non-interactive)
+    sudo pacman -U --noconfirm yay-*.pkg.tar.zst
+    echo
 
     # Cleanup
     cd - >/dev/null
@@ -53,12 +60,48 @@ ensure_yay_installed() {
     echo
 }
 
+# Ensure Node.js is installed (required for many AUR packages)
+ensure_nodejs_installed() {
+    if command -v node &>/dev/null; then
+        return 0
+    fi
+
+    log_info "Installing Node.js (required for AUR packages)..."
+    echo
+
+    # Install Node.js with corepack
+    log_info "Installing Node.js..."
+    sudo pacman -S --needed --noconfirm nodejs npm
+    echo
+
+    # Enable corepack (it should be available after nodejs installation)
+    log_info "Enabling corepack..."
+    if command -v corepack &>/dev/null; then
+        sudo corepack enable
+        echo
+    else
+        log_warning "corepack not found, but Node.js is installed"
+        echo
+    fi
+
+    if command -v node &>/dev/null; then
+        log_success "Node.js installed successfully"
+    else
+        fatal_error "Failed to install Node.js"
+    fi
+
+    echo
+}
+
 # Prepare system for package installation
 packages_prepare() {
     log_section "Preparing System"
 
     # Ensure yay is installed (system depends on it)
     ensure_yay_installed
+
+    # Ensure Node.js is installed (required for many AUR packages)
+    ensure_nodejs_installed
 
     # Check if mirrors need updating (older than 7 days)
     local mirrorlist="/etc/pacman.d/mirrorlist"
@@ -114,6 +157,14 @@ packages_prepare() {
         fi
     fi
     echo
+
+    # Enable multilib repository if needed
+    if ! grep -q "^\[multilib\]" /etc/pacman.conf; then
+        log_info "Enabling multilib repository..."
+        sudo sed -i 's/^#\[multilib\]/\[multilib\]/' /etc/pacman.conf
+        sudo sed -i '/^\[multilib\]$/,/^\[/ s/^#Include = \/etc\/pacman\.d\/mirrorlist/Include = \/etc\/pacman.d\/mirrorlist/' /etc/pacman.conf
+        echo
+    fi
 
     # Sync package databases
     log_info "Synchronizing package databases..."
@@ -245,11 +296,16 @@ packages_install() {
     # Just install packages from lists - no checking
     # For auditing system vs dotfiles, use package_audit function instead
 
-    # Find missing official packages
+    # Find missing official packages (filter out packages that don't exist in official repos)
     local missing_official=()
     for pkg in "${packages[@]}"; do
         if ! pacman -Q "$pkg" &>/dev/null; then
-            missing_official+=("$pkg")
+            # Check if package exists in official repositories
+            if pacman -Ss "^$pkg$" &>/dev/null; then
+                missing_official+=("$pkg")
+            else
+                log_warning "Package $pkg not found in official repositories, skipping"
+            fi
         fi
     done
     
@@ -261,12 +317,26 @@ packages_install() {
         echo
         log_info "Installing official packages..."
         echo
-        # Force unbuffered output for pacman to show progress in real-time
-        sudo pacman -S --needed --noconfirm "${missing_official[@]}" 2>&1 | while IFS= read -r line; do
-            echo "[$(date '+%Y-%m-%d %H:%M:%S')] [PACMAN] $line" >> "$DOTFILES_LOG_FILE"
-        done
+        # Install packages directly (sudo will prompt for password if needed)
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] [PACMAN] Installing packages: ${missing_official[*]}" >> "$DOTFILES_LOG_FILE"
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] [PACMAN] Starting installation..." >> "$DOTFILES_LOG_FILE"
+        
+        # Run pacman with automatic answers to all prompts
+        # Use printf to automatically answer provider selection (default=1) and proceed (Y)
+        printf "1\nY\n" | sudo pacman -S --needed --noconfirm "${missing_official[@]}"
+        local pacman_exit_code=$?
+        
+        if [[ $pacman_exit_code -eq 0 ]]; then
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] [PACMAN] Installation completed successfully" >> "$DOTFILES_LOG_FILE"
+            log_success "Official packages installed"
+        else
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] [PACMAN] Installation completed with some failures (exit code: $pacman_exit_code)" >> "$DOTFILES_LOG_FILE"
+            log_warning "Some official packages failed to install, but continuing..."
+            echo
+            log_info "You can try installing failed packages manually later with:"
+            log_info "sudo pacman -S <package-name>"
+        fi
         echo
-        log_success "Official packages installed"
     else
         log_success "All official packages already installed"
     fi
@@ -275,6 +345,12 @@ packages_install() {
 
     # Ensure yay is installed for AUR packages
     if [[ ${#aur_packages[@]} -gt 0 ]]; then
+        # Refresh sudo session before installing yay (makepkg needs sudo)
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] Refreshing sudo session for yay installation..." >> "$DOTFILES_LOG_FILE"
+        sudo -v || {
+            log_error "Failed to refresh sudo session for yay installation"
+            return 1
+        }
         ensure_yay_installed
 
         # Find missing AUR packages
@@ -293,12 +369,33 @@ packages_install() {
             echo
             log_info "Installing AUR packages..."
             echo
-            # Force unbuffered output for yay to show progress in real-time
-            yay -S --needed --noconfirm --answerclean None --answerdiff None --removemake "${missing_aur[@]}" 2>&1 | while IFS= read -r line; do
-                echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] $line" >> "$DOTFILES_LOG_FILE"
-            done
+            # Refresh sudo session before yay (yay calls pacman which needs sudo)
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] Refreshing sudo session..." >> "$DOTFILES_LOG_FILE"
+            sudo -v || {
+                log_error "Failed to refresh sudo session"
+                return 1
+            }
+            
+            # Install AUR packages directly (yay will handle sudo prompts)
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] Installing packages: ${missing_aur[*]}" >> "$DOTFILES_LOG_FILE"
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] Starting installation..." >> "$DOTFILES_LOG_FILE"
+            
+            # Run yay with automatic answers to all prompts
+            # Use printf to automatically answer any provider selections and proceed confirmations
+            printf "1\nY\n" | yay -S --needed --noconfirm --answerclean None --answerdiff None --removemake "${missing_aur[@]}"
+            local yay_exit_code=$?
+            
+            if [[ $yay_exit_code -eq 0 ]]; then
+                echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] Installation completed successfully" >> "$DOTFILES_LOG_FILE"
+                log_success "AUR packages installed"
+            else
+                echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] Installation completed with some failures (exit code: $yay_exit_code)" >> "$DOTFILES_LOG_FILE"
+                log_warning "Some AUR packages failed to install, but continuing..."
+                echo
+                log_info "You can try installing failed packages manually later with:"
+                log_info "yay -S <package-name>"
+            fi
             echo
-            log_success "AUR packages installed"
         else
             log_success "All AUR packages already installed"
         fi
@@ -314,23 +411,20 @@ packages_sync() {
     
     log_info "Scanning installed packages..."
     
-    # Get all AUR packages first
+    # Get all explicitly installed packages and categorize them properly
     local aur_packages_temp=$(mktemp)
-    pacman -Qm | awk '{print $1}' | sort > "$aur_packages_temp"
-    
-    # Create pattern for grep
-    local aur_pattern=""
-    if [[ -s "$aur_packages_temp" ]]; then
-        aur_pattern=$(sed 's/[[\.*^$()+?{|]/\\&/g' "$aur_packages_temp" | paste -sd'|')
-    fi
-    
-    # Get explicitly installed official packages (excluding AUR)
     local official_temp=$(mktemp)
-    if [[ -n "$aur_pattern" ]]; then
-        pacman -Qe | grep -vE "^($aur_pattern) " | awk '{print $1}' | sort > "$official_temp"
-    else
-        pacman -Qe | awk '{print $1}' | sort > "$official_temp"
-    fi
+    
+    # Fast categorization: use pacman's built-in categorization
+    # Get official packages (explicitly installed, not from AUR)
+    pacman -Qeq | grep -vf <(pacman -Qmq) >> "$official_temp"
+    
+    # Get AUR packages (explicitly installed from AUR)
+    pacman -Qmq >> "$aur_packages_temp"
+    
+    # Sort the files
+    sort "$aur_packages_temp" -o "$aur_packages_temp"
+    sort "$official_temp" -o "$official_temp"
     
     # Show changes
     local official_changes=false
@@ -379,6 +473,20 @@ packages_manage() {
     log_section "Package Management"
 
     log_info "Analyzing packages..."
+    
+    # Fast categorization: just use pacman's built-in categorization
+    local installed_official=()
+    local installed_aur=()
+    
+    # Get official packages (explicitly installed, not from AUR)
+    while IFS= read -r pkg; do
+        installed_official+=("$pkg")
+    done < <(pacman -Qeq | grep -vf <(pacman -Qmq))
+    
+    # Get AUR packages (explicitly installed from AUR)
+    while IFS= read -r pkg; do
+        installed_aur+=("$pkg")
+    done < <(pacman -Qmq)
 
     # Read dotfiles packages
     local dotfiles_official=()
@@ -395,17 +503,6 @@ packages_manage() {
             [[ -n "$pkg" && ! "$pkg" =~ ^# ]] && dotfiles_aur+=("$pkg")
         done < "$AUR_PACKAGES_FILE"
     fi
-
-    # Get installed packages
-    local installed_official=()
-    while IFS= read -r pkg; do
-        installed_official+=("$pkg")
-    done < <(pacman -Qeq | grep -vf <(pacman -Qmq))
-
-    local installed_aur=()
-    while IFS= read -r pkg; do
-        installed_aur+=("$pkg")
-    done < <(pacman -Qmq)
 
     # Find differences
     local missing_official=()
@@ -704,7 +801,8 @@ packages_update() {
 
     log_info "Updating all packages (official + AUR)..."
     echo
-    yay -Syu --noconfirm --answerclean None --answerdiff None --removemake
+    # Use printf to automatically answer any prompts during update
+    printf "1\nY\n" | yay -Syu --noconfirm --answerclean None --answerdiff None --removemake
     echo
     log_success "System update complete"
 }

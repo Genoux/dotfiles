@@ -40,12 +40,12 @@ log_to_file() {
     fi
 }
 
-# Start live log monitor (simple spinner + last 20 lines)
+# Start live log monitor (improved with better scrolling)
 start_log_monitor() {
     # Get terminal dimensions
     local term_height=$(tput lines 2>/dev/null || echo 24)
     local term_width=$(tput cols 2>/dev/null || echo 80)
-    local log_lines=$((term_height - 3))
+    local log_lines=$((term_height - 4))  # More space for logs
 
     # Use alternate screen and hide cursor
     tput smcup 2>/dev/null
@@ -59,37 +59,67 @@ start_log_monitor() {
         local spinners=("⠋" "⠙" "⠹" "⠸" "⠼" "⠴" "⠦" "⠧" "⠇" "⠏")
         local spinner_index=0
 
+        # Store previous log content to detect changes
+        local prev_log_content=""
+        local prev_log_lines=0
+        
         while true; do
             # Get current step
             local current_step=$(grep -o "Starting: .*" "$DOTFILES_LOG_FILE" 2>/dev/null | tail -1 | sed 's/Starting: //' | sed 's/\.sh$//' || echo "dotfiles")
 
-            # Move cursor to home (0,0) and clear screen
-            tput cup 0 0 2>/dev/null
-            tput ed 2>/dev/null
-
-            # Print spinner line (blue)
-            local status_line="${spinners[$spinner_index]} Installing ${current_step}..."
-            if [ ${#status_line} -gt $term_width ]; then
-                status_line="${status_line:0:$term_width}"
+            # Get current log content
+            local current_log_content=""
+            if [[ -f "$DOTFILES_LOG_FILE" ]]; then
+                current_log_content=$(tail -n $log_lines "$DOTFILES_LOG_FILE" 2>/dev/null)
             fi
-            printf "\033[94m%s\033[0m\n" "$status_line"
+            local current_log_lines=$(echo "$current_log_content" | wc -l)
 
-            # Blank line
-            echo
+            # Only redraw if content changed or first run
+            if [[ "$current_log_content" != "$prev_log_content" ]] || [[ $prev_log_lines -eq 0 ]]; then
+                # Clear screen only when content changes
+                tput cup 0 0 2>/dev/null
+                tput ed 2>/dev/null
 
-            # Print log lines (gray) - highlight package operations
-            tail -n $log_lines "$DOTFILES_LOG_FILE" 2>/dev/null | while IFS= read -r line; do
-                # Highlight package-related lines in blue for better visibility
-                if [[ "$line" =~ \[PACMAN\]|\[YAY\] ]]; then
-                    printf "\033[94m%s\033[0m\n" "${line:0:$term_width}"
-                else
-                    printf "\033[90m%s\033[0m\n" "${line:0:$term_width}"
+                # Print spinner line (blue)
+                local status_line="${spinners[$spinner_index]} Installing ${current_step}..."
+                if [ ${#status_line} -gt $term_width ]; then
+                    status_line="${status_line:0:$term_width}"
                 fi
-            done
+                printf "\033[94m%s\033[0m\n" "$status_line"
+
+                # Show help text
+                printf "\033[90mPress Ctrl+C to stop installation\033[0m\n"
+                echo
+
+                # Print log lines with better formatting
+                echo "$current_log_content" | while IFS= read -r line; do
+                    # Highlight package-related lines in blue for better visibility
+                    if [[ "$line" =~ \[PACMAN\]|\[YAY\] ]]; then
+                        printf "\033[94m%s\033[0m\n" "${line:0:$term_width}"
+                    elif [[ "$line" =~ Starting:|Completed:|Failed: ]]; then
+                        printf "\033[92m%s\033[0m\n" "${line:0:$term_width}"
+                    else
+                        printf "\033[90m%s\033[0m\n" "${line:0:$term_width}"
+                    fi
+                done
+
+                # Update previous content
+                prev_log_content="$current_log_content"
+                prev_log_lines=$current_log_lines
+            else
+                # Just update spinner position without redrawing
+                tput cup 0 0 2>/dev/null
+                local status_line="${spinners[$spinner_index]} Installing ${current_step}..."
+                if [ ${#status_line} -gt $term_width ]; then
+                    status_line="${status_line:0:$term_width}"
+                fi
+                printf "\033[94m%s\033[0m" "$status_line"
+                tput el 2>/dev/null  # Clear to end of line
+            fi
 
             # Next spinner
             spinner_index=$(( (spinner_index + 1) % ${#spinners[@]} ))
-            sleep 0.1
+            sleep "${DOTFILES_LOG_REFRESH_RATE:-0.1}"  # Configurable refresh rate (default: 0.1s)
         done
     ) &
     export DOTFILES_LOG_MONITOR_PID=$!
@@ -162,6 +192,26 @@ show_log_tail() {
         tail -n "$lines" "$log_file"
     else
         log_warning "Log file not found: $log_file"
+    fi
+}
+
+# View full log with Gum pager (scrollable interface)
+view_full_log() {
+    local log_file="${1:-$DOTFILES_LOG_FILE}"
+    
+    if [[ ! -f "$log_file" ]]; then
+        log_warning "Log file not found: $log_file"
+        return 1
+    fi
+    
+    if command -v gum &>/dev/null; then
+        log_info "Opening log with Gum pager (scrollable interface)..."
+        echo
+        gum pager --show-line-numbers --soft-wrap "$log_file"
+    else
+        log_warning "Gum not available, showing last 50 lines:"
+        echo
+        tail -n 50 "$log_file"
     fi
 }
 

@@ -7,6 +7,8 @@ beekeeper-studio-bin
 better-control-git
 caelestia-cli-git
 caelestia-shell-git
+claude-desktop
+clickup
 clipse
 cursor-bin
 downgrade
@@ -25,6 +27,7 @@ elephant-symbols
 elephant-todo
 elephant-websearch
 figma-linux
+gauntlet-bin
 gitkraken
 gnu-netcat
 google-breakpad
@@ -35,7 +38,6 @@ heroic-games-launcher-bin
 http-parser
 hyprfloat
 i3lock-color
-impala
 libastal-4-git
 libastal-apps-git
 libastal-auth-git
@@ -64,6 +66,7 @@ notion-app-electron
 notion-calendar-electron
 pacseek
 parsec-bin
+pgadmin4-server
 phonon-qt5
 phonon-qt5-vlc
 postman-bin
@@ -76,6 +79,7 @@ python-nvidia-ml-py
 python-steam
 python-vdf
 quickshell-git
+rustdesk
 sherlock-launcher-bin
 slack-desktop
 spotify
@@ -87,5 +91,6 @@ walker-bin
 wiremix-git
 wl-screenrec
 xrdp
+yay-bin
 zen-browser-bin
 zscroll-git

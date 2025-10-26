@@ -25,6 +25,9 @@ case "$1/$2" in
 
     # Restart NetworkManager (non-blocking)
     systemctl restart NetworkManager &
+    
+    # Give NetworkManager time to initialize
+    sleep 2
 
     # Restart user services and reconnect Bluetooth for each user
     for user_dir in /run/user/*; do
