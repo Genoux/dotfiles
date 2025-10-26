@@ -7,6 +7,8 @@ beekeeper-studio-bin
 better-control-git
 caelestia-cli-git
 caelestia-shell-git
+claude-desktop
+clickup
 clipse
 cursor-bin
 downgrade

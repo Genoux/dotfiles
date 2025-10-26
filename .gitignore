@@ -56,4 +56,7 @@ stow/hypr/.config/hypr/monitors.conf
 
 
 *.bak
-#stow/ags/.config/ags/*
+
+# Auto-generated and managed files in stow
+stow/applications/.local/share/applications/mimeinfo.cache
+stow/scripts/.local/bin/dotfiles

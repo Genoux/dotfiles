@@ -79,13 +79,6 @@ scrollbar slider:hover {
   border-color: @border;
 }
 
-.content-container {
-  margin-top: 8px;
-}
-
-.scroll {
-}
-
 .list {
   color: @fg;
 }
