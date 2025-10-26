@@ -98,7 +98,7 @@ child {
   border-radius: 6px;
   padding: 7px 8px;
   border: 1px solid transparent;
-  transition: all 0.12s ease-out;
+  transition: all 0.12s easeOut;
 }
 
 .item-quick-activation {
@@ -129,6 +129,7 @@ child:selected .item-box {
   line-height: 1.2;
   margin: 0;
   padding: 0;
+  vertical-align: middle;
 }
 
 .item-subtext {
@@ -186,6 +187,7 @@ child:selected .item-box {
   margin: 0;
   padding: 0;
   min-height: 0;
+  max-height: 0;
 }
 
 .error {

@@ -187,8 +187,6 @@ generate_monitor_config() {
 
 # Setup Hyprland monitors
 hyprland_setup() {
-    local auto_confirm="${1:-false}"
-    
     log_section "Hyprland Monitor Setup"
     
     check_hyprland || return 1
@@ -214,35 +212,30 @@ hyprland_setup() {
     done
     
     echo
-    
-    if [[ "$auto_confirm" == "true" ]] || confirm "Generate monitor configuration?"; then
-        # Ensure directory exists
-        ensure_directory "$(dirname "$MONITORS_CONF")"
-        
-        # Generate and write config
-        generate_monitor_config "${monitors[@]}" > "$MONITORS_CONF"
-        log_success "Monitor configuration written to monitors.conf"
-        
-        # Update main config to source monitors.conf
-        local main_config="$HOME/.config/hypr/hyprland.conf"
-        if [[ -f "$main_config" ]] && ! grep -q "source.*monitors\.conf" "$main_config"; then
-            echo -e "\n# Device-specific monitor configuration\nsource = ~/.config/hypr/monitors.conf" >> "$main_config"
-            log_info "Added monitors.conf to hyprland.conf"
-        fi
-        
-        # Reload if Hyprland is running
-        if hyprctl version &>/dev/null; then
-            echo
-            if [[ "$auto_confirm" == "true" ]] || confirm "Reload Hyprland configuration?"; then
-                log_info "Reloading Hyprland (screen may flash briefly)..."
-                sleep 0.5
-                hyprctl reload 2>/dev/null && log_success "Configuration reloaded" || log_warning "Failed to reload"
-                # Give time for screen to stabilize
-                sleep 1.5
-            fi
-        fi
-    else
-        log_info "Monitor configuration not generated"
+
+    # Ensure directory exists
+    ensure_directory "$(dirname "$MONITORS_CONF")"
+
+    # Generate and write config
+    log_info "Generating monitor configuration..."
+    generate_monitor_config "${monitors[@]}" > "$MONITORS_CONF"
+    log_success "Monitor configuration written to monitors.conf"
+
+    # Update main config to source monitors.conf
+    local main_config="$HOME/.config/hypr/hyprland.conf"
+    if [[ -f "$main_config" ]] && ! grep -q "source.*monitors\.conf" "$main_config"; then
+        echo -e "\n# Device-specific monitor configuration\nsource = ~/.config/hypr/monitors.conf" >> "$main_config"
+        log_info "Added monitors.conf to hyprland.conf"
+    fi
+
+    # Reload if Hyprland is running
+    if hyprctl version &>/dev/null; then
+        echo
+        log_info "Reloading Hyprland (screen may flash briefly)..."
+        sleep 0.5
+        hyprctl reload 2>/dev/null && log_success "Configuration reloaded" || log_warning "Failed to reload"
+        # Give time for screen to stabilize
+        sleep 1.5
     fi
 }
 

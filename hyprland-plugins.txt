@@ -1,0 +1,21 @@
+# Hyprland Plugins Configuration
+#
+# Format: repository_url plugin_name
+# Both URL and plugin name are required
+#
+# Examples:
+#   https://github.com/KZDKM/Hyprspace Hyprspace
+#   https://github.com/hyprwm/hyprland-plugins hyprexpo
+#   https://github.com/DreamMaoMao/hycov hycov
+#
+# To add a new plugin:
+# 1. Add the GitHub URL and plugin name below
+# 2. Run: dotfiles hyprland setup (or dotfiles install)
+
+# Overview/Workspace plugins (choose one):
+https://github.com/KZDKM/Hyprspace Hyprspace
+#https://github.com/hyprwm/hyprland-plugins hyprexpo
+#https://github.com/DreamMaoMao/hycov hycov
+
+# Other plugins:
+# Add more plugins here as: url plugin_name

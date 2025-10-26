@@ -52,7 +52,7 @@ show_usage() {
         echo "    status                 Show shell info"
         echo
         echo -e "\e[38;5;14m  hyprland\e[0m\e[38;5;240m             Hyprland configuration\e[0m"
-        echo "    setup                  Configure monitors"
+        echo "    setup                  Setup plugins and monitors"
         echo "    status                 Show Hyprland info"
         echo
         echo -e "\e[38;5;14m  menu\e[0m\e[38;5;240m                 Show interactive menu\e[0m"
@@ -85,7 +85,7 @@ show_usage() {
         echo "    status                  Show shell info"
         echo ""
         echo "  hyprland                  Hyprland configuration"
-        echo "    setup                   Configure monitors"
+        echo "    setup                   Setup plugins and monitors"
         echo "    status                  Show Hyprland info"
         echo ""
         echo "  menu                      Show interactive menu"
@@ -434,11 +434,18 @@ menu_hyprland() {
         case "$action" in
             "Setup Hyprland")
                 clear_screen
-                hyprland_setup
-                if [[ $? -eq 0 ]]; then
+
+                # Setup plugins using our improved library function
+                if command -v hyprpm &>/dev/null; then
+                    source "$DOTFILES_DIR/lib/hyprland-plugins.sh"
+                    setup_hyprland_plugins
                     echo
-                    read -p "Press Enter to continue..."
                 fi
+
+                # Setup monitors
+                hyprland_setup
+                echo
+                read -p "Press Enter to continue..."
                 ;;
             "Show details")
                 clear_screen
@@ -520,7 +527,15 @@ main() {
         hyprland)
             source "$DOTFILES_DIR/lib/hyprland.sh"
             case "$subcommand" in
-                setup) hyprland_setup ;;
+                setup)
+                    # Setup plugins and monitors
+                    if command -v hyprpm &>/dev/null; then
+                        source "$DOTFILES_DIR/lib/hyprland-plugins.sh"
+                        setup_hyprland_plugins
+                        echo
+                    fi
+                    hyprland_setup
+                    ;;
                 status|"") hyprland_status ;;
                 *) log_error "Unknown subcommand: $subcommand"; show_usage; exit 1 ;;
             esac

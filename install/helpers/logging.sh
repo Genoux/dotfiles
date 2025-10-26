@@ -77,13 +77,14 @@ start_log_monitor() {
             # Blank line
             echo
 
-            # Print log lines (gray) - use tail directly
+            # Print log lines (gray) - highlight package operations
             tail -n $log_lines "$DOTFILES_LOG_FILE" 2>/dev/null | while IFS= read -r line; do
-                # Truncate if needed
-                if [ ${#line} -gt $term_width ]; then
-                    line="${line:0:$term_width}"
+                # Highlight package-related lines in blue for better visibility
+                if [[ "$line" =~ \[PACMAN\]|\[YAY\] ]]; then
+                    printf "\033[94m%s\033[0m\n" "${line:0:$term_width}"
+                else
+                    printf "\033[90m%s\033[0m\n" "${line:0:$term_width}"
                 fi
-                printf "\033[90m%s\033[0m\n" "$line"
             done
 
             # Next spinner
@@ -116,9 +117,17 @@ run_logged() {
 
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting: $script" >> "$DOTFILES_LOG_FILE"
 
-    # Run script and redirect all output to log
-    bash "$script" "${args[@]}" </dev/null >> "$DOTFILES_LOG_FILE" 2>&1
-    local exit_code=$?
+    # Run script with unbuffered output for real-time log updates
+    # Use stdbuf to disable buffering, or fall back to regular redirect
+    if command -v stdbuf &>/dev/null; then
+        # Force line buffering for better real-time output
+        stdbuf -oL -eL bash "$script" "${args[@]}" </dev/null >> "$DOTFILES_LOG_FILE" 2>&1
+        local exit_code=$?
+    else
+        # Fallback: use script command for pseudo-terminal (forces unbuffered output)
+        script -q -c "bash '$script' ${args[*]}" /dev/null >> "$DOTFILES_LOG_FILE" 2>&1
+        local exit_code=$?
+    fi
 
     if [ $exit_code -eq 0 ]; then
         echo "[$(date '+%Y-%m-%d %H:%M:%S')] Completed: $script" >> "$DOTFILES_LOG_FILE"

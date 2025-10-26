@@ -14,9 +14,51 @@ fi
 PACKAGES_FILE="$DOTFILES_DIR/packages.txt"
 AUR_PACKAGES_FILE="$DOTFILES_DIR/aur-packages.txt"
 
+# Ensure yay is installed (system depends on it)
+ensure_yay_installed() {
+    if command -v yay &>/dev/null; then
+        return 0
+    fi
+
+    log_info "Installing yay (AUR helper - required by system)..."
+    echo
+
+    # Install dependencies
+    log_info "Installing base-devel and git..."
+    sudo pacman -S --needed --noconfirm base-devel git
+    echo
+
+    # Clone and build yay
+    log_info "Cloning yay repository..."
+    local temp_dir=$(mktemp -d)
+    cd "$temp_dir"
+    git clone --depth=1 --progress https://aur.archlinux.org/yay.git
+    cd yay
+    echo
+
+    log_info "Building yay from source..."
+    makepkg -si --noconfirm
+
+    # Cleanup
+    cd - >/dev/null
+    rm -rf "$temp_dir"
+    echo
+
+    if command -v yay &>/dev/null; then
+        log_success "yay installed successfully"
+    else
+        fatal_error "Failed to install yay"
+    fi
+
+    echo
+}
+
 # Prepare system for package installation
 packages_prepare() {
     log_section "Preparing System"
+
+    # Ensure yay is installed (system depends on it)
+    ensure_yay_installed
 
     # Check if mirrors need updating (older than 7 days)
     local mirrorlist="/etc/pacman.d/mirrorlist"
@@ -219,7 +261,10 @@ packages_install() {
         echo
         log_info "Installing official packages..."
         echo
-        sudo pacman -S --needed --noconfirm "${missing_official[@]}"
+        # Force unbuffered output for pacman to show progress in real-time
+        sudo pacman -S --needed --noconfirm "${missing_official[@]}" 2>&1 | while IFS= read -r line; do
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] [PACMAN] $line" >> "$DOTFILES_LOG_FILE"
+        done
         echo
         log_success "Official packages installed"
     else
@@ -227,29 +272,11 @@ packages_install() {
     fi
     
     echo
-    
+
     # Ensure yay is installed for AUR packages
     if [[ ${#aur_packages[@]} -gt 0 ]]; then
-        if ! command -v yay &>/dev/null; then
-            log_info "Installing yay (AUR helper)..."
-            echo
-            log_info "Installing base-devel and git..."
-            sudo pacman -S --needed base-devel git
-            echo
-            log_info "Cloning yay repository..."
-            cd /tmp
-            rm -rf yay
-            git clone --depth=1 --progress https://aur.archlinux.org/yay.git
-            cd yay
-            echo
-            log_info "Building yay from source..."
-            makepkg -si --noconfirm
-            cd -
-            echo
-            log_success "yay installed"
-            echo
-        fi
-        
+        ensure_yay_installed
+
         # Find missing AUR packages
         local missing_aur=()
         for pkg in "${aur_packages[@]}"; do
@@ -266,8 +293,10 @@ packages_install() {
             echo
             log_info "Installing AUR packages..."
             echo
-            # Always non-interactive
-            yay -S --needed --noconfirm --answerclean None --answerdiff None --removemake "${missing_aur[@]}"
+            # Force unbuffered output for yay to show progress in real-time
+            yay -S --needed --noconfirm --answerclean None --answerdiff None --removemake "${missing_aur[@]}" 2>&1 | while IFS= read -r line; do
+                echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] $line" >> "$DOTFILES_LOG_FILE"
+            done
             echo
             log_success "AUR packages installed"
         else
@@ -670,14 +699,8 @@ packages_update() {
         echo
     fi
 
-    if ! command -v yay &>/dev/null; then
-        log_info "Updating system packages with pacman..."
-        echo
-        sudo pacman -Syu --noconfirm
-        echo
-        log_success "System update complete"
-        return 0
-    fi
+    # Ensure yay is installed (system depends on it)
+    ensure_yay_installed
 
     log_info "Updating all packages (official + AUR)..."
     echo
