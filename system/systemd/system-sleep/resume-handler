@@ -4,20 +4,7 @@
 
 case "$1/$2" in
   pre/*)
-    # Before suspend - save connected Bluetooth devices for each user
-    for user_dir in /run/user/*; do
-      [ -d "$user_dir" ] || continue
-      uid=$(basename "$user_dir")
-      user_name=$(id -nu "$uid" 2>/dev/null) || continue
-
-      # Get user's connected Bluetooth devices (with proper D-Bus environment)
-      bt_devices=$(XDG_RUNTIME_DIR="$user_dir" su "$user_name" -c "bluetoothctl devices Connected 2>/dev/null | awk '{print \\\$2}'")
-
-      if [ -n "$bt_devices" ]; then
-        echo "$bt_devices" > "/tmp/bt-connected-$uid"
-        logger -t resume-handler "Saved BT devices for $user_name: $bt_devices"
-      fi
-    done
+    # Nothing needed before suspend
     ;;
 
   post/*)
@@ -52,14 +39,8 @@ case "$1/$2" in
         systemctl --user restart ags.service
       ' 2>&1 | logger -t resume-handler &
 
-      # Reconnect Bluetooth devices
-      bt_file="/tmp/bt-connected-$uid"
-      if [ -f "$bt_file" ]; then
-        while read -r mac; do
-          [ -n "$mac" ] && XDG_RUNTIME_DIR="$user_dir" su "$user_name" -c "bluetoothctl connect $mac" &
-        done < "$bt_file"
-        rm -f "$bt_file"
-      fi
+      # Reconnect Bluetooth devices using systemd service
+      systemd-run --user --machine="$user_name@.host" systemctl --user start bluetooth.service &
     done
     ;;
 esac

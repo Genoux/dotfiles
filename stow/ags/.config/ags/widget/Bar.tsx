@@ -11,6 +11,7 @@ import { VolumeButton } from "./volume";
 import { InternetButton } from "./internet";
 import { KeyboardButton } from "./keyboard";
 import { MediaPlayerButton } from "./mediaplayer";
+import { SystemMenuButton } from "./systemmenu";
 
 export default function Bar(gdkmonitor: Gdk.Monitor) {
   const { TOP, LEFT, RIGHT, BOTTOM } = Astal.WindowAnchor;
@@ -47,6 +48,8 @@ export default function Bar(gdkmonitor: Gdk.Monitor) {
             <Weather />
             <SystemTemp />
             <TimeDisplay />
+            <SystemMenuButton />
+
           </box>
         </centerbox>
       </Gtk.Revealer>

@@ -31,16 +31,11 @@ default = [
 empty = ["desktopapplications"]
 max_results = 24 
 
-[providers.sets]
 [providers.max_results_provider]
 
 [[providers.prefixes]]
 prefix = "/"
 provider = "providerlist"
-
-[[providers.prefixes]]
-prefix = "."
-provider = "files"
 
 [[providers.prefixes]]
 prefix = ":"
@@ -51,10 +46,14 @@ prefix = "@"
 provider = "websearch"
 
 [[providers.prefixes]]
-prefix = "$"
-provider = "clipboard"
+prefix = "!"
+provider = "menus"
 
-[providers.actions] # This will be MERGED/OVEWRITTEN with what the user specifies
+[[providers.prefixes]]
+prefix = "~"
+provider = "archlinuxpkgs"
+
+[providers.actions]
 dmenu = [{ action = "select", default = true, bind = "Return" }]
 
 providerlist = [
@@ -115,3 +114,10 @@ clipboard = [
   { action = "toggle_images", global = true, label = "toggle images", bind = "ctrl i", after = "ClearReload" },
   { action = "edit", bind = "ctrl o" },
 ]
+
+menus = [
+  { action = "run_cmd", label = "execute", default = true, bind = "Return" },
+]
+
+[applications]
+cache = true

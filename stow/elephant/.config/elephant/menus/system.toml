@@ -1,0 +1,24 @@
+name = "system"
+name_pretty = "System Actions"
+fixed_order = true
+icon = "cs-desktop"
+
+[[entries]]
+icon = "system-suspend-symbolic"
+text = "Sleep"
+actions = { sleep = "systemctl suspend" }
+
+[[entries]]
+icon = "system-reboot-symbolic"
+text = "Reboot"
+actions = { reboot = "systemctl reboot" }
+
+[[entries]]
+icon = "system-shutdown-symbolic"
+text = "Shutdown"
+actions = { shutdown = "systemctl poweroff" }
+
+[[entries]]
+icon = "system-lock-screen-symbolic"
+text = "Lock Screen"
+actions = { lock = "swaylock" }

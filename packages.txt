@@ -48,6 +48,7 @@ hyprlock
 hyprpicker
 hyprshot
 i3-wm
+impala
 inetutils
 inotify-tools
 inxi
@@ -147,7 +148,6 @@ swayosd
 swww
 tailscale
 tcpdump
-tigervnc
 ttf-montserrat
 ttf-nerd-fonts-symbols
 unzip

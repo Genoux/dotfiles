@@ -42,6 +42,10 @@ show_usage() {
         echo "    unlink [name]          Unlink configs"
         echo "    status                 Show link status"
         echo
+        echo -e "\e[38;5;14m  system\e[0m\e[38;5;240m               System-level configurations\e[0m"
+        echo "    apply                  Apply system configs"
+        echo "    status                 Show system info"
+        echo
         echo -e "\e[38;5;14m  theme\e[0m\e[38;5;240m                Manage theme\e[0m"
         echo "    apply                  Apply theme files"
         echo "    install-gtk            Install GTK theme"
@@ -74,6 +78,10 @@ show_usage() {
         echo "    link [name]             Link configs (all or specific)"
         echo "    unlink [name]           Unlink configs"
         echo "    status                  Show link status"
+        echo ""
+        echo "  system                    System-level configurations"
+        echo "    apply                   Apply system configs"
+        echo "    status                  Show system info"
         echo ""
         echo "  theme                     Manage theme"
         echo "    apply                   Apply theme files"
@@ -140,6 +148,7 @@ show_menu() {
                 "Full Install" \
                 "Packages" \
                 "Configs" \
+                "System" \
                 "Themes" \
                 "Shell" \
                 "Hyprland" \
@@ -151,6 +160,7 @@ show_menu() {
                 "Full Install" \
                 "Packages" \
                 "Configs" \
+                "System" \
                 "Themes" \
                 "Shell" \
                 "Hyprland" \
@@ -175,6 +185,9 @@ show_menu() {
                 ;;
             "Configs")
                 menu_configs
+                ;;
+            "System")
+                menu_system
                 ;;
             "Themes")
                 menu_themes
@@ -220,25 +233,24 @@ menu_packages() {
         case "$action" in
             "Manage packages")
                 clear_screen
-                packages_manage
-                if [[ $? -eq 0 ]]; then
+                if packages_manage; then
                     echo
                     read -p "Press Enter to continue..."
                 fi
                 ;;
             "Update system")
                 clear_screen
-                packages_update
-                if [[ $? -eq 0 ]]; then
+                if packages_update; then
                     echo
                     read -p "Press Enter to continue..."
                 fi
                 ;;
             "Show status")
                 clear_screen
-                packages_status
-                echo
-                read -p "Press Enter to continue..."
+                if packages_status; then
+                    echo
+                    read -p "Press Enter to continue..."
+                fi
                 ;;
             "Back")
                 return
@@ -276,28 +288,22 @@ menu_configs() {
             "Manage links")
                 clear_screen
                 config_manage_interactive
-                if [[ $? -eq 0 ]]; then
-                    echo
-                    read -p "Press Enter to continue..."
-                fi
+                echo
+                read -p "Press Enter to continue..."
                 ;;
             "Link all")
                 clear_screen
                 config_link_all
-                if [[ $? -eq 0 ]]; then
-                    echo
-                    read -p "Press Enter to continue..."
-                fi
+                echo
+                read -p "Press Enter to continue..."
                 ;;
             "Unlink all")
                 clear_screen
                 if confirm "Unlink all configs?"; then
                     config_unlink_all
                 fi
-                if [[ $? -eq 0 ]]; then
-                    echo
-                    read -p "Press Enter to continue..."
-                fi
+                echo
+                read -p "Press Enter to continue..."
                 ;;
             "Show details")
                 clear_screen
@@ -337,24 +343,48 @@ menu_themes() {
             "Apply theme")
                 clear_screen
                 theme_apply
-                if [[ $? -eq 0 ]]; then
-                    echo
-                    read -p "Press Enter to continue..."
-                fi
+                echo
+                read -p "Press Enter to continue..."
                 ;;
             "Install GTK theme")
                 clear_screen
                 theme_install_gtk
-                if [[ $? -eq 0 ]]; then
-                    echo
-                    read -p "Press Enter to continue..."
-                fi
+                echo
+                read -p "Press Enter to continue..."
                 ;;
             "Show details")
                 clear_screen
                 theme_status
                 echo
                 read -p "Press Enter to continue..."
+                ;;
+            "Back")
+                return
+                ;;
+        esac
+    done
+}
+
+# System management menu
+menu_system() {
+    while true; do
+        clear_screen "System"
+
+        source "$DOTFILES_DIR/lib/system.sh"
+
+        local action=$(choose_option \
+            "Apply configurations" \
+            "Back")
+
+        [[ -z "$action" ]] && return  # ESC pressed
+
+        case "$action" in
+            "Apply configurations")
+                clear_screen
+                if system_apply; then
+                    echo
+                    read -p "Press Enter to continue..."
+                fi
                 ;;
             "Back")
                 return
@@ -390,10 +420,8 @@ menu_shell() {
             "Setup shell")
                 clear_screen
                 shell_setup
-                if [[ $? -eq 0 ]]; then
-                    echo
-                    read -p "Press Enter to continue..."
-                fi
+                echo
+                read -p "Press Enter to continue..."
                 ;;
             "Show details")
                 clear_screen
@@ -504,6 +532,14 @@ main() {
                     fi
                     ;;
                 status|"") config_status ;;
+                *) log_error "Unknown subcommand: $subcommand"; show_usage; exit 1 ;;
+            esac
+            ;;
+        system)
+            source "$DOTFILES_DIR/lib/system.sh"
+            case "$subcommand" in
+                apply) system_apply ;;
+                status|"") system_status ;;
                 *) log_error "Unknown subcommand: $subcommand"; show_usage; exit 1 ;;
             esac
             ;;

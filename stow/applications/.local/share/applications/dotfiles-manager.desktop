@@ -2,8 +2,8 @@
 Version=1.0
 Type=Application
 Name=Dotfiles Manager
-Comment=Manage your dotfiles configuration
-Icon=preferences-system
+Comment=Manage dotfiles configuration
+Icon=ccsm
 Exec=/home/john/dotfiles/dotfiles-menu
 Terminal=false
 Categories=System;Settings;Utility;

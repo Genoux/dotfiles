@@ -1,9 +1,0 @@
-[Desktop Entry]
-Name=Sleep
-Comment=Put the system to sleep
-Exec=systemctl suspend
-Icon=system-suspend
-Terminal=false
-Type=Application
-Categories=System;
-StartupNotify=false

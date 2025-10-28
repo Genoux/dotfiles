@@ -79,6 +79,11 @@ scrollbar slider:hover {
   border-color: @border;
 }
 
+.input selection {
+  background-color: rgba(128, 128, 128, 0.3);
+  color: @fg;
+}
+
 .list {
   color: @fg;
 }

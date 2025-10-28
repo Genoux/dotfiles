@@ -1,9 +1,0 @@
-[Desktop Entry]
-Name=Lock Screen
-Comment=Lock the screen
-Exec=swaylock
-Icon=system-lock-screen
-Terminal=false
-Type=Application
-Categories=System;
-StartupNotify=false

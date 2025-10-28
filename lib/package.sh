@@ -575,17 +575,35 @@ packages_manage() {
     local options=()
 
     [[ $total_missing -gt 0 ]] && options+=("Install missing packages ($total_missing)")
+    [[ $total_missing -gt 0 ]] && options+=("Remove missing from dotfiles ($total_missing)")
     [[ $total_extra -gt 0 ]] && options+=("Add extra to dotfiles ($total_extra)")
     [[ $total_extra -gt 0 ]] && options+=("Remove extra from system ($total_extra)")
     [[ $total_extra -gt 0 ]] && options+=("Select which to keep/remove")
     [[ $total_missing -gt 0 && $total_extra -gt 0 ]] && options+=("Full sync (install + add)")
 
     local action=$(gum choose --header "What would you like to do?" "${options[@]}")
-    [[ -z "$action" ]] && return  # ESC pressed
+    [[ -z "$action" ]] && return 1  # ESC pressed
 
     case "$action" in
         "Install missing packages"*)
             packages_install
+            ;;
+
+        "Remove missing from dotfiles"*)
+            log_info "Removing $total_missing packages from dotfiles..."
+            echo
+
+            # Remove from packages.txt
+            for pkg in "${missing_official[@]}"; do
+                sed -i "/^${pkg}$/d" "$PACKAGES_FILE"
+            done
+
+            # Remove from aur-packages.txt
+            for pkg in "${missing_aur[@]}"; do
+                sed -i "/^${pkg}$/d" "$AUR_PACKAGES_FILE"
+            done
+
+            log_success "Removed $total_missing packages from dotfiles"
             ;;
 
         "Add extra to dotfiles"*)

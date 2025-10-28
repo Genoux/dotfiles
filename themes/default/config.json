@@ -9,7 +9,6 @@
     "starship.toml": "~/.config/starship.toml",
     "swayosd.css": "~/.config/swayosd/style.css",
     "yazi.toml": "~/.config/yazi/theme.toml",
-    "pacseek.json": "~/.config/pacseek/config.json",
     "mako.conf": "~/.config/mako/theme.conf",
     "walker.css": "~/.config/walker/themes/default/style.css"
   },

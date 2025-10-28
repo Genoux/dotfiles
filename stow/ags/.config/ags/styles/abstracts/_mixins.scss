@@ -1,6 +1,8 @@
 @use "../abstracts/variables" as *;
 @use "../abstracts/theme" as *;
 
+@use "sass:color";
+
 @mixin gtk-reset {
   all: unset;
   padding: 0;
@@ -17,6 +19,10 @@
 @mixin button-base {
   @include gtk-reset;
   border-radius: $radius-sm;
-  transition: $transition-fast;
+  transition: $transition-hover;
   padding: 5px;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
 }
