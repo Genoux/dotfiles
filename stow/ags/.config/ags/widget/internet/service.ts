@@ -1,5 +1,6 @@
 import GLib from "gi://GLib";
-import { createPoll } from "ags/time";
+import Gio from "gi://Gio";
+import { createState } from "ags";
 
 function checkConnection(): string {
   try {
@@ -44,8 +45,35 @@ function checkConnection(): string {
   }
 }
 
-// Poll connection every 5 seconds
-export const connectionIcon = createPoll("network-offline-symbolic", 5000, checkConnection);
+// Reactive connectivity state using NetworkMonitor
+const [connected, setConnected] = createState<boolean>(false);
+
+try {
+  const net = Gio.NetworkMonitor.get_default();
+  // initial state
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const initial = (net as any).get_network_available ? net.get_network_available() : true;
+  setConnected(() => !!initial);
+
+  let last = Date.now();
+  net.connect("network-changed", (_m, available: boolean) => {
+    const now = Date.now();
+    if (now - last < 500) return; // debounce bursts
+    last = now;
+    setConnected(() => !!available);
+  });
+} catch (error) {
+  // Fallback: best-effort probe immediately
+  setConnected(() => checkConnection() !== "network-offline-symbolic");
+}
+
+// Export a simple boolean state to reuse elsewhere
+export { connected };
+
+// Derive an icon reactively from connectivity; keep it simple (no iface detection here)
+export const connectionIcon = connected((isOn) =>
+  isOn ? "network-wired-symbolic" : "network-offline-symbolic"
+);
 
 export function openInternetManager() {
   try {

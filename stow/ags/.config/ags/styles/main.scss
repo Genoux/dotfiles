@@ -1,5 +1,6 @@
 @use "./abstracts/mixins" as *;
 @use "./abstracts/variables" as *;
+@use "./abstracts/theme" as *;
 
 @use "widgets/bar";
 @use "widgets/windowtitle";
@@ -7,15 +8,31 @@
 @use "widgets/cava";
 @use "widgets/volume";
 @use "widgets/mediaplayer";
+@use "widgets/osd";
 
 * {
   font-family: "SF Pro Text";
-  letter-spacing: 0.04em;
-  font-size: 12px;
-  font-weight: 400;
+  //letter-spacing: 0.04em;
+  //font-size: 12px;
+  //font-weight: 400;
 }
 
 // Apply button reset to all button elements
 button {
   @include button-base;
+}
+
+// GTK4 tooltip styling (used by system tray and other widgets)
+// Remove harsh borders and align visuals with theme
+tooltip {
+  border: none;
+  border-radius: 8px;
+  background-color: $bg-card;
+  color: #ffffff;
+  padding: $spacing-sm;
+}
+
+// Ensure inner label inherits colors without extra borders
+tooltip label {
+  color: inherit;
 }

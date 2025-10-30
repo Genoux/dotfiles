@@ -32,24 +32,25 @@ export default function Bar(gdkmonitor: Gdk.Monitor) {
         transitionDuration={400}
       >
         <centerbox>
-          <box $type="start">
+          <box $type="start" spacing={2}>
             <Workspaces />
             <SystemTray />
           </box>
           <box $type="center" spacing={6} valign={Gtk.Align.CENTER}>
             <WindowTitle />
           </box>
-          <box $type="end" spacing={4} halign={Gtk.Align.END}>
+          <box $type="end" spacing={6} halign={Gtk.Align.END}>
             <MediaPlayerButton />
-            <VolumeButton />
-            <InternetButton />
-            <BluetoothButton />
-            <KeyboardButton />
-            <Weather />
-            <SystemTemp />
-            <TimeDisplay />
-            <SystemMenuButton />
-
+            <box spacing={2} halign={Gtk.Align.END}>
+              <VolumeButton />
+              <InternetButton />
+              <BluetoothButton />
+              <KeyboardButton />
+              <Weather />
+              <SystemTemp />
+              <TimeDisplay />
+              <SystemMenuButton />
+            </box>
           </box>
         </centerbox>
       </Gtk.Revealer>

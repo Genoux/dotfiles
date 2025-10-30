@@ -1,0 +1,24 @@
+#!/bin/bash
+
+# Launch weather with single instance support
+
+TERMINAL_TITLE="weather"
+
+# Check if weather is already running (simplified check)
+window_address=$(hyprctl clients -j | jq -r '.[] | select(.title == "weather") | .address' | head -1)
+if [ -n "$window_address" ]; then
+    # Focus the existing window using address
+    hyprctl dispatch focuswindow address:"$window_address"
+    echo "Focused existing weather window"
+else
+    echo "Launching weather in ${TERMINAL:-xterm}..."
+    
+    # Set environment variables to fix EGL/GPU issues
+    export LIBGL_ALWAYS_SOFTWARE=1
+    export __GL_THREADED_OPTIMIZATIONS=0
+    export MESA_GL_VERSION_OVERRIDE=3.3
+    
+    ${TERMINAL:-xterm} --title "$TERMINAL_TITLE" -e sh -c "wego; echo 'Press any key to close...'; read -n 1" 2>/dev/null &
+
+    echo "Launched weather (PID: $!)"
+fi

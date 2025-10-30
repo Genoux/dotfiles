@@ -6,10 +6,10 @@ export function Weather({ class: cls }: { class?: string }) {
   return (
     <Button onClicked={openWeatherApp}>
       <With value={weather}>
-        {({ icon, feelsLike }) => (
+        {(data) => (
           <box class={cls} spacing={4}>
-            <label label={icon} />
-            <label label={`${feelsLike}°C`} />
+            <label label={data?.icon || ""} />
+            <label label={data ? `${data.feelsLike}°C` : "--°C"} />
           </box>
         )}
       </With>

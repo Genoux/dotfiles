@@ -1,0 +1,38 @@
+@use "../abstracts/variables" as *;
+@use "../abstracts/theme" as *;
+@use "sass:color";
+
+window.volume-osd-window,
+window.volume-osd-window revealer {
+  background-color: transparent;
+  border: none;
+  outline: none;
+  box-shadow: none;
+}
+
+.osd {
+  font-size: 14px;
+  font-weight: 400;
+  box-shadow: none;
+  border-radius: $radius-sm;
+  margin-bottom: 24px;
+  padding-top: $spacing-md;
+  border: $border-width solid rgba(255, 255, 255, 0.02);
+  background: rgba(0, 0, 0, 0.3);
+  color: white;
+
+  .volume-step-bar {
+    margin-top: $spacing-xs;
+  }
+
+  .volume-step {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 1px;
+    min-width: 3px;
+    transition: background-color 0.15s ease;
+
+    &.volume-step-filled {
+      background-color: rgba(255, 255, 255, 0.9);
+    }
+  }
+}

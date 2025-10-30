@@ -243,6 +243,17 @@ menu_packages() {
                 if packages_update; then
                     echo
                     read -p "Press Enter to continue..."
+                else
+                    echo
+                    log_error "Update failed. Showing recent log output:"
+                    echo
+                    if [[ -n "${DOTFILES_LOG_FILE:-}" && -f "$DOTFILES_LOG_FILE" ]]; then
+                        tail -n 120 "$DOTFILES_LOG_FILE"
+                    else
+                        echo "No log file available. Rerun: dotfiles packages update 2>&1 | tee /tmp/dotfiles-update.log"
+                    fi
+                    echo
+                    read -p "Press Enter to continue..."
                 fi
                 ;;
             "Show status")
@@ -505,12 +516,12 @@ main() {
             source "$DOTFILES_DIR/lib/package.sh"
             case "$subcommand" in
                 manage|"") packages_manage ;;
-                update) packages_update ;;
+                update) packages_update || exit $? ;;
                 status) packages_status ;;
                 # Legacy commands still work
-                install) packages_install ;;
-                sync) packages_sync ;;
-                clean) packages_clean_unlisted ;;
+                install) packages_install || exit $? ;;
+                sync) packages_sync || exit $? ;;
+                clean) packages_clean_unlisted || exit $? ;;
                 *) log_error "Unknown subcommand: $subcommand"; show_usage; exit 1 ;;
             esac
             ;;

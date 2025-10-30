@@ -2,9 +2,9 @@
 Description=Reconnect Bluetooth Devices
 After=bluetooth.service
 Wants=bluetooth.service
-# Wait for AGS to be fully started and stable
-After=ags.service
-Wants=ags.service
+# Wait for system Bluetooth service to be ready
+After=dbus.service
+Wants=dbus.service
 
 [Service]
 Type=oneshot

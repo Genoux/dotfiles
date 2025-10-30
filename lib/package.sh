@@ -806,6 +806,14 @@ packages_clean_unlisted() {
 packages_update() {
     log_section "Updating System"
 
+    # Validate sudo access upfront
+    log_info "Validating sudo access..."
+    if ! sudo -v; then
+        log_error "Failed to obtain sudo privileges"
+        return 1
+    fi
+    echo
+
     # Remove debug packages first
     local debug_packages=$(pacman -Qq | grep '\-debug$' 2>/dev/null || true)
     if [[ -n "$debug_packages" ]]; then
@@ -814,15 +822,64 @@ packages_update() {
         echo
     fi
 
-    # Ensure yay is installed (system depends on it)
+    # Step 1: Update official repositories first (root)
+    log_info "Updating official repositories (pacman)..."
+    if ! sudo pacman -Syu --noconfirm; then
+        log_error "pacman repo update failed"
+        return 1
+    fi
+    echo
+
+    # Ensure yay is installed for AUR step
     ensure_yay_installed
 
-    log_info "Updating all packages (official + AUR)..."
+    # Step 2: Update AUR packages (user)
+    # Neutralize user npm config that breaks nvm-based PKGBUILDs (e.g., claude-desktop)
+    # Some AUR helpers/makepkg may ignore exported env; safest is to temporarily
+    # move ~/.npmrc out of the way if it exists and restore it afterwards.
+    local npmrc_backup=""
+    if [[ -f "$HOME/.npmrc" ]]; then
+        npmrc_backup="$HOME/.npmrc.dotfiles-backup-$(date +%s)"
+        mv "$HOME/.npmrc" "$npmrc_backup" 2>/dev/null || true
+    fi
+    # Also try to neutralize env-based npm configs
+    export NPM_CONFIG_USERCONFIG=/dev/null
+    unset NPM_CONFIG_PREFIX npm_config_prefix NPM_CONFIG_GLOBALCONFIG npm_config_globalconfig
+
+    log_info "Updating AUR packages (yay)..."
+    local aur_exit=0
+    local aur_output
+
+    aur_output=$(yay -Sua --noconfirm --answerclean N --answerdiff N 2>&1) || aur_exit=$?
+    echo "$aur_output"
     echo
-    # Use printf to automatically answer any prompts during update
-    printf "1\nY\n" | yay -Syu --noconfirm --answerclean None --answerdiff None --removemake
-    echo
-    log_success "System update complete"
+
+    if [[ $aur_exit -ne 0 ]]; then
+        log_warning "AUR update failed (exit $aur_exit) - retrying..."
+        aur_exit=0
+        aur_output=$(yay -Sua --noconfirm --answerclean N --answerdiff N 2>&1) || aur_exit=$?
+        echo "$aur_output"
+        echo
+    fi
+
+    # Restore ~/.npmrc if we moved it
+    if [[ -n "$npmrc_backup" && -f "$npmrc_backup" ]]; then
+        mv "$npmrc_backup" "$HOME/.npmrc" 2>/dev/null || true
+    fi
+
+    if [[ $aur_exit -eq 0 ]]; then
+        log_success "System update complete"
+        return 0
+    else
+        log_error "AUR update failed (exit code: $aur_exit)"
+        if echo "$aur_output" | grep -qi "TLS handshake timeout"; then
+            log_error "Network timeout talking to AUR; try again later or check connectivity/DNS"
+        fi
+        if echo "$aur_output" | grep -qi "A failure occurred in prepare\(\)"; then
+            log_error "AUR build prepare() failed (often due to user npm prefix/globalconfig). We neutralized ~/.npmrc, but if it persists, try building the package alone with: yay -S <pkg> --debug"
+        fi
+        return 1
+    fi
 }
 
 # Show package status
