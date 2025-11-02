@@ -1,12 +1,11 @@
 import { Button } from "../../../lib/components";
+import Icon from "../../../components/Icon";
 import { connectionIcon, openInternetManager } from "../service";
 
-export function InternetButton({ class: cls = "" }: { class?: string }) {
+export function InternetButton() {
   return (
-    <box class={`${cls}`}>
-      <Button onClicked={openInternetManager}>
-        <image iconName={connectionIcon((icon) => icon)} pixelSize={11} />
-      </Button>
-    </box>
+    <Button onClicked={openInternetManager}>
+      <Icon icon={connectionIcon((icon) => icon)} />
+    </Button>
   );
 }

@@ -12,35 +12,32 @@ case "$1/$2" in
 
     # Restart NetworkManager (non-blocking)
     systemctl restart NetworkManager &
-    
+
     # Give NetworkManager time to initialize
     sleep 2
 
-    # Restart user services and reconnect Bluetooth for each user
+    # Restart user services for each user
     for user_dir in /run/user/*; do
       [ -d "$user_dir" ] || continue
       uid=$(basename "$user_dir")
       user_name=$(id -nu "$uid" 2>/dev/null) || continue
 
-      # Restart AGS for this user (wait for monitors to be ready)
-      logger -t resume-handler "Scheduling AGS restart for user $user_name"
-      # Use systemd-run to run a script that waits for monitors
+      logger -t resume-handler "Restarting services for user $user_name"
+
+      # Restart AGS (wait for monitors to be ready)
       systemd-run --user --machine="$user_name@.host" /bin/bash -c '
-        # Wait for Hyprland monitors to be available (max 10 seconds)
         for i in {1..20}; do
           if hyprctl monitors -j 2>/dev/null | grep -q "id"; then
-            logger -t resume-handler "Monitors ready, restarting AGS"
             systemctl --user restart ags.service
             exit 0
           fi
           sleep 0.5
         done
-        logger -t resume-handler "Timeout waiting for monitors, restarting AGS anyway"
         systemctl --user restart ags.service
-      ' 2>&1 | logger -t resume-handler &
+      ' &
 
-      # Reconnect Bluetooth devices using systemd service
-      systemd-run --user --machine="$user_name@.host" systemctl --user start bluetooth.service &
+      # Reconnect Bluetooth devices
+      systemd-run --user --machine="$user_name@.host" systemctl --user restart bluetooth.service &
     done
     ;;
 esac

@@ -6,6 +6,16 @@ import { timeout } from "ags/time";
 
 const wp = Wp.get_default();
 
+// Volume normalization - WirePlumber uses a 0-2.0 scale where:
+// 0.0 = 0%, 1.0 = 100% (normal maximum), 2.0 = 200% (overamplification)
+// For the bar display, we treat 1.0 as 100% filled (normal max)
+// Values above 1.0 are also shown as 100% filled since they're overamplification
+function normalizeVolume(rawVolume: number): number {
+  // Normalize 0-1.0 range to 0-1.0 for display
+  // Anything above 1.0 also shows as 1.0 (100% filled)
+  return Math.min(rawVolume, 1.0);
+}
+
 // OSD state management
 const [isVisible, setIsVisible] = createState(false);
 const [volumeState, setVolumeState] = createState({ volume: 0, muted: false });
@@ -31,13 +41,15 @@ function setupSpeakerSignals() {
   if (spk) {
     speakerHandlerIds = [
       spk.connect("notify::volume", () => {
-        setVolumeState({ volume: spk.volume, muted: spk.mute });
-        updateDerivedState(spk.volume, spk.mute);
+        const normalizedVol = normalizeVolume(spk.volume);
+        setVolumeState({ volume: normalizedVol, muted: spk.mute });
+        updateDerivedState(normalizedVol, spk.mute, spk.volume);
         if (!isInitializing) showOSD();
       }),
       spk.connect("notify::mute", () => {
-        setVolumeState({ volume: spk.volume, muted: spk.mute });
-        updateDerivedState(spk.volume, spk.mute);
+        const normalizedVol = normalizeVolume(spk.volume);
+        setVolumeState({ volume: normalizedVol, muted: spk.mute });
+        updateDerivedState(normalizedVol, spk.mute, spk.volume);
         if (!isInitializing) showOSD();
       }),
     ];
@@ -48,23 +60,31 @@ function setupSpeakerSignals() {
 wp.audio.connect("notify::default-speaker", () => {
   const spk = wp.audio.default_speaker;
   if (spk) {
-    setVolumeState({ volume: spk.volume, muted: spk.mute });
-    updateDerivedState(spk.volume, spk.mute);
+    const normalizedVol = normalizeVolume(spk.volume);
+    setVolumeState({ volume: normalizedVol, muted: spk.mute });
+    updateDerivedState(normalizedVol, spk.mute, spk.volume);
   }
   setupSpeakerSignals();
 });
 
-// Initialize
-setupSpeakerSignals();
+// Initialize state first (without triggering signals)
 const spk = wp.audio.default_speaker;
 if (spk) {
-  setVolumeState({ volume: spk.volume, muted: spk.mute });
-  updateDerivedState(spk.volume, spk.mute);
+  const normalizedVol = normalizeVolume(spk.volume);
+  setVolumeState({ volume: normalizedVol, muted: spk.mute });
+  updateDerivedState(normalizedVol, spk.mute, spk.volume);
 }
 
-// Disable initialization flag after setup
-timeout(100, () => {
-  isInitializing = false;
+// Connect signals after initial state is set
+// This prevents signals from firing during initialization
+timeout(50, () => {
+  setupSpeakerSignals();
+  
+  // Disable initialization flag after signals are connected
+  // Give extra time to ensure no signals fire during startup
+  timeout(200, () => {
+    isInitializing = false;
+  });
 });
 
 // Track OSD hide timeout
@@ -99,10 +119,14 @@ export function getVolumeIcon(vol: number, muted: boolean): string {
   }
 }
 
-function updateDerivedState(vol: number, muted: boolean) {
-  const validVol = isNaN(vol) ? 0 : vol;
+function updateDerivedState(normalizedVol: number, muted: boolean, rawVol: number) {
+  const validVol = isNaN(normalizedVol) ? 0 : normalizedVol;
   setVolumeIcon(getVolumeIcon(validVol, muted));
-  setVolumeLabel(muted ? "Muted" : `${Math.round(validVol * 100)}%`);
+  
+  // Show percentage based on WirePlumber's scale where 1.0 = 100%
+  // Cap at 100% for display even if volume goes higher (150%, 200%, etc.)
+  const displayPercentage = muted ? 0 : Math.min(Math.round(rawVol * 100), 100);
+  setVolumeLabel(muted ? "Muted" : `${displayPercentage}%`);
 }
 
 // Export state for components

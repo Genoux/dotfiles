@@ -1,8 +1,9 @@
 import app from "ags/gtk4/app";
 import { Astal, Gtk } from "ags/gtk4";
 import { isVisible, volumeState, volumeIcon } from "../service";
+import Icon from "../../../components/Icon";
 
-const TOTAL_STEPS = 10;
+const TOTAL_STEPS = 10; // 10 steps for 10% increments (0%, 10%, 20%, ..., 100%)
 
 function VolumeStepBar() {
     const stepIndices = Array.from({ length: TOTAL_STEPS }, (_, i) => i);
@@ -15,10 +16,16 @@ function VolumeStepBar() {
             cssName="volume-step-bar"
         >
             {stepIndices.map((index: number) => {
-                const stepValue = (index + 1) / TOTAL_STEPS;
+                // Each step represents 10%: step 0 = 0-10%, step 1 = 10-20%, ..., step 9 = 90-100%
+                // Use a small epsilon to handle floating point precision when comparing
+                const stepThreshold = ((index + 1) / TOTAL_STEPS) - 0.001;
 
                 const stepClass = volumeState((state) => {
-                    const filled = !state.muted && state.volume >= stepValue;
+                    if (state.muted) return "volume-step";
+                    
+                    // Fill step if volume is above the threshold (with small epsilon for precision)
+                    // This ensures accurate 10% step display: 0.9 shows 9 bars, 1.0 shows 10 bars
+                    const filled = state.volume > stepThreshold;
                     return filled ? "volume-step volume-step-filled" : "volume-step";
                 });
 
@@ -64,11 +71,10 @@ export function VolumeOSD() {
                     halign={Gtk.Align.CENTER}
                 >
                     <box orientation={Gtk.Orientation.VERTICAL} vexpand valign={Gtk.Align.CENTER} halign={Gtk.Align.CENTER} spacing={21}>
-                        <image
-                            iconName={volumeIcon((icon) => icon || "audio-volume-medium-symbolic")}
-                            pixelSize={40}
+                        <Icon
+                            icon={volumeIcon((icon) => icon || "audio-volume-medium-symbolic")}
+                            size={40}
                             cssName="osd-icon"
-                            halign={Gtk.Align.CENTER}
                         />
                         <VolumeStepBar />
                     </box>

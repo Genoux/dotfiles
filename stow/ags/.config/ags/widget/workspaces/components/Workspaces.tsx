@@ -5,41 +5,32 @@ import Hyprland from "gi://AstalHyprland";
 import { focusedWorkspace, workspaces } from "../service";
 import { Button } from "../../../lib/components";
 
-export function Workspaces({ class: cls }: { class?: string }) {
+export function Workspaces() {
   return (
-    <box class={`workspaces ${cls ?? ""}`} spacing={2}>
+    <box spacing={1}>
       <For each={workspaces}>
         {(ws: Hyprland.Workspace) => {
           const wsId = ws.id;
-          // Single binding per workspace to check if focused
           const isFocused = focusedWorkspace((f) => f?.id === wsId);
 
           return (
             <Button
-              class={isFocused((focused) =>
-                focused ? "workspace workspace--focused" : "workspace"
-              )}
+              class='workspace'
               onClicked={() =>
                 execAsync(["system-workspace-switch", String(wsId)])
               }
             >
-              <box
-                halign={Gtk.Align.CENTER}
-                valign={Gtk.Align.CENTER}
-                class={isFocused((focused) =>
-                  focused
-                    ? "workspace__indicator workspace__indicator--focused"
-                    : "workspace__number"
-                )}
-              >
-                <box visible={isFocused((focused) => !focused)}>
-                  <label label={String(wsId)} />
-                </box>
-              </box>
+              <label
+                widthRequest={12}
+                heightRequest={9}
+                class={isFocused((focused) => (focused ? "focused" : ""))}
+                label={isFocused((focused) => (focused ? "●" : String(wsId)))}
+              />
             </Button>
           );
         }}
       </For>
+
     </box>
   );
 }

@@ -1,38 +1,97 @@
-@use "./abstracts/mixins" as *;
-@use "./abstracts/variables" as *;
+@use "./tokens" as *;
 @use "./abstracts/theme" as *;
+@use "./abstracts/reset" as *;
+
+@use 'sass:color';
 
 @use "widgets/bar";
 @use "widgets/windowtitle";
 @use "widgets/workspaces";
 @use "widgets/cava";
-@use "widgets/volume";
 @use "widgets/mediaplayer";
 @use "widgets/osd";
+@use "widgets/button";
+
 
 * {
-  font-family: "SF Pro Text";
-  //letter-spacing: 0.04em;
-  //font-size: 12px;
-  //font-weight: 400;
-}
+  font-family: typography(font-family);
+  font-size: 12px;
 
-// Apply button reset to all button elements
-button {
-  @include button-base;
 }
 
 // GTK4 tooltip styling (used by system tray and other widgets)
 // Remove harsh borders and align visuals with theme
 tooltip {
-  border: none;
+  @include gtk-reset;
+
   border-radius: 8px;
-  background-color: $bg-card;
+  background-color: rgba(0, 0, 0, 0.5);
+  border: 1px solid color.change($border, $alpha: 0.05);
   color: #ffffff;
-  padding: $spacing-sm;
+  padding: spacing(sm);
 }
 
 // Ensure inner label inherits colors without extra borders
 tooltip label {
+  border: none;
   color: inherit;
+}
+
+// PopoverMenu styling (right-click context menus)
+popover {
+  contents {
+    @include gtk-reset;
+    
+    transform: translateY(8px);
+    border: 1px solid color.change($border, $alpha: 0.05);
+    padding: spacing(md);
+    border-radius: radius(md);
+    background-color: rgba(0, 0, 0, 0.5);
+  }
+
+  arrow {
+    @include gtk-reset;
+    opacity: 0;
+    background-color: rgba(0, 0, 0, 0);
+    border:none;
+  }
+
+  button.model {
+    @include gtk-reset;
+    background-color: transparent;
+    background-image: none;
+    border: none;
+    border-radius: 2px;
+    color: #ffffff;
+    box-shadow: none;
+    outline: none;
+    -gtk-icon-filter: none;
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+      background-image: none;
+      box-shadow: none;
+      outline: none;
+    }
+
+    &:active {
+      background-color: rgba(255, 255, 255, 0.15);
+      background-image: none;
+    }
+
+    &:focus {
+      outline: none;
+      box-shadow: none;
+      background-image: none;
+    }
+
+    &:focus-visible {
+      outline: none;
+      box-shadow: none;
+    }
+  }
+
+  label {
+    color: inherit;
+  }
 }

@@ -1,6 +1,5 @@
 import { Gtk } from "ags/gtk4";
 import { createPoll } from "ags/time";
-import Mpris from "gi://AstalMpris";
 import {
   getActivePlayer,
   currentPlayerInfo,
@@ -9,6 +8,7 @@ import {
 } from "../service";
 import { CavaVisualizer } from "../../cava";
 import { Button } from "../../../lib/components";
+import Icon from "../../../components/Icon";
 
 const MAX_LENGTH = 30;
 const SCROLL_SPEED = 400;
@@ -30,10 +30,10 @@ const scrollingText = createPoll("", SCROLL_SPEED, () => {
   return scrolled.slice(0, MAX_LENGTH);
 });
 
-export function MediaPlayerButton({ class: cls = "" }: { class?: string }) {
+export function MediaPlayerButton() {
 
   return (
-    <box spacing={1} class={`mediaplayer ${cls}`} visible={currentPlayerInfo((info) => info !== "No media")}>
+    <box spacing={1} class='mediaplayer' visible={currentPlayerInfo((info) => info !== "No media")}>
       <Button onClicked={toggleMediaPanel}>
         <box
           spacing={6}
@@ -58,7 +58,7 @@ export function MediaPlayerButton({ class: cls = "" }: { class?: string }) {
             }
           }}
         >
-          <image iconName="media-skip-backward-symbolic" pixelSize={10} />
+          <Icon icon="media-skip-backward-symbolic" />
         </Button>
         <Button
           class="media-control play-pause"
@@ -69,11 +69,10 @@ export function MediaPlayerButton({ class: cls = "" }: { class?: string }) {
             }
           }}
         >
-          <image
-            iconName={currentPlayerPlayIcon((icon) =>
+          <Icon
+            icon={currentPlayerPlayIcon((icon) =>
               icon === "▶" ? "media-playback-start-symbolic" : "media-playback-pause-symbolic"
             )}
-            pixelSize={10}
           />
         </Button>
         <Button
@@ -85,7 +84,7 @@ export function MediaPlayerButton({ class: cls = "" }: { class?: string }) {
             }
           }}
         >
-          <image iconName="media-skip-forward-symbolic" pixelSize={10} />
+          <Icon icon="media-skip-forward-symbolic" />
         </Button>
       </box>
     </box>

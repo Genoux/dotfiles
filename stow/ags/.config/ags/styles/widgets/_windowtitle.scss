@@ -1,9 +1,6 @@
-@use "../abstracts/variables" as *;
+@use "../tokens" as *;
 @use "../abstracts/theme" as *;
-@use "../abstracts/mixins" as *;
 
 .window-title {
-  .window-title__container {
-    padding: 0 $spacing-md;
-  }
+  .window-title__container {}
 }

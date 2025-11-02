@@ -1,6 +1,6 @@
 import Mpris from "gi://AstalMpris";
 import { createState } from "ags";
-import { hypr } from "../../services/hyprland";
+import { hypr } from "./hyprland";
 
 const mpris = Mpris.get_default();
 

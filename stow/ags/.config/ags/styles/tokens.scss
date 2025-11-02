@@ -1,0 +1,188 @@
+// Design tokens - centralized source of truth for colors, spacing, typography, etc.
+// Import theme variables first
+@use "sass:map";
+@use "./abstracts/theme" as *;
+
+// Color palette - based on your theme variables
+$colors: (
+    // Backgrounds (from theme)
+    bg-primary: $bg,
+    bg-secondary: $bg-card,
+    bg-tertiary: rgba(32, 38, 42, 0.8),
+    bg-card: $bg-card,
+    bg-overlay: rgba(22, 22, 27, 0.95),
+
+    // Text (from theme)
+    text-primary: $fg,
+    text-secondary: $fg-dim,
+    text-muted: $accent,
+
+    // Accent colors (from theme + extensions)
+    accent-blue: #89b4fa,
+    accent-green: $green,
+    accent-yellow: #f9e2af,
+    accent-red: $red,
+    accent-purple: #cba6f7,
+    accent-pink: #f5c2e7,
+    accent-teal: #94e2d5,
+    accent-default: $accent,
+
+    // Status colors (from theme)
+    success: $green,
+    warning: #f9e2af,
+    error: $red,
+    info: #89b4fa,
+
+    // Borders (from theme)
+    border-primary: $border,
+    border-secondary: rgba(255, 255, 255, 0.05),
+    border-muted: rgba(255, 255, 255, 0.02),
+
+    // Base colors (from theme)
+    white: $white,
+    black: $black,
+
+    // Shadows
+    shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.1),
+    shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1),
+    shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1),
+    shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1),
+);
+
+// Spacing scale
+$spacing: (
+    xs: 2px,
+    sm: 4px,
+    md: 8px,
+    lg: 12px,
+    xl: 16px,
+    2xl: 24px,
+    3xl: 32px,
+    4xl: 48px,
+);
+
+// Typography
+$typography: (
+    font-family: "SF Pro Text",
+    font-size-xs: 10px,
+    font-size-sm: 12px,
+    font-size-base: 14px,
+    font-size-lg: 16px,
+    font-size-xl: 18px,
+    font-size-2xl: 20px,
+    font-size-3xl: 24px,
+    font-weight-normal: 400,
+    font-weight-medium: 500,
+    font-weight-semibold: 600,
+    font-weight-bold: 700,
+    line-height-tight: 1.2,
+    line-height-normal: 1.5,
+    line-height-relaxed: 1.75,
+);
+
+// Border radius
+$radius: (
+    none: 0,
+    sm: 4px,
+    md: 8px,
+    lg: 12px,
+    xl: 16px,
+    full: 9999px,
+);
+
+// Z-index scale
+$z-index: (
+    base: 0,
+    dropdown: 10,
+    sticky: 20,
+    fixed: 30,
+    modal-backdrop: 40,
+    modal: 50,
+    popover: 60,
+    tooltip: 70,
+    notification: 80,
+    overlay: 90,
+    max: 100,
+);
+
+// Animation durations
+$duration: (
+    fast: 150ms,
+    normal: 250ms,
+    slow: 350ms,
+    slower: 500ms,
+);
+
+// Easing functions
+$easing: (
+    linear: linear,
+    ease: ease,
+    ease-in: ease-in,
+    ease-out: ease-out,
+    ease-in-out: ease-in-out,
+);
+
+// Helper functions to access tokens
+@function color($key) {
+    @return map.get($colors, $key);
+}
+
+@function spacing($key) {
+    @return map.get($spacing, $key);
+}
+
+@function typography($key) {
+    @return map.get($typography, $key);
+}
+
+@function radius($key) {
+    @return map.get($radius, $key);
+}
+
+@function z-index($key) {
+    @return map.get($z-index, $key);
+}
+
+@function duration($key) {
+    @return map.get($duration, $key);
+}
+
+@function easing($key) {
+    @return map.get($easing, $key);
+}
+
+// CSS custom properties for runtime theming
+:root {
+    // Theme-based colors
+    --color-bg-primary: #{$bg};
+    --color-bg-secondary: #{$bg-card};
+    --color-bg-card: #{$bg-card};
+    --color-text-primary: #{$fg};
+    --color-text-secondary: #{$fg-dim};
+    --color-accent: #{$accent};
+    --color-border: #{$border};
+    --color-success: #{$green};
+    --color-error: #{$red};
+
+    // Extended colors
+    --color-accent-blue: #{color(accent-blue)};
+    --color-accent-green: #{color(accent-green)};
+    --color-accent-red: #{color(accent-red)};
+    --color-border-primary: #{color(border-primary)};
+
+    // Spacing
+    --spacing-sm: #{spacing(sm)};
+    --spacing-md: #{spacing(md)};
+    --spacing-lg: #{spacing(lg)};
+    --spacing-xl: #{spacing(xl)};
+
+    // Border radius
+    --radius-md: #{radius(md)};
+    --radius-lg: #{radius(lg)};
+
+    // Z-index
+    --z-index-dropdown: #{z-index(dropdown)};
+    --z-index-modal: #{z-index(modal)};
+    --z-index-tooltip: #{z-index(tooltip)};
+    --z-index-notification: #{z-index(notification)};
+}

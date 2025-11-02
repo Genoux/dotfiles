@@ -1,5 +1,5 @@
 import { createState } from "ags";
-import { hypr } from "../../lib/hyprland";
+import { hypr } from "../../services/hyprland";
 import GLib from "gi://GLib";
 
 function getKeyboardDevices() {

@@ -122,6 +122,9 @@ config_manage_interactive() {
     echo
     log_section "Applying Changes"
 
+    # Clean up orphaned symlinks first
+    config_cleanup_orphans
+
     # Determine what to link and unlink
     local to_link=()
     local to_unlink=()
@@ -378,21 +381,91 @@ config_unlink() {
     fi
 }
 
+# Clean up orphaned symlinks from deleted stow packages
+config_cleanup_orphans() {
+    log_info "Checking for orphaned symlinks..."
+
+    local orphans=()
+
+    # Check top-level .config directories only (where stow creates links)
+    if [[ -d "$HOME/.config" ]]; then
+        while IFS= read -r -d '' symlink; do
+            local target=$(readlink "$symlink" 2>/dev/null)
+            [[ -z "$target" ]] && continue
+
+            if [[ "$target" == *"dotfiles/stow/"* ]]; then
+                local stow_package=$(echo "$target" | grep -oP 'dotfiles/stow/\K[^/]+')
+                if [[ -n "$stow_package" ]] && [[ ! -d "$STOW_DIR/$stow_package" ]]; then
+                    orphans+=("$symlink")
+                fi
+            fi
+        done < <(find "$HOME/.config" -maxdepth 1 -type l -print0 2>/dev/null)
+    fi
+
+    # Check .local/bin and .local/share
+    for subdir in bin share; do
+        if [[ -d "$HOME/.local/$subdir" ]]; then
+            while IFS= read -r -d '' symlink; do
+                local target=$(readlink "$symlink" 2>/dev/null)
+                [[ -z "$target" ]] && continue
+
+                if [[ "$target" == *"dotfiles/stow/"* ]]; then
+                    local stow_package=$(echo "$target" | grep -oP 'dotfiles/stow/\K[^/]+')
+                    if [[ -n "$stow_package" ]] && [[ ! -d "$STOW_DIR/$stow_package" ]]; then
+                        orphans+=("$symlink")
+                    fi
+                fi
+            done < <(find "$HOME/.local/$subdir" -maxdepth 2 -type l -print0 2>/dev/null)
+        fi
+    done
+
+    # Check shell RC files
+    for rc_file in "$HOME/.zshrc" "$HOME/.profile" "$HOME/.zprofile"; do
+        if [[ -L "$rc_file" ]]; then
+            local target=$(readlink "$rc_file" 2>/dev/null)
+            if [[ "$target" == *"dotfiles/stow/"* ]]; then
+                local stow_package=$(echo "$target" | grep -oP 'dotfiles/stow/\K[^/]+')
+                if [[ -n "$stow_package" ]] && [[ ! -d "$STOW_DIR/$stow_package" ]]; then
+                    orphans+=("$rc_file")
+                fi
+            fi
+        fi
+    done
+
+    # Remove orphaned symlinks
+    if [[ ${#orphans[@]} -gt 0 ]]; then
+        log_warning "Found ${#orphans[@]} orphaned symlink(s) from deleted stow packages"
+        for orphan in "${orphans[@]}"; do
+            local rel_path="${orphan#$HOME/}"
+            rm "$orphan"
+            log_info "  Removed: ~/$rel_path"
+        done
+        log_success "Cleaned up ${#orphans[@]} orphaned symlink(s)"
+    else
+        log_success "No orphaned symlinks found"
+    fi
+
+    echo
+}
+
 # Link all configs
 config_link_all() {
     local force="${1:-false}"
-    
+
     log_section "Linking All Configs"
-    
+
+    # Clean up orphaned symlinks from deleted stow packages
+    config_cleanup_orphans
+
     local configs=($(get_configs))
     local failed=0
-    
+
     for config in "${configs[@]}"; do
         if ! config_link "$config" "$force"; then
             ((failed++))
         fi
     done
-    
+
     echo
     if [[ $failed -eq 0 ]]; then
         log_success "All configs linked successfully"

@@ -1,8 +1,7 @@
 import { createState } from "ags";
 import { timeout } from "ags/time";
-import Gio from "gi://Gio";
 import GLib from "gi://GLib";
-import { connected } from "../internet/service";
+import { connected, httpGet } from "../../services/network";
 
 interface WeatherData {
   temperature: number;
@@ -21,23 +20,20 @@ function getWeatherIcon(code: number): string {
   if (code >= 300 && code < 400) return "🌦️"; // drizzle
   if (code >= 500 && code < 600) return "🌧️"; // rain
   if (code >= 600 && code < 700) return "❄️"; // snow
-  if (code >= 700 && code < 800) return "🌫️"; // atmosphere (fog, mist, etc.)
+  if (code >= 700 && code < 800) return "☁️"; // atmosphere (fog, mist, etc.)
   return ""; // default
 }
 
 function getCity(): string {
   try {
-    const out = GLib.spawn_command_line_sync(
-      "curl -s --max-time 10 --connect-timeout 5 http://ip-api.com/json/"
-    )[1];
-    if (!out) throw new Error("No data");
-    const data = JSON.parse(new TextDecoder().decode(out));
+    const response = httpGet("http://ip-api.com/json/", 10, 5);
+    if (!response) throw new Error("No data");
+    const data = JSON.parse(response);
     if (data && typeof data.city === "string" && data.city.length > 0) {
       return data.city;
     }
   } catch {}
 
-  // Final fallback
   return "Montreal";
 }
 
@@ -48,12 +44,10 @@ function fetchWeather(): WeatherData | null {
 
     const city = getCity();
     const url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(city)}&appid=${apiKey}&units=metric`;
-    const out = GLib.spawn_command_line_sync(
-      `curl -s --max-time 15 --connect-timeout 8 '${url}'`
-    )[1];
-    if (!out) throw new Error("No data");
+    const response = httpGet(url);
+    if (!response) throw new Error("No data");
 
-    const data = JSON.parse(new TextDecoder().decode(out));
+    const data = JSON.parse(response);
     if (!data || !data.main || !data.weather || !data.weather[0]) return null;
 
     return {
@@ -81,7 +75,7 @@ timeout(600000, () => {
   return true; // continue
 });
 
-// React to shared connectivity state from internet/service
+// React to shared connectivity state from network service
 (() => {
   let lastTrigger = 0;
   connected((available) => {

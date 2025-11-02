@@ -1,22 +1,19 @@
 import { isBluetoothOn, openBluetoothManager } from "../service";
 import { Button } from "../../../lib/components";
+import Icon from "../../../components/Icon";
 
-export function BluetoothButton({ class: cls = "" }: { class?: string }) {
-  // Only render if Bluetooth service is available
+export function BluetoothButton() {
   if (!isBluetoothOn) {
-    return <box class={`${cls}`} />;
+    return <box />;
   }
 
   return (
-    <box class={`${cls}`}>
-      <Button onClicked={openBluetoothManager}>
-        <image
-          iconName={isBluetoothOn((on: boolean) =>
-            on ? "bluetooth-active-symbolic" : "bluetooth-disabled-symbolic"
-          )}
-          pixelSize={13}
-        />
-      </Button>
-    </box>
+    <Button onClicked={openBluetoothManager}>
+      <Icon
+        icon={isBluetoothOn((on: boolean) =>
+          on ? "bluetooth-active-symbolic" : "bluetooth-disabled-symbolic"
+        )}
+      />
+    </Button>
   );
 }

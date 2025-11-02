@@ -1,18 +1,14 @@
 [Unit]
 Description=Reconnect Bluetooth Devices
-After=bluetooth.service
-Wants=bluetooth.service
-# Wait for system Bluetooth service to be ready
-After=dbus.service
+After=graphical-session.target
 Wants=dbus.service
 
 [Service]
 Type=oneshot
-ExecStartPre=/bin/sleep 1
+ExecStartPre=/bin/sleep 2
 ExecStart=/home/john/.local/bin/system-bluetooth
 StandardOutput=journal
 StandardError=journal
-# Don't fail if Bluetooth is not available
 SuccessExitStatus=0 1
 
 [Install]

@@ -1,11 +1,10 @@
-@use "../abstracts/variables" as *;
+@use "../tokens" as *;
 @use "../abstracts/theme" as *;
-@use "../abstracts/mixins" as *;
 
 .cava-island {
   .cava-bar {
     background: $fg;
-    border-radius: $radius-xl;
+    border-radius: radius(xl);
     transition: all 0.1s ease-out;
     min-height: 2px;
     min-width: 2px;
@@ -24,6 +23,6 @@
 
   .cava-wrapper {
     background: transparent;
-    padding: $spacing-xs;
+    padding: spacing(xs);
   }
 }

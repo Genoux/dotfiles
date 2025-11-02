@@ -1,17 +1,17 @@
 import { focusedClient } from "../service";
 import { truncateText, getAppIcon } from "../../../utils";
+import Icon from "../../../components/Icon";
 
-export function WindowTitle({ class: cls = "" }: { class?: string }) {
+export function WindowTitle() {
   if (!focusedClient) {
-    return <box class={cls} />;
+    return <box />;
   }
 
   return (
-    <box class={cls} spacing={6} visible={focusedClient((c) => !!c)}>
-      <image
-        iconName={focusedClient((c) => getAppIcon(c?.get_class() || ""))}
-        pixelSize={18}
-        visible={focusedClient((c) => !!c?.get_class())}
+    <box spacing={6} visible={focusedClient((c) => !!c)}>
+      <Icon
+        icon={focusedClient((c) => getAppIcon(c?.get_class() || ""))}
+        size={16}
       />
       <label
         label={focusedClient((c) => {

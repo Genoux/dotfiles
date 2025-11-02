@@ -1,12 +1,11 @@
 import { Button } from "../../../lib/components";
+import Icon from "../../../components/Icon";
 import { openSystemMenu } from "../service";
 
-export function SystemMenuButton({ class: cls = "" }: { class?: string }) {
+export function SystemMenuButton() {
     return (
-        <box class={`${cls}`}>
-            <Button onClicked={openSystemMenu}>
-                <image iconName="system-shutdown-symbolic" pixelSize={13} />
-            </Button>
-        </box>
+        <Button onClicked={openSystemMenu}>
+            <Icon icon="system-shutdown-symbolic" />
+        </Button>
     );
 }

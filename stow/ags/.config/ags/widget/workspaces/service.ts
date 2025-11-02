@@ -1,5 +1,5 @@
 import { createState } from "ags";
-import { hypr, focusedWorkspace, getWorkspaces } from "../../lib/hyprland";
+import { hypr, focusedWorkspace, getWorkspaces } from "../../services/hyprland";
 
 // Simple reactive trigger for workspace list updates
 const [workspacesTrigger, setWorkspacesTrigger] = createState(0);

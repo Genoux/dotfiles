@@ -1,12 +1,11 @@
 import { currentIcon, openVolumeManager } from "../service";
 import { Button } from "../../../lib/components";
+import Icon from "../../../components/Icon";
 
-export function VolumeButton({ class: cls = "" }: { class?: string }) {
+export function VolumeButton() {
   return (
-    <box class={`${cls}`}>
-      <Button canFocus={true} onClicked={openVolumeManager}>
-        <image iconName={currentIcon((icon: string) => icon)} pixelSize={13} />
-      </Button>
-    </box>
+    <Button onClicked={openVolumeManager}>
+      <Icon icon={currentIcon((icon: string) => icon)} />
+    </Button>
   );
 }

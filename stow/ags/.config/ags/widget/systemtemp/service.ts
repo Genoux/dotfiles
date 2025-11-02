@@ -1,24 +1,87 @@
-import { createPoll } from "ags/time";
+import { createState } from "ags";
 import GLib from "gi://GLib";
+import Gio from "gi://Gio";
 
-type TempStatus = "normal" | "warm" | "hot";
+export type TempStatus = "normal" | "warm" | "hot";
 
-interface SystemTemps {
+export interface SystemTemps {
   cpu: number;
   gpu: number;
   avg: number;
   status: TempStatus;
 }
 
-function parseCpuTemp(text: string): number {
-  // Try AMD (k10temp)
-  let match = text.match(/Tctl:\s*\+?(\d+\.\d+)°C/);
-  if (match) return Math.round(parseFloat(match[1]));
+const [systemTempsState, setSystemTemps] = createState<SystemTemps>({
+  cpu: 0,
+  gpu: 0,
+  avg: 0,
+  status: "normal",
+});
 
-  // Try Intel (coretemp)
-  match = text.match(/Core 0:\s*\+?(\d+\.\d+)°C/);
-  if (match) return Math.round(parseFloat(match[1]));
+function getTempStatus(cpu: number, gpu: number): TempStatus {
+  const max = Math.max(cpu, gpu);
+  if (max >= 85) return "hot";
+  if (max >= 70) return "warm";
+  return "normal";
+}
 
+function readCpuTempFromHwmon(): number {
+  try {
+    // Use hwmon interface (same as btop++)
+    // Find CPU sensor (k10temp for AMD, coretemp for Intel, etc.)
+    for (let i = 0; i < 20; i++) {
+      const namePath = `/sys/class/hwmon/hwmon${i}/name`;
+      const nameFile = Gio.File.new_for_path(namePath);
+      
+      if (!nameFile.query_exists(null)) continue;
+      
+      const [, nameData] = nameFile.load_contents(null);
+      const name = new TextDecoder().decode(nameData).trim().toLowerCase();
+      
+      // Look for CPU temperature sensors
+      if (name.includes("k10temp") || name.includes("coretemp") || name.includes("cpu")) {
+        // Try temp1_input (usually Tctl or Package id 0 for CPU)
+        for (let j = 1; j <= 3; j++) {
+          const tempPath = `/sys/class/hwmon/hwmon${i}/temp${j}_input`;
+          const labelPath = `/sys/class/hwmon/hwmon${i}/temp${j}_label`;
+          
+          const tempFile = Gio.File.new_for_path(tempPath);
+          if (!tempFile.query_exists(null)) continue;
+          
+          // Check label to prefer Tctl (AMD) or Package (Intel)
+          try {
+            const labelFile = Gio.File.new_for_path(labelPath);
+            if (labelFile.query_exists(null)) {
+              const [, labelData] = labelFile.load_contents(null);
+              const label = new TextDecoder().decode(labelData).trim().toLowerCase();
+              
+              // Prefer Tctl for AMD or Package for Intel
+              if (label.includes("tctl") || label.includes("package") || j === 1) {
+                const [, tempData] = tempFile.load_contents(null);
+                const tempStr = new TextDecoder().decode(tempData).trim();
+                const temp = parseInt(tempStr);
+                
+                if (!isNaN(temp) && temp > 0) {
+                  // hwmon temps are in millidegrees, convert to Celsius
+                  return Math.round(temp / 1000);
+                }
+              }
+            } else {
+              // No label file, just use temp1_input
+              const [, tempData] = tempFile.load_contents(null);
+              const tempStr = new TextDecoder().decode(tempData).trim();
+              const temp = parseInt(tempStr);
+              
+              if (!isNaN(temp) && temp > 0) {
+                return Math.round(temp / 1000);
+              }
+            }
+          } catch {}
+        }
+      }
+    }
+  } catch {}
+  
   return 0;
 }
 
@@ -36,31 +99,55 @@ function getGpuTemp(): number {
   }
 }
 
-function getTempStatus(cpu: number, gpu: number): TempStatus {
-  const max = Math.max(cpu, gpu);
-  if (max >= 85) return "hot";
-  if (max >= 70) return "warm";
-  return "normal";
+function updateTemps() {
+  const cpu = readCpuTempFromHwmon();
+  const gpu = getGpuTemp();
+  const avg = Math.round((cpu + gpu) / 2);
+  const status = getTempStatus(cpu, gpu);
+  
+  setSystemTemps({ cpu, gpu, avg, status });
 }
 
-// Poll every 30 seconds (reduced from 10s to minimize overhead)
-export const systemTemps = createPoll<SystemTemps>(
-  { cpu: 0, gpu: 0, avg: 0, status: "normal" },
-  30000,
-  () => {
-    let cpu = 0;
-    try {
-      const out = GLib.spawn_command_line_sync("sensors")[1];
-      if (out) cpu = parseCpuTemp(new TextDecoder().decode(out));
-    } catch {}
+// Initial read
+updateTemps();
 
-    const gpu = getGpuTemp();
-    const avg = Math.round((cpu + gpu) / 2);
-    const status = getTempStatus(cpu, gpu);
-
-    return { cpu, gpu, avg, status };
+// Monitor CPU hwmon files for changes (event-driven, same method as btop++)
+try {
+  for (let i = 0; i < 20; i++) {
+    const namePath = `/sys/class/hwmon/hwmon${i}/name`;
+    const nameFile = Gio.File.new_for_path(namePath);
+    
+    if (!nameFile.query_exists(null)) continue;
+    
+    const [, nameData] = nameFile.load_contents(null);
+    const name = new TextDecoder().decode(nameData).trim().toLowerCase();
+    
+    if (name.includes("k10temp") || name.includes("coretemp") || name.includes("cpu")) {
+      // Monitor temp1_input (primary CPU temp)
+      const tempPath = `/sys/class/hwmon/hwmon${i}/temp1_input`;
+      const tempFile = Gio.File.new_for_path(tempPath);
+      
+      if (tempFile.query_exists(null)) {
+        const monitor = tempFile.monitor_file(Gio.FileMonitorFlags.NONE, null);
+        monitor.connect("changed", () => {
+          updateTemps();
+        });
+        break; // Found CPU sensor, stop searching
+      }
+    }
   }
-);
+} catch (error) {
+  console.error("Failed to setup hwmon file monitoring:", error);
+}
+
+// Fallback: Poll GPU less frequently (every 10s) since it changes slower
+// and we don't have a reliable file-based source for it
+const gpuPollInterval = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 10, () => {
+  updateTemps();
+  return true; // Continue polling
+});
+
+export const systemTemps = systemTempsState;
 
 export function openSystemMonitor() {
   try {
