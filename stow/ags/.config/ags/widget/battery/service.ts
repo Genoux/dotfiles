@@ -1,4 +1,5 @@
 import { createState, createBinding } from "ags";
+import { exec } from "ags/process";
 import Battery from "gi://AstalBattery";
 import GLib from "gi://GLib";
 
@@ -49,9 +50,22 @@ let hasBattery = false;
 
 try {
   battery = Battery.get_default();
-  hasBattery = battery !== null;
+  // Check if battery actually exists by verifying a battery directory exists in /sys
+  // This is more reliable than just checking if the device object exists
+  if (battery !== null) {
+    try {
+      const result = exec("sh -c '[ -d /sys/class/power_supply/BAT0 ] && echo yes || echo no'");
+      hasBattery = result.trim() === "yes";
+    } catch {
+      // Fallback: if shell check fails, assume no battery on desktop systems
+      hasBattery = false;
+    }
+  } else {
+    hasBattery = false;
+  }
 } catch (error) {
   console.log("No battery available");
+  hasBattery = false;
 }
 
 const [batteryState, setBatteryState] = createState<BatteryState>({
@@ -62,7 +76,7 @@ const [batteryState, setBatteryState] = createState<BatteryState>({
 });
 
 function updateBatteryState() {
-  if (!battery) return;
+  if (!battery || !hasBattery) return;
 
   const percentage = Math.round((battery.percentage || 0) * 100);
   const charging = battery.charging || false;
@@ -71,7 +85,7 @@ function updateBatteryState() {
   setBatteryState({
     percentage,
     charging,
-    available: true,
+    available: hasBattery,
     icon,
   });
 }

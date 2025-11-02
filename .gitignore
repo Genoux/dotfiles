@@ -56,5 +56,5 @@ stow/hypr/.config/hypr/monitors.conf
 
 
 *.bak
-
 todo
+todomimeinfo.cache

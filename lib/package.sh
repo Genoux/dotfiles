@@ -254,8 +254,8 @@ packages_install() {
         log_info "Installing official packages..."
         echo
         # Install packages directly (sudo will prompt for password if needed)
-        echo "[$(date '+%Y-%m-%d %H:%M:%S')] [PACMAN] Installing packages: ${missing_official[*]}" >> "$DOTFILES_LOG_FILE"
-        echo "[$(date '+%Y-%m-%d %H:%M:%S')] [PACMAN] Starting installation..." >> "$DOTFILES_LOG_FILE"
+        [[ -n "${DOTFILES_LOG_FILE:-}" ]] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [PACMAN] Installing packages: ${missing_official[*]}" >> "$DOTFILES_LOG_FILE"
+        [[ -n "${DOTFILES_LOG_FILE:-}" ]] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [PACMAN] Starting installation..." >> "$DOTFILES_LOG_FILE"
         
         # Run pacman with automatic answers to all prompts
         # Use printf to automatically answer provider selection (default=1) and proceed (Y)
@@ -263,10 +263,10 @@ packages_install() {
         local pacman_exit_code=$?
         
         if [[ $pacman_exit_code -eq 0 ]]; then
-            echo "[$(date '+%Y-%m-%d %H:%M:%S')] [PACMAN] Installation completed successfully" >> "$DOTFILES_LOG_FILE"
+            [[ -n "${DOTFILES_LOG_FILE:-}" ]] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [PACMAN] Installation completed successfully" >> "$DOTFILES_LOG_FILE"
             log_success "Official packages installed"
         else
-            echo "[$(date '+%Y-%m-%d %H:%M:%S')] [PACMAN] Installation completed with some failures (exit code: $pacman_exit_code)" >> "$DOTFILES_LOG_FILE"
+            [[ -n "${DOTFILES_LOG_FILE:-}" ]] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [PACMAN] Installation completed with some failures (exit code: $pacman_exit_code)" >> "$DOTFILES_LOG_FILE"
             log_warning "Some official packages failed to install, but continuing..."
             echo
             log_info "You can try installing failed packages manually later with:"
@@ -282,7 +282,7 @@ packages_install() {
     # Ensure yay is installed for AUR packages
     if [[ ${#aur_packages[@]} -gt 0 ]]; then
         # Refresh sudo session before installing yay (makepkg needs sudo)
-        echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] Refreshing sudo session for yay installation..." >> "$DOTFILES_LOG_FILE"
+        [[ -n "${DOTFILES_LOG_FILE:-}" ]] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] Refreshing sudo session for yay installation..." >> "$DOTFILES_LOG_FILE"
         sudo -v || {
             log_error "Failed to refresh sudo session for yay installation"
             return 1
@@ -319,14 +319,17 @@ packages_install() {
             done
         fi
         
-        # 2. Temporarily neutralize npm config (affects: claude-desktop, etc.)
+        # 2. Temporarily neutralize npm config
         local npmrc_backup=""
         if [[ -f "$HOME/.npmrc" ]]; then
             npmrc_backup="$HOME/.npmrc.aur-install-backup"
             log_info "Temporarily moving ~/.npmrc to avoid nvm conflicts..."
             mv "$HOME/.npmrc" "$npmrc_backup" 2>/dev/null || true
         fi
-        
+
+        # Also create a temporary empty .npmrc to override any existing config
+        echo "" > "$HOME/.npmrc"
+
         # Export env vars to neutralize npm config
         export NPM_CONFIG_USERCONFIG=/dev/null
         unset NPM_CONFIG_PREFIX npm_config_prefix NPM_CONFIG_GLOBALCONFIG npm_config_globalconfig
@@ -335,20 +338,32 @@ packages_install() {
         # Resolve package conflicts
         local conflicts_to_remove=()
         for pkg in "${missing_aur[@]}"; do
-            # Check for common conflicts (e.g., walker-bin vs walker-git)
+            # Check for common conflicts (e.g., walker-bin vs walker-git, or base vs -bin/-git)
             if [[ "$pkg" == *"-bin" ]]; then
                 local base_name="${pkg%-bin}"
                 local git_variant="${base_name}-git"
+                # Check for -git variant
                 if pacman -Q "$git_variant" &>/dev/null; then
                     log_info "Detected conflict: $git_variant installed, but $pkg requested"
                     conflicts_to_remove+=("$git_variant")
                 fi
+                # Check for base package
+                if pacman -Q "$base_name" &>/dev/null; then
+                    log_info "Detected conflict: $base_name installed, but $pkg requested"
+                    conflicts_to_remove+=("$base_name")
+                fi
             elif [[ "$pkg" == *"-git" ]]; then
                 local base_name="${pkg%-git}"
                 local bin_variant="${base_name}-bin"
+                # Check for -bin variant
                 if pacman -Q "$bin_variant" &>/dev/null; then
                     log_info "Detected conflict: $bin_variant installed, but $pkg requested"
                     conflicts_to_remove+=("$bin_variant")
+                fi
+                # Check for base package
+                if pacman -Q "$base_name" &>/dev/null; then
+                    log_info "Detected conflict: $base_name installed, but $pkg requested"
+                    conflicts_to_remove+=("$base_name")
                 fi
             fi
         done
@@ -356,10 +371,36 @@ packages_install() {
         # Remove conflicting packages before installation
         if [[ ${#conflicts_to_remove[@]} -gt 0 ]]; then
             log_info "Resolving package conflicts..."
-            printf '  - %s\n' "${conflicts_to_remove[@]}"
-            echo
-            yay -Rns --noconfirm "${conflicts_to_remove[@]}" 2>/dev/null || true
-            echo
+
+            # Filter out packages that are required by others
+            local safe_to_remove=()
+            local blocked_conflicts=()
+
+            for pkg in "${conflicts_to_remove[@]}"; do
+                local required_by=$(pacman -Qi "$pkg" 2>/dev/null | grep "Required By" | cut -d: -f2 | xargs)
+
+                if [[ -z "$required_by" || "$required_by" == "None" ]]; then
+                    safe_to_remove+=("$pkg")
+                else
+                    blocked_conflicts+=("$pkg (required by: $required_by)")
+                fi
+            done
+
+            if [[ ${#safe_to_remove[@]} -gt 0 ]]; then
+                printf '  - %s\n' "${safe_to_remove[@]}"
+                echo
+                # Use sudo pacman directly with --noconfirm to avoid prompts
+                sudo pacman -Rns --noconfirm "${safe_to_remove[@]}" 2>/dev/null || true
+                echo
+            fi
+
+            if [[ ${#blocked_conflicts[@]} -gt 0 ]]; then
+                log_warning "Cannot auto-remove these conflicts (dependencies exist):"
+                printf '  - %s\n' "${blocked_conflicts[@]}"
+                echo
+                log_info "You'll need to manually resolve these before installation can proceed"
+                echo
+            fi
         fi
         
         # Install missing AUR packages
@@ -370,15 +411,15 @@ packages_install() {
         log_info "Installing AUR packages..."
         echo
         # Refresh sudo session before yay (yay calls pacman which needs sudo)
-        echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] Refreshing sudo session..." >> "$DOTFILES_LOG_FILE"
+        [[ -n "${DOTFILES_LOG_FILE:-}" ]] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] Refreshing sudo session..." >> "$DOTFILES_LOG_FILE"
         sudo -v || {
             log_error "Failed to refresh sudo session"
             return 1
         }
         
         # Install AUR packages directly (yay will handle sudo prompts)
-        echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] Installing packages: ${missing_aur[*]}" >> "$DOTFILES_LOG_FILE"
-        echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] Starting installation..." >> "$DOTFILES_LOG_FILE"
+        [[ -n "${DOTFILES_LOG_FILE:-}" ]] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] Installing packages: ${missing_aur[*]}" >> "$DOTFILES_LOG_FILE"
+        [[ -n "${DOTFILES_LOG_FILE:-}" ]] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] Starting installation..." >> "$DOTFILES_LOG_FILE"
         
         # Run yay with automatic answers to all prompts
         # Use printf to automatically answer any provider selections and proceed confirmations
@@ -386,17 +427,20 @@ packages_install() {
         printf "1\nY\n" | yay -S --needed --noconfirm --refresh --answerclean None --answerdiff None --removemake "${missing_aur[@]}"
         local yay_exit_code=$?
         
-        # Restore ~/.npmrc if we moved it
+        # Restore ~/.npmrc if we moved it, or remove the temporary empty one
         if [[ -n "$npmrc_backup" && -f "$npmrc_backup" ]]; then
             log_info "Restoring ~/.npmrc..."
             mv "$npmrc_backup" "$HOME/.npmrc" 2>/dev/null || true
+        else
+            # Remove the temporary empty .npmrc we created
+            rm -f "$HOME/.npmrc" 2>/dev/null || true
         fi
         
         if [[ $yay_exit_code -eq 0 ]]; then
-            echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] Installation completed successfully" >> "$DOTFILES_LOG_FILE"
+            [[ -n "${DOTFILES_LOG_FILE:-}" ]] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] Installation completed successfully" >> "$DOTFILES_LOG_FILE"
             log_success "AUR packages installed"
         else
-            echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] Installation completed with some failures (exit code: $yay_exit_code)" >> "$DOTFILES_LOG_FILE"
+            [[ -n "${DOTFILES_LOG_FILE:-}" ]] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] Installation completed with some failures (exit code: $yay_exit_code)" >> "$DOTFILES_LOG_FILE"
             log_warning "Some AUR packages failed to install, but continuing..."
             echo
             log_info "You can try installing failed packages manually later with:"
@@ -682,6 +726,9 @@ packages_manage() {
     # Offer smart actions based on what's found
     local options=()
 
+    # Always show "Install all from dotfiles" option
+    options+=("Install all from dotfiles (reinstall everything)")
+
     if [[ ${#deps_as_explicit[@]} -gt 0 ]]; then
         options+=("Mark ${#deps_as_explicit[@]} dependency packages as explicit (already installed)")
     fi
@@ -696,6 +743,16 @@ packages_manage() {
     [[ -z "$action" ]] && return 1  # ESC pressed
 
     case "$action" in
+        "Install all from dotfiles"*)
+            log_info "Installing all packages from dotfiles..."
+            echo
+            log_warning "This will install/reinstall ALL packages in your dotfiles"
+            echo
+
+            # Call the main install function which handles everything
+            packages_install
+            ;;
+
         "Mark"*"dependency packages as explicit"*)
             log_info "Marking ${#deps_as_explicit[@]} packages as explicitly installed..."
             echo
@@ -1082,7 +1139,7 @@ packages_update() {
     ensure_yay_installed
 
     # Step 2: Update AUR packages (user)
-    # Neutralize user npm config that breaks nvm-based PKGBUILDs (e.g., claude-desktop)
+    # Neutralize user npm config that breaks nvm-based PKGBUILDs
     # Some AUR helpers/makepkg may ignore exported env; safest is to temporarily
     # move ~/.npmrc out of the way if it exists and restore it afterwards.
     local npmrc_backup=""

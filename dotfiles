@@ -223,6 +223,7 @@ menu_packages() {
         echo
         
         local action=$(choose_option \
+            "Install all from dotfiles" \
             "Manage packages" \
             "Update system" \
             "Show status" \
@@ -231,6 +232,13 @@ menu_packages() {
         [[ -z "$action" ]] && return  # ESC pressed
 
         case "$action" in
+            "Install all from dotfiles")
+                clear_screen
+                if packages_install; then
+                    echo
+                    read -p "Press Enter to continue..."
+                fi
+                ;;
             "Manage packages")
                 clear_screen
                 if packages_manage; then

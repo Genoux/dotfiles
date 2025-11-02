@@ -323,7 +323,10 @@ config_link() {
                         # Check if already enabled
                         if systemctl --user is-enabled "$service_name" &>/dev/null; then
                             if systemctl --user is-active "$service_name" &>/dev/null; then
-                                log_info "$service_name already enabled and running"
+                                log_info "$service_name already enabled and running, restarting to apply changes..."
+                                systemctl --user restart "$service_name" 2>/dev/null && \
+                                    log_success "Restarted $service_name" || \
+                                    log_warning "Could not restart $service_name"
                             else
                                 systemctl --user start "$service_name" 2>/dev/null && \
                                     log_success "Started $service_name" || \

@@ -5,7 +5,7 @@ export const time = createPoll("", 1000, ["date", "+%a %d %b %H:%M"]);
 
 export function openCalendar() {
   try {
-    GLib.spawn_command_line_async("firefoxpwa site launch 01K92VV7C938FN73H4XEZZT3WF");
+    GLib.spawn_command_line_async("firefoxpwa site launch 01K93BAS8XCDB5JEXER5421G71");
   } catch (error) {
     console.error("Failed to launch calendar:", error);
   }

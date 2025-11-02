@@ -6,7 +6,6 @@ aylurs-gtk-shell-git
 battop
 caelestia-cli-git
 caelestia-shell-git
-claude-desktop
 clickup
 clipse
 cursor-bin
@@ -15,6 +14,7 @@ dragon-drop
 electron25-bin
 electron29-bin
 elephant-archlinuxpkgs
+elephant-bin
 elephant-bluetooth
 elephant-calc
 elephant-clipboard
@@ -24,7 +24,6 @@ elephant-menus
 elephant-providerlist
 elephant-symbols
 elephant-websearch
-elephant-bin
 elephant-windows-bin
 figma-linux
 gitkraken
@@ -36,6 +35,10 @@ grimblast-git
 heroic-games-launcher-bin
 http-parser
 hyprfloat
+hyprgraphics-git
+hyprlang-git
+hyprutils-git
+hyprwayland-scanner-git
 i3lock-color
 libastal-4-git
 libastal-apps-git

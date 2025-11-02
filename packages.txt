@@ -22,6 +22,7 @@ extra-cmake-modules
 fastfetch
 fd
 firefox
+firefoxpwa
 fish
 flatpak
 font-manager
@@ -65,7 +66,7 @@ kcrash5
 kdbusaddons5
 kdeconnect
 kdialog
-kdoctools5
+kdoctools
 ki18n5
 kiconthemes5
 kio5
@@ -105,10 +106,12 @@ nano
 nautilus
 net-tools
 networkmanager
+nodejs
 noto-fonts
 noto-fonts-cjk
 noto-fonts-emoji
 noto-fonts-extra
+npm
 nvidia
 nvidia-prime
 nvidia-settings

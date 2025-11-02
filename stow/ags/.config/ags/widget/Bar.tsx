@@ -13,6 +13,7 @@ import { KeyboardButton } from "./keyboard";
 import { MediaPlayerButton } from "./mediaplayer";
 import { SystemMenuButton } from "./systemmenu";
 import { BatteryButton } from "./battery";
+import { batteryStateAccessor } from "./battery/service";
 
 export default function Bar(gdkmonitor: Gdk.Monitor) {
   const { TOP, LEFT, RIGHT, BOTTOM } = Astal.WindowAnchor;
@@ -47,7 +48,9 @@ export default function Bar(gdkmonitor: Gdk.Monitor) {
               <InternetButton />
               <BluetoothButton />
               <KeyboardButton />
-              <BatteryButton />
+              <box visible={batteryStateAccessor((state) => state.available)}>
+                <BatteryButton />
+              </box>
               <Weather />
               <SystemTemp />
               <TimeDisplay />
