@@ -25,13 +25,12 @@ resume_last_query = ["ctrl r"]
 quick_activate = []
 
 [providers]
-default = [
-  "desktopapplications",
-] 
+default = ["desktopapplications"]
 empty = ["desktopapplications"]
-max_results = 24 
+max_results = 100 
 
 [providers.max_results_provider]
+desktopapplications = 100
 
 [[providers.prefixes]]
 prefix = "/"
@@ -119,5 +118,5 @@ menus = [
   { action = "run_cmd", label = "execute", default = true, bind = "Return" },
 ]
 
-[applications]
+[desktopapplications]
 cache = true

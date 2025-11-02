@@ -105,6 +105,25 @@ apply_theme_gtk() {
         log_success "  ✓ Icons: $icon_theme"
     fi
 
+    # Apply cursor theme if available
+    local cursor_theme=$(jq -r ".gtk.cursor // empty" "$THEME_CONFIG" 2>/dev/null)
+    local cursor_size=$(jq -r ".gtk.cursor_size // 24" "$THEME_CONFIG" 2>/dev/null)
+
+    if [[ -n "$cursor_theme" ]]; then
+        # Check if cursor theme is installed
+        if [[ -d "$HOME/.local/share/icons/$cursor_theme/cursors" ]] || [[ -d "/usr/share/icons/$cursor_theme/cursors" ]]; then
+            gsettings set org.gnome.desktop.interface cursor-theme "$cursor_theme"
+            gsettings set org.gnome.desktop.interface cursor-size "$cursor_size"
+            log_success "  ✓ Cursor: $cursor_theme (size: $cursor_size)"
+
+            # Also set for Hyprland
+            export XCURSOR_THEME="$cursor_theme"
+            export XCURSOR_SIZE="$cursor_size"
+        else
+            log_warning "  ⊘ Cursor theme not installed: $cursor_theme"
+        fi
+    fi
+
     # Set color scheme based on theme name
     if [[ "$gtk_theme" =~ -[Dd]ark || "$gtk_theme" =~ -dark ]]; then
         gsettings set org.gnome.desktop.interface color-scheme "prefer-dark"
@@ -146,12 +165,17 @@ theme_status() {
     if command -v gsettings &>/dev/null; then
         local gtk_theme=$(gsettings get org.gnome.desktop.interface gtk-theme 2>/dev/null | tr -d "'")
         local icon_theme=$(gsettings get org.gnome.desktop.interface icon-theme 2>/dev/null | tr -d "'")
+        local cursor_theme=$(gsettings get org.gnome.desktop.interface cursor-theme 2>/dev/null | tr -d "'")
+        local cursor_size=$(gsettings get org.gnome.desktop.interface cursor-size 2>/dev/null)
 
         if [[ -n "$gtk_theme" ]]; then
             show_info "GTK theme" "$gtk_theme"
         fi
         if [[ -n "$icon_theme" ]]; then
             show_info "Icon theme" "$icon_theme"
+        fi
+        if [[ -n "$cursor_theme" ]]; then
+            show_info "Cursor theme" "$cursor_theme (size: $cursor_size)"
         fi
     fi
 

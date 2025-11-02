@@ -52,4 +52,17 @@ if [[ -f /etc/makepkg.conf ]]; then
     fi
 fi
 
+# Automatically set timezone based on geolocation
+if command -v tzupdate &>/dev/null; then
+    log_info "Detecting and setting timezone automatically..."
+    if sudo tzupdate -q 2>/dev/null; then
+        DETECTED_TZ=$(timedatectl show --value -p Timezone)
+        log_success "Timezone automatically set to $DETECTED_TZ"
+    else
+        log_warning "Failed to auto-detect timezone, keeping current setting"
+    fi
+else
+    log_info "tzupdate not installed, skipping automatic timezone detection"
+fi
+
 log_success "System configuration complete"

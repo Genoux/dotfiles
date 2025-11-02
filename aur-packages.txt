@@ -90,6 +90,7 @@ swaylock-effects
 ttf-material-design-icons-git
 ttf-material-symbols-variable-git
 ttf-rubik-vf
+tzupdate
 walker-bin
 wiremix-git
 wl-screenrec

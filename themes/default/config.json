@@ -5,6 +5,7 @@
   "mappings": {
     "ags.scss": "~/.config/ags/style.scss",
     "hypr.conf": "~/.config/hypr/theme.conf",
+    "hypr-cursor.conf": "~/.config/hypr/cursor.conf",
     "kitty.conf": "~/.config/kitty/theme.conf",
     "starship.toml": "~/.config/starship.toml",
     "swayosd.css": "~/.config/swayosd/style.css",
@@ -16,6 +17,8 @@
     "name": "MacTahoe Dark",
     "theme": "MacTahoe-Dark",
     "icons": "MacTahoe-dark",
+    "cursor": "MacTahoe-dark",
+    "cursor_size": 24,
     "install": {
       "gtk_repo": "https://github.com/vinceliuice/MacTahoe-gtk-theme.git",
       "gtk_cmd": "./install.sh -l",
