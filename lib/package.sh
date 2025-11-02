@@ -174,75 +174,6 @@ packages_prepare() {
     echo
 }
 
-# Clean packages not in dotfiles lists
-packages_clean() {
-    log_section "Cleaning Packages"
-
-    # Check if package files exist
-    if [[ ! -f "$PACKAGES_FILE" ]] || [[ ! -f "$AUR_PACKAGES_FILE" ]]; then
-        log_warning "Package lists not found, skipping clean"
-        return
-    fi
-
-    # Read desired packages
-    local desired_official=()
-    while IFS= read -r pkg; do
-        [[ -z "$pkg" ]] && continue
-        [[ "$pkg" =~ ^#.*$ ]] && continue
-        desired_official+=("$pkg")
-    done < "$PACKAGES_FILE"
-
-    local desired_aur=()
-    while IFS= read -r pkg; do
-        [[ -z "$pkg" ]] && continue
-        [[ "$pkg" =~ ^#.*$ ]] && continue
-        desired_aur+=("$pkg")
-    done < "$AUR_PACKAGES_FILE"
-
-    # Get currently installed explicitly installed packages
-    local installed_official=()
-    while IFS= read -r pkg; do
-        installed_official+=("$pkg")
-    done < <(pacman -Qeq | grep -vf <(pacman -Qmq))
-
-    local installed_aur=()
-    while IFS= read -r pkg; do
-        installed_aur+=("$pkg")
-    done < <(pacman -Qmq)
-
-    # Find packages to remove
-    local to_remove=()
-
-    for pkg in "${installed_official[@]}"; do
-        if [[ ! " ${desired_official[@]} " =~ " ${pkg} " ]]; then
-            to_remove+=("$pkg")
-        fi
-    done
-
-    for pkg in "${installed_aur[@]}"; do
-        if [[ ! " ${desired_aur[@]} " =~ " ${pkg} " ]]; then
-            to_remove+=("$pkg")
-        fi
-    done
-
-    if [[ ${#to_remove[@]} -gt 0 ]]; then
-        log_warning "Found ${#to_remove[@]} packages not in your dotfiles lists"
-        echo
-        log_info "Packages to remove:"
-        printf '  - %s\n' "${to_remove[@]}"
-        echo
-
-        log_info "Removing packages..."
-        sudo pacman -Rns --noconfirm "${to_remove[@]}"
-        echo
-        log_success "Packages removed"
-    else
-        log_success "No extra packages found"
-    fi
-
-    echo
-}
-
 # Install packages from lists
 packages_install() {
     # Always prepare system first
@@ -293,6 +224,11 @@ packages_install() {
     log_info "Found ${#packages[@]} official packages and ${#aur_packages[@]} AUR packages"
     echo
 
+    # Update package databases to ensure latest versions
+    log_info "Updating package databases..."
+    sudo pacman -Sy --noconfirm
+    echo
+    
     # Just install packages from lists - no checking
     # For auditing system vs dotfiles, use package_audit function instead
 
@@ -353,7 +289,7 @@ packages_install() {
         }
         ensure_yay_installed
 
-        # Find missing AUR packages
+        # Find missing AUR packages first
         local missing_aur=()
         for pkg in "${aur_packages[@]}"; do
             if ! pacman -Q "$pkg" &>/dev/null; then
@@ -361,48 +297,203 @@ packages_install() {
             fi
         done
         
-        # Install missing AUR packages
-        if [[ ${#missing_aur[@]} -gt 0 ]]; then
-            log_info "Installing ${#missing_aur[@]} AUR packages..."
-            echo
-            log_info "Packages to install: ${missing_aur[*]}"
-            echo
-            log_info "Installing AUR packages..."
-            echo
-            # Refresh sudo session before yay (yay calls pacman which needs sudo)
-            echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] Refreshing sudo session..." >> "$DOTFILES_LOG_FILE"
-            sudo -v || {
-                log_error "Failed to refresh sudo session"
-                return 1
-            }
-            
-            # Install AUR packages directly (yay will handle sudo prompts)
-            echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] Installing packages: ${missing_aur[*]}" >> "$DOTFILES_LOG_FILE"
-            echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] Starting installation..." >> "$DOTFILES_LOG_FILE"
-            
-            # Run yay with automatic answers to all prompts
-            # Use printf to automatically answer any provider selections and proceed confirmations
-            printf "1\nY\n" | yay -S --needed --noconfirm --answerclean None --answerdiff None --removemake "${missing_aur[@]}"
-            local yay_exit_code=$?
-            
-            if [[ $yay_exit_code -eq 0 ]]; then
-                echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] Installation completed successfully" >> "$DOTFILES_LOG_FILE"
-                log_success "AUR packages installed"
-            else
-                echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] Installation completed with some failures (exit code: $yay_exit_code)" >> "$DOTFILES_LOG_FILE"
-                log_warning "Some AUR packages failed to install, but continuing..."
-                echo
-                log_info "You can try installing failed packages manually later with:"
-                log_info "yay -S <package-name>"
-            fi
-            echo
-        else
+        # Exit early if nothing to install
+        if [[ ${#missing_aur[@]} -eq 0 ]]; then
             log_success "All AUR packages already installed"
+            return 0
+        fi
+        
+        # Pre-installation cleanup for common AUR build issues
+        log_info "Preparing AUR build environment..."
+        echo
+        
+        # 1. Clean Go module cache permission issues (affects: wego, etc.)
+        if command -v go &>/dev/null; then
+            log_info "Cleaning Go-based package caches (fixing permissions)..."
+            for pkg in "${missing_aur[@]}"; do
+                if [[ -d "$HOME/.cache/yay/$pkg" ]]; then
+                    # Go modules are read-only, make writable first
+                    chmod -R +w "$HOME/.cache/yay/$pkg" 2>/dev/null || true
+                    rm -rf "$HOME/.cache/yay/$pkg"
+                fi
+            done
+        fi
+        
+        # 2. Temporarily neutralize npm config (affects: claude-desktop, etc.)
+        local npmrc_backup=""
+        if [[ -f "$HOME/.npmrc" ]]; then
+            npmrc_backup="$HOME/.npmrc.aur-install-backup"
+            log_info "Temporarily moving ~/.npmrc to avoid nvm conflicts..."
+            mv "$HOME/.npmrc" "$npmrc_backup" 2>/dev/null || true
+        fi
+        
+        # Export env vars to neutralize npm config
+        export NPM_CONFIG_USERCONFIG=/dev/null
+        unset NPM_CONFIG_PREFIX npm_config_prefix NPM_CONFIG_GLOBALCONFIG npm_config_globalconfig
+        echo
+        
+        # Resolve package conflicts
+        local conflicts_to_remove=()
+        for pkg in "${missing_aur[@]}"; do
+            # Check for common conflicts (e.g., walker-bin vs walker-git)
+            if [[ "$pkg" == *"-bin" ]]; then
+                local base_name="${pkg%-bin}"
+                local git_variant="${base_name}-git"
+                if pacman -Q "$git_variant" &>/dev/null; then
+                    log_info "Detected conflict: $git_variant installed, but $pkg requested"
+                    conflicts_to_remove+=("$git_variant")
+                fi
+            elif [[ "$pkg" == *"-git" ]]; then
+                local base_name="${pkg%-git}"
+                local bin_variant="${base_name}-bin"
+                if pacman -Q "$bin_variant" &>/dev/null; then
+                    log_info "Detected conflict: $bin_variant installed, but $pkg requested"
+                    conflicts_to_remove+=("$bin_variant")
+                fi
+            fi
+        done
+        
+        # Remove conflicting packages before installation
+        if [[ ${#conflicts_to_remove[@]} -gt 0 ]]; then
+            log_info "Resolving package conflicts..."
+            printf '  - %s\n' "${conflicts_to_remove[@]}"
+            echo
+            yay -Rns --noconfirm "${conflicts_to_remove[@]}" 2>/dev/null || true
+            echo
+        fi
+        
+        # Install missing AUR packages
+        log_info "Installing ${#missing_aur[@]} AUR packages..."
+        echo
+        log_info "Packages to install: ${missing_aur[*]}"
+        echo
+        log_info "Installing AUR packages..."
+        echo
+        # Refresh sudo session before yay (yay calls pacman which needs sudo)
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] Refreshing sudo session..." >> "$DOTFILES_LOG_FILE"
+        sudo -v || {
+            log_error "Failed to refresh sudo session"
+            return 1
+        }
+        
+        # Install AUR packages directly (yay will handle sudo prompts)
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] Installing packages: ${missing_aur[*]}" >> "$DOTFILES_LOG_FILE"
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] Starting installation..." >> "$DOTFILES_LOG_FILE"
+        
+        # Run yay with automatic answers to all prompts
+        # Use printf to automatically answer any provider selections and proceed confirmations
+        # --refresh: Download fresh package databases from AUR
+        printf "1\nY\n" | yay -S --needed --noconfirm --refresh --answerclean None --answerdiff None --removemake "${missing_aur[@]}"
+        local yay_exit_code=$?
+        
+        # Restore ~/.npmrc if we moved it
+        if [[ -n "$npmrc_backup" && -f "$npmrc_backup" ]]; then
+            log_info "Restoring ~/.npmrc..."
+            mv "$npmrc_backup" "$HOME/.npmrc" 2>/dev/null || true
+        fi
+        
+        if [[ $yay_exit_code -eq 0 ]]; then
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] Installation completed successfully" >> "$DOTFILES_LOG_FILE"
+            log_success "AUR packages installed"
+        else
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] Installation completed with some failures (exit code: $yay_exit_code)" >> "$DOTFILES_LOG_FILE"
+            log_warning "Some AUR packages failed to install, but continuing..."
+            echo
+            log_info "You can try installing failed packages manually later with:"
+            log_info "yay -S <package-name>"
+        fi
+        echo
+    fi
+    
+    echo
+    
+    # Quick dependency check: Only check EXPLICITLY installed packages not in dotfiles
+    local explicit_count=$(pacman -Qeq | wc -l)
+    
+    # Skip if too many packages (would take too long)
+    if [[ $explicit_count -gt 500 ]]; then
+        log_info "Skipping dependency check ($explicit_count packages - would take too long)"
+        log_info "Dependencies will be added automatically when needed"
+    else
+        log_info "Checking for missing dependencies in dotfiles..."
+        local deps_to_add_official=()
+        local deps_to_add_aur=()
+        
+        # Get all packages in dotfiles (convert to associative array for O(1) lookup)
+        declare -A dotfiles_map
+        for pkg in "${packages[@]}" "${aur_packages[@]}"; do
+            dotfiles_map[$pkg]=1
+        done
+        
+        # Only check explicitly installed packages (much smaller set)
+        while IFS= read -r installed_pkg; do
+            # Skip if already in dotfiles
+            [[ -n "${dotfiles_map[$installed_pkg]}" ]] && continue
+            
+            # Quick check: is this required by any package in dotfiles?
+            local required_by=$(pacman -Qi "$installed_pkg" 2>/dev/null | awk '/^Required By/ {for(i=4;i<=NF;i++) print $i}')
+            
+            if [[ -n "$required_by" ]]; then
+                # Check if any requirer is in our dotfiles
+                local should_add=false
+                while read -r req; do
+                    if [[ -n "${dotfiles_map[$req]}" ]]; then
+                        should_add=true
+                        break
+                    fi
+                done <<< "$required_by"
+                
+                if $should_add; then
+                    # Determine if it's AUR or official (batch check)
+                    if pacman -Qm "$installed_pkg" &>/dev/null; then
+                        deps_to_add_aur+=("$installed_pkg")
+                    else
+                        deps_to_add_official+=("$installed_pkg")
+                    fi
+                fi
+            fi
+        done < <(pacman -Qeq)  # Only explicitly installed packages
+    
+        # Add missing dependencies to dotfiles
+        if [[ ${#deps_to_add_official[@]} -gt 0 || ${#deps_to_add_aur[@]} -gt 0 ]]; then
+            log_info "Found dependencies to add to dotfiles:"
+            [[ ${#deps_to_add_official[@]} -gt 0 ]] && printf '  - %s (official)\n' "${deps_to_add_official[@]}"
+            [[ ${#deps_to_add_aur[@]} -gt 0 ]] && printf '  - %s (aur)\n' "${deps_to_add_aur[@]}"
+            echo
+            
+            for dep in "${deps_to_add_official[@]}"; do
+                echo "$dep" >> "$PACKAGES_FILE"
+            done
+            
+            for dep in "${deps_to_add_aur[@]}"; do
+                echo "$dep" >> "$AUR_PACKAGES_FILE"
+            done
+            
+            sort -u "$PACKAGES_FILE" -o "$PACKAGES_FILE"
+            sort -u "$AUR_PACKAGES_FILE" -o "$AUR_PACKAGES_FILE"
+            
+            log_success "Added $((${#deps_to_add_official[@]} + ${#deps_to_add_aur[@]})) dependencies to dotfiles"
+        else
+            log_success "All dependencies are already in dotfiles"
         fi
     fi
     
     echo
     log_success "Package installation complete"
+    
+    # Check for any outdated packages
+    log_info "Checking for package updates..."
+    local outdated_official=$(pacman -Qu 2>/dev/null | grep -v "\[ignored\]" | wc -l)
+    local outdated_aur=$(yay -Qua 2>/dev/null | wc -l)
+    
+    if [[ $outdated_official -gt 0 || $outdated_aur -gt 0 ]]; then
+        echo
+        log_warning "Found $outdated_official official + $outdated_aur AUR packages with updates available"
+        log_info "Run 'yay -Syu' or use the update menu option to upgrade"
+    else
+        log_success "All packages are up to date"
+    fi
+    echo
 }
 
 # Sync package lists from system
@@ -488,14 +579,17 @@ packages_manage() {
         installed_aur+=("$pkg")
     done < <(pacman -Qmq)
 
-    # Read dotfiles packages
+    # Read dotfiles packages (with hardware filtering)
     local dotfiles_official=()
     local dotfiles_aur=()
 
     if [[ -f "$PACKAGES_FILE" ]]; then
+        # Filter packages by hardware (same as install does)
+        local filtered_packages=$(filter_packages_by_hardware "$PACKAGES_FILE")
         while IFS= read -r pkg; do
             [[ -n "$pkg" && ! "$pkg" =~ ^# ]] && dotfiles_official+=("$pkg")
-        done < "$PACKAGES_FILE"
+        done < "$filtered_packages"
+        rm -f "$filtered_packages"
     fi
 
     if [[ -f "$AUR_PACKAGES_FILE" ]]; then
@@ -510,16 +604,22 @@ packages_manage() {
     local extra_official=()
     local extra_aur=()
 
-    # Missing = in dotfiles but not installed
+    # Missing = in dotfiles but not installed (check ANY installation, not just explicit)
     for pkg in "${dotfiles_official[@]}"; do
         if [[ ! " ${installed_official[@]} " =~ " ${pkg} " ]]; then
-            missing_official+=("$pkg")
+            # Double-check if it's installed as a dependency
+            if ! pacman -Q "$pkg" &>/dev/null; then
+                missing_official+=("$pkg")
+            fi
         fi
     done
 
     for pkg in "${dotfiles_aur[@]}"; do
         if [[ ! " ${installed_aur[@]} " =~ " ${pkg} " ]]; then
-            missing_aur+=("$pkg")
+            # Double-check if it's installed as a dependency
+            if ! pacman -Q "$pkg" &>/dev/null; then
+                missing_aur+=("$pkg")
+            fi
         fi
     done
 
@@ -571,9 +671,20 @@ packages_manage() {
         echo
     fi
 
+    # Check if any "missing" packages are actually installed as dependencies
+    local deps_as_explicit=()
+    for pkg in "${missing_official[@]}" "${missing_aur[@]}"; do
+        if pacman -Q "$pkg" &>/dev/null; then
+            deps_as_explicit+=("$pkg")
+        fi
+    done
+    
     # Offer smart actions based on what's found
     local options=()
 
+    if [[ ${#deps_as_explicit[@]} -gt 0 ]]; then
+        options+=("Mark ${#deps_as_explicit[@]} dependency packages as explicit (already installed)")
+    fi
     [[ $total_missing -gt 0 ]] && options+=("Install missing packages ($total_missing)")
     [[ $total_missing -gt 0 ]] && options+=("Remove missing from dotfiles ($total_missing)")
     [[ $total_extra -gt 0 ]] && options+=("Add extra to dotfiles ($total_extra)")
@@ -585,8 +696,40 @@ packages_manage() {
     [[ -z "$action" ]] && return 1  # ESC pressed
 
     case "$action" in
+        "Mark"*"dependency packages as explicit"*)
+            log_info "Marking ${#deps_as_explicit[@]} packages as explicitly installed..."
+            echo
+            printf '  - %s\n' "${deps_as_explicit[@]}"
+            echo
+            sudo pacman -D --asexplicit "${deps_as_explicit[@]}"
+            log_success "Packages marked as explicit"
+            ;;
+
         "Install missing packages"*)
-            packages_install
+            log_info "Installing $total_missing packages..."
+            echo
+            
+            # Prepare system (mirrors, multilib, database sync)
+            packages_prepare
+            
+            # Install missing official packages
+            if [[ ${#missing_official[@]} -gt 0 ]]; then
+                log_info "Installing ${#missing_official[@]} official packages..."
+                echo
+                printf "1\nY\n" | sudo pacman -S --needed --noconfirm "${missing_official[@]}"
+                echo
+            fi
+            
+            # Install missing AUR packages
+            if [[ ${#missing_aur[@]} -gt 0 ]]; then
+                ensure_yay_installed
+                log_info "Installing ${#missing_aur[@]} AUR packages..."
+                echo
+                printf "1\nY\n" | yay -S --needed --noconfirm --refresh --answerclean None --answerdiff None --removemake "${missing_aur[@]}"
+                echo
+            fi
+            
+            log_success "Installation complete"
             ;;
 
         "Remove missing from dotfiles"*)
@@ -619,11 +762,40 @@ packages_manage() {
             ;;
 
         "Remove extra from system"*)
-            log_info "Removing $total_extra packages..."
+            log_info "Checking which of $total_extra packages can be safely removed..."
             echo
             local all_extra=("${extra_official[@]}" "${extra_aur[@]}")
-            sudo pacman -Rns "${all_extra[@]}"
-            log_success "Removed $total_extra packages"
+            
+            # Filter out packages that are dependencies
+            local safe_to_remove=()
+            local blocked_packages=()
+            
+            for pkg in "${all_extra[@]}"; do
+                local required_by=$(pacman -Qi "$pkg" 2>/dev/null | grep "Required By" | cut -d: -f2 | xargs)
+                
+                if [[ -z "$required_by" || "$required_by" == "None" ]]; then
+                    safe_to_remove+=("$pkg")
+                else
+                    blocked_packages+=("$pkg (required by: $required_by)")
+                fi
+            done
+            
+            if [[ ${#blocked_packages[@]} -gt 0 ]]; then
+                log_info "Packages blocked (required by other packages):"
+                printf '  - %s\n' "${blocked_packages[@]}"
+                echo
+            fi
+            
+            if [[ ${#safe_to_remove[@]} -gt 0 ]]; then
+                log_info "Removing ${#safe_to_remove[@]} packages:"
+                printf '  - %s\n' "${safe_to_remove[@]}"
+                echo
+                
+                sudo pacman -Rns "${safe_to_remove[@]}"
+                log_success "Removed ${#safe_to_remove[@]} packages"
+            else
+                log_info "No packages can be safely removed (all are dependencies)"
+            fi
             ;;
 
         "Select which to keep/remove"*)
@@ -633,8 +805,30 @@ packages_manage() {
         "Full sync"*)
             log_info "Full sync: Installing missing + adding extras to dotfiles..."
             echo
-            packages_install
+            
+            # Install missing packages (same as "Install missing packages" option)
+            if [[ $total_missing -gt 0 ]]; then
+                packages_prepare
+                
+                if [[ ${#missing_official[@]} -gt 0 ]]; then
+                    log_info "Installing ${#missing_official[@]} official packages..."
+                    echo
+                    printf "1\nY\n" | sudo pacman -S --needed --noconfirm "${missing_official[@]}"
+                    echo
+                fi
+                
+                if [[ ${#missing_aur[@]} -gt 0 ]]; then
+                    ensure_yay_installed
+                    log_info "Installing ${#missing_aur[@]} AUR packages..."
+                    echo
+                    printf "1\nY\n" | yay -S --needed --noconfirm --refresh --answerclean None --answerdiff None --removemake "${missing_aur[@]}"
+                    echo
+                fi
+            fi
+            
+            # Add extra packages to dotfiles
             echo
+            log_info "Adding extras to dotfiles..."
             for pkg in "${extra_official[@]}"; do
                 echo "$pkg" >> "$PACKAGES_FILE"
             done
@@ -762,13 +956,38 @@ packages_clean_unlisted() {
                     return 0
                 fi
 
+                # Filter out packages that are dependencies
+                local safe_to_remove=()
+                local blocked_packages=()
+                
+                for pkg in "${to_remove[@]}"; do
+                    local required_by=$(pacman -Qi "$pkg" 2>/dev/null | grep "Required By" | cut -d: -f2 | xargs)
+                    
+                    if [[ -z "$required_by" || "$required_by" == "None" ]]; then
+                        safe_to_remove+=("$pkg")
+                    else
+                        blocked_packages+=("$pkg (required by: $required_by)")
+                    fi
+                done
+                
                 echo
-                log_warning "Will remove ${#to_remove[@]} packages:"
-                printf '  - %s\n' "${to_remove[@]}"
-                echo
+                
+                if [[ ${#blocked_packages[@]} -gt 0 ]]; then
+                    log_info "Packages blocked (required by other packages):"
+                    printf '  - %s\n' "${blocked_packages[@]}"
+                    echo
+                fi
+                
+                if [[ ${#safe_to_remove[@]} -gt 0 ]]; then
+                    log_warning "Will remove ${#safe_to_remove[@]} packages:"
+                    printf '  - %s\n' "${safe_to_remove[@]}"
+                    echo
 
-                sudo pacman -Rns --noconfirm "${to_remove[@]}"
-                log_success "Removed ${#to_remove[@]} packages"
+                    sudo pacman -Rns --noconfirm "${safe_to_remove[@]}"
+                    log_success "Removed ${#safe_to_remove[@]} packages"
+                else
+                    log_info "No packages can be safely removed (all are dependencies)"
+                fi
                 ;;
 
             "Add all to dotfiles")
@@ -788,12 +1007,41 @@ packages_clean_unlisted() {
 
             "Remove all unlisted packages")
                 echo
-                log_warning "This will remove ALL $total_unlisted unlisted packages"
+                log_warning "Checking which of $total_unlisted packages can be safely removed..."
                 echo
 
                 local all_to_remove=("${unlisted_official[@]}" "${unlisted_aur[@]}")
-                sudo pacman -Rns --noconfirm "${all_to_remove[@]}"
-                log_success "Removed $total_unlisted packages"
+                
+                # Filter out packages that are dependencies
+                local safe_to_remove=()
+                local blocked_packages=()
+                
+                for pkg in "${all_to_remove[@]}"; do
+                    local required_by=$(pacman -Qi "$pkg" 2>/dev/null | grep "Required By" | cut -d: -f2 | xargs)
+                    
+                    if [[ -z "$required_by" || "$required_by" == "None" ]]; then
+                        safe_to_remove+=("$pkg")
+                    else
+                        blocked_packages+=("$pkg (required by: $required_by)")
+                    fi
+                done
+                
+                if [[ ${#blocked_packages[@]} -gt 0 ]]; then
+                    log_info "Packages blocked (required by other packages):"
+                    printf '  - %s\n' "${blocked_packages[@]}"
+                    echo
+                fi
+                
+                if [[ ${#safe_to_remove[@]} -gt 0 ]]; then
+                    log_info "Removing ${#safe_to_remove[@]} packages:"
+                    printf '  - %s\n' "${safe_to_remove[@]}"
+                    echo
+                    
+                    sudo pacman -Rns --noconfirm "${safe_to_remove[@]}"
+                    log_success "Removed ${#safe_to_remove[@]} packages"
+                else
+                    log_info "No packages can be safely removed (all are dependencies)"
+                fi
                 ;;
 
             *)
@@ -912,148 +1160,3 @@ packages_status() {
     show_info "AUR packages installed" "$installed_aur"
     show_info "Total installed" "$installed_official"
 }
-
-# Audit system packages vs dotfiles lists
-package_audit() {
-    # Load package lists
-    local packages=()
-    local aur_packages=()
-
-    while IFS= read -r pkg; do
-        [[ -z "$pkg" ]] && continue
-        [[ "$pkg" =~ ^#.*$ ]] && continue
-        packages+=("$pkg")
-    done < "$PACKAGES_FILE"
-
-    while IFS= read -r pkg; do
-        [[ -z "$pkg" ]] && continue
-        [[ "$pkg" =~ ^#.*$ ]] && continue
-        aur_packages+=("$pkg")
-    done < "$AUR_PACKAGES_FILE"
-
-    # Get installed packages
-    local installed_official=()
-    while IFS= read -r pkg; do
-        installed_official+=("$pkg")
-    done < <(pacman -Qeq | grep -vf <(pacman -Qmq))
-
-    local installed_aur=()
-    while IFS= read -r pkg; do
-        installed_aur+=("$pkg")
-    done < <(pacman -Qmq)
-
-    # Find packages not in lists
-    local unlisted=()
-    for pkg in "${installed_official[@]}"; do
-        if [[ ! " ${packages[@]} " =~ " ${pkg} " ]]; then
-            unlisted+=("$pkg:official")
-        fi
-    done
-
-    for pkg in "${installed_aur[@]}"; do
-        if [[ ! " ${aur_packages[@]} " =~ " ${pkg} " ]]; then
-            unlisted+=("$pkg:aur")
-        fi
-    done
-
-    if [[ ${#unlisted[@]} -eq 0 ]]; then
-        clear
-        echo
-        printf "\033[92m✓\033[0m \033[94mSystem is in sync with dotfiles\033[0m\n"
-        echo
-        read -p "Press Enter to continue..."
-        return 0
-    fi
-
-    # Show unlisted packages
-    clear
-    echo
-    printf "\033[90mFound ${#unlisted[@]} packages not in your dotfiles lists:\033[0m\n"
-    for entry in "${unlisted[@]}"; do
-        local pkg="${entry%%:*}"
-        local type="${entry##*:}"
-        printf "\033[94m  - %s\033[0m \033[90m(%s)\033[0m\n" "$pkg" "$type"
-    done
-    echo
-
-    # Ask what to do
-    local choice=$(gum choose --header "Add these packages to dotfiles?" \
-        --height 15 --cursor.foreground 212 \
-        "Yes, add all" \
-        "Select which ones")
-
-    [[ -z "$choice" ]] && return 1  # ESC pressed
-
-    case "$choice" in
-        "Yes, add all")
-            for entry in "${unlisted[@]}"; do
-                local pkg="${entry%%:*}"
-                local type="${entry##*:}"
-                if [[ "$type" == "aur" ]]; then
-                    echo "$pkg" >> "$AUR_PACKAGES_FILE"
-                else
-                    echo "$pkg" >> "$PACKAGES_FILE"
-                fi
-            done
-            sort -u "$PACKAGES_FILE" -o "$PACKAGES_FILE"
-            sort -u "$AUR_PACKAGES_FILE" -o "$AUR_PACKAGES_FILE"
-            echo
-            printf "\033[92m✓\033[0m \033[94mAdded ${#unlisted[@]} packages to your lists\033[0m\n"
-            return 0
-            ;;
-        "Select which ones")
-            local options=()
-            for entry in "${unlisted[@]}"; do
-                local pkg="${entry%%:*}"
-                local type="${entry##*:}"
-                options+=("$pkg ($type)")
-            done
-
-            clear
-            echo
-            printf "\033[94mSelect packages to add to dotfiles\033[0m\n"
-            printf "\033[90m(space to select, enter to confirm - unchecked will be ignored)\033[0m\n"
-            echo
-
-            local selected=()
-            readarray -t selected < <(gum choose --no-limit --height 15 --cursor.foreground 212 "${options[@]}")
-            local gum_exit=$?
-
-            if [[ $gum_exit -ne 0 ]] || [[ ${#selected[@]} -eq 0 ]]; then
-                # ESC or nothing selected - return 1 to skip Press Enter
-                return 1
-            fi
-
-            # Add selected packages
-            local added_count=0
-            for item in "${selected[@]}"; do
-                local pkg="${item%% (*}"
-                local type="${item##*(}"
-                type="${type%)}"
-
-                if [[ "$type" == "aur" ]]; then
-                    echo "$pkg" >> "$AUR_PACKAGES_FILE"
-                else
-                    echo "$pkg" >> "$PACKAGES_FILE"
-                fi
-                ((added_count++))
-            done
-
-            if [[ $added_count -gt 0 ]]; then
-                sort -u "$PACKAGES_FILE" -o "$PACKAGES_FILE"
-                sort -u "$AUR_PACKAGES_FILE" -o "$AUR_PACKAGES_FILE"
-                echo
-                printf "\033[92m✓\033[0m \033[94mAdded $added_count packages to your lists\033[0m\n"
-                return 0
-            else
-                # Nothing added - return 1
-                return 1
-            fi
-            ;;
-        *)
-            # "No, skip" or ESC - return 1
-            return 1
-            ;;
-    esac
-}
-

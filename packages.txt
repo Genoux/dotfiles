@@ -54,6 +54,7 @@ inotify-tools
 inxi
 iw
 iwd
+jq
 kbookmarks5
 kcmutils5
 kcodecs5
@@ -79,7 +80,7 @@ kwindowsystem5
 kxmlgui5
 lazydocker
 lib32-gnutls
-lib32-gtk2
+lib32-gtk3
 lib32-libpulse
 lib32-libsm
 lib32-libvdpau

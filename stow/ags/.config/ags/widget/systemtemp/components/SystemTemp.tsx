@@ -100,8 +100,8 @@ export function SystemTemp() {
     >
       <With value={systemTemps}>
         {({ avg, status }) => (
-          <box class={status} spacing={2}>
-            <Icon icon={icons[status] || "temperature-normal-symbolic"} size={12} />
+          <box class={status}>
+            <Icon icon={icons[status] || "temperature-normal-symbolic"} size={13} />
             <label label={`${avg}°C`} />
           </box>
         )}

@@ -12,6 +12,7 @@ import { InternetButton } from "./internet";
 import { KeyboardButton } from "./keyboard";
 import { MediaPlayerButton } from "./mediaplayer";
 import { SystemMenuButton } from "./systemmenu";
+import { BatteryButton } from "./battery";
 
 export default function Bar(gdkmonitor: Gdk.Monitor) {
   const { TOP, LEFT, RIGHT, BOTTOM } = Astal.WindowAnchor;
@@ -46,6 +47,7 @@ export default function Bar(gdkmonitor: Gdk.Monitor) {
               <InternetButton />
               <BluetoothButton />
               <KeyboardButton />
+              <BatteryButton />
               <Weather />
               <SystemTemp />
               <TimeDisplay />

@@ -118,5 +118,10 @@ menus = [
   { action = "run_cmd", label = "execute", default = true, bind = "Return" },
 ]
 
+[[plugins]]
+prefix = ">"
+name = "elephant"
+src = "elephant"
+
 [desktopapplications]
 cache = true

@@ -1,4 +1,4 @@
-import { focusedClient } from "../service";
+import { focusedClient, clientTitle, clientClass } from "../service";
 import { truncateText, getAppIcon } from "../../../utils";
 import Icon from "../../../components/Icon";
 
@@ -10,14 +10,11 @@ export function WindowTitle() {
   return (
     <box spacing={6} visible={focusedClient((c) => !!c)}>
       <Icon
-        icon={focusedClient((c) => getAppIcon(c?.get_class() || ""))}
+        icon={clientClass((cls) => getAppIcon(cls || ""))}
         size={16}
       />
       <label
-        label={focusedClient((c) => {
-          const title = c?.get_title() || "";
-          return truncateText(title.trim(), 54);
-        })}
+        label={clientTitle((title) => truncateText(title.trim(), 54))}
       />
     </box>
   );

@@ -3,7 +3,9 @@
 @use "sass:color";
 
 window.volume-osd-window,
-window.volume-osd-window revealer {
+window.volume-osd-window revealer,
+window.brightness-osd-window,
+window.brightness-osd-window revealer {
   background-color: transparent;
   border: none;
   outline: none;
@@ -21,17 +23,20 @@ window.volume-osd-window revealer {
   background: rgba(0, 0, 0, 0.3);
   color: white;
 
-  .volume-step-bar {
+  .volume-step-bar,
+  .brightness-step-bar {
     margin-top: spacing(xs);
   }
 
-  .volume-step {
+  .volume-step,
+  .brightness-step {
     background-color: rgba(255, 255, 255, 0.2);
     border-radius: 1px;
     min-width: 3px;
     transition: background-color 0.15s ease;
 
-    &.volume-step-filled {
+    &.volume-step-filled,
+    &.brightness-step-filled {
       background-color: rgba(255, 255, 255, 0.9);
     }
   }
