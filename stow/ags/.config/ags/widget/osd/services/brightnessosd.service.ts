@@ -29,12 +29,13 @@ function getBrightnessIcon(brightness: number): string {
 
 function readBrightness(): number {
   try {
-    const output = GLib.spawn_command_line_sync("brightnessctl get")[1];
-    const current = parseInt(new TextDecoder().decode(output).trim());
-    
-    const maxOutput = GLib.spawn_command_line_sync("brightnessctl max")[1];
-    const max = parseInt(new TextDecoder().decode(maxOutput).trim());
-    
+    const [ok1, stdout1] = GLib.spawn_command_line_sync("brightnessctl get");
+    if (!ok1 || !stdout1) throw new Error("Failed to run 'brightnessctl get'");
+    const current = parseInt(new TextDecoder().decode(stdout1).trim());
+
+    const [ok2, stdout2] = GLib.spawn_command_line_sync("brightnessctl max");
+    if (!ok2 || !stdout2) throw new Error("Failed to run 'brightnessctl max'");
+    const max = parseInt(new TextDecoder().decode(stdout2).trim());
     if (isNaN(current) || isNaN(max) || max === 0) return 0;
     
     return current / max;

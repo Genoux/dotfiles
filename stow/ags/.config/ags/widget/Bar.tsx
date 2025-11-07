@@ -8,12 +8,13 @@ import { Weather } from "./weather";
 import { TimeDisplay } from "./timedisplay";
 import { BluetoothButton } from "./bluetooth";
 import { VolumeButton } from "./volume";
-import { InternetButton } from "./internet";
+import { NetworkButton } from "./network";
 import { KeyboardButton } from "./keyboard";
 import { MediaPlayerButton } from "./mediaplayer";
 import { SystemMenuButton } from "./systemmenu";
 import { BatteryButton } from "./battery";
 import { batteryStateAccessor } from "./battery/service";
+import { ScreenRecordButton } from "./screenrecord";
 
 export default function Bar(gdkmonitor: Gdk.Monitor) {
   const { TOP, LEFT, RIGHT, BOTTOM } = Astal.WindowAnchor;
@@ -44,8 +45,9 @@ export default function Bar(gdkmonitor: Gdk.Monitor) {
           <box $type="end" spacing={8} halign={Gtk.Align.END}>
             <MediaPlayerButton />
             <box spacing={3} halign={Gtk.Align.END} valign={Gtk.Align.CENTER}>
+              <ScreenRecordButton />
               <VolumeButton />
-              <InternetButton />
+              <NetworkButton />
               <BluetoothButton />
               <KeyboardButton />
               <box visible={batteryStateAccessor((state) => state.available)}>

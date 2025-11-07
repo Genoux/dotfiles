@@ -12,6 +12,15 @@ WINDOW_CLASS="dotfiles-manager"
 WINDOW_COLS=80
 WINDOW_ROWS=25
 
+# Check if window is already running
+if command -v hyprctl &>/dev/null; then
+    if hyprctl clients | grep -q "^[[:space:]]*title: $WINDOW_TITLE$"; then
+        # Focus the existing window
+        hyprctl dispatch focuswindow title:"$WINDOW_TITLE"
+        exit 0
+    fi
+fi
+
 # Launch in kitty with fixed size
 exec kitty \
     --class="$WINDOW_CLASS" \

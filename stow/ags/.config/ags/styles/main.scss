@@ -11,7 +11,7 @@
 @use "widgets/mediaplayer";
 @use "widgets/osd";
 @use "widgets/button";
-
+@use "widgets/screenrecord";
 
 * {
   font-family: typography(font-family);
@@ -41,8 +41,8 @@ tooltip label {
 popover {
   contents {
     @include gtk-reset;
-    
-    transform: translateY(8px);
+
+    transform: translateY(5px);
     border: 1px solid color.change($border, $alpha: 0.05);
     padding: spacing(md);
     border-radius: radius(md);
@@ -53,7 +53,7 @@ popover {
     @include gtk-reset;
     opacity: 0;
     background-color: rgba(0, 0, 0, 0);
-    border:none;
+    border: none;
   }
 
   button.model {

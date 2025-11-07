@@ -19,6 +19,7 @@ export function Workspaces() {
               onClicked={() =>
                 execAsync(["system-workspace-switch", String(wsId)])
               }
+
             >
               <label
                 widthRequest={12}

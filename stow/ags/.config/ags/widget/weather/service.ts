@@ -1,7 +1,8 @@
 import { createState } from "ags";
 import { timeout } from "ags/time";
 import GLib from "gi://GLib";
-import { connected, httpGet } from "../../services/network";
+import Gio from "gi://Gio";
+import { httpGet } from "../../services/network";
 
 interface WeatherData {
   temperature: number;
@@ -75,17 +76,28 @@ timeout(600000, () => {
   return true; // continue
 });
 
-// React to shared connectivity state from network service
+// Watch for network reconnection
 (() => {
-  let lastTrigger = 0;
-  connected((available) => {
-    if (!available) return available;
-    const now = Date.now();
-    if (now - lastTrigger < 1000) return available; // debounce burst
-    lastTrigger = now;
-    triggerRefresh();
-    return available;
-  });
+  try {
+    const net = Gio.NetworkMonitor.get_default();
+    let lastTrigger = 0;
+    let wasConnected = (net as any).get_network_available ? net.get_network_available() : true;
+    
+    net.connect("network-changed", (_m, available: boolean) => {
+      // Only trigger on transition from disconnected to connected
+      if (!wasConnected && available) {
+        const now = Date.now();
+        if (now - lastTrigger > 2000) {
+          lastTrigger = now;
+          triggerRefresh();
+        }
+      }
+      
+      wasConnected = available;
+    });
+  } catch (error) {
+    console.error("[Weather] Failed to setup network monitoring:", error);
+  }
 })();
 
 export function forceWeatherRefresh() {

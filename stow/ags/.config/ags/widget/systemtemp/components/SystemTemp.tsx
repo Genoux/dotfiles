@@ -11,25 +11,29 @@ const icons = {
   hot: "temperature-warm-symbolic",
 };
 
-function showTemperatureDetails(widget: Gtk.Widget) {
+function showTemperatureDetails(widget: any) {
   try {
+    // Ensure widget is valid
+    if (!widget || typeof widget.get_parent !== 'function') return;
+
     const popover = new Gtk.Popover();
     popover.set_parent(widget);
     popover.set_autohide(true);
     popover.set_has_arrow(true);
-    
+
     const content = new Gtk.Box({
       orientation: Gtk.Orientation.VERTICAL,
+      spacing: 4,
     });
-    
-    const cpuLabel = new Gtk.Label({ label: "" });
-    const gpuLabel = new Gtk.Label({ label: "" });
-    const avgLabel = new Gtk.Label({ label: "" });
-    
+
+    const cpuLabel = new Gtk.Label({ label: "", xalign: 0 });
+    const gpuLabel = new Gtk.Label({ label: "", xalign: 0 });
+    const avgLabel = new Gtk.Label({ label: "", xalign: 0 });
+
     content.append(cpuLabel);
     content.append(gpuLabel);
     content.append(avgLabel);
-    
+
     // Update labels reactively when temperature changes
     const updateLabels = () => {
       const temps = systemTemps.get() || { cpu: 0, gpu: 0, avg: 0, status: "normal" as const };
@@ -37,14 +41,14 @@ function showTemperatureDetails(widget: Gtk.Widget) {
       gpuLabel.set_label(`GPU: ${temps.gpu}°C`);
       avgLabel.set_label(`Avg: ${temps.avg}°C`);
     };
-    
+
     // Initial update
     updateLabels();
-    
+
     // Poll for updates every 1 second while popover is open
     let updateInterval: number | null = null;
     let isActive = true;
-    
+
     const cleanup = () => {
       isActive = false;
       if (updateInterval !== null) {
@@ -52,7 +56,7 @@ function showTemperatureDetails(widget: Gtk.Widget) {
         updateInterval = null;
       }
     };
-    
+
     // Start polling timer
     updateInterval = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 1, () => {
       if (isActive) {
@@ -69,17 +73,17 @@ function showTemperatureDetails(widget: Gtk.Widget) {
       cleanup();
       return false; // Stop polling
     });
-    
+
     // Clean up when popover is closed
     popover.connect("closed", cleanup);
-    
+
     // Also clean up when popover is unparented (autohide)
     popover.connect("notify::parent", () => {
       if (popover.get_parent() === null) {
         cleanup();
       }
     });
-    
+
     popover.set_child(content);
     popover.popup();
   } catch (error) {
@@ -89,7 +93,7 @@ function showTemperatureDetails(widget: Gtk.Widget) {
 
 export function SystemTemp() {
   return (
-    <Button 
+    <Button
       onClicked={openSystemMonitor}
       $={(self: any) => {
         const rightClick = new Gtk.GestureClick();

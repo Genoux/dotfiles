@@ -11,28 +11,12 @@ function filterValidItems(items: Tray.TrayItem[]): Tray.TrayItem[] {
     return [];
   }
 
+  // Filter out invalid items, but don't deduplicate - let AstalTray handle uniqueness
   const validItems = items.filter((item) => {
     return item && item.id && item.gicon;
   });
 
-  const seen = new Set<string>();
-  const deduplicatedItems = validItems.filter((item) => {
-    const normalizedId = item.id
-      .toLowerCase()
-      .replace(/[_-]/g, "-")
-      .replace(/^tray-/, "")
-      .replace(/-tray$/, "")
-      .replace(/-client$/, "");
-
-    if (seen.has(normalizedId)) {
-      return false;
-    }
-
-    seen.add(normalizedId);
-    return true;
-  });
-
-  return deduplicatedItems;
+  return validItems;
 }
 
 export const trayItems = createBinding(tray, "items").as(filterValidItems);
@@ -66,14 +50,18 @@ export async function handlePrimaryClick(item: Tray.TrayItem) {
   }
 }
 
-export function handleSecondaryClick(item: Tray.TrayItem, widget: Gtk.Widget) {
+export function handleSecondaryClick(item: Tray.TrayItem, widget: any) {
   try {
     if (item.menu_model) {
       item.about_to_show();
       const popover = new Gtk.PopoverMenu();
       popover.set_menu_model(item.menu_model);
-      popover.set_parent(widget);
-      popover.popup();
+      
+      // Ensure widget is valid before setting parent
+      if (widget && typeof widget.get_parent === 'function') {
+        popover.set_parent(widget);
+        popover.popup();
+      }
     } else {
       item.secondary_activate(0, 0);
     }

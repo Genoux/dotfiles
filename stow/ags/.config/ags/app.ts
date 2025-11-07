@@ -1,8 +1,7 @@
 import app from "ags/gtk4/app";
 import style from "./styles/main.scss";
 import Bar from "./widget/Bar";
-import { VolumeOSD } from "./widget/osd";
-import { BrightnessOSD } from "./widget/osd-brightness";
+import { VolumeOSD, BrightnessOSD } from "./widget/osd";
 
 app.start({
   css: style,

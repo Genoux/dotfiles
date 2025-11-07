@@ -1,6 +1,6 @@
 import app from "ags/gtk4/app";
 import { Astal, Gtk } from "ags/gtk4";
-import { isVisible, volumeState, volumeIcon } from "../service";
+import { isVisible, volumeState, volumeIcon } from "../services/volumeosd.service";
 import Icon from "../../../components/Icon";
 
 const TOTAL_STEPS = 10; // 10 steps for 10% increments (0%, 10%, 20%, ..., 100%)
@@ -22,7 +22,7 @@ function VolumeStepBar() {
 
                 const stepClass = volumeState((state) => {
                     if (state.muted) return "volume-step";
-                    
+
                     // Fill step if volume is above the threshold (with small epsilon for precision)
                     // This ensures accurate 10% step display: 0.9 shows 9 bars, 1.0 shows 10 bars
                     const filled = state.volume > stepThreshold;
@@ -52,34 +52,27 @@ export function VolumeOSD() {
             anchor={BOTTOM}
             halign={Gtk.Align.CENTER}
             valign={Gtk.Align.END}
-
             visible={isVisible}
             application={app}
         >
-            <Gtk.Revealer
-                revealChild={isVisible}
-                transitionType={Gtk.RevealerTransitionType.SLIDE_DOWN}
-                transitionDuration={300}
+            <box
+                class='osd volume-osd'
+                orientation={Gtk.Orientation.VERTICAL}
+                heightRequest={150}
+                widthRequest={150}
+                spacing={12}
+                valign={Gtk.Align.CENTER}
+                halign={Gtk.Align.CENTER}
             >
-                <box
-                    class='osd volume-osd'
-                    orientation={Gtk.Orientation.VERTICAL}
-                    heightRequest={150}
-                    widthRequest={150}
-                    spacing={12}
-                    valign={Gtk.Align.CENTER}
-                    halign={Gtk.Align.CENTER}
-                >
-                    <box orientation={Gtk.Orientation.VERTICAL} vexpand valign={Gtk.Align.CENTER} halign={Gtk.Align.CENTER} spacing={21}>
-                        <Icon
-                            icon={volumeIcon((icon) => icon || "audio-volume-medium-symbolic")}
-                            size={40}
-                            cssName="osd-icon"
-                        />
-                        <VolumeStepBar />
-                    </box>
+                <box orientation={Gtk.Orientation.VERTICAL} vexpand valign={Gtk.Align.CENTER} halign={Gtk.Align.CENTER} spacing={21}>
+                    <Icon
+                        icon={volumeIcon((icon) => icon || "audio-volume-medium-symbolic")}
+                        size={40}
+                        cssName="osd-icon"
+                    />
+                    <VolumeStepBar />
                 </box>
-            </Gtk.Revealer>
+            </box>
         </window>
     );
 }

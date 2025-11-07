@@ -1,6 +1,6 @@
 import app from "ags/gtk4/app";
 import { Astal, Gtk } from "ags/gtk4";
-import { isVisible, brightnessState, brightnessIcon } from "../service";
+import { isVisible, brightnessState, brightnessIcon } from "../services/brightnessosd.service";
 import Icon from "../../../components/Icon";
 
 const TOTAL_STEPS = 10;
@@ -49,30 +49,24 @@ export function BrightnessOSD() {
       visible={isVisible}
       application={app}
     >
-      <Gtk.Revealer
-        revealChild={isVisible}
-        transitionType={Gtk.RevealerTransitionType.SLIDE_DOWN}
-        transitionDuration={300}
+      <box
+        class="osd brightness-osd"
+        orientation={Gtk.Orientation.VERTICAL}
+        heightRequest={150}
+        widthRequest={150}
+        spacing={12}
+        valign={Gtk.Align.CENTER}
+        halign={Gtk.Align.CENTER}
       >
-        <box
-          class="osd brightness-osd"
-          orientation={Gtk.Orientation.VERTICAL}
-          heightRequest={150}
-          widthRequest={150}
-          spacing={12}
-          valign={Gtk.Align.CENTER}
-          halign={Gtk.Align.CENTER}
-        >
-          <box orientation={Gtk.Orientation.VERTICAL} vexpand valign={Gtk.Align.CENTER} halign={Gtk.Align.CENTER} spacing={21}>
-            <Icon
-              icon={brightnessIcon((icon) => icon || "display-brightness-symbolic")}
-              size={40}
-              cssName="osd-icon"
-            />
-            <BrightnessStepBar />
-          </box>
+        <box orientation={Gtk.Orientation.VERTICAL} vexpand valign={Gtk.Align.CENTER} halign={Gtk.Align.CENTER} spacing={21}>
+          <Icon
+            icon={brightnessIcon((icon) => icon || "display-brightness-symbolic")}
+            size={40}
+            cssName="osd-icon"
+          />
+          <BrightnessStepBar />
         </box>
-      </Gtk.Revealer>
+      </box>
     </window>
   );
 }

@@ -65,4 +65,24 @@ else
     log_info "tzupdate not installed, skipping automatic timezone detection"
 fi
 
+# Enable systemd-resolved for proper DNS handling with NetworkManager
+log_info "Configuring systemd-resolved for NetworkManager..."
+if systemctl is-enabled systemd-resolved.service &>/dev/null; then
+    log_info "systemd-resolved already enabled"
+else
+    sudo systemctl enable --now systemd-resolved.service
+    log_success "Enabled systemd-resolved for proper DNS resolution"
+fi
+
+# Enable Bluetooth auto-start on boot
+if [[ -f /etc/bluetooth/main.conf ]]; then
+    log_info "Configuring Bluetooth to auto-enable on boot..."
+    if grep -q "^AutoEnable=true" /etc/bluetooth/main.conf; then
+        log_info "Bluetooth AutoEnable already configured"
+    else
+        sudo sed -i 's/^#\?AutoEnable=.*/AutoEnable=true/' /etc/bluetooth/main.conf
+        log_success "Enabled Bluetooth auto-start"
+    fi
+fi
+
 log_success "System configuration complete"

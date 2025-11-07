@@ -1,0 +1,28 @@
+@use "../tokens" as *;
+@use "../abstracts/theme" as *;
+
+@use 'sass:color';
+
+.recording-indicator button {
+    animation: pulse 2s ease-in-out infinite;
+    color: $red;
+    background-color: color.change($red, $alpha: 0.1);
+    border-radius: radius(xl);
+
+    &:hover {
+        animation: none;
+        background-color: color.change($red, $alpha: 0.2);
+    }
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.6;
+    }
+}

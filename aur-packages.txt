@@ -13,8 +13,8 @@ downgrade
 dragon-drop
 electron25-bin
 electron29-bin
+elephant
 elephant-archlinuxpkgs
-elephant-bin
 elephant-bluetooth
 elephant-calc
 elephant-clipboard
@@ -24,7 +24,7 @@ elephant-menus
 elephant-providerlist
 elephant-symbols
 elephant-websearch
-elephant-windows-bin
+elephant-windows
 figma-linux
 gitkraken
 gnu-netcat
@@ -82,6 +82,7 @@ sherlock-launcher-bin
 slack-desktop
 spotify
 swaylock-effects
+sysc-greet-hyprland
 ttf-material-design-icons-git
 ttf-material-symbols-variable-git
 ttf-rubik-vf

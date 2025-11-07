@@ -1,5 +1,3 @@
-//TODO: Fix visibility glitch when volume is changed quickly after 2 sec (closing)
-
 import Wp from "gi://AstalWp";
 import { createState } from "ags";
 import { timeout } from "ags/time";

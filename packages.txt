@@ -150,7 +150,6 @@ stow
 swaync
 swayosd
 swww
-tailscale
 tcpdump
 ttf-montserrat
 ttf-nerd-fonts-symbols
