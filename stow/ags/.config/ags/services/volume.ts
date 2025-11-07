@@ -4,18 +4,81 @@ import GLib from "gi://GLib";
 
 const wp = Wp.get_default();
 
-function getVolumeIcon(volume: number, muted: boolean): string {
+// Track last icon, volume, and mute state for hysteresis to prevent flickering
+let lastIcon: string | null = null;
+let lastVolumeForIcon = -1;
+let lastMutedState: boolean | null = null;
+
+/**
+ * Get volume icon with smooth transitions and hysteresis to prevent flickering
+ * @param volume - Volume value (0.0 to 2.0, where 1.0 = 100%)
+ * @param muted - Whether volume is muted
+ * @returns Icon name string
+ */
+export function getVolumeIcon(volume: number, muted: boolean): string {
+  // Track mute state changes - always update icon when mute state changes
+  const muteStateChanged = lastMutedState !== null && lastMutedState !== muted;
+  
+  // Muted always shows muted icon (highest priority)
   if (muted) {
-    return "audio-volume-muted-symbolic";
-  } else if (volume <= 0) {
-    return "audio-volume-low-symbolic";
-  } else if (volume > 0.6) {
-    return "audio-volume-high-symbolic";
-  } else if (volume > 0.3) {
-    return "audio-volume-medium-symbolic";
-  } else {
-    return "audio-volume-low-symbolic";
+    lastIcon = "audio-volume-muted-symbolic";
+    lastVolumeForIcon = volume;
+    lastMutedState = muted;
+    return lastIcon;
   }
+  
+  // Normalize volume to 0-1.0 range for icon selection
+  // WirePlumber uses 0-2.0 scale, but icons should treat 1.0+ as high
+  const normalizedVol = Math.min(volume, 1.0);
+  
+  // Handle zero or near-zero volume
+  if (normalizedVol <= 0.01) {
+    lastIcon = "audio-volume-low-symbolic";
+    lastVolumeForIcon = volume;
+    lastMutedState = muted;
+    return lastIcon;
+  }
+  
+  // Use clear, non-overlapping thresholds for smoother transitions
+  // Thresholds: 0-33% = low, 33-66% = medium, 66-100% = high
+  let newIcon: string;
+  if (normalizedVol > 0.66) {
+    newIcon = "audio-volume-high-symbolic";
+  } else if (normalizedVol > 0.33) {
+    newIcon = "audio-volume-medium-symbolic";
+  } else {
+    newIcon = "audio-volume-low-symbolic";
+  }
+  
+  // Add hysteresis: only change icon if volume has moved significantly
+  // This prevents rapid icon changes when volume hovers around threshold values
+  // BUT: always update if mute state changed (unmuting should immediately show correct icon)
+  if (lastIcon === null || lastVolumeForIcon === -1 || muteStateChanged) {
+    // First time, reset, or mute state changed - always update
+    lastIcon = newIcon;
+    lastVolumeForIcon = volume;
+    lastMutedState = muted;
+    return newIcon;
+  }
+  
+  // If icon would change, require a meaningful volume change to prevent flickering
+  if (newIcon !== lastIcon) {
+    const volumeDelta = Math.abs(volume - lastVolumeForIcon);
+    // Require at least 2% volume change to switch icons (prevents micro-adjustment flickering)
+    if (volumeDelta >= 0.02) {
+      lastIcon = newIcon;
+      lastVolumeForIcon = volume;
+      lastMutedState = muted;
+      return newIcon;
+    }
+    // Keep previous icon if volume change is too small
+    return lastIcon;
+  }
+  
+  // Icon hasn't changed, but update tracking volume
+  lastVolumeForIcon = volume;
+  lastMutedState = muted;
+  return newIcon;
 }
 
 function updateIcon(): string {

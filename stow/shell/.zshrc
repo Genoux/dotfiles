@@ -113,7 +113,13 @@ plugins=(
 source $ZSH/oh-my-zsh.sh
 
 # Initialize Starship prompt (cross-shell, fast, highly customizable)
-eval "$(starship init zsh)"
+# Only initialize if Starship is installed
+if command -v starship &>/dev/null; then
+    eval "$(starship init zsh)"
+else
+    # Fallback to a simple prompt if Starship is not installed
+    PROMPT='%F{blue}%n@%m%f %F{green}%~%f %# '
+fi
 
 # User configuration
 

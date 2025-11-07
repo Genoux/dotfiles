@@ -1,6 +1,6 @@
 import app from "ags/gtk4/app";
 import { Astal, Gtk } from "ags/gtk4";
-import { isVisible, volumeState, volumeIcon } from "../services/volumeosd.service";
+import { osd, volumeState, volumeIcon } from "../services/volumeosd.service";
 import Icon from "../../../components/Icon";
 
 const TOTAL_STEPS = 10; // 10 steps for 10% increments (0%, 10%, 20%, ..., 100%)
@@ -52,7 +52,7 @@ export function VolumeOSD() {
             anchor={BOTTOM}
             halign={Gtk.Align.CENTER}
             valign={Gtk.Align.END}
-            visible={isVisible}
+            visible={osd.isVisible}
             application={app}
         >
             <box

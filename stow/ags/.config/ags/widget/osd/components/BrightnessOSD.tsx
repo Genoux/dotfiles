@@ -1,6 +1,6 @@
 import app from "ags/gtk4/app";
 import { Astal, Gtk } from "ags/gtk4";
-import { isVisible, brightnessState, brightnessIcon } from "../services/brightnessosd.service";
+import { osd, brightnessState, brightnessIcon } from "../services/brightnessosd.service";
 import Icon from "../../../components/Icon";
 
 const TOTAL_STEPS = 10;
@@ -46,7 +46,7 @@ export function BrightnessOSD() {
       anchor={BOTTOM}
       halign={Gtk.Align.CENTER}
       valign={Gtk.Align.END}
-      visible={isVisible}
+      visible={osd.isVisible}
       application={app}
     >
       <box

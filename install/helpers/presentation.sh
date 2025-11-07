@@ -5,7 +5,11 @@
 ensure_gum() {
     if ! command -v gum &>/dev/null; then
         echo "Installing gum for better UI..."
-        sudo pacman -S --needed --noconfirm gum
+        if command -v pacman &>/dev/null; then
+            sudo pacman -S --needed --noconfirm gum
+        elif command -v apt-get &>/dev/null; then
+            sudo apt-get update -qq && sudo apt-get install -y gum
+        fi
     fi
 }
 

@@ -11,13 +11,36 @@ if [[ -z "${DOTFILES_HELPERS_LOADED:-}" ]]; then
     export DOTFILES_HELPERS_LOADED=true
 fi
 
-# Check if zsh is installed
+# Check if zsh is installed, install if missing
 check_zsh() {
-    if ! command -v zsh &>/dev/null; then
-        graceful_error "zsh not installed" "Install with: sudo pacman -S zsh"
+    if command -v zsh &>/dev/null; then
+        return 0
+    fi
+    
+    log_warning "zsh is not installed"
+    
+    # Ask user if they want to install
+    if ! confirm "Install zsh using pacman?"; then
+        graceful_error "zsh not installed" "Install manually or run: dotfiles shell setup"
         return 1
     fi
-    return 0
+    
+    # Install zsh using pacman
+    log_info "Installing zsh..."
+    if sudo pacman -S --needed --noconfirm zsh; then
+        # Verify installation
+        if command -v zsh &>/dev/null; then
+            log_success "zsh is now installed"
+            return 0
+        else
+            log_error "zsh installation completed but command not found"
+            log_info "You may need to update your PATH or restart your shell"
+            return 1
+        fi
+    else
+        log_error "Failed to install zsh"
+        return 1
+    fi
 }
 
 # Check if Oh My Zsh is installed

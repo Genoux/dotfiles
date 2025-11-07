@@ -2,17 +2,19 @@ import { createState } from "ags";
 import { timeout, interval } from "ags/time";
 import GLib from "gi://GLib";
 import Gio from "gi://Gio";
+import { createOSDService } from "../../../services/osd";
 
 interface BrightnessState {
   brightness: number; // 0.0 to 1.0
 }
 
-const [isVisible, setIsVisible] = createState(false);
+// Create generic OSD service
+const osd = createOSDService(2000);
+
+// Brightness-specific state management
 const [brightnessState, setBrightnessState] = createState<BrightnessState>({ brightness: 0 });
 const [brightnessIcon, setBrightnessIcon] = createState("display-brightness-symbolic");
 
-let hideTimeoutId = 0;
-let isInitializing = true;
 let lastBrightness = 0;
 
 function getBrightnessIcon(brightness: number): string {
@@ -50,8 +52,8 @@ function updateBrightnessState(showOsd = false) {
   setBrightnessState({ brightness });
   setBrightnessIcon(getBrightnessIcon(brightness));
   
-  if (showOsd && !isInitializing) {
-    showOSD();
+  if (showOsd && !osd.initializing) {
+    osd.show();
   }
 }
 
@@ -64,36 +66,26 @@ setBrightnessIcon(getBrightnessIcon(initialBrightness));
 // Poll for brightness changes (more reliable than file monitoring)
 interval(100, () => {
   const currentBrightness = readBrightness();
+  const brightnessChanged = Math.abs(currentBrightness - lastBrightness) > 0.0001;
   
-  // Show OSD if brightness changed (even tiny changes)
-  // Using very small threshold to catch all changes
-  if (Math.abs(currentBrightness - lastBrightness) > 0.0001) {
+  // Only update state and show OSD if brightness actually changed
+  // Note: If brightness is at max/min, brightnessctl won't change the value,
+  // so we can't detect attempts to change beyond limits via polling
+  if (brightnessChanged) {
     lastBrightness = currentBrightness;
     setBrightnessState({ brightness: currentBrightness });
     setBrightnessIcon(getBrightnessIcon(currentBrightness));
     
-    if (!isInitializing) {
-      showOSD();
+    if (!osd.initializing) {
+      osd.show();
     }
   }
 });
 
 // Disable initialization flag after a delay
 timeout(300, () => {
-  isInitializing = false;
+  osd.finishInitialization();
 });
 
-export function showOSD() {
-  setIsVisible(true);
-  
-  const currentTimeoutId = ++hideTimeoutId;
-  
-  timeout(2000, () => {
-    if (currentTimeoutId === hideTimeoutId) {
-      setIsVisible(false);
-    }
-  });
-}
-
-export { isVisible, brightnessState, brightnessIcon };
+export { osd, brightnessState, brightnessIcon };
 
