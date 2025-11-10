@@ -167,24 +167,33 @@ export WALKER_GDK_BACKEND=wayland
 alias walker='GDK_BACKEND=$WALKER_GDK_BACKEND walker'
 
 
-# Override syntax highlighting colors
+# Override syntax highlighting colors with vibrant theme
 ZSH_HIGHLIGHT_STYLES[default]='none'
-ZSH_HIGHLIGHT_STYLES[unknown-token]='fg=red,bold'
-ZSH_HIGHLIGHT_STYLES[reserved-word]='fg=yellow'
-ZSH_HIGHLIGHT_STYLES[alias]='fg=green'
-ZSH_HIGHLIGHT_STYLES[builtin]='fg=green'
-ZSH_HIGHLIGHT_STYLES[function]='fg=green'
-ZSH_HIGHLIGHT_STYLES[command]='fg=green'
-ZSH_HIGHLIGHT_STYLES[precommand]='fg=green'
-ZSH_HIGHLIGHT_STYLES[commandseparator]='none'
-ZSH_HIGHLIGHT_STYLES[hashed-command]='fg=green'
-ZSH_HIGHLIGHT_STYLES[path]='none'  # Remove path highlighting
-ZSH_HIGHLIGHT_STYLES[globbing]='fg=blue'
-ZSH_HIGHLIGHT_STYLES[history-expansion]='fg=blue'
-ZSH_HIGHLIGHT_STYLES[single-quoted-argument]='fg=yellow'
-ZSH_HIGHLIGHT_STYLES[double-quoted-argument]='fg=yellow'
-ZSH_HIGHLIGHT_STYLES[dollar-double-quoted-argument]='fg=cyan'
-ZSH_HIGHLIGHT_STYLES[back-quoted-argument]='fg=cyan'
+ZSH_HIGHLIGHT_STYLES[unknown-token]='fg=#ff6464,bold'
+ZSH_HIGHLIGHT_STYLES[reserved-word]='fg=#ffc850,bold'
+ZSH_HIGHLIGHT_STYLES[alias]='fg=#64c864,bold'
+ZSH_HIGHLIGHT_STYLES[suffix-alias]='fg=#64c864,bold'
+ZSH_HIGHLIGHT_STYLES[global-alias]='fg=#64c864,bold'
+ZSH_HIGHLIGHT_STYLES[builtin]='fg=#64c864,bold'
+ZSH_HIGHLIGHT_STYLES[function]='fg=#80d880,bold'
+ZSH_HIGHLIGHT_STYLES[command]='fg=#64c864,bold'
+ZSH_HIGHLIGHT_STYLES[precommand]='fg=#9696c8,italic'
+ZSH_HIGHLIGHT_STYLES[commandseparator]='fg=#b4b4b4'
+ZSH_HIGHLIGHT_STYLES[hashed-command]='fg=#64c864'
+ZSH_HIGHLIGHT_STYLES[path]='fg=#dcdcdc,underline'
+ZSH_HIGHLIGHT_STYLES[path_prefix]='fg=#b4b4b4,underline'
+ZSH_HIGHLIGHT_STYLES[path_approx]='fg=#b4b4b4,underline'
+ZSH_HIGHLIGHT_STYLES[globbing]='fg=#9696c8,bold'
+ZSH_HIGHLIGHT_STYLES[history-expansion]='fg=#9696c8,bold'
+ZSH_HIGHLIGHT_STYLES[single-quoted-argument]='fg=#ffc850'
+ZSH_HIGHLIGHT_STYLES[double-quoted-argument]='fg=#ffc850'
+ZSH_HIGHLIGHT_STYLES[dollar-quoted-argument]='fg=#ffc850'
+ZSH_HIGHLIGHT_STYLES[dollar-double-quoted-argument]='fg=#80d880'
+ZSH_HIGHLIGHT_STYLES[back-quoted-argument]='fg=#80d880'
+ZSH_HIGHLIGHT_STYLES[redirection]='fg=#9696c8,bold'
+ZSH_HIGHLIGHT_STYLES[arg0]='fg=#64c864'
+ZSH_HIGHLIGHT_STYLES[comment]='fg=#404040,italic'
+ZSH_HIGHLIGHT_STYLES[assign]='fg=#b4b4b4'
 export PATH=~/.npm-global/bin:$PATH
 
 export NVM_DIR="$HOME/.nvm"
@@ -200,3 +209,23 @@ case ":$PATH:" in
 esac
 # pnpm end
 export PATH="$HOME/.npm-global/bin:$PATH"
+
+# Colorful terminal tools
+if command -v eza &>/dev/null; then
+    alias ls='eza --icons --group-directories-first'
+    alias ll='eza -lh --icons --group-directories-first'
+    alias la='eza -lah --icons --group-directories-first'
+    alias lt='eza --tree --level=2 --icons'
+    alias lta='eza --tree --level=2 --icons -a'
+fi
+
+if command -v bat &>/dev/null; then
+    alias cat='bat --style=auto'
+    alias bcat='bat --style=plain'
+    export BAT_THEME="TwoDark"
+    export MANPAGER="sh -c 'col -bx | bat -l man -p'"
+fi
+
+if command -v delta &>/dev/null; then
+    export GIT_PAGER="delta"
+fi

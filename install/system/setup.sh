@@ -14,75 +14,35 @@ fi
 
 log_info "Installing system-level configurations..."
 
-# systemd system-sleep hooks
-if [[ -d "$SYSTEM_DIR/systemd/system-sleep" ]]; then
-    log_info "Installing systemd system-sleep hooks..."
-    sudo mkdir -p /usr/lib/systemd/system-sleep
-    for file in "$SYSTEM_DIR/systemd/system-sleep"/*; do
-        if [[ -f "$file" ]]; then
-            filename=$(basename "$file")
-            sudo cp "$file" /usr/lib/systemd/system-sleep/
-            sudo chmod +x "/usr/lib/systemd/system-sleep/$filename"
-            log_success "Installed $filename"
-        fi
-    done
+# Validate and cache sudo access at the beginning
+if ! sudo -v; then
+    log_error "Failed to authenticate with sudo"
+    exit 1
 fi
 
-# systemd sleep configuration
-if [[ -d "$SYSTEM_DIR/systemd/sleep.conf.d" ]]; then
-    log_info "Installing systemd sleep configuration..."
-    sudo mkdir -p /etc/systemd/sleep.conf.d
-    for file in "$SYSTEM_DIR/systemd/sleep.conf.d"/*; do
-        if [[ -f "$file" ]]; then
-            filename=$(basename "$file")
-            sudo cp "$file" /etc/systemd/sleep.conf.d/
-            log_success "Installed $filename"
-        fi
-    done
-fi
+# Keep sudo timestamp fresh in the background
+while true; do
+    sudo -n true
+    sleep 60
+    kill -0 $$ 2>/dev/null || exit
+done &
+SUDO_KEEPALIVE_PID=$!
 
-# makepkg.conf - disable debug packages
-if [[ -f /etc/makepkg.conf ]]; then
-    log_info "Configuring makepkg.conf (disabling debug packages)..."
-    if grep -q "OPTIONS=.*debug.*" /etc/makepkg.conf; then
-        sudo sed -i 's/\(OPTIONS=([^)]*\)debug\([^)]*)\)/\1!debug\2/' /etc/makepkg.conf
-        log_success "Disabled debug packages in makepkg.conf"
-    else
-        log_info "makepkg.conf already configured (debug already disabled)"
-    fi
-fi
+# Cleanup function
+cleanup_sudo() {
+    kill $SUDO_KEEPALIVE_PID 2>/dev/null || true
+}
+trap cleanup_sudo EXIT
 
-# Automatically set timezone based on geolocation
-if command -v tzupdate &>/dev/null; then
-    log_info "Detecting and setting timezone automatically..."
-    if sudo tzupdate -q 2>/dev/null; then
-        DETECTED_TZ=$(timedatectl show --value -p Timezone)
-        log_success "Timezone automatically set to $DETECTED_TZ"
-    else
-        log_warning "Failed to auto-detect timezone, keeping current setting"
-    fi
-else
-    log_info "tzupdate not installed, skipping automatic timezone detection"
-fi
+# Run individual system configuration scripts
+run_logged "$DOTFILES_DIR/install/system/systemd-sleep.sh"
+run_logged "$DOTFILES_DIR/install/system/makepkg.sh"
+run_logged "$DOTFILES_DIR/install/system/timezone.sh"
+run_logged "$DOTFILES_DIR/install/system/systemd-resolved.sh"
+run_logged "$DOTFILES_DIR/install/system/bluetooth.sh"
+run_logged "$DOTFILES_DIR/install/system/esp32.sh"
 
-# Enable systemd-resolved for proper DNS handling with NetworkManager
-log_info "Configuring systemd-resolved for NetworkManager..."
-if systemctl is-enabled systemd-resolved.service &>/dev/null; then
-    log_info "systemd-resolved already enabled"
-else
-    sudo systemctl enable --now systemd-resolved.service
-    log_success "Enabled systemd-resolved for proper DNS resolution"
-fi
-
-# Enable Bluetooth auto-start on boot
-if [[ -f /etc/bluetooth/main.conf ]]; then
-    log_info "Configuring Bluetooth to auto-enable on boot..."
-    if grep -q "^AutoEnable=true" /etc/bluetooth/main.conf; then
-        log_info "Bluetooth AutoEnable already configured"
-    else
-        sudo sed -i 's/^#\?AutoEnable=.*/AutoEnable=true/' /etc/bluetooth/main.conf
-        log_success "Enabled Bluetooth auto-start"
-    fi
-fi
+# Cleanup
+cleanup_sudo
 
 log_success "System configuration complete"

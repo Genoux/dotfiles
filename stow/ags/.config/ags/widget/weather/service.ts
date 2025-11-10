@@ -20,7 +20,8 @@ function getWeatherIcon(code: number): string {
   if (code >= 200 && code < 300) return "⛈️"; // thunderstorm
   if (code >= 300 && code < 400) return "🌦️"; // drizzle
   if (code >= 500 && code < 600) return "🌧️"; // rain
-  if (code >= 600 && code < 700) return "❄️"; // snow
+  // Snow codes: 600-622 (light snow, snow, heavy snow, sleet, etc.)
+  if (code >= 600 && code <= 622) return "❄️"; // snow
   if (code >= 700 && code < 800) return "☁️"; // atmosphere (fog, mist, etc.)
   return ""; // default
 }

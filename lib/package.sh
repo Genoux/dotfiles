@@ -1107,6 +1107,135 @@ packages_clean_unlisted() {
         esac
 }
 
+# Detect and resolve AUR packages that conflict with official packages
+resolve_aur_official_conflicts() {
+    log_info "Checking for AUR packages conflicting with official packages..."
+    
+    # Get all AUR packages
+    local aur_packages=($(pacman -Qmq 2>/dev/null || true))
+    
+    if [[ ${#aur_packages[@]} -eq 0 ]]; then
+        return 0
+    fi
+    
+    # Refresh package databases to check for conflicts
+    sudo pacman -Sy --noconfirm >/dev/null 2>&1 || true
+    
+    local conflicts_to_remove=()
+    
+    for aur_pkg in "${aur_packages[@]}"; do
+        # Check if this AUR package provides a base package name (without -git/-bin suffix)
+        local base_name="${aur_pkg%-git}"
+        base_name="${base_name%-bin}"
+        
+        # Skip if it's already the base name
+        if [[ "$aur_pkg" == "$base_name" ]]; then
+            continue
+        fi
+        
+        # Check if an official package with the base name exists and conflicts
+        if pacman -Si "$base_name" &>/dev/null; then
+            # Check if the AUR package conflicts with the official package
+            local aur_conflicts=$(pacman -Qi "$aur_pkg" 2>/dev/null | grep "Conflicts With" | cut -d: -f2 | xargs)
+            if [[ "$aur_conflicts" == *"$base_name"* ]]; then
+                log_info "Detected conflict: $aur_pkg (AUR) conflicts with $base_name (official)"
+                conflicts_to_remove+=("$aur_pkg")
+            fi
+        fi
+    done
+    
+    if [[ ${#conflicts_to_remove[@]} -eq 0 ]]; then
+        return 0
+    fi
+    
+    log_info "Found ${#conflicts_to_remove[@]} conflicting AUR package(s):"
+    printf '  - %s\n' "${conflicts_to_remove[@]}"
+    echo
+    
+    log_info "Force-removing conflicting AUR packages (will be replaced by official packages during upgrade)..."
+    # Use -dd to skip dependency checks and force removal
+    # The system upgrade will then install official packages and upgrade dependents automatically
+    sudo pacman -Rdd --noconfirm "${conflicts_to_remove[@]}" 2>&1 || {
+        log_error "Failed to remove conflicting AUR packages"
+        log_info "Manual resolution required. Try:"
+        printf '  sudo pacman -Rdd %s\n' "${conflicts_to_remove[*]}"
+        echo
+        return 1
+    }
+    echo
+    
+    # Clean up package files - remove AUR packages that were replaced by official ones
+    log_info "Cleaning up package lists..."
+    local files_updated=false
+    
+    if [[ -f "$AUR_PACKAGES_FILE" ]]; then
+        local temp_file=$(mktemp)
+        local removed_count=0
+        
+        while IFS= read -r line; do
+            local should_keep=true
+            for pkg in "${conflicts_to_remove[@]}"; do
+                if [[ "$line" == "$pkg" ]]; then
+                    should_keep=false
+                    ((removed_count++))
+                    break
+                fi
+            done
+            if $should_keep; then
+                echo "$line" >> "$temp_file"
+            fi
+        done < "$AUR_PACKAGES_FILE"
+        
+        if [[ $removed_count -gt 0 ]]; then
+            mv "$temp_file" "$AUR_PACKAGES_FILE"
+            files_updated=true
+            log_info "Removed $removed_count package(s) from aur-packages.txt"
+        else
+            rm -f "$temp_file"
+        fi
+    fi
+    
+    # Add official packages to packages.txt if they're not already there
+    if [[ -f "$PACKAGES_FILE" ]]; then
+        local temp_file=$(mktemp)
+        local added_count=0
+        
+        # First, copy existing packages
+        cp "$PACKAGES_FILE" "$temp_file"
+        
+        # Then check which official packages need to be added
+        for aur_pkg in "${conflicts_to_remove[@]}"; do
+            local base_name="${aur_pkg%-git}"
+            base_name="${base_name%-bin}"
+            
+            # Check if official package exists and isn't already in the file
+            if pacman -Si "$base_name" &>/dev/null; then
+                if ! grep -qxF "$base_name" "$temp_file" 2>/dev/null; then
+                    echo "$base_name" >> "$temp_file"
+                    ((added_count++))
+                fi
+            fi
+        done
+        
+        if [[ $added_count -gt 0 ]]; then
+            sort -u "$temp_file" -o "$temp_file"
+            mv "$temp_file" "$PACKAGES_FILE"
+            files_updated=true
+            log_info "Added $added_count official package(s) to packages.txt"
+        else
+            rm -f "$temp_file"
+        fi
+    fi
+    
+    if $files_updated; then
+        log_success "Package lists updated"
+    fi
+    
+    log_success "Removed ${#conflicts_to_remove[@]} conflicting AUR package(s)"
+    log_info "Official packages will be installed during system upgrade"
+    echo
+}
+
 # Update system packages
 packages_update() {
     log_section "Updating System"
@@ -1125,6 +1254,12 @@ packages_update() {
         log_info "Removing debug packages..."
         echo "$debug_packages" | xargs sudo pacman -Rdd --noconfirm 2>/dev/null || true
         echo
+    fi
+
+    # Resolve AUR vs official package conflicts before updating
+    if ! resolve_aur_official_conflicts; then
+        log_error "Failed to resolve package conflicts. Update cannot proceed."
+        return 1
     fi
 
     # Step 1: Update official repositories first (root)
@@ -1217,3 +1352,4 @@ packages_status() {
     show_info "AUR packages installed" "$installed_aur"
     show_info "Total installed" "$installed_official"
 }
+

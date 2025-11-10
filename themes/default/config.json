@@ -1,17 +1,14 @@
 {
-  "$schema": "Theme configuration",
-  "description": "Default dark theme",
-  
+  "description": "Default theme",
   "mappings": {
     "ags.scss": "~/.config/ags/style.scss",
     "hypr.conf": "~/.config/hypr/theme.conf",
-    "hypr-cursor.conf": "~/.config/hypr/cursor.conf",
     "kitty.conf": "~/.config/kitty/theme.conf",
     "starship.toml": "~/.config/starship.toml",
-    "swayosd.css": "~/.config/swayosd/style.css",
     "yazi.toml": "~/.config/yazi/theme.toml",
     "mako.conf": "~/.config/mako/theme.conf",
-    "walker.css": "~/.config/walker/themes/default/style.css"
+    "walker.css": "~/.config/walker/themes/default/style.css",
+    "zed.json": "~/.config/zed/settings.json"
   },
   "gtk": {
     "name": "MacTahoe Dark",
@@ -27,4 +24,3 @@
     }
   }
 }
-

@@ -15,43 +15,36 @@ fi
 system_apply() {
     log_section "Applying System Configurations"
 
-    # systemd system-sleep hooks
-    if [[ -d "$SYSTEM_DIR/systemd/system-sleep" ]]; then
-        log_info "Installing systemd system-sleep hooks..."
-        sudo mkdir -p /usr/lib/systemd/system-sleep
-        for file in "$SYSTEM_DIR/systemd/system-sleep"/*; do
-            if [[ -f "$file" ]]; then
-                filename=$(basename "$file")
-                sudo cp "$file" /usr/lib/systemd/system-sleep/
-                sudo chmod +x "/usr/lib/systemd/system-sleep/$filename"
-                log_success "Installed $filename"
-            fi
-        done
+    # Validate and cache sudo access at the beginning
+    if ! sudo -v; then
+        log_error "Failed to authenticate with sudo"
+        return 1
     fi
 
-    # systemd sleep configuration
-    if [[ -d "$SYSTEM_DIR/systemd/sleep.conf.d" ]]; then
-        log_info "Installing systemd sleep configuration..."
-        sudo mkdir -p /etc/systemd/sleep.conf.d
-        for file in "$SYSTEM_DIR/systemd/sleep.conf.d"/*; do
-            if [[ -f "$file" ]]; then
-                filename=$(basename "$file")
-                sudo cp "$file" /etc/systemd/sleep.conf.d/
-                log_success "Installed $filename"
-            fi
-        done
-    fi
+    # Keep sudo timestamp fresh in the background
+    while true; do
+        sudo -n true
+        sleep 60
+        kill -0 $$ 2>/dev/null || exit
+    done &
+    SUDO_KEEPALIVE_PID=$!
 
-    # makepkg.conf - disable debug packages
-    if [[ -f /etc/makepkg.conf ]]; then
-        log_info "Configuring makepkg.conf (disabling debug packages)..."
-        if grep -q "OPTIONS=.*debug.*" /etc/makepkg.conf; then
-            sudo sed -i 's/\(OPTIONS=([^)]*\)debug\([^)]*)\)/\1!debug\2/' /etc/makepkg.conf
-            log_success "Disabled debug packages in makepkg.conf"
-        else
-            log_info "makepkg.conf already configured (debug already disabled)"
-        fi
-    fi
+    # Cleanup function
+    cleanup_sudo() {
+        kill $SUDO_KEEPALIVE_PID 2>/dev/null || true
+    }
+    trap cleanup_sudo EXIT
+
+    # Run individual system configuration scripts
+    bash "$DOTFILES_DIR/install/system/systemd-sleep.sh"
+    bash "$DOTFILES_DIR/install/system/makepkg.sh"
+    bash "$DOTFILES_DIR/install/system/timezone.sh"
+    bash "$DOTFILES_DIR/install/system/systemd-resolved.sh"
+    bash "$DOTFILES_DIR/install/system/bluetooth.sh"
+    bash "$DOTFILES_DIR/install/system/esp32.sh"
+
+    # Cleanup
+    cleanup_sudo
 
     echo
     log_success "System configuration complete"
@@ -71,13 +64,6 @@ system_status() {
     else
         show_info "makepkg.conf" "not found"
     fi
-
-    # systemd sleep hooks
-    local sleep_hooks=0
-    if [[ -d /usr/lib/systemd/system-sleep ]]; then
-        sleep_hooks=$(find /usr/lib/systemd/system-sleep -type f 2>/dev/null | wc -l)
-    fi
-    show_info "systemd sleep hooks" "$sleep_hooks installed"
 
     # systemd sleep config
     local sleep_configs=0
