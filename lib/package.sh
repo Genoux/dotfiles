@@ -705,14 +705,60 @@ packages_manage() {
         echo
     fi
 
-    # Show extra packages
+    # Check if any "extra" packages are actually dependencies of dotfiles packages
+    local extra_as_deps_official=()
+    local extra_as_deps_aur=()
+    local extra_not_deps=()
+    
+    # Build dotfiles map for dependency checking
+    declare -A dotfiles_map
+    for pkg in "${dotfiles_official[@]}" "${dotfiles_aur[@]}"; do
+        dotfiles_map[$pkg]=1
+    done
+    
+    # Check each extra package to see if it's a dependency
+    for pkg in "${extra_official[@]}" "${extra_aur[@]}"; do
+        local required_by=$(pacman -Qi "$pkg" 2>/dev/null | awk '/^Required By/ {for(i=4;i<=NF;i++) print $i}')
+        local is_dependency=false
+        
+        if [[ -n "$required_by" ]]; then
+            while IFS= read -r req; do
+                if [[ -n "${dotfiles_map[$req]}" ]]; then
+                    is_dependency=true
+                    break
+                fi
+            done <<< "$required_by"
+        fi
+        
+        if $is_dependency; then
+            if pacman -Qm "$pkg" &>/dev/null; then
+                extra_as_deps_aur+=("$pkg")
+            else
+                extra_as_deps_official+=("$pkg")
+            fi
+        else
+            extra_not_deps+=("$pkg")
+        fi
+    done
+    
+    # Show extra packages, separating dependencies from truly extra
     if [[ $total_extra -gt 0 ]]; then
-        log_warning "Extra packages (installed, not in dotfiles): $total_extra"
-        local all_extra=("${extra_official[@]}" "${extra_aur[@]}")
-        printf '%s\n' "${all_extra[@]}" | sort | while read -r pkg; do
-            printf '  - %s\n' "$pkg"
-        done
-        echo
+        if [[ $((${#extra_as_deps_official[@]} + ${#extra_as_deps_aur[@]})) -gt 0 ]]; then
+            log_info "Dependencies detected (will be auto-added): $((${#extra_as_deps_official[@]} + ${#extra_as_deps_aur[@]}))"
+            local all_deps=("${extra_as_deps_official[@]}" "${extra_as_deps_aur[@]}")
+            printf '%s\n' "${all_deps[@]}" | sort | while read -r pkg; do
+                printf '  - %s (dependency)\n' "$pkg"
+            done
+            echo
+        fi
+        
+        if [[ ${#extra_not_deps[@]} -gt 0 ]]; then
+            log_warning "Extra packages (installed, not in dotfiles): ${#extra_not_deps[@]}"
+            printf '%s\n' "${extra_not_deps[@]}" | sort | while read -r pkg; do
+                printf '  - %s\n' "$pkg"
+            done
+            echo
+        fi
     fi
 
     # Check if any "missing" packages are actually installed as dependencies
@@ -732,11 +778,17 @@ packages_manage() {
     if [[ ${#deps_as_explicit[@]} -gt 0 ]]; then
         options+=("Mark ${#deps_as_explicit[@]} dependency packages as explicit (already installed)")
     fi
+    
+    # Add option to auto-add dependencies if found
+    if [[ $((${#extra_as_deps_official[@]} + ${#extra_as_deps_aur[@]})) -gt 0 ]]; then
+        options+=("Add $((${#extra_as_deps_official[@]} + ${#extra_as_deps_aur[@]})) dependencies to dotfiles (auto-detect)")
+    fi
+    
     [[ $total_missing -gt 0 ]] && options+=("Install missing packages ($total_missing)")
     [[ $total_missing -gt 0 ]] && options+=("Remove missing from dotfiles ($total_missing)")
-    [[ $total_extra -gt 0 ]] && options+=("Add extra to dotfiles ($total_extra)")
-    [[ $total_extra -gt 0 ]] && options+=("Remove extra from system ($total_extra)")
-    [[ $total_extra -gt 0 ]] && options+=("Select which to keep/remove")
+    [[ ${#extra_not_deps[@]} -gt 0 ]] && options+=("Add extra to dotfiles (${#extra_not_deps[@]})")
+    [[ ${#extra_not_deps[@]} -gt 0 ]] && options+=("Remove extra from system (${#extra_not_deps[@]})")
+    [[ ${#extra_not_deps[@]} -gt 0 ]] && options+=("Select which to keep/remove")
     [[ $total_missing -gt 0 && $total_extra -gt 0 ]] && options+=("Full sync (install + add)")
 
     local action=$(gum choose --header "What would you like to do?" "${options[@]}")
@@ -760,6 +812,23 @@ packages_manage() {
             echo
             sudo pacman -D --asexplicit "${deps_as_explicit[@]}"
             log_success "Packages marked as explicit"
+            ;;
+
+        "Add"*"dependencies to dotfiles"*)
+            log_info "Adding $((${#extra_as_deps_official[@]} + ${#extra_as_deps_aur[@]})) dependencies to dotfiles..."
+            echo
+            
+            for pkg in "${extra_as_deps_official[@]}"; do
+                echo "$pkg" >> "$PACKAGES_FILE"
+            done
+            for pkg in "${extra_as_deps_aur[@]}"; do
+                echo "$pkg" >> "$AUR_PACKAGES_FILE"
+            done
+            
+            sort -u "$PACKAGES_FILE" -o "$PACKAGES_FILE"
+            sort -u "$AUR_PACKAGES_FILE" -o "$AUR_PACKAGES_FILE"
+            
+            log_success "Added $((${#extra_as_deps_official[@]} + ${#extra_as_deps_aur[@]})) dependencies to dotfiles"
             ;;
 
         "Install missing packages"*)
@@ -807,21 +876,23 @@ packages_manage() {
             ;;
 
         "Add extra to dotfiles"*)
-            for pkg in "${extra_official[@]}"; do
-                echo "$pkg" >> "$PACKAGES_FILE"
-            done
-            for pkg in "${extra_aur[@]}"; do
-                echo "$pkg" >> "$AUR_PACKAGES_FILE"
+            for pkg in "${extra_not_deps[@]}"; do
+                # Determine if it's AUR or official
+                if pacman -Qm "$pkg" &>/dev/null; then
+                    echo "$pkg" >> "$AUR_PACKAGES_FILE"
+                else
+                    echo "$pkg" >> "$PACKAGES_FILE"
+                fi
             done
             sort -u "$PACKAGES_FILE" -o "$PACKAGES_FILE"
             sort -u "$AUR_PACKAGES_FILE" -o "$AUR_PACKAGES_FILE"
-            log_success "Added $total_extra packages to dotfiles"
+            log_success "Added ${#extra_not_deps[@]} packages to dotfiles"
             ;;
 
         "Remove extra from system"*)
-            log_info "Checking which of $total_extra packages can be safely removed..."
+            log_info "Checking which of ${#extra_not_deps[@]} packages can be safely removed..."
             echo
-            local all_extra=("${extra_official[@]}" "${extra_aur[@]}")
+            local all_extra=("${extra_not_deps[@]}")
             
             # Filter out packages that are dependencies
             local safe_to_remove=()
@@ -860,7 +931,7 @@ packages_manage() {
             ;;
 
         "Full sync"*)
-            log_info "Full sync: Installing missing + adding extras to dotfiles..."
+            log_info "Full sync: Installing missing + adding dependencies and extras to dotfiles..."
             echo
             
             # Install missing packages (same as "Install missing packages" option)
@@ -883,14 +954,21 @@ packages_manage() {
                 fi
             fi
             
-            # Add extra packages to dotfiles
+            # Add dependencies and extra packages to dotfiles
             echo
-            log_info "Adding extras to dotfiles..."
-            for pkg in "${extra_official[@]}"; do
+            log_info "Adding dependencies and extras to dotfiles..."
+            for pkg in "${extra_as_deps_official[@]}"; do
                 echo "$pkg" >> "$PACKAGES_FILE"
             done
-            for pkg in "${extra_aur[@]}"; do
+            for pkg in "${extra_as_deps_aur[@]}"; do
                 echo "$pkg" >> "$AUR_PACKAGES_FILE"
+            done
+            for pkg in "${extra_not_deps[@]}"; do
+                if pacman -Qm "$pkg" &>/dev/null; then
+                    echo "$pkg" >> "$AUR_PACKAGES_FILE"
+                else
+                    echo "$pkg" >> "$PACKAGES_FILE"
+                fi
             done
             sort -u "$PACKAGES_FILE" -o "$PACKAGES_FILE"
             sort -u "$AUR_PACKAGES_FILE" -o "$AUR_PACKAGES_FILE"

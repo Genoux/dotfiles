@@ -9,7 +9,7 @@ interface IconProps {
 
 export default function Icon({
     icon,
-    size = 13,
+    size = 14,
     cssName = "",
     ...props
 }: IconProps) {

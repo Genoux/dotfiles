@@ -12,11 +12,19 @@
 @use "widgets/osd";
 @use "widgets/button";
 @use "widgets/screenrecord";
+@use "widgets/keyboard";
 
 * {
   font-family: typography(font-family);
   font-size: 12px;
+}
 
+
+.group {
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: radius(md);
+  padding: spacing(xs);
 }
 
 // GTK4 tooltip styling (used by system tray and other widgets)

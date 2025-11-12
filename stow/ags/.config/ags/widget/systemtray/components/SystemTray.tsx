@@ -33,7 +33,7 @@ function TrayButton({ item }: { item: Tray.TrayItem }) {
         self.add_controller(middleClick);
       }}
     >
-      <image gicon={item.gicon} pixelSize={13} />
+      <image gicon={item.gicon} pixelSize={12} />
     </Button>
   );
 }
@@ -41,8 +41,11 @@ function TrayButton({ item }: { item: Tray.TrayItem }) {
 export function SystemTray() {
   return (
     <box
-      class='system-tray'
+      class='system-tray group'
       visible={trayItems((list) => list.length > 0)}
+      spacing={2}
+      valign={Gtk.Align.CENTER}
+      vexpand={false}
     >
       <For each={trayItems}>
         {(item) => <TrayButton item={item} />}

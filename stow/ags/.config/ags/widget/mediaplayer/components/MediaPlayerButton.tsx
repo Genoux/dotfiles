@@ -33,11 +33,13 @@ const scrollingText = createPoll("", SCROLL_SPEED, () => {
 export function MediaPlayerButton() {
 
   return (
-    <box spacing={1} class='mediaplayer' visible={currentPlayerInfo((info) => info !== "No media")}>
+    <box spacing={3} class='mediaplayer group' visible={currentPlayerInfo((info) => info !== "No media")}>
       <Button onClicked={toggleMediaPanel}>
         <box
           spacing={6}
           class="media-content"
+          vexpand={false}
+          valign={Gtk.Align.CENTER}
         >
           <CavaVisualizer />
           <label
@@ -48,7 +50,7 @@ export function MediaPlayerButton() {
         </box>
       </Button>
 
-      <box $type="end">
+      <box $type="end" vexpand={false} valign={Gtk.Align.CENTER}>
         <Button
           class="media-control"
           onClicked={() => {
@@ -58,7 +60,7 @@ export function MediaPlayerButton() {
             }
           }}
         >
-          <Icon icon="media-skip-backward-symbolic" />
+          <Icon icon="media-skip-backward-symbolic" pixelSize={13} />
         </Button>
         <Button
           class="media-control play-pause"
@@ -73,6 +75,7 @@ export function MediaPlayerButton() {
             icon={currentPlayerPlayIcon((icon) =>
               icon === "▶" ? "media-playback-start-symbolic" : "media-playback-pause-symbolic"
             )}
+            pixelSize={13}
           />
         </Button>
         <Button
@@ -83,8 +86,9 @@ export function MediaPlayerButton() {
               player.next();
             }
           }}
+
         >
-          <Icon icon="media-skip-forward-symbolic" />
+          <Icon icon="media-skip-forward-symbolic" pixelSize={13} />
         </Button>
       </box>
     </box>

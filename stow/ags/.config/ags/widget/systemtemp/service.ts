@@ -1,6 +1,7 @@
 import { createState } from "ags";
 import GLib from "gi://GLib";
 import Gio from "gi://Gio";
+import { Gtk } from "ags/gtk4";
 
 export type TempStatus = "normal" | "warm" | "hot";
 
@@ -18,11 +19,37 @@ const [systemTempsState, setSystemTemps] = createState<SystemTemps>({
   status: "normal",
 });
 
+export const icons: Record<TempStatus, string> = {
+  normal: "temperature-normal-symbolic",
+  warm: "temperature-warm-symbolic",
+  hot: "temperature-warm-symbolic",
+};
+
 function getTempStatus(cpu: number, gpu: number): TempStatus {
   const max = Math.max(cpu, gpu);
   if (max >= 85) return "hot";
   if (max >= 70) return "warm";
   return "normal";
+}
+
+export function getTempIcon(status: TempStatus): string {
+  return icons[status] || icons.normal;
+}
+
+export function formatTempLabel(temps: SystemTemps): string {
+  return `${temps.avg}°C`;
+}
+
+export function formatTempDetails(temps: SystemTemps): {
+  cpu: string;
+  gpu: string;
+  avg: string;
+} {
+  return {
+    cpu: `CPU: ${temps.cpu}°C`,
+    gpu: `GPU: ${temps.gpu}°C`,
+    avg: `Avg: ${temps.avg}°C`,
+  };
 }
 
 function readCpuTempFromHwmon(): number {
@@ -154,5 +181,77 @@ export function openSystemMonitor() {
     GLib.spawn_command_line_async(`${GLib.get_home_dir()}/.local/bin/launch-btop`);
   } catch (error) {
     console.error("Failed to launch btop:", error);
+  }
+}
+
+export function showTemperatureDetails(widget: any) {
+  try {
+    if (!widget || typeof widget.get_parent !== 'function') return;
+
+    const popover = new Gtk.Popover();
+    popover.set_parent(widget);
+    popover.set_autohide(true);
+    popover.set_has_arrow(true);
+
+    const content = new Gtk.Box({
+      orientation: Gtk.Orientation.VERTICAL,
+      spacing: 4,
+    });
+
+    const cpuLabel = new Gtk.Label({ label: "", xalign: 0 });
+    const gpuLabel = new Gtk.Label({ label: "", xalign: 0 });
+    const avgLabel = new Gtk.Label({ label: "", xalign: 0 });
+
+    content.append(cpuLabel);
+    content.append(gpuLabel);
+    content.append(avgLabel);
+
+    const updateLabels = () => {
+      const temps = systemTemps.get() || { cpu: 0, gpu: 0, avg: 0, status: "normal" as const };
+      const details = formatTempDetails(temps);
+      cpuLabel.set_label(details.cpu);
+      gpuLabel.set_label(details.gpu);
+      avgLabel.set_label(details.avg);
+    };
+
+    updateLabels();
+
+    let updateInterval: number | null = null;
+    let isActive = true;
+
+    const cleanup = () => {
+      isActive = false;
+      if (updateInterval !== null) {
+        GLib.source_remove(updateInterval);
+        updateInterval = null;
+      }
+    };
+
+    updateInterval = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 1, () => {
+      if (isActive) {
+        try {
+          if (popover.get_parent() !== null) {
+            updateLabels();
+            return true;
+          }
+        } catch (error) {
+          // Popover might be destroyed, stop polling
+        }
+      }
+      cleanup();
+      return false;
+    });
+
+    popover.connect("closed", cleanup);
+    popover.connect("notify::parent", () => {
+      if (popover.get_parent() === null) {
+        cleanup();
+      }
+    });
+
+    popover.set_child(content);
+    popover.popup();
+  } catch (error) {
+    console.error("Failed to show temperature details:", error);
   }
 }

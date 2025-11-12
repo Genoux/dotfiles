@@ -1,10 +1,8 @@
 @use "../tokens" as *;
 @use "../abstracts/theme" as *;
+@use "sass:color";
 
 
-.workspace {
-    button {
-        min-width: 14px;
-    }
-
+.keyboard {
+    font-size: 10px;
 }

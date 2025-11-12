@@ -61,7 +61,6 @@ export function ScreenRecordButton() {
   return (
     <box class={isRecording((active) => active ? "recording-indicator" : "")}>
       <Button
-        visible={isRecording((active) => active)}
         onClicked={(self: any) => {
           // Synchronously check if recording is active right now
           if (isCurrentlyRecording()) {

@@ -7,7 +7,7 @@ import { Button } from "../../../lib/components";
 
 export function Workspaces() {
   return (
-    <box spacing={1}>
+    <box spacing={2} class='workspace' >
       <For each={workspaces}>
         {(ws: Hyprland.Workspace) => {
           const wsId = ws.id;
@@ -15,15 +15,13 @@ export function Workspaces() {
 
           return (
             <Button
-              class='workspace'
               onClicked={() =>
                 execAsync(["system-workspace-switch", String(wsId)])
               }
 
             >
               <label
-                widthRequest={12}
-                heightRequest={9}
+
                 class={isFocused((focused) => (focused ? "focused" : ""))}
                 label={isFocused((focused) => (focused ? "●" : String(wsId)))}
               />

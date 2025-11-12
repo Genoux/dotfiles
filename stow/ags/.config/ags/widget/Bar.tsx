@@ -33,26 +33,25 @@ export default function Bar(gdkmonitor: Gdk.Monitor) {
         revealChild={true}
         transitionType={Gtk.RevealerTransitionType.CROSSFADE}
         transitionDuration={400}
+        valign={Gtk.Align.CENTER}
       >
-        <centerbox>
-          <box $type="start" spacing={2} halign={Gtk.Align.CENTER} vexpand={false} valign={Gtk.Align.CENTER}>
+        <centerbox valign={Gtk.Align.CENTER}>
+          <box $type="start" spacing={4} halign={Gtk.Align.CENTER} vexpand={false} valign={Gtk.Align.CENTER}>
             <Workspaces />
             <SystemTray />
           </box>
-          <box $type="center">
+          <box $type="center" valign={Gtk.Align.CENTER} vexpand={false}>
             <WindowTitle />
           </box>
-          <box $type="end" spacing={8} halign={Gtk.Align.END}>
+          <box $type="end" spacing={4} halign={Gtk.Align.END} valign={Gtk.Align.CENTER} vexpand={false}>
             <MediaPlayerButton />
-            <box spacing={3} halign={Gtk.Align.END} valign={Gtk.Align.CENTER}>
-              <ScreenRecordButton />
+            <box spacing={3}>
               <VolumeButton />
               <NetworkButton />
               <BluetoothButton />
+              <ScreenRecordButton />
               <KeyboardButton />
-              <box visible={batteryStateAccessor((state) => state.available)}>
-                <BatteryButton />
-              </box>
+              <BatteryButton />
               <Weather />
               <SystemTemp />
               <TimeDisplay />

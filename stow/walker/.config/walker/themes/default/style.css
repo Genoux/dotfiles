@@ -43,7 +43,7 @@ scrollbar slider:hover {
 .box-wrapper {
     background: @bg;
     border: 1px solid @border;
-    border-radius: 10px;
+    border-radius: 12px;
     padding: 10px;
 }
 
@@ -54,12 +54,9 @@ scrollbar slider:hover {
     opacity: 0.6;
 }
 
-.box {
-}
-
 .search-container {
-    background: @bg-card;
-    //border: 1px solid @border;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid @border;
     border-radius: 8px;
     padding: 1px;
 }

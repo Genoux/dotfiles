@@ -4,8 +4,8 @@
 
 .bar {
   background-color: rgba(255, 255, 255, 0.0);
-  padding: 0 spacing(md) spacing(sm);
-
+  padding: 0 spacing(md);
+  margin-bottom: spacing(sm);
   // Smooth transitions for all bar animations
   transition: all 400ms cubic-bezier(0.4, 0.0, 0.2, 1),
     opacity 400ms cubic-bezier(0.4, 0.0, 0.2, 1),

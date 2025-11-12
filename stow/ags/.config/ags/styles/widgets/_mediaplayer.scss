@@ -2,21 +2,10 @@
 @use "../abstracts/theme" as *;
 
 .mediaplayer {
-  border: 1px solid rgba(white, 0.05);
-  border-radius: radius(sm);
-  padding: spacing(xs);
-  background: rgba(255, 255, 255, 0.02);
-
   .media-info {
     font-size: 11px;
     font-weight: 400;
     color: $fg;
     font-family: "JetBrainsMono Nerd Font Mono";
-  }
-
-  .media-control {
-    &:hover {
-      background: rgba(white, 0.05);
-    }
   }
 }

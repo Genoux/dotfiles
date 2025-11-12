@@ -8,12 +8,15 @@ const [isRecordingState, setIsRecording] = createState(false);
 
 let monitorProcess: any = null;
 
+let restartCount = 0;
+const MAX_RESTARTS = 3;
+
 function startMonitoring() {
   if (monitorProcess) return;
 
   monitorProcess = subprocess(
     ["bash", "-c", `
-      if pgrep -x wl-screenrec >/dev/null || pgrep -x wf-recorder >/dev/null; then
+      if pgrep -x wl-screenrec >/dev/null 2>&1 || pgrep -x wf-recorder >/dev/null 2>&1; then
         last_state="1"
       else
         last_state="0"
@@ -21,7 +24,7 @@ function startMonitoring() {
       echo "$last_state"
 
       while true; do
-        if pgrep -x wl-screenrec >/dev/null || pgrep -x wf-recorder >/dev/null; then
+        if pgrep -x wl-screenrec >/dev/null 2>&1 || pgrep -x wf-recorder >/dev/null 2>&1; then
           current_state="1"
         else
           current_state="0"
@@ -32,20 +35,27 @@ function startMonitoring() {
           last_state="$current_state"
         fi
 
-        sleep 0.2
+        sleep 1
       done
     `],
     (out) => {
       const recording = out.trim() === "1";
       setIsRecording(recording);
+      restartCount = 0;
     },
     (err) => {
       console.error("[ScreenRecord] Monitor error:", err);
       monitorProcess = null;
-      GLib.timeout_add(GLib.PRIORITY_DEFAULT, 1000, () => {
-        startMonitoring();
-        return false;
-      });
+
+      restartCount++;
+      if (restartCount <= MAX_RESTARTS) {
+        GLib.timeout_add(GLib.PRIORITY_DEFAULT, 2000, () => {
+          startMonitoring();
+          return false;
+        });
+      } else {
+        console.error("[ScreenRecord] Max restarts reached, giving up");
+      }
     }
   );
 }
