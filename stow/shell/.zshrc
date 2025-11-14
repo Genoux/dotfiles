@@ -94,9 +94,10 @@ ZSH_THEME=""
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-# Plugins (auto-generated from zsh-plugins.txt + built-in plugins)
+# Plugins (manually configured - add from zsh-plugins.package after installation)
 # Built-in Oh My Zsh plugins: git, command-not-found, sudo, history, dirhistory
-# External plugins from zsh-plugins.txt: zsh-autosuggestions,zsh-syntax-highlighting,zsh-completions,fast-syntax-highlighting,zsh-history-substring-search
+# External plugins: zsh-autosuggestions, zsh-syntax-highlighting, zsh-completions, 
+#                   zsh-history-substring-search, you-should-use, zsh-bat
 plugins=(
   git
   command-not-found
@@ -106,8 +107,9 @@ plugins=(
   zsh-autosuggestions
   zsh-syntax-highlighting
   zsh-completions
-  fast-syntax-highlighting
   zsh-history-substring-search
+  you-should-use
+  zsh-bat
 )
 
 source $ZSH/oh-my-zsh.sh

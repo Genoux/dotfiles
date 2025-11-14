@@ -285,3 +285,75 @@ run_with_spinner_box() {
     fi
 }
 
+# =============================================================================
+# Helper Wrappers - Reduce Boilerplate
+# =============================================================================
+
+# Run operation with automatic status display
+# Usage: run_op "message" command [args...]
+run_op() {
+    local message="$1"
+    shift
+
+    log_info "$message"
+    echo
+
+    "$@"
+    local exit_code=$?
+
+    echo
+
+    if [[ $exit_code -eq 0 ]]; then
+        log_success "Complete"
+    else
+        log_error "Failed (exit code: $exit_code)"
+    fi
+
+    return $exit_code
+}
+
+# Run operation with spinner
+# Usage: run_with_spin "message" command [args...]
+run_with_spin() {
+    local message="$1"
+    shift
+
+    if command -v gum &>/dev/null; then
+        gum spin --spinner dot --title "$message" -- "$@"
+    else
+        log_info "$message"
+        "$@"
+    fi
+}
+
+# Pause for user input
+# Usage: pause
+pause() {
+    echo
+    read -p "Press Enter to continue..." -n 1 -r
+    echo
+}
+
+# Run operation and pause
+# Usage: run_and_pause command [args...]
+run_and_pause() {
+    "$@"
+    local exit_code=$?
+    pause
+    return $exit_code
+}
+
+# Interactive confirmation
+# Usage: if confirm "Are you sure?"; then ...
+confirm() {
+    local message="${1:-Continue?}"
+
+    if command -v gum &>/dev/null; then
+        gum confirm "$message"
+    else
+        read -p "$message (y/N) " -n 1 -r
+        echo
+        [[ $REPLY =~ ^[Yy]$ ]]
+    fi
+}
+

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Install base packages from packages.txt
+# Install base packages from packages.package
 
 # Source helpers first
 if [[ -z "${DOTFILES_HELPERS_LOADED:-}" ]]; then

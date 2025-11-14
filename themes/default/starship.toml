@@ -1,5 +1,5 @@
 # Include theme colors
-"$schema" = 'https://starship.rs/config-schema.json'
+# Starship config schema: https://starship.rs/config-schema.json
 
 # Starship Configuration
 # A modern, fast, and highly customizable cross-shell prompt

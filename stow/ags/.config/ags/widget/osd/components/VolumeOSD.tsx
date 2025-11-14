@@ -67,7 +67,7 @@ export function VolumeOSD() {
                 <box orientation={Gtk.Orientation.VERTICAL} vexpand valign={Gtk.Align.CENTER} halign={Gtk.Align.CENTER} spacing={21}>
                     <Icon
                         icon={volumeIcon((icon) => icon || "audio-volume-medium-symbolic")}
-                        size={40}
+                        size={50}
                         cssName="osd-icon"
                     />
                     <VolumeStepBar />

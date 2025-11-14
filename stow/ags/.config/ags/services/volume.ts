@@ -21,7 +21,7 @@ export function getVolumeIcon(volume: number, muted: boolean): string {
   
   // Muted always shows muted icon (highest priority)
   if (muted) {
-    lastIcon = "audio-volume-muted-symbolic";
+    lastIcon = "audio-volume-muted";
     lastVolumeForIcon = volume;
     lastMutedState = muted;
     return lastIcon;
@@ -33,7 +33,7 @@ export function getVolumeIcon(volume: number, muted: boolean): string {
   
   // Handle zero or near-zero volume
   if (normalizedVol <= 0.01) {
-    lastIcon = "audio-volume-low-symbolic";
+    lastIcon = "audio-volume-low";
     lastVolumeForIcon = volume;
     lastMutedState = muted;
     return lastIcon;
@@ -43,11 +43,11 @@ export function getVolumeIcon(volume: number, muted: boolean): string {
   // Thresholds: 0-33% = low, 33-66% = medium, 66-100% = high
   let newIcon: string;
   if (normalizedVol > 0.66) {
-    newIcon = "audio-volume-high-symbolic";
+    newIcon = "audio-volume-high";
   } else if (normalizedVol > 0.33) {
-    newIcon = "audio-volume-medium-symbolic";
+    newIcon = "audio-volume-medium";
   } else {
-    newIcon = "audio-volume-low-symbolic";
+    newIcon = "audio-volume-low";
   }
   
   // Add hysteresis: only change icon if volume has moved significantly
@@ -87,10 +87,10 @@ function updateIcon(): string {
     if (spk) {
       return getVolumeIcon(spk.volume, spk.mute);
     }
-    return "audio-volume-high-symbolic";
+    return "audio-volume-high";
   } catch (error) {
     console.error("Volume update error:", error);
-    return "audio-volume-high-symbolic";
+    return "audio-volume-high";
   }
 }
 

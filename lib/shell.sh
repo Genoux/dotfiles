@@ -3,7 +3,7 @@
 
 # Get dotfiles directory
 DOTFILES_DIR="$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" && pwd)"
-PLUGINS_FILE="$DOTFILES_DIR/zsh-plugins.txt"
+PLUGINS_FILE="$DOTFILES_DIR/zsh-plugins.package"
 
 # Source helpers if not already loaded
 if [[ -z "${DOTFILES_HELPERS_LOADED:-}" ]]; then
@@ -144,6 +144,127 @@ install_plugins() {
     return 0
 }
 
+# Check if Starship is installed
+check_starship() {
+    if command -v starship &>/dev/null; then
+        return 0
+    fi
+    
+    log_warning "Starship is not installed"
+    
+    # Ask user if they want to install
+    if ! confirm "Install Starship? (via pacman or cargo)"; then
+        log_info "Skipping Starship installation"
+        return 0
+    fi
+    
+    # Try pacman first (Arch Linux)
+    if command -v pacman &>/dev/null; then
+        log_info "Installing Starship via pacman..."
+        if sudo pacman -S --needed --noconfirm starship; then
+            if command -v starship &>/dev/null; then
+                log_success "Starship installed"
+                return 0
+            fi
+        fi
+    fi
+    
+    # Fallback to cargo if available
+    if command -v cargo &>/dev/null; then
+        log_info "Installing Starship via cargo..."
+        if cargo install starship --locked; then
+            if command -v starship &>/dev/null; then
+                log_success "Starship installed"
+                return 0
+            fi
+        fi
+    fi
+    
+    log_warning "Could not install Starship automatically"
+    log_info "Install manually: https://starship.rs/guide/#%F0%9F%9A%80-installation"
+    return 0  # Don't fail setup if Starship isn't installed
+}
+
+# Update plugins array in .zshrc
+update_zshrc_plugins() {
+    local zshrc_file="$DOTFILES_DIR/stow/shell/.zshrc"
+    
+    if [[ ! -f "$zshrc_file" ]]; then
+        log_warning "Could not find .zshrc file: $zshrc_file"
+        return 0  # Don't fail setup
+    fi
+    
+    if [[ ! -f "$PLUGINS_FILE" ]]; then
+        log_warning "Plugin list not found, skipping plugin array update"
+        return 0
+    fi
+    
+    log_info "Updating plugins array in .zshrc..."
+    
+    # Built-in Oh My Zsh plugins (always include these)
+    local builtin_plugins=("git" "command-not-found" "sudo" "history" "dirhistory")
+    
+    # Collect external plugins from zsh-plugins.package
+    local external_plugins=()
+    while IFS= read -r plugin_line; do
+        # Skip comments and empty lines
+        [[ -z "$plugin_line" ]] && continue
+        [[ "$plugin_line" =~ ^#.*$ ]] && continue
+        
+        local plugin_name=$(echo "$plugin_line" | cut -d':' -f1)
+        
+        # Only add if plugin is actually installed
+        if is_plugin_installed "$plugin_name"; then
+            external_plugins+=("$plugin_name")
+        fi
+    done < "$PLUGINS_FILE"
+    
+    # Combine all plugins
+    local all_plugins=("${builtin_plugins[@]}" "${external_plugins[@]}")
+    
+    # Create temporary file for new .zshrc
+    local temp_file=$(mktemp)
+    local in_plugins_array=false
+    local plugins_written=false
+    
+    while IFS= read -r line; do
+        # Detect start of plugins array
+        if [[ "$line" =~ ^plugins=\( ]]; then
+            in_plugins_array=true
+            plugins_written=true
+            
+            # Write plugins array
+            echo "plugins=(" >> "$temp_file"
+            for plugin in "${all_plugins[@]}"; do
+                echo "  $plugin" >> "$temp_file"
+            done
+            echo ")" >> "$temp_file"
+            continue
+        fi
+        
+        # Skip lines inside plugins array until we hit the closing )
+        if [[ "$in_plugins_array" == true ]]; then
+            if [[ "$line" =~ ^\) ]]; then
+                in_plugins_array=false
+            fi
+            continue
+        fi
+        
+        # Write all other lines
+        echo "$line" >> "$temp_file"
+    done < "$zshrc_file"
+    
+    # Replace original file
+    if mv "$temp_file" "$zshrc_file"; then
+        log_success "Updated plugins array ($((${#all_plugins[@]})) plugins)"
+        return 0
+    else
+        log_error "Failed to update plugins array"
+        rm -f "$temp_file"
+        return 0  # Don't fail setup
+    fi
+}
+
 # Set zsh as default shell
 set_default_shell() {
     local zsh_path=$(which zsh)
@@ -187,6 +308,16 @@ shell_setup() {
     
     # Install plugins
     install_plugins
+    
+    echo
+    
+    # Update plugins array in .zshrc
+    update_zshrc_plugins
+    
+    echo
+    
+    # Check/install Starship
+    check_starship
     
     echo
     
@@ -235,6 +366,23 @@ shell_status() {
         if [[ "$has_plugins" == false ]]; then
             printf "  \033[90mNo plugins installed\033[0m\n"
         fi
+    fi
+    
+    # Check Starship
+    echo
+    if command -v starship &>/dev/null; then
+        local starship_version=$(starship --version | cut -d' ' -f2)
+        show_info "Starship" "$starship_version"
+        
+        # Check if config exists
+        local starship_config="$HOME/.config/starship.toml"
+        if [[ -f "$starship_config" ]]; then
+            show_info "Starship config" "✓ Configured"
+        else
+            show_info "Starship config" "✗ Not configured"
+        fi
+    else
+        show_info "Starship" "✗ Not installed"
     fi
 }
 

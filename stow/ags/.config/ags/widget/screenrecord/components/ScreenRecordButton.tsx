@@ -70,7 +70,7 @@ export function ScreenRecordButton() {
           }
         }}
       >
-        <Icon icon={isRecording((active) => active ? "media-playback-stop-symbolic" : "media-record-symbolic")} />
+        <Icon icon={isRecording((active) => active ? "media-playback-stop-symbolic" : "media-optical-symbolic")} />
       </Button>
     </box>
   );

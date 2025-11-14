@@ -177,8 +177,9 @@ show_menu() {
                 read -p "Press Enter to continue..."
                 ;;
             "Full Install")
-                clear_screen
-                bash "$DOTFILES_DIR/install.sh"
+                # Exit menu and run installation with clean screen
+                clear
+                exec bash "$DOTFILES_DIR/install.sh"
                 ;;
             "Packages")
                 menu_packages
@@ -217,13 +218,12 @@ menu_packages() {
         
         # Show current package count
         source "$DOTFILES_DIR/lib/package.sh"
-        local pkg_count=$(grep -cvE '^#|^$' "$DOTFILES_DIR/packages.txt" 2>/dev/null || echo 0)
-        local aur_count=$(grep -cvE '^#|^$' "$DOTFILES_DIR/aur-packages.txt" 2>/dev/null || echo 0)
+        local pkg_count=$(grep -cvE '^#|^$' "$DOTFILES_DIR/packages.package" 2>/dev/null || echo 0)
+        local aur_count=$(grep -cvE '^#|^$' "$DOTFILES_DIR/aur-packages.package" 2>/dev/null || echo 0)
         show_info "Tracked" "$pkg_count official + $aur_count AUR"
         echo
         
         local action=$(choose_option \
-            "Install all from dotfiles" \
             "Manage packages" \
             "Update system" \
             "Show status" \
@@ -232,13 +232,6 @@ menu_packages() {
         [[ -z "$action" ]] && return  # ESC pressed
 
         case "$action" in
-            "Install all from dotfiles")
-                clear_screen
-                if packages_install; then
-                    echo
-                    read -p "Press Enter to continue..."
-                fi
-                ;;
             "Manage packages")
                 clear_screen
                 if packages_manage; then
@@ -339,43 +332,37 @@ menu_configs() {
 
 # Theme management menu
 menu_themes() {
-    while true; do
-        clear_screen "Themes"
-        
-        source "$DOTFILES_DIR/lib/theme.sh"
-        
-        # Show quick status
+    source "$DOTFILES_DIR/lib/theme.sh"
+    source "$DOTFILES_DIR/lib/menu.sh"
+
+    theme_quick_status() {
         local theme_dir="$DOTFILES_DIR/themes/default"
         local theme_files=$(ls "$theme_dir" 2>/dev/null | wc -l)
         show_info "Active theme" "default ($theme_files files)"
+    }
+
+    while true; do
+        clear_screen "Themes"
+        theme_quick_status
         echo
-        
+
         local action=$(choose_option \
             "Apply theme" \
             "Install GTK theme" \
             "Show details" \
             "Back")
-        
-        [[ -z "$action" ]] && return  # ESC pressed
-        
+
+        [[ -z "$action" ]] && return
+
         case "$action" in
             "Apply theme")
-                clear_screen
-                theme_apply
-                echo
-                read -p "Press Enter to continue..."
+                run_operation "" theme_apply
                 ;;
             "Install GTK theme")
-                clear_screen
-                theme_install_gtk
-                echo
-                read -p "Press Enter to continue..."
+                run_operation "" theme_install_gtk
                 ;;
             "Show details")
-                clear_screen
-                theme_status
-                echo
-                read -p "Press Enter to continue..."
+                run_operation "" theme_status
                 ;;
             "Back")
                 return
@@ -386,24 +373,21 @@ menu_themes() {
 
 # System management menu
 menu_system() {
+    source "$DOTFILES_DIR/lib/system.sh"
+    source "$DOTFILES_DIR/lib/menu.sh"
+
     while true; do
         clear_screen "System"
-
-        source "$DOTFILES_DIR/lib/system.sh"
 
         local action=$(choose_option \
             "Apply configurations" \
             "Back")
 
-        [[ -z "$action" ]] && return  # ESC pressed
+        [[ -z "$action" ]] && return
 
         case "$action" in
             "Apply configurations")
-                clear_screen
-                if system_apply; then
-                    echo
-                    read -p "Press Enter to continue..."
-                fi
+                run_operation "" system_apply
                 ;;
             "Back")
                 return
@@ -414,18 +398,21 @@ menu_system() {
 
 # Shell management menu
 menu_shell() {
-    while true; do
-        clear_screen "Shell"
+    source "$DOTFILES_DIR/lib/shell.sh"
+    source "$DOTFILES_DIR/lib/menu.sh"
 
-        source "$DOTFILES_DIR/lib/shell.sh"
-
-        # Show quick status
+    shell_quick_status() {
         if command -v zsh &>/dev/null; then
             local version=$(zsh --version | cut -d' ' -f2)
             show_info "Version" "$version"
         else
             show_info "Status" "not installed"
         fi
+    }
+
+    while true; do
+        clear_screen "Shell"
+        shell_quick_status
         echo
 
         local action=$(choose_option \
@@ -433,20 +420,14 @@ menu_shell() {
             "Show details" \
             "Back")
 
-        [[ -z "$action" ]] && return  # ESC pressed
+        [[ -z "$action" ]] && return
 
         case "$action" in
             "Setup shell")
-                clear_screen
-                shell_setup
-                echo
-                read -p "Press Enter to continue..."
+                run_operation "" shell_setup
                 ;;
             "Show details")
-                clear_screen
-                shell_status
-                echo
-                read -p "Press Enter to continue..."
+                run_operation "" shell_status
                 ;;
             "Back")
                 return
@@ -457,18 +438,30 @@ menu_shell() {
 
 # Hyprland management menu
 menu_hyprland() {
-    while true; do
-        clear_screen "Hyprland"
+    source "$DOTFILES_DIR/lib/hyprland.sh"
+    source "$DOTFILES_DIR/lib/menu.sh"
 
-        source "$DOTFILES_DIR/lib/hyprland.sh"
-
-        # Show quick status
+    hyprland_quick_status() {
         if command -v hyprctl &>/dev/null; then
             local version=$(hyprctl version 2>/dev/null | head -1 | grep -oP 'Hyprland \K\d+\.\d+\.\d+' || echo "unknown")
             show_info "Version" "$version"
         else
             show_info "Status" "not installed"
         fi
+    }
+
+    hyprland_setup_all() {
+        if command -v hyprpm &>/dev/null; then
+            source "$DOTFILES_DIR/lib/hyprland-plugins.sh"
+            setup_hyprland_plugins
+            echo
+        fi
+        hyprland_setup
+    }
+
+    while true; do
+        clear_screen "Hyprland"
+        hyprland_quick_status
         echo
 
         local action=$(choose_option \
@@ -476,29 +469,14 @@ menu_hyprland() {
             "Show details" \
             "Back")
 
-        [[ -z "$action" ]] && return  # ESC pressed
+        [[ -z "$action" ]] && return
 
         case "$action" in
             "Setup Hyprland")
-                clear_screen
-
-                # Setup plugins using our improved library function
-                if command -v hyprpm &>/dev/null; then
-                    source "$DOTFILES_DIR/lib/hyprland-plugins.sh"
-                    setup_hyprland_plugins
-                    echo
-                fi
-
-                # Setup monitors
-                hyprland_setup
-                echo
-                read -p "Press Enter to continue..."
+                run_operation "" hyprland_setup_all
                 ;;
             "Show details")
-                clear_screen
-                hyprland_status
-                echo
-                read -p "Press Enter to continue..."
+                run_operation "" hyprland_status
                 ;;
             "Back")
                 return
@@ -518,7 +496,8 @@ main() {
             show_status
             ;;
         install)
-            bash "$DOTFILES_DIR/install.sh"
+            clear
+            exec bash "$DOTFILES_DIR/install.sh"
             ;;
         packages|pkg)
             source "$DOTFILES_DIR/lib/package.sh"
@@ -526,10 +505,6 @@ main() {
                 manage|"") packages_manage ;;
                 update) packages_update || exit $? ;;
                 status) packages_status ;;
-                # Legacy commands still work
-                install) packages_install || exit $? ;;
-                sync) packages_sync || exit $? ;;
-                clean) packages_clean_unlisted || exit $? ;;
                 *) log_error "Unknown subcommand: $subcommand"; show_usage; exit 1 ;;
             esac
             ;;

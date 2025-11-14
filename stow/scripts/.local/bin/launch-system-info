@@ -1,0 +1,29 @@
+#!/bin/sh
+# Display system info - TUI style, no shell prompt
+# Always open a new kitty window with specific size
+
+# If we're already in display mode (env var set), just run the display
+if [ "$SYSTEM_INFO_DISPLAY" = "1" ]; then
+    # Clear screen and hide cursor
+    tput clear
+    tput civis
+    
+    # Run fastfetch
+    fastfetch
+    
+    # Wait for any keypress (silent, no echo)
+    stty -echo
+    read -n 1 -s
+    stty echo
+    
+    # Show cursor and exit cleanly
+    tput cnorm
+    exit 0
+fi
+
+# Always launch kitty (will create new window even if kitty is running)
+exec kitty --class=SystemInfo --title=SystemInfo \
+    -o initial_window_width=80c \
+    -o initial_window_height=24c \
+    env SYSTEM_INFO_DISPLAY=1 "$0"
+

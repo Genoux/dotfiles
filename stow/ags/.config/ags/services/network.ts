@@ -168,12 +168,12 @@ export function checkConnection(): string {
         interfaceName.startsWith("en") ||
         interfaceName.startsWith("enp")
       ) {
-        return "network-wireless-symbolic";
+        return "network-idle";
       } else {
-        return "network-wireless-symbolic";
+        return "network-idle";
       }
     } else {
-      return "network-offline-symbolic";
+      return "network-offline";
     }
   } catch (error) {
     console.error("Network check error:", error);

@@ -45,7 +45,7 @@ export default function Bar(gdkmonitor: Gdk.Monitor) {
           </box>
           <box $type="end" spacing={4} halign={Gtk.Align.END} valign={Gtk.Align.CENTER} vexpand={false}>
             <MediaPlayerButton />
-            <box spacing={3}>
+            <box spacing={2}>
               <VolumeButton />
               <NetworkButton />
               <BluetoothButton />

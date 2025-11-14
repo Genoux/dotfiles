@@ -11,7 +11,7 @@ if [[ -z "${DOTFILES_HELPERS_LOADED:-}" ]]; then
 fi
 
 # Plugin configuration file
-HYPRLAND_PLUGINS_FILE="$DOTFILES_DIR/hyprland-plugins.txt"
+HYPRLAND_PLUGINS_FILE="$DOTFILES_DIR/hyprland-plugins.package"
 
 # Load plugins from configuration file
 load_plugin_config() {

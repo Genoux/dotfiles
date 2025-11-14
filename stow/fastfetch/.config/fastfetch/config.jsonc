@@ -1,13 +1,13 @@
 {
-  "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/json_schema.json",
+  "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
   "logo": {
     "type": "command-raw",
-    "source": "~/.config/fastfetch/scripts/bonsai.sh -n -L 20 -g 40,16 -T",
+    "source": "~/.config/fastfetch/scripts/bonsai.sh -n -L 20 -g 40,16 -T -s 12345",
     "height": 16,
     "width": 40,
     "padding": {
-      "top": 0,
-      "left": 0,
+      "top": 1,
+      "left": 4,
       "right": 0,
       "bottom": 0
     }
@@ -16,101 +16,100 @@
     "separator": " "
   },
   "modules": [
-    "break",
+    {
+      "type": "title"
+    },
     {
       "type": "custom",
-      "format": "\u001b[90m┌──────────────────────Hardware──────────────────────┐"
+      "format": "\u001b[90m┌───────────────Hardware─────────────────────────────┐"
     },
     {
       "type": "host",
-      "key": " PC",
+      "key": "󰍹 PC:",
       "keyColor": "green"
     },
     {
       "type": "cpu",
-      "key": "│ ├",
+      "key": "├ 󰍛",
       "showPeCoreCount": true,
       "keyColor": "green"
     },
     {
       "type": "gpu",
-      "key": "│ ├",
+      "key": "├ 󰾲",
       "detectionMethod": "pci",
       "keyColor": "green"
     },
     {
       "type": "display",
-      "key": "│ ├",
+      "key": "├ 󰹑",
       "keyColor": "green"
     },
     {
-      "type": "disk",
-      "key": "│ ├",
+      "type": "command",
+      "key": "├ 󰋊",
+      "keyColor": "green",
+      "text": "df -h / | awk 'NR==2 {used=$3; total=$2; pct=$5+0; printf \"%s / %s (%d%%)\", used, total, pct}'"
+    },
+    {
+      "type": "battery",
+      "key": "├ 󰁹",
       "keyColor": "green"
     },
     {
       "type": "memory",
-      "key": "│ ├",
+      "key": "└ 󱤓",
       "keyColor": "green"
     },
-    {
-      "type": "battery",
-      "key": "│ ├",
-      "keyColor": "green"
-    },
-    {
-      "type": "swap",
-      "key": "└ └",
-      "keyColor": "green"
-    },
+
     {
       "type": "custom",
       "format": "\u001b[90m└────────────────────────────────────────────────────┘"
     },
-    "break",
     {
       "type": "custom",
-      "format": "\u001b[90m┌──────────────────────Software──────────────────────┐"
+      "format": "\u001b[90m┌───────────────Software─────────────────────────────┐"
     },
     {
       "type": "os",
-      "key": " OS",
+      "key": "󱃋 OS:",
       "keyColor": "blue"
     },
     {
       "type": "kernel",
-      "key": "│ ├",
+      "key": "├ 󰌢",
       "keyColor": "blue"
     },
     {
       "type": "wm",
-      "key": "│ ├",
+      "key": "├ 󰖲",
       "keyColor": "blue"
     },
     {
       "type": "de",
-      "key": " DE",
+      "key": "├ 󰨳",
       "keyColor": "blue"
     },
     {
       "type": "terminal",
-      "key": "│ ├",
-      "keyColor": "blue"
-    },
-    {
-      "type": "packages",
-      "key": "│ ├",
+      "key": "├ 󰆍",
       "keyColor": "blue"
     },
     {
       "type": "wmtheme",
-      "key": "│ ├",
+      "key": "├ 󰎔",
       "keyColor": "blue"
     },
     {
       "type": "terminalfont",
-      "key": "└ └",
+      "key": "├ 󰊄",
       "keyColor": "blue"
+    },
+    {
+      "type": "custom",
+      "key": "└ 󰏘",
+      "keyColor": "blue",
+      "format": "\u001b[90m\u25cf \u001b[31m\u25cf \u001b[32m\u25cf \u001b[33m\u25cf \u001b[34m\u25cf \u001b[35m\u25cf \u001b[36m\u25cf \u001b[37m\u25cf"
     },
     {
       "type": "custom",
@@ -118,24 +117,9 @@
     },
     "break",
     {
-      "type": "custom",
-      "format": "\u001b[90m┌────────────────────Uptime / Age────────────────────┐"
-    },
-    {
-      "type": "command",
-      "key": " OS Age",
-      "keyColor": "magenta",
-      "text": "birth_install=$(stat -c %W / 2>/dev/null || echo 0); current=$(date +%s); if [ $birth_install -gt 0 ]; then time_progression=$((current - birth_install)); days_difference=$((time_progression / 86400)); echo $days_difference days; else echo unknown; fi"
-    },
-    {
       "type": "uptime",
-      "key": " Uptime",
-      "keyColor": "magenta"
-    },
-    {
-      "type": "custom",
-      "format": "\u001b[90m└────────────────────────────────────────────────────┘"
-    },
-    "break"
+      "key": "󰔛 Uptime:",
+      "keyColor": "yellow"
+    }
   ]
 }
