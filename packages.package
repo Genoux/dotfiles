@@ -110,6 +110,7 @@ lutris
 lxappearance
 lxsession
 mako
+matugen
 mesa-utils
 mpv
 nano
@@ -147,6 +148,7 @@ python-pywal
 qbittorrent
 qt5ct
 qt6ct
+quickshell
 reflector
 ripgrep
 rpi-imager

@@ -310,6 +310,42 @@ config_link() {
                     log_info "Updated desktop database"
                 fi
                 ;;
+            "ags")
+                # Create symlink for AGS TypeScript types
+                local ags_config_dir="$HOME/.config/ags"
+                local ags_node_modules="$ags_config_dir/node_modules"
+                local ags_symlink="$ags_node_modules/ags"
+                local ags_source="/usr/share/ags/js"
+
+                if [[ -d "$ags_config_dir" ]]; then
+                    # Ensure node_modules directory exists
+                    if [[ ! -d "$ags_node_modules" ]]; then
+                        mkdir -p "$ags_node_modules"
+                        log_info "Created node_modules directory for AGS"
+                    fi
+
+                    # Create symlink if it doesn't exist or is broken
+                    if [[ -L "$ags_symlink" ]]; then
+                        if [[ -e "$ags_symlink" ]]; then
+                            log_info "AGS types symlink already exists"
+                        else
+                            log_info "Removing broken symlink and recreating..."
+                            rm "$ags_symlink"
+                            ln -s "$ags_source" "$ags_symlink"
+                            log_success "AGS types symlink created"
+                        fi
+                    elif [[ -e "$ags_symlink" ]]; then
+                        log_warning "File exists at $ags_symlink (not a symlink), skipping"
+                    else
+                        if [[ -d "$ags_source" ]]; then
+                            ln -s "$ags_source" "$ags_symlink"
+                            log_success "AGS types symlink created"
+                        else
+                            log_warning "AGS source directory not found at $ags_source, skipping symlink"
+                        fi
+                    fi
+                fi
+                ;;
         esac
 
         # Enable user systemd services if present (for any config that has them)

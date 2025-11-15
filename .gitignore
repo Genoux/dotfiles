@@ -54,6 +54,8 @@ stow/ags/.config/ags/*.logmonitors.conf
 *.backup.*
 stow/hypr/.config/hypr/monitors.conf
 
+# Wallpapers
+stow/hypr/.config/hypr/wallpapers/current/current_wallpaper.jpg
 
 *.bak
 todo

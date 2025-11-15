@@ -42,6 +42,8 @@ system_apply() {
     bash "$DOTFILES_DIR/install/system/systemd-resolved.sh"
     bash "$DOTFILES_DIR/install/system/bluetooth.sh"
     bash "$DOTFILES_DIR/install/system/esp32.sh"
+    bash "$DOTFILES_DIR/install/system/app-launcher.sh"
+    bash "$DOTFILES_DIR/install/system/greeter.sh"
 
     # Cleanup
     cleanup_sudo

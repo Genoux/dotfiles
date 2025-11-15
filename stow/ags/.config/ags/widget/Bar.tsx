@@ -13,7 +13,6 @@ import { KeyboardButton } from "./keyboard";
 import { MediaPlayerButton } from "./mediaplayer";
 import { SystemMenuButton } from "./systemmenu";
 import { BatteryButton } from "./battery";
-import { batteryStateAccessor } from "./battery/service";
 import { ScreenRecordButton } from "./screenrecord";
 
 export default function Bar(gdkmonitor: Gdk.Monitor) {

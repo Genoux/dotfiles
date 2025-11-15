@@ -1,5 +1,12 @@
 #!/bin/bash
 # Hyprland plugin management
+#
+# Configuration format in hyprland-plugins.package:
+#   plugin_name = repository_url
+#
+# Example:
+#   Hyprspace = https://github.com/KZDKM/Hyprspace
+#   split-monitor-workspaces = https://github.com/Duckonaut/split-monitor-workspaces
 
 # Get dotfiles directory
 DOTFILES_DIR="$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" && pwd)"
@@ -14,6 +21,7 @@ fi
 HYPRLAND_PLUGINS_FILE="$DOTFILES_DIR/hyprland-plugins.package"
 
 # Load plugins from configuration file
+# Format: plugin_name = repository_url
 load_plugin_config() {
     declare -gA HYPRLAND_PLUGINS
 
@@ -22,22 +30,32 @@ load_plugin_config() {
         return 1
     fi
 
-    while IFS= read -r line; do
+    while IFS= read -r line || [[ -n "$line" ]]; do
         # Skip empty lines and comments
         [[ -z "$line" ]] && continue
         [[ "$line" =~ ^[[:space:]]*#.*$ ]] && continue
 
-        # Parse line: URL and plugin name (both required)
-        local plugin_url plugin_name
-        read -r plugin_url plugin_name <<< "$line"
+        # Parse line: plugin_name = repository_url
+        if [[ "$line" =~ ^[[:space:]]*([^=]+)[[:space:]]*=[[:space:]]*(.+)[[:space:]]*$ ]]; then
+            local plugin_name="${BASH_REMATCH[1]}"
+            local plugin_url="${BASH_REMATCH[2]}"
 
-        # Validate both fields are present
-        if [[ -z "$plugin_url" ]] || [[ -z "$plugin_name" ]]; then
-            log_warning "Invalid plugin entry (missing URL or name): $line"
-            continue
+            # Trim whitespace
+            plugin_name="${plugin_name## }"
+            plugin_name="${plugin_name%% }"
+            plugin_url="${plugin_url## }"
+            plugin_url="${plugin_url%% }"
+
+            # Validate both fields are present
+            if [[ -z "$plugin_name" ]] || [[ -z "$plugin_url" ]]; then
+                log_warning "Invalid plugin entry (missing name or URL): $line"
+                continue
+            fi
+
+            HYPRLAND_PLUGINS["$plugin_name"]="$plugin_url"
+        else
+            log_warning "Invalid plugin entry format (expected: name = url): $line"
         fi
-
-        HYPRLAND_PLUGINS["$plugin_name"]="$plugin_url"
     done < "$HYPRLAND_PLUGINS_FILE"
 }
 

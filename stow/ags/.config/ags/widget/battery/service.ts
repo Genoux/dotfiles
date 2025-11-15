@@ -51,20 +51,16 @@ let hasBattery = false;
 try {
   battery = Battery.get_default();
   // Check if battery actually exists by verifying a battery directory exists in /sys
-  // This is more reliable than just checking if the device object exists
+  // Check for any BAT* device (BAT0, BAT1, etc.) to handle different laptop configurations
   if (battery !== null) {
-    try {
-      const result = exec("sh -c '[ -d /sys/class/power_supply/BAT0 ] && echo yes || echo no'");
-      hasBattery = result.trim() === "yes";
-    } catch {
-      // Fallback: if shell check fails, assume no battery on desktop systems
-      hasBattery = false;
-    }
+    // Check for any battery device (BAT0, BAT1, etc.)
+    const result = exec("sh -c 'ls -d /sys/class/power_supply/BAT* 2>/dev/null | head -1 | grep -q . && echo yes || echo no'");
+    hasBattery = result.trim() === "yes";
   } else {
     hasBattery = false;
   }
 } catch (error) {
-  console.log("No battery available");
+  console.log("No battery available:", error);
   hasBattery = false;
 }
 

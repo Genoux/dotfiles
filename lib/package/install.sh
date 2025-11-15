@@ -163,6 +163,15 @@ packages_install() {
         
         # Resolve package conflicts
         local conflicts_to_remove=()
+
+        # Special case: Migrate elephant-bin to elephant (Go version compatibility)
+        if printf '%s\n' "${missing_aur[@]}" | grep -q '^elephant$'; then
+            if pacman -Q elephant-bin &>/dev/null; then
+                log_warning "Found elephant-bin (pre-compiled binary)"
+                log_info "Switching to elephant (source build) for Go version compatibility"
+                conflicts_to_remove+=("elephant-bin")
+            fi
+        fi
         for pkg in "${missing_aur[@]}"; do
             # Check for common conflicts (e.g., walker-bin vs walker-git, or base vs -bin/-git)
             if [[ "$pkg" == *"-bin" ]]; then
