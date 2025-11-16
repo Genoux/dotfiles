@@ -15,48 +15,40 @@ else
     source "$DOTFILES_DIR/install/helpers/all.sh" 2>/dev/null || true
 fi
 
-log_section "ESP32 USB-to-Serial Configuration"
+log_section "ESP32"
 
 # ESP32 USB-to-Serial driver configuration
 if [[ -d "$SYSTEM_DIR/modules-load.d" ]]; then
-    log_info "Installing ESP32 modules-load configuration..."
     sudo mkdir -p /etc/modules-load.d
     for file in "$SYSTEM_DIR/modules-load.d"/*; do
         if [[ -f "$file" ]]; then
             filename=$(basename "$file")
             sudo cp "$file" /etc/modules-load.d/
-            log_success "Installed $filename"
+            log_success "$filename"
         fi
     done
 fi
 
 # ESP32 udev rules
 if [[ -d "$SYSTEM_DIR/udev/rules.d" ]]; then
-    log_info "Installing ESP32 udev rules..."
     sudo mkdir -p /etc/udev/rules.d
     for file in "$SYSTEM_DIR/udev/rules.d"/*; do
         if [[ -f "$file" ]]; then
             filename=$(basename "$file")
             sudo cp "$file" /etc/udev/rules.d/
-            log_success "Installed $filename"
+            log_success "$filename"
         fi
     done
     # Reload udev rules
     if command -v udevadm &>/dev/null; then
-        sudo udevadm control --reload-rules
-        sudo udevadm trigger
-        log_success "Reloaded udev rules"
+        sudo udevadm control --reload-rules >/dev/null 2>&1
+        sudo udevadm trigger >/dev/null 2>&1
     fi
 fi
 
 # Add user to uucp group for ESP32 serial port access
-log_info "Configuring ESP32 serial port access..."
-if groups "$USER" | grep -q "\buucp\b"; then
-    log_info "User already in uucp group"
-else
+if ! groups "$USER" | grep -q "\buucp\b"; then
     sudo usermod -a -G uucp "$USER"
-    log_success "Added user to uucp group (log out and back in for changes to take effect)"
+    log_success "Added to uucp group"
 fi
-
-log_success "ESP32 configuration complete"
 

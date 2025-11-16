@@ -12,11 +12,19 @@ show_completion_screen() {
     echo "  • Configurations"
     echo "  • Theme"
     echo
+
+    # Check if reboot is needed
+    if [[ -f "$HOME/.local/state/dotfiles/.reboot_needed" ]]; then
+        echo
+        printf "\033[93m⚠\033[0m  \033[93mReboot required to apply all changes\033[0m\n"
+    fi
+
+    echo
     echo "Next steps:"
     echo "  • Reboot or log out and back in"
     echo "  • Start Hyprland: uwsm start hyprland-uwsm.desktop"
     echo
-    echo "[L] View install log  [Q] Quit"
+    echo "[L] View install log  [R] Reboot now  [Q] Quit"
     echo
 }
 
@@ -49,6 +57,14 @@ while true; do
     case "${key,,}" in
         l)
             view_install_log
+            ;;
+        r)
+            clear
+            echo
+            printf "\033[94mRebooting system...\033[0m\n"
+            echo
+            rm -f "$HOME/.local/state/dotfiles/.reboot_needed"
+            sudo systemctl reboot
             ;;
         q|$'\n'|$'\x0a')
             clear

@@ -14,20 +14,13 @@ else
     source "$DOTFILES_DIR/install/helpers/all.sh" 2>/dev/null || true
 fi
 
-log_section "makepkg Configuration"
+log_section "makepkg"
 
 # makepkg.conf - disable debug packages
 if [[ -f /etc/makepkg.conf ]]; then
-    log_info "Configuring makepkg.conf (disabling debug packages)..."
     if grep -q "OPTIONS=.*debug.*" /etc/makepkg.conf; then
         sudo sed -i 's/\(OPTIONS=([^)]*\)debug\([^)]*)\)/\1!debug\2/' /etc/makepkg.conf
-        log_success "Disabled debug packages in makepkg.conf"
-    else
-        log_info "makepkg.conf already configured (debug already disabled)"
+        log_success "Disabled debug packages"
     fi
-else
-    log_info "makepkg.conf not found (not on Arch Linux?)"
 fi
-
-log_success "makepkg configuration complete"
 

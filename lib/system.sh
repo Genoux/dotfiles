@@ -37,6 +37,7 @@ system_apply() {
 
     # Run individual system configuration scripts
     bash "$DOTFILES_DIR/install/system/systemd-sleep.sh"
+    bash "$DOTFILES_DIR/install/system/logind.sh"
     bash "$DOTFILES_DIR/install/system/makepkg.sh"
     bash "$DOTFILES_DIR/install/system/timezone.sh"
     bash "$DOTFILES_DIR/install/system/systemd-resolved.sh"
@@ -50,6 +51,16 @@ system_apply() {
 
     echo
     log_success "System configuration complete"
+
+    # Check if reboot is needed and prompt (only if not in full install)
+    if [[ -f "$HOME/.local/state/dotfiles/.reboot_needed" && -z "${FULL_INSTALL:-}" ]]; then
+        echo
+        log_warning "Reboot required to apply changes"
+        if confirm "Reboot now?"; then
+            rm -f "$HOME/.local/state/dotfiles/.reboot_needed"
+            sudo systemctl reboot
+        fi
+    fi
 }
 
 # Show system status
@@ -73,4 +84,11 @@ system_status() {
         sleep_configs=$(find /etc/systemd/sleep.conf.d -type f 2>/dev/null | wc -l)
     fi
     show_info "systemd sleep configs" "$sleep_configs installed"
+
+    # systemd logind config
+    local logind_configs=0
+    if [[ -d /etc/systemd/logind.conf.d ]]; then
+        logind_configs=$(find /etc/systemd/logind.conf.d -type f 2>/dev/null | wc -l)
+    fi
+    show_info "systemd logind configs" "$logind_configs installed"
 }

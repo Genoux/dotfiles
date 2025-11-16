@@ -14,17 +14,12 @@ else
     source "$DOTFILES_DIR/install/helpers/all.sh" 2>/dev/null || true
 fi
 
-log_section "Timezone Configuration"
+log_section "Timezone"
 
 # Automatically set timezone based on geolocation
 if command -v tzupdate &>/dev/null; then
-    log_info "Detecting and setting timezone automatically..."
     sudo tzupdate -q 2>/dev/null || true
     DETECTED_TZ=$(timedatectl show --value -p Timezone)
-    log_success "Timezone set to $DETECTED_TZ"
-else
-    log_info "tzupdate not installed, skipping automatic timezone detection"
+    log_success "$DETECTED_TZ"
 fi
-
-log_success "Timezone configuration complete"
 

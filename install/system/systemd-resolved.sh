@@ -14,16 +14,11 @@ else
     source "$DOTFILES_DIR/install/helpers/all.sh" 2>/dev/null || true
 fi
 
-log_section "systemd-resolved Configuration"
+log_section "systemd-resolved"
 
 # Enable systemd-resolved for proper DNS handling with NetworkManager
-log_info "Configuring systemd-resolved for NetworkManager..."
-if systemctl is-enabled systemd-resolved.service &>/dev/null; then
-    log_info "systemd-resolved already enabled"
-else
+if ! systemctl is-enabled systemd-resolved.service &>/dev/null; then
     sudo systemctl enable --now systemd-resolved.service
-    log_success "Enabled systemd-resolved for proper DNS resolution"
+    log_success "Enabled"
 fi
-
-log_success "systemd-resolved configuration complete"
 

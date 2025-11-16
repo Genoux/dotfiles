@@ -15,20 +15,17 @@ else
     source "$DOTFILES_DIR/install/helpers/all.sh" 2>/dev/null || true
 fi
 
-log_section "systemd Sleep Configuration"
+log_section "systemd Sleep"
 
 # systemd sleep configuration
 if [[ -d "$SYSTEM_DIR/systemd/sleep.conf.d" ]]; then
-    log_info "Installing systemd sleep configuration..."
     sudo mkdir -p /etc/systemd/sleep.conf.d
     for file in "$SYSTEM_DIR/systemd/sleep.conf.d"/*; do
         if [[ -f "$file" ]]; then
             filename=$(basename "$file")
             sudo cp "$file" /etc/systemd/sleep.conf.d/
-            log_success "Installed $filename"
+            log_success "$filename"
         fi
     done
 fi
-
-log_success "systemd sleep configuration complete"
 
