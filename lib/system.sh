@@ -13,13 +13,17 @@ fi
 
 # Apply system configurations
 system_apply() {
-    log_section "Applying System Configurations"
-
     # Validate and cache sudo access at the beginning
     if ! sudo -v; then
         log_error "Failed to authenticate with sudo"
         return 1
     fi
+
+    # Initialize logging for system operations
+    init_logging "daily"
+
+    # Start live log monitor (same polished UX as full install)
+    start_log_monitor
 
     # Keep sudo timestamp fresh in the background
     while true; do
@@ -32,25 +36,23 @@ system_apply() {
     # Cleanup function
     cleanup_sudo() {
         kill $SUDO_KEEPALIVE_PID 2>/dev/null || true
+        stop_log_monitor
     }
-    trap cleanup_sudo EXIT
+    trap cleanup_sudo EXIT INT TERM
 
-    # Run individual system configuration scripts
-    bash "$DOTFILES_DIR/install/system/systemd-sleep.sh"
-    bash "$DOTFILES_DIR/install/system/logind.sh"
-    bash "$DOTFILES_DIR/install/system/makepkg.sh"
-    bash "$DOTFILES_DIR/install/system/timezone.sh"
-    bash "$DOTFILES_DIR/install/system/systemd-resolved.sh"
-    bash "$DOTFILES_DIR/install/system/bluetooth.sh"
-    bash "$DOTFILES_DIR/install/system/esp32.sh"
-    bash "$DOTFILES_DIR/install/system/app-launcher.sh"
-    bash "$DOTFILES_DIR/install/system/greeter.sh"
+    # Run individual system configuration scripts with logging
+    run_logged "$DOTFILES_DIR/install/system/systemd-sleep.sh"
+    run_logged "$DOTFILES_DIR/install/system/logind.sh"
+    run_logged "$DOTFILES_DIR/install/system/makepkg.sh"
+    run_logged "$DOTFILES_DIR/install/system/timezone.sh"
+    run_logged "$DOTFILES_DIR/install/system/systemd-resolved.sh"
+    run_logged "$DOTFILES_DIR/install/system/bluetooth.sh"
+    run_logged "$DOTFILES_DIR/install/system/esp32.sh"
+    run_logged "$DOTFILES_DIR/install/system/app-launcher.sh"
+    run_logged "$DOTFILES_DIR/install/system/greeter.sh"
 
     # Cleanup
     cleanup_sudo
-
-    echo
-    log_success "System configuration complete"
 
     # Check if reboot is needed and prompt (only if not in full install)
     if [[ -f "$HOME/.local/state/dotfiles/.reboot_needed" && -z "${FULL_INSTALL:-}" ]]; then
@@ -61,6 +63,9 @@ system_apply() {
             sudo systemctl reboot
         fi
     fi
+
+    echo
+    log_success "System configuration complete"
 }
 
 # Show system status

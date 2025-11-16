@@ -209,7 +209,11 @@ choose_option_multi() {
 
 # Clear screen with optional header
 clear_screen() {
-    clear
+    # Clear screen AND scrollback buffer for clean display
+    clear && printf '\033[3J'
+    # Move cursor to top-left
+    tput cup 0 0 2>/dev/null || true
+
     if [[ -n "${1:-}" ]]; then
         if command -v gum &>/dev/null; then
             gum style --bold --foreground 212 "$1"

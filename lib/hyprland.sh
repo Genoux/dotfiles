@@ -208,7 +208,7 @@ hyprland_setup() {
     for info in "${monitors[@]}"; do
         local monitor_name=$(echo "$info" | cut -d':' -f1)
         local mode_info=$(echo "$info" | cut -d':' -f2)
-        log_info "  • $monitor_name: $mode_info"
+        echo "  • $monitor_name: $mode_info"
     done
     
     echo

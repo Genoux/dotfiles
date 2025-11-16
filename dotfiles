@@ -213,11 +213,13 @@ show_menu() {
 
 # Package management menu
 menu_packages() {
+    source "$DOTFILES_DIR/lib/package.sh"
+    source "$DOTFILES_DIR/lib/menu.sh"
+
     while true; do
         clear_screen "Packages"
-        
+
         # Show current package count
-        source "$DOTFILES_DIR/lib/package.sh"
         local pkg_count=$(grep -cvE '^#|^$' "$DOTFILES_DIR/packages.package" 2>/dev/null || echo 0)
         local aur_count=$(grep -cvE '^#|^$' "$DOTFILES_DIR/aur-packages.package" 2>/dev/null || echo 0)
         show_info "Tracked" "$pkg_count official + $aur_count AUR"
@@ -233,18 +235,10 @@ menu_packages() {
 
         case "$action" in
             "Manage packages")
-                clear_screen
-                if packages_manage; then
-                    echo
-                    read -p "Press Enter to continue..."
-                fi
+                run_operation "" packages_manage
                 ;;
             "Update system")
-                clear_screen
-                if packages_update; then
-                    echo
-                    read -p "Press Enter to continue..."
-                else
+                run_operation "" packages_update || {
                     echo
                     log_error "Update failed. Showing recent log output:"
                     echo
@@ -255,14 +249,10 @@ menu_packages() {
                     fi
                     echo
                     read -p "Press Enter to continue..."
-                fi
+                }
                 ;;
             "Show status")
-                clear_screen
-                if packages_status; then
-                    echo
-                    read -p "Press Enter to continue..."
-                fi
+                run_operation "" packages_status
                 ;;
             "Back")
                 return
@@ -273,10 +263,11 @@ menu_packages() {
 
 # Config management menu
 menu_configs() {
+    source "$DOTFILES_DIR/lib/config.sh"
+    source "$DOTFILES_DIR/lib/menu.sh"
+
     while true; do
         clear_screen "Configs"
-
-        source "$DOTFILES_DIR/lib/config.sh"
 
         # Show summary only
         local configs=($(get_configs))
@@ -298,30 +289,21 @@ menu_configs() {
 
         case "$action" in
             "Manage links")
-                clear_screen
-                config_manage_interactive
-                echo
-                read -p "Press Enter to continue..."
+                run_operation "" config_manage_interactive
                 ;;
             "Link all")
-                clear_screen
-                config_link_all
-                echo
-                read -p "Press Enter to continue..."
+                run_operation "" config_link_all
                 ;;
             "Unlink all")
                 clear_screen
                 if confirm "Unlink all configs?"; then
                     config_unlink_all
+                    echo
                 fi
-                echo
                 read -p "Press Enter to continue..."
                 ;;
             "Show details")
-                clear_screen
-                config_status
-                echo
-                read -p "Press Enter to continue..."
+                run_operation "" config_status
                 ;;
             "Back")
                 return

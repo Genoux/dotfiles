@@ -109,8 +109,8 @@ config_manage_interactive() {
 
     if [[ $will_link -gt 0 ]] || [[ $will_unlink -gt 0 ]]; then
         log_warning "Changes to apply:"
-        [[ $will_link -gt 0 ]] && log_info "  • Will link: $will_link configs"
-        [[ $will_unlink -gt 0 ]] && log_warning "  • Will unlink: $will_unlink configs"
+        [[ $will_link -gt 0 ]] && echo "  • Will link: $will_link configs"
+        [[ $will_unlink -gt 0 ]] && echo "  • Will unlink: $will_unlink configs"
         echo
 
         if ! confirm "Apply these changes?"; then
