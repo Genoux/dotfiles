@@ -246,54 +246,61 @@ config_link() {
             find "$STOW_DIR/scripts/.local/bin" -type f -exec chmod +x {} \;
             log_info "Made scripts executable"
         fi
+        
+        # Handle absolute symlink in source - remove it (dotfiles command is managed separately)
+        local dotfiles_symlink="$STOW_DIR/scripts/.local/bin/dotfiles"
+        if [[ -L "$dotfiles_symlink" ]]; then
+            local symlink_target=$(readlink "$dotfiles_symlink")
+            if [[ "$symlink_target" == /* ]]; then
+                # Absolute symlink - remove it, dotfiles command is installed separately
+                log_info "Removing absolute symlink (dotfiles command is managed separately)..."
+                rm "$dotfiles_symlink"
+            fi
+        fi
     fi
     
     # Stow the config (always restow to pick up new files)
+    # Use --adopt to move existing files into stow directory (repo is source of truth)
     if $already_linked; then
         log_info "Re-stowing $config (updating symlinks)..."
     else
         log_info "Linking $config..."
     fi
 
-    # Try stow - on conflict, backup and use repo version (repo is source of truth)
+    # Try stow with --adopt flag to handle conflicts (moves existing files into stow dir)
     local stow_output
     local stow_success=false
 
-    if stow_output=$(stow -R -t "$HOME" "$config" 2>&1); then
+    if stow_output=$(stow -R --adopt -t "$HOME" "$config" 2>&1); then
         if $already_linked; then
             log_success "$config re-stowed successfully"
         else
             log_success "$config linked successfully"
         fi
         stow_success=true
-    elif echo "$stow_output" | grep -q "existing target"; then
-        # Conflict detected - backup existing files and force repo version
-        log_warning "$config has conflicts with existing files"
-        log_info "Backing up existing files to ~/.config-backup/"
-
-        # Create backup directory
-        local backup_dir="$HOME/.config-backup/$(date +%Y%m%d-%H%M%S)"
-        mkdir -p "$backup_dir"
-
-        # Find conflicting files and backup
-        echo "$stow_output" | grep "existing target" | while read -r line; do
-            local target_file=$(echo "$line" | sed 's/.*existing target is neither a link nor a directory: //')
-            if [[ -f "$target_file" ]] || [[ -d "$target_file" ]]; then
-                local rel_path="${target_file#$HOME/}"
-                local backup_path="$backup_dir/$rel_path"
-                mkdir -p "$(dirname "$backup_path")"
-                mv "$target_file" "$backup_path"
-                log_info "  Backed up: $rel_path"
+    elif echo "$stow_output" | grep -q "source is an absolute symlink"; then
+        # Handle absolute symlink in source directory
+        log_warning "$config has absolute symlink in source"
+        
+        # Extract the problematic symlink path from error message
+        local symlink_path=$(echo "$stow_output" | grep -oP "dotfiles/stow/$config/[^ ]+")
+        if [[ -n "$symlink_path" ]]; then
+            local full_path="$DOTFILES_DIR/$symlink_path"
+            if [[ -L "$full_path" ]]; then
+                log_info "Removing absolute symlink: $symlink_path"
+                rm "$full_path"
+                
+                # Try stow again
+                if stow_output=$(stow -R --adopt -t "$HOME" "$config" 2>&1); then
+                    log_success "$config linked successfully"
+                    stow_success=true
+                else
+                    graceful_error "Failed to link $config after removing symlink" "$stow_output"
+                    return 1
+                fi
             fi
-        done
-
-        # Now stow should work
-        if stow -R -t "$HOME" "$config" 2>&1; then
-            log_success "$config linked (conflicts backed up)"
-            log_info "Backup location: $backup_dir"
-            stow_success=true
         else
-            log_error "Failed to link $config even after backup"
+            graceful_error "Failed to link $config" "$stow_output"
             return 1
         fi
     else

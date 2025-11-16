@@ -5,13 +5,13 @@
 
 .recording-indicator button {
     animation: pulse 2s ease-in-out infinite;
-    color: $red;
-    background-color: color.change($red, $alpha: 0.1);
+    color: $red-500;
+    background-color: color.change($red-500, $alpha: 0.1);
     border-radius: radius(xl);
 
     &:hover {
         animation: none;
-        background-color: color.change($red, $alpha: 0.2);
+        background-color: color.change($red-500, $alpha: 0.2);
     }
 }
 

@@ -110,7 +110,6 @@ lutris
 lxappearance
 lxsession
 mako
-matugen
 mesa-utils
 mpv
 nano
@@ -148,7 +147,6 @@ python-pywal
 qbittorrent
 qt5ct
 qt6ct
-quickshell
 reflector
 ripgrep
 rpi-imager
@@ -163,6 +161,9 @@ swaync
 swayosd
 swww
 tcpdump
+ttf-fantasque-nerd
+ttf-fira-code
+ttf-firacode-nerd
 ttf-material-symbols-variable
 ttf-montserrat
 ttf-nerd-fonts-symbols

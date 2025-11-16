@@ -2,6 +2,7 @@
   "description": "Default theme",
   "mappings": {
     "ags.scss": "~/.config/ags/style.scss",
+    "btop.theme": "~/.config/btop/themes/default.theme",
     "hypr.conf": "~/.config/hypr/theme.conf",
     "kitty.conf": "~/.config/kitty/theme.conf",
     "starship.toml": "~/.config/starship.toml",

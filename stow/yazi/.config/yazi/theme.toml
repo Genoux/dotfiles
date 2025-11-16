@@ -1,5 +1,17 @@
+# Theme for Yazi (Tailwind CSS naming convention)
+# Variable mapping:
+# #fafafa → gray-50 (lightest text)
+# #b4b4b4 → gray-400 (mid gray/accent)
+# #64c864 → green-500 (success)
+# #ff6464 → red-500 (error)
+# #ffc850 → warning (app-specific yellow)
+# #dcdc64 → bright yellow (app-specific)
+# #19191c → close to gray-900 (dark background)
+# #262622 → dark surface (app-specific)
+# #4a4a4a → medium dark gray (app-specific)
+
 [mgr]
-cwd = { fg = "#64c864" }
+cwd = { fg = "#64c864" }  # green-500
 
 hovered         = { fg = "#19191c", bg = "#b4b4b4" }
 preview_hovered = { fg = "#19191c", bg = "#dcdc64" }

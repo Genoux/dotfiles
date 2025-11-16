@@ -19,7 +19,7 @@ window.brightness-osd-window revealer {
   border-radius: radius(md);
   margin-bottom: 24px;
   padding-top: spacing(md);
-  border: 1px solid rgba(255, 255, 255, 0.02);
+  border: 1px solid $alpha-subtle;
   background: rgba(0, 0, 0, 0.3);
   color: white;
 

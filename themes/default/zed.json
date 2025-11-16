@@ -1,4 +1,5 @@
 {
+  "$comment": "Theme colors map to Tailwind CSS naming: #16161b = gray-900, #ffffff1a = alpha-medium",
   "vim_mode": false,
   "disable_ai": false,
   "use_system_path_prompts": false,

@@ -99,15 +99,23 @@ style = "bold info"
 format = '[⎈ $context\($namespace\)]($style) '
 
 # Generated theme colors at: Wed Aug 20 11:53:03 AM EDT 2025
+# Variable mapping (Tailwind CSS naming):
+# primary: #fafafa → gray-50
+# secondary: #dcdcdc → gray-300
+# accent: #b4b4b4 → gray-400
+# success: #64c864 → green-500
+# error: #ff6464 → red-500
+# warning: #ffc850 → unique to Starship/Yazi
+# info: #9696c8 → unique to Starship/Yazi
 [palettes.custom]
-primary = "#fafafa"
-secondary = "#dcdcdc"
-accent = "#b4b4b4"
-success = "#64c864"
-warning = "#ffc850"
-error = "#ff6464"
-info = "#9696c8"
-surface = "#202024"
-on_surface = "#fafafa"
-background = "#19191c"
-on_background = "#fafafa"
+primary = "#fafafa"      # gray-50
+secondary = "#dcdcdc"    # gray-300
+accent = "#b4b4b4"       # gray-400
+success = "#64c864"      # green-500
+warning = "#ffc850"      # app-specific
+error = "#ff6464"        # red-500
+info = "#9696c8"         # app-specific
+surface = "#202024"      # close to gray-800
+on_surface = "#fafafa"   # gray-50
+background = "#19191c"   # close to gray-900
+on_background = "#fafafa"  # gray-50
