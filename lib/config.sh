@@ -1,5 +1,6 @@
 #!/bin/bash
 # Config management operations (stow/unstow dotfiles)
+# Requires: gum (charmbracelet/gum)
 
 # Get dotfiles directory
 DOTFILES_DIR="$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" && pwd)"
@@ -46,37 +47,33 @@ config_manage_interactive() {
         fi
     done
 
+    # Interactive selection with gum
+    clear
+    echo
+    printf "\033[94mSelect configs to link\033[0m\n"
+    printf "\033[90m(space to toggle, enter to apply - unchecked will be unlinked)\033[0m\n"
+    echo
+
+    # Build gum command with pre-selections
+    local gum_args=(--no-limit --height 15)
+    for item in "${pre_selected[@]}"; do
+        gum_args+=(--selected="$item")
+    done
+
+    # Execute gum choose with pre-selections
     local selected=()
-    if command -v gum &>/dev/null; then
-        clear
-        echo
-        printf "\033[94mSelect configs to link\033[0m\n"
-        printf "\033[90m(space to toggle, enter to apply - unchecked will be unlinked)\033[0m\n"
-        echo
+    readarray -t selected < <(gum choose "${gum_args[@]}" "${options[@]}")
+    local gum_exit=$?
 
-        # Build gum command with pre-selections
-        local gum_args=(--no-limit --height 15 --cursor.foreground 212)
-        for item in "${pre_selected[@]}"; do
-            gum_args+=(--selected="$item")
-        done
+    # Check if user cancelled (ESC pressed)
+    if [[ $gum_exit -ne 0 ]]; then
+        # Return 1 to skip "Press Enter"
+        return 1
+    fi
 
-        # Execute gum choose with pre-selections
-        readarray -t selected < <(gum choose "${gum_args[@]}" "${options[@]}")
-        local gum_exit=$?
-
-        # Check if user cancelled (ESC pressed)
-        if [[ $gum_exit -ne 0 ]]; then
-            # Return 1 to skip "Press Enter"
-            return 1
-        fi
-
-        # If nothing selected but we had options, user cancelled
-        if [[ ${#selected[@]} -eq 0 && ${#options[@]} -gt 0 ]]; then
-            # Return 1 to skip "Press Enter"
-            return 1
-        fi
-    else
-        log_warning "Interactive selection requires 'gum'"
+    # If nothing selected but we had options, user cancelled
+    if [[ ${#selected[@]} -eq 0 && ${#options[@]} -gt 0 ]]; then
+        # Return 1 to skip "Press Enter"
         return 1
     fi
 
@@ -550,18 +547,10 @@ config_status() {
     
     for config in "${configs[@]}"; do
         if is_config_linked "$config"; then
-            if command -v gum &>/dev/null; then
-                echo "$(gum style --foreground 10 "✓ $config")$(gum style --foreground 240 " (linked)")"
-            else
-                echo -e "${GREEN}✓ $config${NC} ${GRAY}(linked)${NC}"
-            fi
+            echo "$(gum style --foreground 2 "✓ $config")$(gum style --foreground 8 " (linked)")"  # green + muted
             ((linked_count++))
         else
-            if command -v gum &>/dev/null; then
-                echo "$(gum style --foreground 240 "○ $config (not linked)")"
-            else
-                echo -e "${GRAY}○ $config${NC} ${GRAY}(not linked)${NC}"
-            fi
+            echo "$(gum style --foreground 8 "○ $config (not linked)")"  # muted
         fi
     done
     

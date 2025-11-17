@@ -1,5 +1,6 @@
 #!/bin/bash
 # System package updates and conflict resolution
+# Requires: gum (charmbracelet/gum)
 
 # Detect and resolve AUR packages that conflict with official packages
 resolve_aur_official_conflicts() {
@@ -150,9 +151,9 @@ packages_update() {
         return 1
     fi
 
-    # Update official repositories first
-    log_info "Updating official repositories (pacman)..."
-    if ! sudo pacman -Syu --noconfirm; then
+    # Update official repositories first with spinner
+    if ! gum spin --spinner dot --title "Updating official repositories (pacman)..." --show-output -- \
+        sudo pacman -Syu --noconfirm; then
         log_error "pacman repo update failed"
         return 1
     fi
@@ -170,19 +171,19 @@ packages_update() {
     export NPM_CONFIG_USERCONFIG=/dev/null
     unset NPM_CONFIG_PREFIX npm_config_prefix NPM_CONFIG_GLOBALCONFIG npm_config_globalconfig
 
-    log_info "Updating AUR packages (yay)..."
     local aur_exit=0
     local aur_output
 
-    aur_output=$(yay -Sua --noconfirm --answerclean N --answerdiff N 2>&1) || aur_exit=$?
-    echo "$aur_output"
+    # Update AUR packages with spinner
+    aur_output=$(gum spin --spinner dot --title "Updating AUR packages (yay)..." --show-output -- \
+        yay -Sua --noconfirm --answerclean N --answerdiff N 2>&1) || aur_exit=$?
     echo
 
     if [[ $aur_exit -ne 0 ]]; then
         log_warning "AUR update failed (exit $aur_exit) - retrying..."
         aur_exit=0
-        aur_output=$(yay -Sua --noconfirm --answerclean N --answerdiff N 2>&1) || aur_exit=$?
-        echo "$aur_output"
+        aur_output=$(gum spin --spinner dot --title "Retrying AUR update..." --show-output -- \
+            yay -Sua --noconfirm --answerclean N --answerdiff N 2>&1) || aur_exit=$?
         echo
     fi
 

@@ -1,5 +1,6 @@
 #!/bin/bash
 # Reusable menu patterns for dotfiles management
+# Requires: gum (charmbracelet/gum)
 
 # Generic submenu handler
 # Usage: show_submenu "Title" callback_function
@@ -51,8 +52,8 @@ run_operation() {
     "$command" "$@"
     local exit_code=$?
 
-    echo
-    read -p "Press Enter to continue..."
+    # Pause before returning to menu
+    pause
 
     return $exit_code
 }
@@ -74,45 +75,16 @@ show_status_summary() {
 # Usage: if confirm_action "Are you sure?"; then ...
 confirm_action() {
     local message="${1:-Are you sure?}"
-
-    if command -v gum &>/dev/null; then
-        gum confirm "$message"
-    else
-        read -p "$message (y/N) " -n 1 -r
-        echo
-        [[ $REPLY =~ ^[Yy]$ ]]
-    fi
+    gum confirm "$message"
 }
 
-# Multi-select menu with gum or fallback
+# Multi-select menu with gum
 # Usage: selected=$(multi_select "Header" "option1" "option2" "option3")
 multi_select() {
     local header="$1"
     shift
     local options=("$@")
-
-    if command -v gum &>/dev/null; then
-        printf '%s\n' "${options[@]}" | gum choose --no-limit --header "$header"
-    else
-        # Fallback: show numbered list and accept comma-separated input
-        log_info "$header"
-        local i=1
-        for opt in "${options[@]}"; do
-            echo "$i) $opt"
-            ((i++))
-        done
-        echo
-        read -p "Enter numbers separated by commas: " selection
-
-        # Parse selection
-        IFS=',' read -ra nums <<< "$selection"
-        for num in "${nums[@]}"; do
-            num=$(echo "$num" | xargs) # trim whitespace
-            if [[ $num =~ ^[0-9]+$ ]] && [[ $num -ge 1 ]] && [[ $num -le ${#options[@]} ]]; then
-                echo "${options[$((num-1))]}"
-            fi
-        done
-    fi
+    printf '%s\n' "${options[@]}" | gum choose --no-limit --header "$header"
 }
 
 # Show operation spinner
@@ -120,13 +92,7 @@ multi_select() {
 with_spinner() {
     local message="$1"
     shift
-
-    if command -v gum &>/dev/null; then
-        gum spin --spinner dot --title "$message" -- "$@"
-    else
-        log_info "$message"
-        "$@"
-    fi
+    gum spin --spinner dot --title "$message" -- "$@"
 }
 
 # Generic two-action menu (e.g., Apply/Show Details/Back)

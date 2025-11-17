@@ -1,26 +1,6 @@
 #!/bin/bash
-# Presentation helpers - colors, formatting, gum integration
-
-# Ensure gum is available (install if needed)
-ensure_gum() {
-    if ! command -v gum &>/dev/null; then
-        echo "Installing gum for better UI..."
-        if command -v pacman &>/dev/null; then
-            sudo pacman -S --needed --noconfirm gum
-        elif command -v apt-get &>/dev/null; then
-            sudo apt-get update -qq && sudo apt-get install -y gum
-        fi
-    fi
-}
-
-# Colors (fallback if gum not available)
-export GREEN='\033[0;32m'
-export BLUE='\033[0;34m'
-export YELLOW='\033[1;33m'
-export RED='\033[0;31m'
-export PURPLE='\033[0;35m'
-export GRAY='\033[0;90m'
-export NC='\033[0m'
+# Presentation helpers - gum-powered UI components
+# Requires: gum (charmbracelet/gum)
 
 # Centered box UI helpers
 export BOX_WIDTH=70
@@ -83,86 +63,45 @@ vertical_center() {
     for ((i = 0; i < padding_top; i++)); do echo; done
 }
 
-# Logging functions
+# Logging functions (Base16 ANSI colors)
 log_info() {
-    if command -v gum &>/dev/null; then
-        gum style --foreground 12 "ℹ  $1"
-    else
-        echo -e "${BLUE}ℹ  $1${NC}"
-    fi
+    gum style --foreground 4 "ℹ  $1"  # base0D blue
 }
 
 log_success() {
-    if command -v gum &>/dev/null; then
-        gum style --foreground 10 "✓ $1"
-    else
-        echo -e "${GREEN}✓ $1${NC}"
-    fi
+    gum style --foreground 2 "✓ $1"  # base0B green
 }
 
 log_warning() {
-    if command -v gum &>/dev/null; then
-        gum style --foreground 11 "⚠ $1"
-    else
-        echo -e "${YELLOW}⚠ $1${NC}"
-    fi
+    gum style --foreground 3 "⚠ $1"  # base0A yellow
 }
 
 log_error() {
-    if command -v gum &>/dev/null; then
-        gum style --foreground 9 "✗ $1"
-    else
-        echo -e "${RED}✗ $1${NC}"
-    fi
+    gum style --foreground 1 "✗ $1"  # base08 red
 }
 
 log_section() {
-    if command -v gum &>/dev/null; then
-        echo
-        gum style --bold --foreground 13 "$1"
-        echo
-    else
-        echo
-        echo -e "${PURPLE}━━━ $1 ━━━${NC}"
-        echo
-    fi
+    echo
+    gum style --bold --foreground 5 "$1"  # base0E purple
+    echo
 }
 
 # Progress spinner
 run_with_spinner() {
     local title="$1"
     shift
-    
-    if command -v gum &>/dev/null; then
-        gum spin --spinner dot --title "$title" -- "$@"
-    else
-        echo -e "${BLUE}⟳ $title${NC}"
-        "$@"
-    fi
+    gum spin --spinner dot --title "$title" -- "$@"
 }
 
 # Confirmation prompt
 confirm() {
     local prompt="$1"
     local default="${2:-true}"
-    
-    if command -v gum &>/dev/null; then
-        if [[ "$default" == "true" ]]; then
-            gum confirm "$prompt"
-        else
-            gum confirm --default=false "$prompt"
-        fi
+
+    if [[ "$default" == "true" ]]; then
+        gum confirm "$prompt"
     else
-        local default_text="Y/n"
-        [[ "$default" == "false" ]] && default_text="y/N"
-        
-        read -p "$prompt ($default_text): " -n 1 -r
-        echo
-        if [[ "$default" == "true" ]]; then
-            [[ ! $REPLY =~ ^[Nn]$ ]]
-        else
-            [[ $REPLY =~ ^[Yy]$ ]]
-        fi
+        gum confirm --default=false "$prompt"
     fi
 }
 
@@ -170,41 +109,35 @@ confirm() {
 get_input() {
     local prompt="$1"
     local placeholder="${2:-}"
-    
-    if command -v gum &>/dev/null; then
-        if [[ -n "$placeholder" ]]; then
-            gum input --placeholder "$placeholder" --prompt "$prompt "
-        else
-            gum input --prompt "$prompt "
-        fi
+
+    if [[ -n "$placeholder" ]]; then
+        gum input --placeholder "$placeholder" --prompt "$prompt "
     else
-        read -p "$prompt: " input
-        echo "$input"
+        gum input --prompt "$prompt "
     fi
 }
 
-# Menu selection with consistent styling
+# Menu selection (uses terminal theme colors)
 choose_option() {
-    if command -v gum &>/dev/null; then
-        gum choose --header "" --height 15 --cursor.foreground 212 "$@"
-    else
-        local options=("$@")
-        select opt in "${options[@]}"; do
-            if [[ -n "$opt" ]]; then
-                echo "$opt"
-                break
-            fi
-        done
-    fi
+    gum choose --header "" --height 15 "$@"
 }
 
 # Multi-select menu
 choose_option_multi() {
-    if command -v gum &>/dev/null; then
-        gum choose --no-limit --height 15 --cursor.foreground 212 "$@"
-    else
-        echo "$@"
-    fi
+    gum choose --no-limit --height 15 "$@"
+}
+
+# Fuzzy filter search (for large lists)
+# Usage: selected=$(filter_search "placeholder text" < items.txt)
+filter_search() {
+    local placeholder="${1:-Search...}"
+    gum filter --no-limit --placeholder "$placeholder"
+}
+
+# Display table from CSV data
+# Usage: show_table < data.csv  OR  echo "header,data" | show_table
+show_table() {
+    gum table
 }
 
 # Clear screen with optional header
@@ -215,13 +148,8 @@ clear_screen() {
     tput cup 0 0 2>/dev/null || true
 
     if [[ -n "${1:-}" ]]; then
-        if command -v gum &>/dev/null; then
-            gum style --bold --foreground 212 "$1"
-            echo
-        else
-            echo -e "${PURPLE}$1${NC}"
-            echo
-        fi
+        gum style --bold --foreground 5 "$1"  # base0E purple
+        echo
     fi
 }
 
@@ -229,12 +157,7 @@ clear_screen() {
 show_info() {
     local key="$1"
     local value="$2"
-
-    if command -v gum &>/dev/null; then
-        echo "$(gum style --foreground 240 "$key:")  $(gum style --foreground 15 "$value")"
-    else
-        echo -e "${GRAY}$key:${NC} $value"
-    fi
+    echo "$(gum style --foreground 8 "$key:")  $(gum style "$value")"  # base03 muted for key
 }
 
 # Run command with clean UI: header + muted boxed output
@@ -242,51 +165,33 @@ run_with_clean_ui() {
     local title="$1"
     local command="$2"
 
-    if command -v gum &>/dev/null; then
-        # Show header with border
-        gum style \
-            --border double \
-            --border-foreground 212 \
-            --padding "0 2" \
-            --bold \
-            "$title"
-        echo
+    # Show header with border (Base16 purple)
+    gum style \
+        --border double \
+        --border-foreground 5 \
+        --padding "0 2" \
+        --bold \
+        "$title"
+    echo
 
-        # Show muted "Output:" label
-        gum style --foreground 240 "Output:"
-        echo
+    # Show muted "Output:" label
+    gum style --foreground 8 "Output:"  # base03
+    echo
 
-        # Run command and show output as faint/muted
-        eval "$command" 2>&1 | while IFS= read -r line; do
-            gum style --faint "  $line"
-        done
+    # Run command and show output as faint/muted
+    eval "$command" 2>&1 | while IFS= read -r line; do
+        gum style --faint "  $line"
+    done
 
-        echo
-    else
-        # Fallback without gum
-        echo "━━━ $title ━━━"
-        echo
-        eval "$command"
-        echo
-    fi
+    echo
 }
 
 # Run command with spinner and scrolling output
 run_with_spinner_box() {
     local title="$1"
     local command="$2"
-    local max_lines="${3:-15}"  # Show last 15 lines by default
 
-    if command -v gum &>/dev/null; then
-        # Use gum spin with output shown
-        gum spin --spinner dot --title "$title" --show-output -- bash -c "$command"
-    else
-        # Fallback without gum
-        echo "⟳ $title"
-        echo "─────────────────────────────"
-        eval "$command"
-        echo "─────────────────────────────"
-    fi
+    gum spin --spinner dot --title "$title" --show-output -- bash -c "$command"
 }
 
 # =============================================================================
@@ -321,43 +226,15 @@ run_op() {
 run_with_spin() {
     local message="$1"
     shift
-
-    if command -v gum &>/dev/null; then
-        gum spin --spinner dot --title "$message" -- "$@"
-    else
-        log_info "$message"
-        "$@"
-    fi
+    gum spin --spinner dot --title "$message" -- "$@"
 }
 
 # Pause for user input
-# Usage: pause
+# Usage: pause [message]
 pause() {
+    local message="${1:-Press any key to continue...}"
     echo
-    read -p "Press Enter to continue..." -n 1 -r
+    read -p "$message " -n 1 -r
     echo
-}
-
-# Run operation and pause
-# Usage: run_and_pause command [args...]
-run_and_pause() {
-    "$@"
-    local exit_code=$?
-    pause
-    return $exit_code
-}
-
-# Interactive confirmation
-# Usage: if confirm "Are you sure?"; then ...
-confirm() {
-    local message="${1:-Continue?}"
-
-    if command -v gum &>/dev/null; then
-        gum confirm "$message"
-    else
-        read -p "$message (y/N) " -n 1 -r
-        echo
-        [[ $REPLY =~ ^[Yy]$ ]]
-    fi
 }
 

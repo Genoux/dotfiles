@@ -1,21 +1,22 @@
 #\!/bin/bash
 # Interactive package management and cleanup
+# Requires: gum (charmbracelet/gum)
 
 # Comprehensive package management (handle all sync scenarios)
 packages_manage() {
     log_section "Package Management"
 
     log_info "Analyzing packages..."
-    
+
     # Fast categorization: just use pacman's built-in categorization
     local installed_official=()
     local installed_aur=()
-    
+
     # Get official packages (explicitly installed, not from AUR)
     while IFS= read -r pkg; do
         installed_official+=("$pkg")
     done < <(pacman -Qeq | grep -vf <(pacman -Qmq))
-    
+
     # Get AUR packages (explicitly installed from AUR)
     while IFS= read -r pkg; do
         installed_aur+=("$pkg")
@@ -81,11 +82,18 @@ packages_manage() {
     local total_missing=$((${#missing_official[@]} + ${#missing_aur[@]}))
     local total_extra=$((${#extra_official[@]} + ${#extra_aur[@]}))
 
-    # Show status
+    # Show status with formatted table
     echo
-    log_info "Status:"
-    show_info "  In dotfiles" "$((${#dotfiles_official[@]} + ${#dotfiles_aur[@]})) packages"
-    show_info "  Installed" "$((${#installed_official[@]} + ${#installed_aur[@]})) packages"
+    log_info "Package Summary:"
+    echo
+
+    # Simple formatted table (gum table is for selection, not display)
+    printf "  %-12s %10s %10s %10s\n" "Source" "Official" "AUR" "Total"
+    printf "  %-12s %10s %10s %10s\n" "------------" "----------" "----------" "----------"
+    printf "  %-12s %10d %10d %10d\n" "Dotfiles" "${#dotfiles_official[@]}" "${#dotfiles_aur[@]}" "$((${#dotfiles_official[@]} + ${#dotfiles_aur[@]}))"
+    printf "  %-12s %10d %10d %10d\n" "Installed" "${#installed_official[@]}" "${#installed_aur[@]}" "$((${#installed_official[@]} + ${#installed_aur[@]}))"
+    printf "  %-12s %10d %10d %10d\n" "Missing" "${#missing_official[@]}" "${#missing_aur[@]}" "$total_missing"
+    printf "  %-12s %10d %10d %10d\n" "Extra" "${#extra_official[@]}" "${#extra_aur[@]}" "$total_extra"
     echo
 
     if [[ $total_missing -eq 0 && $total_extra -eq 0 ]]; then
@@ -468,7 +476,15 @@ packages_clean_unlisted() {
                     all_unlisted+=("$pkg (aur)")
                 done
 
-                local selected=$(printf '%s\n' "${all_unlisted[@]}" | gum choose --no-limit --header "Select packages to KEEP (unselected will be removed):")
+                # Use filter for search if many packages, otherwise multi-select
+                local selected
+                if [[ ${#all_unlisted[@]} -gt 20 ]]; then
+                    log_info "Large list detected. Use fuzzy search to filter packages to KEEP:"
+                    echo
+                    selected=$(printf '%s\n' "${all_unlisted[@]}" | gum filter --no-limit --placeholder "Search packages to keep (Tab to select, Enter to confirm)...")
+                else
+                    selected=$(printf '%s\n' "${all_unlisted[@]}" | gum choose --no-limit --header "Select packages to KEEP (unselected will be removed):")
+                fi
 
                 # Parse selected packages
                 local keep_packages=()

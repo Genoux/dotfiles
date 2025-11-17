@@ -17,87 +17,45 @@ source "$DOTFILES_DIR/install/helpers/all.sh"
 # Initialize logging for daily operations
 init_logging "daily"
 
-# Ensure gum is available
-ensure_gum
-
-# Show usage
+# Show usage (gum-powered)
 show_usage() {
-    if command -v gum &>/dev/null; then
-        gum style --bold "Dotfiles Manager"
-        echo
-        gum style --foreground 5 "Usage: dotfiles <command> [subcommand] [options]"
-        echo
-        echo "Commands:"
-        echo
-        echo -e "\e[38;5;6m  status\e[0m\e[38;5;8m               Show system state\e[0m"
-        echo -e "\e[38;5;6m  install\e[0m\e[38;5;8m              Run full installation\e[0m"
-        echo
-        echo -e "\e[38;5;6m  packages\e[0m\e[38;5;8m             Manage packages\e[0m"
-        echo "    manage                 Interactive package management (default)"
-        echo "    update                 System update (yay -Syu)"
-        echo "    status                 Show package info"
-        echo
-        echo -e "\e[38;5;6m  config\e[0m\e[38;5;8m               Manage configurations\e[0m"
-        echo "    link [name]            Link configs (all or specific)"
-        echo "    unlink [name]          Unlink configs"
-        echo "    status                 Show link status"
-        echo
-        echo -e "\e[38;5;6m  system\e[0m\e[38;5;8m               System-level configurations\e[0m"
-        echo "    apply                  Apply system configs"
-        echo "    status                 Show system info"
-        echo
-        echo -e "\e[38;5;6m  theme\e[0m\e[38;5;8m                Manage theme\e[0m"
-        echo "    apply                  Apply theme files"
-        echo "    install-gtk            Install GTK theme"
-        echo "    status                 Show theme info"
-        echo
-        echo -e "\e[38;5;6m  shell\e[0m\e[38;5;8m                Shell management\e[0m"
-        echo "    setup                  Setup zsh + omz + plugins"
-        echo "    status                 Show shell info"
-        echo
-        echo -e "\e[38;5;6m  hyprland\e[0m\e[38;5;8m             Hyprland configuration\e[0m"
-        echo "    setup                  Setup plugins and monitors"
-        echo "    status                 Show Hyprland info"
-        echo
-        echo -e "\e[38;5;6m  menu\e[0m\e[38;5;8m                 Show interactive menu\e[0m"
-    else
-        echo "Dotfiles Manager"
-        echo ""
-        echo "Usage: dotfiles <command> [subcommand] [options]"
-        echo ""
-        echo "Commands:"
-        echo "  status                    Show system state"
-        echo "  install                   Run full installation"
-        echo ""
-        echo "  packages                  Manage packages"
-        echo "    manage                  Interactive package management (default)"
-        echo "    update                  System update (yay -Syu)"
-        echo "    status                  Show package info"
-        echo ""
-        echo "  config                    Manage configurations"
-        echo "    link [name]             Link configs (all or specific)"
-        echo "    unlink [name]           Unlink configs"
-        echo "    status                  Show link status"
-        echo ""
-        echo "  system                    System-level configurations"
-        echo "    apply                   Apply system configs"
-        echo "    status                  Show system info"
-        echo ""
-        echo "  theme                     Manage theme"
-        echo "    apply                   Apply theme files"
-        echo "    install-gtk             Install GTK theme"
-        echo "    status                  Show theme info"
-        echo ""
-        echo "  shell                     Shell management"
-        echo "    setup                   Setup zsh + omz + plugins"
-        echo "    status                  Show shell info"
-        echo ""
-        echo "  hyprland                  Hyprland configuration"
-        echo "    setup                   Setup plugins and monitors"
-        echo "    status                  Show Hyprland info"
-        echo ""
-        echo "  menu                      Show interactive menu"
-    fi
+    gum style --bold "Dotfiles Manager"
+    echo
+    gum style --foreground 5 "Usage: dotfiles <command> [subcommand] [options]"
+    echo
+    echo "Commands:"
+    echo
+    echo -e "\e[38;5;6m  status\e[0m\e[38;5;8m               Show system state\e[0m"
+    echo -e "\e[38;5;6m  install\e[0m\e[38;5;8m              Run full installation\e[0m"
+    echo
+    echo -e "\e[38;5;6m  packages\e[0m\e[38;5;8m             Manage packages\e[0m"
+    echo "    manage                 Interactive package management (default)"
+    echo "    update                 System update (yay -Syu)"
+    echo "    status                 Show package info"
+    echo
+    echo -e "\e[38;5;6m  config\e[0m\e[38;5;8m               Manage configurations\e[0m"
+    echo "    link [name]            Link configs (all or specific)"
+    echo "    unlink [name]          Unlink configs"
+    echo "    status                 Show link status"
+    echo
+    echo -e "\e[38;5;6m  system\e[0m\e[38;5;8m               System-level configurations\e[0m"
+    echo "    apply                  Apply system configs"
+    echo "    status                 Show system info"
+    echo
+    echo -e "\e[38;5;6m  theme\e[0m\e[38;5;8m                Manage theme\e[0m"
+    echo "    apply                  Apply theme files"
+    echo "    install-gtk            Install GTK theme"
+    echo "    status                 Show theme info"
+    echo
+    echo -e "\e[38;5;6m  shell\e[0m\e[38;5;8m                Shell management\e[0m"
+    echo "    setup                  Setup zsh + omz + plugins"
+    echo "    status                 Show shell info"
+    echo
+    echo -e "\e[38;5;6m  hyprland\e[0m\e[38;5;8m             Hyprland configuration\e[0m"
+    echo "    setup                  Setup plugins and monitors"
+    echo "    status                 Show Hyprland info"
+    echo
+    echo -e "\e[38;5;6m  menu\e[0m\e[38;5;8m                 Show interactive menu\e[0m"
 }
 
 # Show overall system status
@@ -136,45 +94,29 @@ show_status() {
 show_menu() {
     while true; do
         clear
-        if command -v gum &>/dev/null && [[ -f "$DOTFILES_DIR/system.txt" ]]; then
+        if [[ -f "$DOTFILES_DIR/system.txt" ]]; then
             gum style --foreground 5 < "$DOTFILES_DIR/system.txt"
             echo
         fi
-        
-        local action
-        if command -v gum &>/dev/null; then
-            action=$(gum choose --header "" --selected "System Status" \
-                "System Status" \
-                "Full Install" \
-                "Packages" \
-                "Configs" \
-                "System" \
-                "Themes" \
-                "Shell" \
-                "Hyprland" \
-                "" \
-                "Exit")
-        else
-            action=$(choose_option \
-                "System Status" \
-                "Full Install" \
-                "Packages" \
-                "Configs" \
-                "System" \
-                "Themes" \
-                "Shell" \
-                "Hyprland" \
-                "" \
-                "Exit")
-        fi
-        
+
+        local action=$(gum choose --header "" --selected "System Status" \
+            "System Status" \
+            "Full Install" \
+            "Packages" \
+            "Configs" \
+            "System" \
+            "Themes" \
+            "Shell" \
+            "Hyprland" \
+            "" \
+            "Exit")
+
         [[ -z "$action" ]] && exit 0  # ESC pressed
-        
+
         case "$action" in
             "System Status")
                 show_status
-                echo
-                read -p "Press Enter to continue..."
+                pause
                 ;;
             "Full Install")
                 # Exit menu and run installation with clean screen
@@ -243,12 +185,12 @@ menu_packages() {
                     log_error "Update failed. Showing recent log output:"
                     echo
                     if [[ -n "${DOTFILES_LOG_FILE:-}" && -f "$DOTFILES_LOG_FILE" ]]; then
-                        tail -n 120 "$DOTFILES_LOG_FILE"
+                        # Use gum pager for better log viewing
+                        tail -n 120 "$DOTFILES_LOG_FILE" | gum pager
                     else
                         echo "No log file available. Rerun: dotfiles packages update 2>&1 | tee /tmp/dotfiles-update.log"
+                        pause
                     fi
-                    echo
-                    read -p "Press Enter to continue..."
                 }
                 ;;
             "Show status")
@@ -300,7 +242,7 @@ menu_configs() {
                     config_unlink_all
                     echo
                 fi
-                read -p "Press Enter to continue..."
+                pause
                 ;;
             "Show details")
                 run_operation "" config_status
