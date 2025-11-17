@@ -2,8 +2,8 @@
 # Single-theme management with flexible mappings
 
 DOTFILES_DIR="$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" && pwd)"
-THEME_DIR="$DOTFILES_DIR/themes/default"
-THEME_CONFIG="$THEME_DIR/config.json"
+THEME_DIR="$DOTFILES_DIR/theme"
+THEME_CONFIG="$THEME_DIR/gtk.json"
 
 # Source helpers if not already loaded
 if [[ -z "${DOTFILES_HELPERS_LOADED:-}" ]]; then
@@ -11,59 +11,42 @@ if [[ -z "${DOTFILES_HELPERS_LOADED:-}" ]]; then
     export DOTFILES_HELPERS_LOADED=true
 fi
 
-# Apply theme files based on config mappings
-apply_theme_files() {
-    if [[ ! -f "$THEME_CONFIG" ]]; then
-        log_error "Theme config not found: $THEME_CONFIG"
+# Apply flavours theme using base16 scheme
+apply_flavours_theme() {
+    # Ensure flavours is installed and templates are downloaded
+    if ! command -v flavours &>/dev/null && [[ ! -x "$HOME/.cargo/bin/flavours" ]]; then
+        log_info "Setting up flavours for the first time..."
+        source "$DOTFILES_DIR/lib/flavours-setup.sh"
+        if ! flavours_setup; then
+            log_warning "Flavours setup failed - skipping auto-generated themes"
+            return 0
+        fi
+        echo
+    fi
+
+    # Use flavours from PATH or cargo bin
+    local flavours_cmd="flavours"
+    if ! command -v flavours &>/dev/null; then
+        flavours_cmd="$HOME/.cargo/bin/flavours"
+    fi
+
+    log_info "Applying theme with flavours..."
+
+    # Flavours config is managed via stow (stow/flavours/.config/flavours/config.toml)
+    # Scheme is also managed via stow (stow/flavours/.config/flavours/schemes/default/default.yaml)
+    # Just apply the scheme
+    if "$flavours_cmd" apply default 2>&1 | while IFS= read -r line; do
+        log_info "  $line"
+    done; then
+        log_success "Flavours theme applied!"
+        return 0
+    else
+        log_error "Failed to apply flavours theme"
+        log_info "Some apps may need custom templates - check stow/flavours/.config/flavours/templates/"
         return 1
     fi
-
-    log_info "Applying theme files..."
-
-    local applied=0
-    local failed=0
-    local skipped=0
-
-    # Parse mappings and apply each file
-    while IFS='=' read -r source_file target_path; do
-        local source="$THEME_DIR/$source_file"
-        local target="${target_path/#\~/$HOME}"
-
-        if [[ ! -f "$source" ]]; then
-            log_warning "  ⊘ Source not found: $source_file"
-            ((skipped++))
-            continue
-        fi
-
-        # Ensure target directory exists
-        local target_dir=$(dirname "$target")
-        if [[ ! -d "$target_dir" ]]; then
-            log_warning "  ⊘ Target directory doesn't exist: $target_dir (skipping $source_file)"
-            ((skipped++))
-            continue
-        fi
-
-        # Copy file
-        if cp "$source" "$target"; then
-            log_info "  ✓ Applied $source_file → $target"
-            ((applied++))
-        else
-            log_error "  ✗ Failed to copy $source_file"
-            ((failed++))
-        fi
-    done < <(jq -r '.mappings | to_entries[] | "\(.key)=\(.value)"' "$THEME_CONFIG")
-
-    echo
-    show_info "Files applied" "$applied"
-    if [[ $skipped -gt 0 ]]; then
-        show_info "Files skipped" "$skipped (not in config or target missing)"
-    fi
-    if [[ $failed -gt 0 ]]; then
-        show_info "Files failed" "$failed"
-    fi
-
-    return $failed
 }
+
 
 # Apply GTK theme from theme config
 apply_theme_gtk() {
@@ -138,21 +121,19 @@ apply_theme_gtk() {
 theme_apply() {
     log_section "Applying Theme"
 
-    # Apply theme files
-    if apply_theme_files; then
-        echo
-        apply_theme_gtk
-        echo
-        log_success "Theme applied!"
+    # Apply flavours theme (all files are auto-generated)
+    apply_flavours_theme
+    echo
 
-        echo
-        log_info "Restart applications to see changes:"
+    # Apply GTK theme
+    apply_theme_gtk
+    echo
 
-        return 0
-    else
-        graceful_error "Failed to apply theme files"
-        return 1
-    fi
+    log_success "Theme applied!"
+    echo
+    log_info "Restart applications to see changes"
+
+    return 0
 }
 
 # Show theme status
@@ -180,12 +161,12 @@ theme_status() {
     fi
 
     echo
-    log_info "Themed files:"
+    log_info "All theme files are managed by flavours"
+    log_info "See: stow/flavours/.config/flavours/config.toml"
 
-    if [[ -f "$THEME_CONFIG" ]]; then
-        jq -r '.mappings | to_entries[] | "  • \(.key) → \(.value)"' "$THEME_CONFIG"
-    else
-        log_warning "Theme config not found"
+    if command -v flavours &>/dev/null; then
+        local current_scheme=$(flavours current 2>/dev/null || echo "none")
+        show_info "Current flavours scheme" "$current_scheme"
     fi
 }
 
@@ -203,7 +184,7 @@ theme_install_gtk() {
     local icons_cmd=$(jq -r ".gtk.install.icons_cmd // empty" "$THEME_CONFIG")
 
     if [[ -z "$gtk_repo" ]]; then
-        graceful_error "No GTK theme install info in config.json"
+        graceful_error "No GTK theme install info in gtk.json"
         return 1
     fi
 

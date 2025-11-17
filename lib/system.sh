@@ -11,6 +11,19 @@ if [[ -z "${DOTFILES_HELPERS_LOADED:-}" ]]; then
     export DOTFILES_HELPERS_LOADED=true
 fi
 
+# Configure laptop-specific settings
+configure_laptop_settings() {
+    local laptop_conf="$HOME/.config/hypr/laptop.conf"
+
+    # Check if system has backlight support (laptop)
+    if [ -d /sys/class/backlight ] && [ -n "$(ls -A /sys/class/backlight 2>/dev/null)" ]; then
+        log_info "Laptop detected - brightness controls enabled"
+    else
+        log_info "Desktop detected - disabling brightness controls"
+        [ -f "$laptop_conf" ] && > "$laptop_conf"
+    fi
+}
+
 # Apply system configurations
 system_apply() {
     # Validate and cache sudo access at the beginning
@@ -50,6 +63,9 @@ system_apply() {
     run_logged "$DOTFILES_DIR/install/system/esp32.sh"
     run_logged "$DOTFILES_DIR/install/system/app-launcher.sh"
     run_logged "$DOTFILES_DIR/install/system/greeter.sh"
+
+    # Configure laptop-specific settings
+    configure_laptop_settings
 
     # Cleanup
     cleanup_sudo

@@ -25,41 +25,41 @@ show_usage() {
     if command -v gum &>/dev/null; then
         gum style --bold "Dotfiles Manager"
         echo
-        gum style --foreground 240 "Usage: dotfiles <command> [subcommand] [options]"
+        gum style --foreground 5 "Usage: dotfiles <command> [subcommand] [options]"
         echo
         echo "Commands:"
         echo
-        echo -e "\e[38;5;14m  status\e[0m\e[38;5;240m               Show system state\e[0m"
-        echo -e "\e[38;5;14m  install\e[0m\e[38;5;240m              Run full installation\e[0m"
+        echo -e "\e[38;5;6m  status\e[0m\e[38;5;8m               Show system state\e[0m"
+        echo -e "\e[38;5;6m  install\e[0m\e[38;5;8m              Run full installation\e[0m"
         echo
-        echo -e "\e[38;5;14m  packages\e[0m\e[38;5;240m             Manage packages\e[0m"
+        echo -e "\e[38;5;6m  packages\e[0m\e[38;5;8m             Manage packages\e[0m"
         echo "    manage                 Interactive package management (default)"
         echo "    update                 System update (yay -Syu)"
         echo "    status                 Show package info"
         echo
-        echo -e "\e[38;5;14m  config\e[0m\e[38;5;240m               Manage configurations\e[0m"
+        echo -e "\e[38;5;6m  config\e[0m\e[38;5;8m               Manage configurations\e[0m"
         echo "    link [name]            Link configs (all or specific)"
         echo "    unlink [name]          Unlink configs"
         echo "    status                 Show link status"
         echo
-        echo -e "\e[38;5;14m  system\e[0m\e[38;5;240m               System-level configurations\e[0m"
+        echo -e "\e[38;5;6m  system\e[0m\e[38;5;8m               System-level configurations\e[0m"
         echo "    apply                  Apply system configs"
         echo "    status                 Show system info"
         echo
-        echo -e "\e[38;5;14m  theme\e[0m\e[38;5;240m                Manage theme\e[0m"
+        echo -e "\e[38;5;6m  theme\e[0m\e[38;5;8m                Manage theme\e[0m"
         echo "    apply                  Apply theme files"
         echo "    install-gtk            Install GTK theme"
         echo "    status                 Show theme info"
         echo
-        echo -e "\e[38;5;14m  shell\e[0m\e[38;5;240m                Shell management\e[0m"
+        echo -e "\e[38;5;6m  shell\e[0m\e[38;5;8m                Shell management\e[0m"
         echo "    setup                  Setup zsh + omz + plugins"
         echo "    status                 Show shell info"
         echo
-        echo -e "\e[38;5;14m  hyprland\e[0m\e[38;5;240m             Hyprland configuration\e[0m"
+        echo -e "\e[38;5;6m  hyprland\e[0m\e[38;5;8m             Hyprland configuration\e[0m"
         echo "    setup                  Setup plugins and monitors"
         echo "    status                 Show Hyprland info"
         echo
-        echo -e "\e[38;5;14m  menu\e[0m\e[38;5;240m                 Show interactive menu\e[0m"
+        echo -e "\e[38;5;6m  menu\e[0m\e[38;5;8m                 Show interactive menu\e[0m"
     else
         echo "Dotfiles Manager"
         echo ""
@@ -137,7 +137,7 @@ show_menu() {
     while true; do
         clear
         if command -v gum &>/dev/null && [[ -f "$DOTFILES_DIR/system.txt" ]]; then
-            gum style --foreground 212 < "$DOTFILES_DIR/system.txt"
+            gum style --foreground 5 < "$DOTFILES_DIR/system.txt"
             echo
         fi
         
@@ -220,8 +220,8 @@ menu_packages() {
         clear_screen "Packages"
 
         # Show current package count
-        local pkg_count=$(grep -cvE '^#|^$' "$DOTFILES_DIR/packages.package" 2>/dev/null || echo 0)
-        local aur_count=$(grep -cvE '^#|^$' "$DOTFILES_DIR/aur-packages.package" 2>/dev/null || echo 0)
+        local pkg_count=$(grep -cvE '^#|^$' "$DOTFILES_DIR/packages/arch.package" 2>/dev/null || echo 0)
+        local aur_count=$(grep -cvE '^#|^$' "$DOTFILES_DIR/packages/aur.package" 2>/dev/null || echo 0)
         show_info "Tracked" "$pkg_count official + $aur_count AUR"
         echo
         
@@ -318,9 +318,59 @@ menu_themes() {
     source "$DOTFILES_DIR/lib/menu.sh"
 
     theme_quick_status() {
-        local theme_dir="$DOTFILES_DIR/themes/default"
-        local theme_files=$(ls "$theme_dir" 2>/dev/null | wc -l)
-        show_info "Active theme" "default ($theme_files files)"
+        local scheme_file="$DOTFILES_DIR/stow/flavours/.config/flavours/schemes/default/default.yaml"
+
+        if [[ -f "$scheme_file" ]]; then
+            local scheme_name=$(grep "^scheme:" "$scheme_file" | cut -d'"' -f2)
+            local scheme_author=$(grep "^author:" "$scheme_file" | cut -d'"' -f2)
+            show_info "Active theme" "$scheme_name by $scheme_author"
+            echo
+
+            # Display Base16 color palette (compact)
+            echo -e "${BOLD}Colors:${RESET}"
+
+            # Read colors from scheme
+            local base00=$(grep "^base00:" "$scheme_file" | awk '{print $2}' | tr -d '"')
+            local base01=$(grep "^base01:" "$scheme_file" | awk '{print $2}' | tr -d '"')
+            local base02=$(grep "^base02:" "$scheme_file" | awk '{print $2}' | tr -d '"')
+            local base03=$(grep "^base03:" "$scheme_file" | awk '{print $2}' | tr -d '"')
+            local base04=$(grep "^base04:" "$scheme_file" | awk '{print $2}' | tr -d '"')
+            local base05=$(grep "^base05:" "$scheme_file" | awk '{print $2}' | tr -d '"')
+            local base06=$(grep "^base06:" "$scheme_file" | awk '{print $2}' | tr -d '"')
+            local base07=$(grep "^base07:" "$scheme_file" | awk '{print $2}' | tr -d '"')
+            local base08=$(grep "^base08:" "$scheme_file" | awk '{print $2}' | tr -d '"')
+            local base09=$(grep "^base09:" "$scheme_file" | awk '{print $2}' | tr -d '"')
+            local base0A=$(grep "^base0A:" "$scheme_file" | awk '{print $2}' | tr -d '"')
+            local base0B=$(grep "^base0B:" "$scheme_file" | awk '{print $2}' | tr -d '"')
+            local base0C=$(grep "^base0C:" "$scheme_file" | awk '{print $2}' | tr -d '"')
+            local base0D=$(grep "^base0D:" "$scheme_file" | awk '{print $2}' | tr -d '"')
+            local base0E=$(grep "^base0E:" "$scheme_file" | awk '{print $2}' | tr -d '"')
+            local base0F=$(grep "^base0F:" "$scheme_file" | awk '{print $2}' | tr -d '"')
+
+            # Display as compact rows of colored circles
+            printf "  "
+            printf "\033[38;2;$((16#${base00:0:2}));$((16#${base00:2:2}));$((16#${base00:4:2}))m●\033[0m "
+            printf "\033[38;2;$((16#${base01:0:2}));$((16#${base01:2:2}));$((16#${base01:4:2}))m●\033[0m "
+            printf "\033[38;2;$((16#${base02:0:2}));$((16#${base02:2:2}));$((16#${base02:4:2}))m●\033[0m "
+            printf "\033[38;2;$((16#${base03:0:2}));$((16#${base03:2:2}));$((16#${base03:4:2}))m●\033[0m "
+            printf "\033[38;2;$((16#${base04:0:2}));$((16#${base04:2:2}));$((16#${base04:4:2}))m●\033[0m "
+            printf "\033[38;2;$((16#${base05:0:2}));$((16#${base05:2:2}));$((16#${base05:4:2}))m●\033[0m "
+            printf "\033[38;2;$((16#${base06:0:2}));$((16#${base06:2:2}));$((16#${base06:4:2}))m●\033[0m "
+            printf "\033[38;2;$((16#${base07:0:2}));$((16#${base07:2:2}));$((16#${base07:4:2}))m●\033[0m"
+            echo
+            printf "  "
+            printf "\033[38;2;$((16#${base08:0:2}));$((16#${base08:2:2}));$((16#${base08:4:2}))m●\033[0m "
+            printf "\033[38;2;$((16#${base09:0:2}));$((16#${base09:2:2}));$((16#${base09:4:2}))m●\033[0m "
+            printf "\033[38;2;$((16#${base0A:0:2}));$((16#${base0A:2:2}));$((16#${base0A:4:2}))m●\033[0m "
+            printf "\033[38;2;$((16#${base0B:0:2}));$((16#${base0B:2:2}));$((16#${base0B:4:2}))m●\033[0m "
+            printf "\033[38;2;$((16#${base0C:0:2}));$((16#${base0C:2:2}));$((16#${base0C:4:2}))m●\033[0m "
+            printf "\033[38;2;$((16#${base0D:0:2}));$((16#${base0D:2:2}));$((16#${base0D:4:2}))m●\033[0m "
+            printf "\033[38;2;$((16#${base0E:0:2}));$((16#${base0E:2:2}));$((16#${base0E:4:2}))m●\033[0m "
+            printf "\033[38;2;$((16#${base0F:0:2}));$((16#${base0F:2:2}));$((16#${base0F:4:2}))m●\033[0m"
+            echo
+        else
+            show_info "Active theme" "default (scheme file not found)"
+        fi
     }
 
     while true; do

@@ -12,8 +12,8 @@ if [[ -z "${DOTFILES_HELPERS_LOADED:-}" ]]; then
 fi
 
 # Package file locations
-PACKAGES_FILE="$DOTFILES_DIR/packages.package"
-AUR_PACKAGES_FILE="$DOTFILES_DIR/aur-packages.package"
+PACKAGES_FILE="$DOTFILES_DIR/packages/arch.package"
+AUR_PACKAGES_FILE="$DOTFILES_DIR/packages/aur.package"
 
 # Source all package management modules
 source "$DOTFILES_DIR/lib/package/core.sh"      # yay, Node.js, system prep

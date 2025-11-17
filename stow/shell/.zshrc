@@ -94,7 +94,7 @@ ZSH_THEME=""
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-# Plugins (manually configured - add from zsh-plugins.package after installation)
+# Plugins (manually configured - add from packages/zsh-plugins.package after installation)
 # Built-in Oh My Zsh plugins: git, command-not-found, sudo, history, dirhistory
 # External plugins: zsh-autosuggestions, zsh-syntax-highlighting, zsh-completions, 
 #                   zsh-history-substring-search, you-should-use, zsh-bat
@@ -211,6 +211,9 @@ case ":$PATH:" in
 esac
 # pnpm end
 export PATH="$HOME/.npm-global/bin:$PATH"
+
+# Rust cargo binaries
+export PATH="$HOME/.cargo/bin:$PATH"
 
 # Colorful terminal tools
 if command -v eza &>/dev/null; then

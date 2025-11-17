@@ -56,12 +56,9 @@ scrollbar slider:hover {
   opacity: 0.6;
 }
 
-.box {
-}
-
 .search-container {
-  background: @gray-800;
-  //border: 1px solid @alpha-subtle;
+  background: alpha(@gray-400, 0.05);
+  border: 1px solid @alpha-subtle;
   border-radius: 8px;
   padding: 1px;
 }

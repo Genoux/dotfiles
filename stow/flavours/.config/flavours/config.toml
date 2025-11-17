@@ -1,0 +1,50 @@
+# Flavours configuration for dotfiles theme management
+# Managed via stow - changes here will be synced to ~/.config/flavours/config.toml
+
+shell = "bash -c '{}'"
+
+# Auto-generated themes using base16 templates
+
+[[items]]
+file = "~/.config/kitty/theme.conf"
+template = "kitty"
+subtemplate = "default-256"
+rewrite = true
+
+[[items]]
+file = "~/.config/btop/themes/default.theme"
+template = "btop"
+subtemplate = "default"
+rewrite = true
+
+[[items]]
+file = "~/.config/hypr/theme.conf"
+template = "hyprland"
+subtemplate = "default"
+rewrite = true
+
+[[items]]
+file = "~/.config/starship.toml"
+template = "starship"
+subtemplate = "default"
+rewrite = true
+
+[[items]]
+file = "~/.config/mako/theme.conf"
+template = "mako"
+subtemplate = "default"
+rewrite = true
+
+# Custom templates (created in stow/flavours/.config/flavours/templates/)
+
+[[items]]
+file = "~/.config/ags/styles/abstracts/_theme.scss"
+template = "ags"
+subtemplate = "default"
+rewrite = true
+
+[[items]]
+file = "~/.config/walker/themes/default/style.css"
+template = "walker"
+subtemplate = "default"
+rewrite = true

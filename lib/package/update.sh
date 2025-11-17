@@ -80,13 +80,13 @@ resolve_aur_official_conflicts() {
         if [[ $removed_count -gt 0 ]]; then
             mv "$temp_file" "$AUR_PACKAGES_FILE"
             files_updated=true
-            log_info "Removed $removed_count package(s) from aur-packages.package"
+            log_info "Removed $removed_count package(s) from packages/aur.package"
         else
             rm -f "$temp_file"
         fi
     fi
 
-    # Add official packages to packages.package if they're not already there
+    # Add official packages to packages/arch.package if they're not already there
     if [[ -f "$PACKAGES_FILE" ]]; then
         local temp_file=$(mktemp)
         local added_count=0
@@ -109,7 +109,7 @@ resolve_aur_official_conflicts() {
             sort -u "$temp_file" -o "$temp_file"
             mv "$temp_file" "$PACKAGES_FILE"
             files_updated=true
-            log_info "Added $added_count official package(s) to packages.package"
+            log_info "Added $added_count official package(s) to packages/arch.package"
         else
             rm -f "$temp_file"
         fi

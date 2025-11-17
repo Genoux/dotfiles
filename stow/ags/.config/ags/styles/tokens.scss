@@ -1,53 +1,7 @@
-// Design tokens - centralized source of truth for colors, spacing, typography, etc.
-// Import theme variables first
+// Design tokens - spacing, typography, and utilities
+// Colors come from Base16 theme (see abstracts/_theme.scss)
 @use "sass:map";
 @use "./abstracts/theme" as *;
-
-// Color palette - based on your theme variables
-$colors: (
-    // Backgrounds (from theme)
-    bg-primary: $gray-900,
-    bg-secondary: $gray-800,
-    bg-tertiary: rgba(32, 38, 42, 0.8),
-    bg-card: $gray-800,
-    bg-overlay: rgba(22, 22, 27, 0.95),
-
-    // Text (from theme)
-    text-primary: $gray-50,
-    text-secondary: $gray-300,
-    text-muted: $gray-400,
-
-    // Accent colors (from theme + extensions)
-    accent-blue: #89b4fa,
-    accent-green: $green-500,
-    accent-yellow: #f9e2af,
-    accent-red: $red-500,
-    accent-purple: #cba6f7,
-    accent-pink: #f5c2e7,
-    accent-teal: #94e2d5,
-    accent-default: $gray-400,
-
-    // Status colors (from theme)
-    success: $green-500,
-    warning: #f9e2af,
-    error: $red-500,
-    info: #89b4fa,
-
-    // Borders (from theme)
-    border-primary: $alpha-medium,
-    border-secondary: $alpha-light,
-    border-muted: $alpha-subtle,
-
-    // Base colors
-    white: rgba(255, 255, 255, 1),
-    black: rgba(0, 0, 0, 1),
-
-    // Shadows
-    shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.1),
-    shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1),
-    shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1),
-    shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1),
-);
 
 // Spacing scale
 $spacing: (
@@ -123,10 +77,6 @@ $easing: (
 );
 
 // Helper functions to access tokens
-@function color($key) {
-    @return map.get($colors, $key);
-}
-
 @function spacing($key) {
     @return map.get($spacing, $key);
 }
@@ -149,40 +99,4 @@ $easing: (
 
 @function easing($key) {
     @return map.get($easing, $key);
-}
-
-// CSS custom properties for runtime theming
-:root {
-    // Theme-based colors
-    --color-bg-primary: #{$gray-900};
-    --color-bg-secondary: #{$gray-800};
-    --color-bg-card: #{$gray-800};
-    --color-text-primary: #{$gray-50};
-    --color-text-secondary: #{$gray-300};
-    --color-accent: #{$gray-400};
-    --color-border: #{$alpha-medium};
-    --color-success: #{$green-500};
-    --color-error: #{$red-500};
-
-    // Extended colors
-    --color-accent-blue: #{color(accent-blue)};
-    --color-accent-green: #{color(accent-green)};
-    --color-accent-red: #{color(accent-red)};
-    --color-border-primary: #{color(border-primary)};
-
-    // Spacing
-    --spacing-sm: #{spacing(sm)};
-    --spacing-md: #{spacing(md)};
-    --spacing-lg: #{spacing(lg)};
-    --spacing-xl: #{spacing(xl)};
-
-    // Border radius
-    --radius-md: #{radius(md)};
-    --radius-lg: #{radius(lg)};
-
-    // Z-index
-    --z-index-dropdown: #{z-index(dropdown)};
-    --z-index-modal: #{z-index(modal)};
-    --z-index-tooltip: #{z-index(tooltip)};
-    --z-index-notification: #{z-index(notification)};
 }

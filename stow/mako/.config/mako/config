@@ -5,12 +5,10 @@ include=~/.config/mako/theme.conf
 
 font=SF Pro Text 10
 width=350
-height=100
+height=1200
 margin=6
 outer-margin=0,2,6,0
 padding=10
-border-size=1
-border-radius=4
 
 default-timeout=5000
 ignore-timeout=0

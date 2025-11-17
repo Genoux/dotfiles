@@ -1,12 +1,12 @@
 /* Theme variables - Tailwind CSS naming convention */
-@define-color gray-50 rgba(250, 250, 250, 1.0);
-@define-color gray-300 rgba(220, 220, 220, 0.8);
-@define-color gray-400 rgba(180, 180, 180, 1.0);
-@define-color gray-800 rgba(32, 38, 42, 0.4);
-@define-color gray-900 rgba(22, 22, 27, 0.75);
+@define-color gray-50 rgba({{base07-rgb-r}}, {{base07-rgb-g}}, {{base07-rgb-b}}, 1.0);
+@define-color gray-300 rgba({{base05-rgb-r}}, {{base05-rgb-g}}, {{base05-rgb-b}}, 0.8);
+@define-color gray-400 rgba({{base04-rgb-r}}, {{base04-rgb-g}}, {{base04-rgb-b}}, 1.0);
+@define-color gray-800 rgba({{base01-rgb-r}}, {{base01-rgb-g}}, {{base01-rgb-b}}, 0.4);
+@define-color gray-900 rgba({{base00-rgb-r}}, {{base00-rgb-g}}, {{base00-rgb-b}}, 0.75);
 
-@define-color red-500 rgba(255, 100, 100, 1.0);
-@define-color green-500 rgba(100, 200, 100, 1.0);
+@define-color red-500 rgba({{base08-rgb-r}}, {{base08-rgb-g}}, {{base08-rgb-b}}, 1.0);
+@define-color green-500 rgba({{base0B-rgb-r}}, {{base0B-rgb-g}}, {{base0B-rgb-b}}, 1.0);
 
 @define-color alpha-subtle rgba(255, 255, 255, 0.02);
 @define-color alpha-light rgba(255, 255, 255, 0.05);
@@ -56,12 +56,9 @@ scrollbar slider:hover {
   opacity: 0.6;
 }
 
-.box {
-}
-
 .search-container {
-  background: @gray-800;
-  //border: 1px solid @alpha-subtle;
+  background: alpha(@gray-400, 0.05);
+  border: 1px solid @alpha-subtle;
   border-radius: 8px;
   padding: 1px;
 }

@@ -1,7 +1,7 @@
 #!/bin/bash
 # Hyprland plugin management
 #
-# Configuration format in hyprland-plugins.package:
+# Configuration format in packages/hyprland-plugins.package:
 #   plugin_name = repository_url
 #
 # Example:
@@ -18,7 +18,7 @@ if [[ -z "${DOTFILES_HELPERS_LOADED:-}" ]]; then
 fi
 
 # Plugin configuration file
-HYPRLAND_PLUGINS_FILE="$DOTFILES_DIR/hyprland-plugins.package"
+HYPRLAND_PLUGINS_FILE="$DOTFILES_DIR/packages/hyprland-plugins.package"
 
 # Load plugins from configuration file
 # Format: plugin_name = repository_url

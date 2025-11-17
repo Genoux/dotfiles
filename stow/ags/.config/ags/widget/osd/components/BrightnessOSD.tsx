@@ -61,7 +61,7 @@ export function BrightnessOSD() {
         <box orientation={Gtk.Orientation.VERTICAL} vexpand valign={Gtk.Align.CENTER} halign={Gtk.Align.CENTER} spacing={21}>
           <Icon
             icon={brightnessIcon((icon) => icon || "display-brightness-symbolic")}
-            size={40}
+            size={50}
             cssName="osd-icon"
           />
           <BrightnessStepBar />

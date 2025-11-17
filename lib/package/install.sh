@@ -17,11 +17,11 @@ packages_install() {
 
     # Check if package files exist
     if [[ ! -f "$PACKAGES_FILE" ]]; then
-        fatal_error "packages.package not found in $DOTFILES_DIR"
+        fatal_error "packages/arch.package not found in $DOTFILES_DIR"
     fi
 
     if [[ ! -f "$AUR_PACKAGES_FILE" ]]; then
-        fatal_error "aur-packages.package not found in $DOTFILES_DIR"
+        fatal_error "packages/aur.package not found in $DOTFILES_DIR"
     fi
     
     # Filter packages by hardware

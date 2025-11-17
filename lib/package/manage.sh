@@ -260,12 +260,12 @@ packages_manage() {
             log_info "Removing $total_missing packages from dotfiles..."
             echo
 
-            # Remove from packages.package
+            # Remove from packages/arch.package
             for pkg in "${missing_official[@]}"; do
                 sed -i "/^${pkg}$/d" "$PACKAGES_FILE"
             done
 
-            # Remove from aur-packages.package
+            # Remove from packages/aur.package
             for pkg in "${missing_aur[@]}"; do
                 sed -i "/^${pkg}$/d" "$AUR_PACKAGES_FILE"
             done

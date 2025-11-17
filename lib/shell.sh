@@ -3,7 +3,7 @@
 
 # Get dotfiles directory
 DOTFILES_DIR="$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" && pwd)"
-PLUGINS_FILE="$DOTFILES_DIR/zsh-plugins.package"
+PLUGINS_FILE="$DOTFILES_DIR/packages/zsh-plugins.package"
 
 # Source helpers if not already loaded
 if [[ -z "${DOTFILES_HELPERS_LOADED:-}" ]]; then
