@@ -11,6 +11,63 @@ if [[ -z "${DOTFILES_HELPERS_LOADED:-}" ]]; then
     export DOTFILES_HELPERS_LOADED=true
 fi
 
+# Show current theme information
+theme_show_current() {
+    local scheme_file="$DOTFILES_DIR/stow/flavours/.config/flavours/schemes/default/default.yaml"
+
+    if [[ -f "$scheme_file" ]]; then
+        local scheme_name=$(grep "^scheme:" "$scheme_file" | cut -d'"' -f2)
+        local scheme_author=$(grep "^author:" "$scheme_file" | cut -d'"' -f2)
+        show_info "Active theme" "$scheme_name by $scheme_author"
+        echo
+
+        # Display Base16 color palette (compact)
+        echo -e "${BOLD}Colors:${RESET}"
+
+        # Read colors from scheme
+        local base00=$(grep "^base00:" "$scheme_file" | awk '{print $2}' | tr -d '"')
+        local base01=$(grep "^base01:" "$scheme_file" | awk '{print $2}' | tr -d '"')
+        local base02=$(grep "^base02:" "$scheme_file" | awk '{print $2}' | tr -d '"')
+        local base03=$(grep "^base03:" "$scheme_file" | awk '{print $2}' | tr -d '"')
+        local base04=$(grep "^base04:" "$scheme_file" | awk '{print $2}' | tr -d '"')
+        local base05=$(grep "^base05:" "$scheme_file" | awk '{print $2}' | tr -d '"')
+        local base06=$(grep "^base06:" "$scheme_file" | awk '{print $2}' | tr -d '"')
+        local base07=$(grep "^base07:" "$scheme_file" | awk '{print $2}' | tr -d '"')
+        local base08=$(grep "^base08:" "$scheme_file" | awk '{print $2}' | tr -d '"')
+        local base09=$(grep "^base09:" "$scheme_file" | awk '{print $2}' | tr -d '"')
+        local base0A=$(grep "^base0A:" "$scheme_file" | awk '{print $2}' | tr -d '"')
+        local base0B=$(grep "^base0B:" "$scheme_file" | awk '{print $2}' | tr -d '"')
+        local base0C=$(grep "^base0C:" "$scheme_file" | awk '{print $2}' | tr -d '"')
+        local base0D=$(grep "^base0D:" "$scheme_file" | awk '{print $2}' | tr -d '"')
+        local base0E=$(grep "^base0E:" "$scheme_file" | awk '{print $2}' | tr -d '"')
+        local base0F=$(grep "^base0F:" "$scheme_file" | awk '{print $2}' | tr -d '"')
+
+        # Display as compact rows of colored circles
+        printf "→ Accent Colors: "
+        printf "\033[38;2;$((16#${base00:0:2}));$((16#${base00:2:2}));$((16#${base00:4:2}))m●\033[0m "
+        printf "\033[38;2;$((16#${base01:0:2}));$((16#${base01:2:2}));$((16#${base01:4:2}))m●\033[0m "
+        printf "\033[38;2;$((16#${base02:0:2}));$((16#${base02:2:2}));$((16#${base02:4:2}))m●\033[0m "
+        printf "\033[38;2;$((16#${base03:0:2}));$((16#${base03:2:2}));$((16#${base03:4:2}))m●\033[0m "
+        printf "\033[38;2;$((16#${base04:0:2}));$((16#${base04:2:2}));$((16#${base04:4:2}))m●\033[0m "
+        printf "\033[38;2;$((16#${base05:0:2}));$((16#${base05:2:2}));$((16#${base05:4:2}))m●\033[0m "
+        printf "\033[38;2;$((16#${base06:0:2}));$((16#${base06:2:2}));$((16#${base06:4:2}))m●\033[0m "
+        printf "\033[38;2;$((16#${base07:0:2}));$((16#${base07:2:2}));$((16#${base07:4:2}))m●\033[0m"
+        echo
+        printf "→ Grayscale Colors: "
+        printf "\033[38;2;$((16#${base08:0:2}));$((16#${base08:2:2}));$((16#${base08:4:2}))m●\033[0m "
+        printf "\033[38;2;$((16#${base09:0:2}));$((16#${base09:2:2}));$((16#${base09:4:2}))m●\033[0m "
+        printf "\033[38;2;$((16#${base0A:0:2}));$((16#${base0A:2:2}));$((16#${base0A:4:2}))m●\033[0m "
+        printf "\033[38;2;$((16#${base0B:0:2}));$((16#${base0B:2:2}));$((16#${base0B:4:2}))m●\033[0m "
+        printf "\033[38;2;$((16#${base0C:0:2}));$((16#${base0C:2:2}));$((16#${base0C:4:2}))m●\033[0m "
+        printf "\033[38;2;$((16#${base0D:0:2}));$((16#${base0D:2:2}));$((16#${base0D:4:2}))m●\033[0m "
+        printf "\033[38;2;$((16#${base0E:0:2}));$((16#${base0E:2:2}));$((16#${base0E:4:2}))m●\033[0m "
+        printf "\033[38;2;$((16#${base0F:0:2}));$((16#${base0F:2:2}));$((16#${base0F:4:2}))m●\033[0m"
+        echo
+    else
+        show_info "Active theme" "default (scheme file not found)"
+    fi
+}
+
 # Apply flavours theme using base16 scheme
 apply_flavours_theme() {
     # Ensure flavours is installed and templates are downloaded
@@ -363,4 +420,38 @@ theme_install_gtk() {
         log_error "Installation failed with $failed error(s)"
         return 1
     fi
+}
+
+# Theme management menu
+theme_menu() {
+    source "$DOTFILES_DIR/lib/menu.sh"
+
+    while true; do
+        clear_screen "Themes"
+        theme_show_current
+        echo
+
+        local action=$(choose_option \
+            "Select theme" \
+            "Install GTK theme" \
+            "Show details" \
+            "Back")
+
+        [[ -z "$action" ]] && return
+
+        case "$action" in
+            "Select theme")
+                run_operation "" theme_select
+                ;;
+            "Install GTK theme")
+                run_operation "" theme_install_gtk
+                ;;
+            "Show details")
+                run_operation "" theme_status
+                ;;
+            "Back")
+                return
+                ;;
+        esac
+    done
 }

@@ -279,3 +279,53 @@ hyprland_status() {
     fi
 }
 
+# Show Hyprland version information
+hyprland_show_version() {
+    if command -v hyprctl &>/dev/null; then
+        local version=$(hyprctl version 2>/dev/null | head -1 | grep -oP 'Hyprland \K\d+\.\d+\.\d+' || echo "unknown")
+        show_info "Version" "$version"
+    else
+        show_info "Status" "not installed"
+    fi
+}
+
+# Setup Hyprland with plugins and monitors
+hyprland_setup_all() {
+    if command -v hyprpm &>/dev/null; then
+        source "$DOTFILES_DIR/lib/hyprland-plugins.sh"
+        setup_hyprland_plugins
+        echo
+    fi
+    hyprland_setup
+}
+
+# Hyprland management menu
+hyprland_menu() {
+    source "$DOTFILES_DIR/lib/menu.sh"
+
+    while true; do
+        clear_screen "Hyprland"
+        hyprland_show_version
+        echo
+
+        local action=$(choose_option \
+            "Setup Hyprland" \
+            "Show details" \
+            "Back")
+
+        [[ -z "$action" ]] && return
+
+        case "$action" in
+            "Setup Hyprland")
+                run_operation "" hyprland_setup_all
+                ;;
+            "Show details")
+                run_operation "" hyprland_status
+                ;;
+            "Back")
+                return
+                ;;
+        esac
+    done
+}
+

@@ -328,6 +328,46 @@ shell_setup() {
     log_success "Shell setup complete"
 }
 
+# Show shell version information
+shell_show_version() {
+    if command -v zsh &>/dev/null; then
+        local version=$(zsh --version | cut -d' ' -f2)
+        show_info "Version" "$version"
+    else
+        show_info "Status" "not installed"
+    fi
+}
+
+# Shell management menu
+shell_menu() {
+    source "$DOTFILES_DIR/lib/menu.sh"
+
+    while true; do
+        clear_screen "Shell"
+        shell_show_version
+        echo
+
+        local action=$(choose_option \
+            "Setup shell" \
+            "Show details" \
+            "Back")
+
+        [[ -z "$action" ]] && return
+
+        case "$action" in
+            "Setup shell")
+                run_operation "" shell_setup
+                ;;
+            "Show details")
+                run_operation "" shell_status
+                ;;
+            "Back")
+                return
+                ;;
+        esac
+    done
+}
+
 # Show shell status
 shell_status() {
     log_section "Shell Status"

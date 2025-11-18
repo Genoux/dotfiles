@@ -594,3 +594,53 @@ config_select() {
     read -p "Press Enter to continue..."
 }
 
+# Config management menu
+config_menu() {
+    source "$DOTFILES_DIR/lib/menu.sh"
+
+    while true; do
+        clear_screen "Configs"
+
+        # Show summary only
+        local configs=($(get_configs))
+        local linked_count=0
+        for config in "${configs[@]}"; do
+            is_config_linked "$config" && ((linked_count++))
+        done
+        show_info "Status" "$linked_count/${#configs[@]} linked"
+        echo
+
+        local action=$(choose_option \
+            "Manage links" \
+            "Link all" \
+            "Unlink all" \
+            "Show details" \
+            "Back")
+
+        [[ -z "$action" ]] && return  # ESC pressed
+
+        case "$action" in
+            "Manage links")
+                run_operation "" config_manage_interactive
+                ;;
+            "Link all")
+                run_operation "" config_link_all
+                ;;
+            "Unlink all")
+                clear_screen
+                if confirm "Unlink all configs?"; then
+                    config_unlink_all
+                    echo
+                fi
+                pause
+                ;;
+            "Show details")
+                run_operation "" config_status
+                ;;
+            "Back")
+                return
+                ;;
+        esac
+    done
+}
+

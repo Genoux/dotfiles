@@ -113,3 +113,27 @@ system_status() {
     fi
     show_info "systemd logind configs" "$logind_configs installed"
 }
+
+# System management menu
+system_menu() {
+    source "$DOTFILES_DIR/lib/menu.sh"
+
+    while true; do
+        clear_screen "System"
+
+        local action=$(choose_option \
+            "Apply configurations" \
+            "Back")
+
+        [[ -z "$action" ]] && return
+
+        case "$action" in
+            "Apply configurations")
+                run_operation "" system_apply
+                ;;
+            "Back")
+                return
+                ;;
+        esac
+    done
+}

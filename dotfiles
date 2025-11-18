@@ -130,22 +130,28 @@ show_menu() {
                 exec bash "$DOTFILES_DIR/install.sh"
                 ;;
             "Packages")
-                menu_packages
+                source "$DOTFILES_DIR/lib/package.sh"
+                packages_menu
                 ;;
             "Configs")
-                menu_configs
+                source "$DOTFILES_DIR/lib/config.sh"
+                config_menu
                 ;;
             "System")
-                menu_system
+                source "$DOTFILES_DIR/lib/system.sh"
+                system_menu
                 ;;
             "Themes")
-                menu_themes
+                source "$DOTFILES_DIR/lib/theme.sh"
+                theme_menu
                 ;;
             "Shell")
-                menu_shell
+                source "$DOTFILES_DIR/lib/shell.sh"
+                shell_menu
                 ;;
             "Hyprland")
-                menu_hyprland
+                source "$DOTFILES_DIR/lib/hyprland.sh"
+                hyprland_menu
                 ;;
             "Exit")
                 clear
@@ -159,311 +165,6 @@ show_menu() {
     done
 }
 
-# Package management menu
-menu_packages() {
-    source "$DOTFILES_DIR/lib/package.sh"
-    source "$DOTFILES_DIR/lib/menu.sh"
-
-    while true; do
-        clear_screen "Packages"
-
-        # Show current package count
-        local pkg_count=$(grep -cvE '^#|^$' "$DOTFILES_DIR/packages/arch.package" 2>/dev/null || echo 0)
-        local aur_count=$(grep -cvE '^#|^$' "$DOTFILES_DIR/packages/aur.package" 2>/dev/null || echo 0)
-        show_info "Tracked" "$pkg_count official + $aur_count AUR"
-        echo
-        
-        local action=$(choose_option \
-            "Manage packages" \
-            "Update system" \
-            "Show status" \
-            "Back")
-
-        [[ -z "$action" ]] && return  # ESC pressed
-
-        case "$action" in
-            "Manage packages")
-                run_operation "" packages_manage
-                ;;
-            "Update system")
-                run_operation "" packages_update || {
-                    echo
-                    log_error "Update failed. Showing recent log output:"
-                    echo
-                    if [[ -n "${DOTFILES_LOG_FILE:-}" && -f "$DOTFILES_LOG_FILE" ]]; then
-                        # Use gum pager for better log viewing
-                        tail -n 120 "$DOTFILES_LOG_FILE" | gum pager
-                    else
-                        echo "No log file available. Rerun: dotfiles packages update 2>&1 | tee /tmp/dotfiles-update.log"
-                        pause
-                    fi
-                }
-                ;;
-            "Show status")
-                run_operation "" packages_status
-                ;;
-            "Back")
-                return
-                ;;
-        esac
-    done
-}
-
-# Config management menu
-menu_configs() {
-    source "$DOTFILES_DIR/lib/config.sh"
-    source "$DOTFILES_DIR/lib/menu.sh"
-
-    while true; do
-        clear_screen "Configs"
-
-        # Show summary only
-        local configs=($(get_configs))
-        local linked_count=0
-        for config in "${configs[@]}"; do
-            is_config_linked "$config" && ((linked_count++))
-        done
-        show_info "Status" "$linked_count/${#configs[@]} linked"
-        echo
-
-        local action=$(choose_option \
-            "Manage links" \
-            "Link all" \
-            "Unlink all" \
-            "Show details" \
-            "Back")
-
-        [[ -z "$action" ]] && return  # ESC pressed
-
-        case "$action" in
-            "Manage links")
-                run_operation "" config_manage_interactive
-                ;;
-            "Link all")
-                run_operation "" config_link_all
-                ;;
-            "Unlink all")
-                clear_screen
-                if confirm "Unlink all configs?"; then
-                    config_unlink_all
-                    echo
-                fi
-                pause
-                ;;
-            "Show details")
-                run_operation "" config_status
-                ;;
-            "Back")
-                return
-                ;;
-        esac
-    done
-}
-
-# Theme management menu
-menu_themes() {
-    source "$DOTFILES_DIR/lib/theme.sh"
-    source "$DOTFILES_DIR/lib/menu.sh"
-
-    theme_quick_status() {
-        local scheme_file="$DOTFILES_DIR/stow/flavours/.config/flavours/schemes/default/default.yaml"
-
-        if [[ -f "$scheme_file" ]]; then
-            local scheme_name=$(grep "^scheme:" "$scheme_file" | cut -d'"' -f2)
-            local scheme_author=$(grep "^author:" "$scheme_file" | cut -d'"' -f2)
-            show_info "Active theme" "$scheme_name by $scheme_author"
-            echo
-
-            # Display Base16 color palette (compact)
-            echo -e "${BOLD}Colors:${RESET}"
-
-            # Read colors from scheme
-            local base00=$(grep "^base00:" "$scheme_file" | awk '{print $2}' | tr -d '"')
-            local base01=$(grep "^base01:" "$scheme_file" | awk '{print $2}' | tr -d '"')
-            local base02=$(grep "^base02:" "$scheme_file" | awk '{print $2}' | tr -d '"')
-            local base03=$(grep "^base03:" "$scheme_file" | awk '{print $2}' | tr -d '"')
-            local base04=$(grep "^base04:" "$scheme_file" | awk '{print $2}' | tr -d '"')
-            local base05=$(grep "^base05:" "$scheme_file" | awk '{print $2}' | tr -d '"')
-            local base06=$(grep "^base06:" "$scheme_file" | awk '{print $2}' | tr -d '"')
-            local base07=$(grep "^base07:" "$scheme_file" | awk '{print $2}' | tr -d '"')
-            local base08=$(grep "^base08:" "$scheme_file" | awk '{print $2}' | tr -d '"')
-            local base09=$(grep "^base09:" "$scheme_file" | awk '{print $2}' | tr -d '"')
-            local base0A=$(grep "^base0A:" "$scheme_file" | awk '{print $2}' | tr -d '"')
-            local base0B=$(grep "^base0B:" "$scheme_file" | awk '{print $2}' | tr -d '"')
-            local base0C=$(grep "^base0C:" "$scheme_file" | awk '{print $2}' | tr -d '"')
-            local base0D=$(grep "^base0D:" "$scheme_file" | awk '{print $2}' | tr -d '"')
-            local base0E=$(grep "^base0E:" "$scheme_file" | awk '{print $2}' | tr -d '"')
-            local base0F=$(grep "^base0F:" "$scheme_file" | awk '{print $2}' | tr -d '"')
-
-            # Display as compact rows of colored circles
-            printf "→ Accent Colors: "
-            printf "\033[38;2;$((16#${base00:0:2}));$((16#${base00:2:2}));$((16#${base00:4:2}))m●\033[0m "
-            printf "\033[38;2;$((16#${base01:0:2}));$((16#${base01:2:2}));$((16#${base01:4:2}))m●\033[0m "
-            printf "\033[38;2;$((16#${base02:0:2}));$((16#${base02:2:2}));$((16#${base02:4:2}))m●\033[0m "
-            printf "\033[38;2;$((16#${base03:0:2}));$((16#${base03:2:2}));$((16#${base03:4:2}))m●\033[0m "
-            printf "\033[38;2;$((16#${base04:0:2}));$((16#${base04:2:2}));$((16#${base04:4:2}))m●\033[0m "
-            printf "\033[38;2;$((16#${base05:0:2}));$((16#${base05:2:2}));$((16#${base05:4:2}))m●\033[0m "
-            printf "\033[38;2;$((16#${base06:0:2}));$((16#${base06:2:2}));$((16#${base06:4:2}))m●\033[0m "
-            printf "\033[38;2;$((16#${base07:0:2}));$((16#${base07:2:2}));$((16#${base07:4:2}))m●\033[0m"
-            echo
-            printf "→ Grayscale Colors: "
-            printf "\033[38;2;$((16#${base08:0:2}));$((16#${base08:2:2}));$((16#${base08:4:2}))m●\033[0m "
-            printf "\033[38;2;$((16#${base09:0:2}));$((16#${base09:2:2}));$((16#${base09:4:2}))m●\033[0m "
-            printf "\033[38;2;$((16#${base0A:0:2}));$((16#${base0A:2:2}));$((16#${base0A:4:2}))m●\033[0m "
-            printf "\033[38;2;$((16#${base0B:0:2}));$((16#${base0B:2:2}));$((16#${base0B:4:2}))m●\033[0m "
-            printf "\033[38;2;$((16#${base0C:0:2}));$((16#${base0C:2:2}));$((16#${base0C:4:2}))m●\033[0m "
-            printf "\033[38;2;$((16#${base0D:0:2}));$((16#${base0D:2:2}));$((16#${base0D:4:2}))m●\033[0m "
-            printf "\033[38;2;$((16#${base0E:0:2}));$((16#${base0E:2:2}));$((16#${base0E:4:2}))m●\033[0m "
-            printf "\033[38;2;$((16#${base0F:0:2}));$((16#${base0F:2:2}));$((16#${base0F:4:2}))m●\033[0m"
-            echo
-        else
-            show_info "Active theme" "default (scheme file not found)"
-        fi
-    }
-
-    while true; do
-        clear_screen "Themes"
-        theme_quick_status
-        echo
-
-        local action=$(choose_option \
-            "Select theme" \
-            "Install GTK theme" \
-            "Show details" \
-            "Back")
-
-        [[ -z "$action" ]] && return
-
-        case "$action" in
-            "Select theme")
-                run_operation "" theme_select
-                ;;
-            "Install GTK theme")
-                run_operation "" theme_install_gtk
-                ;;
-            "Show details")
-                run_operation "" theme_status
-                ;;
-            "Back")
-                return
-                ;;
-        esac
-    done
-}
-
-# System management menu
-menu_system() {
-    source "$DOTFILES_DIR/lib/system.sh"
-    source "$DOTFILES_DIR/lib/menu.sh"
-
-    while true; do
-        clear_screen "System"
-
-        local action=$(choose_option \
-            "Apply configurations" \
-            "Back")
-
-        [[ -z "$action" ]] && return
-
-        case "$action" in
-            "Apply configurations")
-                run_operation "" system_apply
-                ;;
-            "Back")
-                return
-                ;;
-        esac
-    done
-}
-
-# Shell management menu
-menu_shell() {
-    source "$DOTFILES_DIR/lib/shell.sh"
-    source "$DOTFILES_DIR/lib/menu.sh"
-
-    shell_quick_status() {
-        if command -v zsh &>/dev/null; then
-            local version=$(zsh --version | cut -d' ' -f2)
-            show_info "Version" "$version"
-        else
-            show_info "Status" "not installed"
-        fi
-    }
-
-    while true; do
-        clear_screen "Shell"
-        shell_quick_status
-        echo
-
-        local action=$(choose_option \
-            "Setup shell" \
-            "Show details" \
-            "Back")
-
-        [[ -z "$action" ]] && return
-
-        case "$action" in
-            "Setup shell")
-                run_operation "" shell_setup
-                ;;
-            "Show details")
-                run_operation "" shell_status
-                ;;
-            "Back")
-                return
-                ;;
-        esac
-    done
-}
-
-# Hyprland management menu
-menu_hyprland() {
-    source "$DOTFILES_DIR/lib/hyprland.sh"
-    source "$DOTFILES_DIR/lib/menu.sh"
-
-    hyprland_quick_status() {
-        if command -v hyprctl &>/dev/null; then
-            local version=$(hyprctl version 2>/dev/null | head -1 | grep -oP 'Hyprland \K\d+\.\d+\.\d+' || echo "unknown")
-            show_info "Version" "$version"
-        else
-            show_info "Status" "not installed"
-        fi
-    }
-
-    hyprland_setup_all() {
-        if command -v hyprpm &>/dev/null; then
-            source "$DOTFILES_DIR/lib/hyprland-plugins.sh"
-            setup_hyprland_plugins
-            echo
-        fi
-        hyprland_setup
-    }
-
-    while true; do
-        clear_screen "Hyprland"
-        hyprland_quick_status
-        echo
-
-        local action=$(choose_option \
-            "Setup Hyprland" \
-            "Show details" \
-            "Back")
-
-        [[ -z "$action" ]] && return
-
-        case "$action" in
-            "Setup Hyprland")
-                run_operation "" hyprland_setup_all
-                ;;
-            "Show details")
-                run_operation "" hyprland_status
-                ;;
-            "Back")
-                return
-                ;;
-        esac
-    done
-}
 
 # Main command routing
 main() {
@@ -538,15 +239,7 @@ main() {
         hyprland)
             source "$DOTFILES_DIR/lib/hyprland.sh"
             case "$subcommand" in
-                setup)
-                    # Setup plugins and monitors
-                    if command -v hyprpm &>/dev/null; then
-                        source "$DOTFILES_DIR/lib/hyprland-plugins.sh"
-                        setup_hyprland_plugins
-                        echo
-                    fi
-                    hyprland_setup
-                    ;;
+                setup) hyprland_setup_all ;;
                 status|"") hyprland_status ;;
                 *) log_error "Unknown subcommand: $subcommand"; show_usage; exit 1 ;;
             esac

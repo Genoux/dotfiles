@@ -1,24 +1,24 @@
 /* Theme variables - Base16 colors (use alpha() function for opacity) */
 
 /* Base16 grayscale */
-@define-color base00 rgb(40, 41, 54);
-@define-color base01 rgb(58, 60, 78);
-@define-color base02 rgb(77, 79, 104);
-@define-color base03 rgb(98, 100, 131);
-@define-color base04 rgb(98, 214, 232);
-@define-color base05 rgb(233, 233, 244);
-@define-color base06 rgb(241, 242, 248);
-@define-color base07 rgb(247, 247, 251);
+@define-color base00 rgb(36, 40, 59);
+@define-color base01 rgb(31, 35, 53);
+@define-color base02 rgb(41, 46, 66);
+@define-color base03 rgb(86, 95, 137);
+@define-color base04 rgb(169, 177, 214);
+@define-color base05 rgb(192, 202, 245);
+@define-color base06 rgb(192, 202, 245);
+@define-color base07 rgb(192, 202, 245);
 
 /* Base16 accent colors */
-@define-color base08 rgb(234, 81, 178);
-@define-color base09 rgb(180, 91, 207);
-@define-color base0A rgb(0, 247, 105);
-@define-color base0B rgb(235, 255, 135);
-@define-color base0C rgb(161, 239, 228);
-@define-color base0D rgb(98, 214, 232);
-@define-color base0E rgb(180, 91, 207);
-@define-color base0F rgb(0, 247, 105);
+@define-color base08 rgb(247, 118, 142);
+@define-color base09 rgb(255, 158, 100);
+@define-color base0A rgb(224, 175, 104);
+@define-color base0B rgb(158, 206, 106);
+@define-color base0C rgb(26, 188, 156);
+@define-color base0D rgb(65, 166, 181);
+@define-color base0E rgb(187, 154, 247);
+@define-color base0F rgb(255, 0, 124);
 
 /* Alpha overlays (design tokens - not theme colors) */
 @define-color alpha-subtle rgba(255, 255, 255, 0.02);
@@ -42,7 +42,7 @@
 }
 
 .box-wrapper {
-  background: alpha(@base00, 0.3);
+  background: alpha(@base01, 0.5);
   border: 1px solid @alpha-subtle;
   border-radius: 10px;
   padding: 10px;
@@ -57,7 +57,7 @@
 }
 
 .search-container {
-  background: alpha(@base01, 0.2);
+  background: alpha(@base01, 0.3);
   border: 1px solid @alpha-subtle;
   border-radius: 8px;
   padding: 1px;

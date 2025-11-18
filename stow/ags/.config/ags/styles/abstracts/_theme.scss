@@ -2,24 +2,24 @@
 // Use sass:color to adjust opacity in components
 
 // Base16 grayscale
-$base00: rgb(40, 41, 54);  // Background
-$base01: rgb(58, 60, 78);  // Surface
-$base02: rgb(77, 79, 104);  // Selection
-$base03: rgb(98, 100, 131);  // Comments
-$base04: rgb(98, 214, 232);  // Muted text
-$base05: rgb(233, 233, 244);  // Text
-$base06: rgb(241, 242, 248);  // Light text
-$base07: rgb(247, 247, 251);  // Primary text
+$base00: rgb(36, 40, 59);  // Background
+$base01: rgb(31, 35, 53);  // Surface
+$base02: rgb(41, 46, 66);  // Selection
+$base03: rgb(86, 95, 137);  // Comments
+$base04: rgb(169, 177, 214);  // Muted text
+$base05: rgb(192, 202, 245);  // Text
+$base06: rgb(192, 202, 245);  // Light text
+$base07: rgb(192, 202, 245);  // Primary text
 
 // Base16 accent colors
-$base08: rgb(234, 81, 178);  // Red
-$base09: rgb(180, 91, 207);  // Orange
-$base0A: rgb(0, 247, 105);  // Yellow
-$base0B: rgb(235, 255, 135);  // Green
-$base0C: rgb(161, 239, 228);  // Cyan
-$base0D: rgb(98, 214, 232);  // Blue
-$base0E: rgb(180, 91, 207);  // Purple (signature)
-$base0F: rgb(0, 247, 105);  // Mauve
+$base08: rgb(247, 118, 142);  // Red
+$base09: rgb(255, 158, 100);  // Orange
+$base0A: rgb(224, 175, 104);  // Yellow
+$base0B: rgb(158, 206, 106);  // Green
+$base0C: rgb(26, 188, 156);  // Cyan
+$base0D: rgb(65, 166, 181);  // Blue
+$base0E: rgb(187, 154, 247);  // Purple (signature)
+$base0F: rgb(255, 0, 124);  // Mauve
 
 // Alpha overlays (design tokens - not theme colors)
 $alpha-subtle: rgba(255, 255, 255, 0.02);   // Very subtle overlay
