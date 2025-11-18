@@ -117,6 +117,109 @@ apply_theme_gtk() {
     return 0
 }
 
+# Select and apply theme interactively
+theme_select() {
+    # Ensure flavours is available
+    local flavours_cmd="flavours"
+    if ! command -v flavours &>/dev/null; then
+        if [[ -x "$HOME/.cargo/bin/flavours" ]]; then
+            flavours_cmd="$HOME/.cargo/bin/flavours"
+        else
+            log_error "Flavours not found"
+            log_info "Run: dotfiles install"
+            return 1
+        fi
+    fi
+
+    log_section "Select Theme"
+
+    # Get list of available themes
+    local themes_output=$("$flavours_cmd" list 2>&1)
+    if [[ $? -ne 0 ]]; then
+        log_error "Failed to get theme list"
+        echo "$themes_output"
+        return 1
+    fi
+
+    # Convert space-separated output to array (one theme per line for gum)
+    local themes=()
+    read -ra themes <<< "$themes_output"
+
+    if [[ ${#themes[@]} -eq 0 ]]; then
+        log_error "No themes found"
+        log_info "Run: flavours update schemes"
+        return 1
+    fi
+
+    # Get current theme
+    local current_theme=$("$flavours_cmd" current 2>/dev/null || echo "")
+
+    # Show theme selection
+    log_info "Available themes: ${#themes[@]}"
+    echo
+
+    local selected=""
+    if [[ -n "$current_theme" ]]; then
+        # Try to preselect current theme
+        selected=$(printf '%s\n' "${themes[@]}" | gum filter --placeholder "Select theme (current: $current_theme)" --limit 1)
+    else
+        selected=$(printf '%s\n' "${themes[@]}" | gum filter --placeholder "Select theme" --limit 1)
+    fi
+
+    # Check if user cancelled
+    if [[ -z "$selected" ]]; then
+        log_info "Selection cancelled"
+        return 0
+    fi
+
+    echo
+    log_info "Selected: $selected"
+    echo
+
+    # Apply the selected theme
+    if "$flavours_cmd" apply "$selected" 2>&1 | while IFS= read -r line; do
+        log_info "  $line"
+    done; then
+        echo
+
+        # Update the default scheme to the selected one
+        # Find the scheme file using flavours info to get the exact path
+        local scheme_info=$("$flavours_cmd" info "$selected" 2>&1 | head -1)
+        local source_scheme=""
+
+        # Extract path from output like: "Ashes (ashes) @ /path/to/ashes.yaml"
+        if [[ "$scheme_info" =~ @[[:space:]](.+\.ya?ml) ]]; then
+            source_scheme="${BASH_REMATCH[1]}"
+        fi
+
+        if [[ -n "$source_scheme" && -f "$source_scheme" ]]; then
+            # Copy to stow directory (managed by git)
+            local stow_scheme="$DOTFILES_DIR/stow/flavours/.config/flavours/schemes/default/default.yaml"
+            mkdir -p "$(dirname "$stow_scheme")"
+            cp "$source_scheme" "$stow_scheme"
+
+            # Also copy to active config (if stowed)
+            local config_scheme="$HOME/.config/flavours/schemes/default/default.yaml"
+            if [[ -d "$HOME/.config/flavours/schemes/default" ]]; then
+                cp "$source_scheme" "$config_scheme"
+            fi
+
+            log_info "Updated default scheme to: $selected"
+        else
+            log_warning "Could not find scheme file for: $selected"
+        fi
+
+        log_success "Theme '$selected' applied!"
+        echo
+        log_info "Restart applications to see changes"
+        return 0
+    else
+        echo
+        log_error "Failed to apply theme '$selected'"
+        return 1
+    fi
+}
+
 # Apply theme (main entry point)
 theme_apply() {
     log_section "Applying Theme"

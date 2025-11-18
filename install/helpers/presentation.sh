@@ -82,7 +82,7 @@ log_error() {
 
 log_section() {
     echo
-    gum style --bold --foreground 5 "$1"  # base0E purple
+    gum style --bold "$1"
     echo
 }
 
@@ -119,7 +119,7 @@ get_input() {
 
 # Menu selection (uses terminal theme colors)
 choose_option() {
-    gum choose --header "" --height 15 "$@"
+    gum choose --header "" --height 15 --cursor.foreground 5 "$@"
 }
 
 # Multi-select menu
@@ -148,7 +148,7 @@ clear_screen() {
     tput cup 0 0 2>/dev/null || true
 
     if [[ -n "${1:-}" ]]; then
-        gum style --bold --foreground 5 "$1"  # base0E purple
+        gum style --bold "$1"
         echo
     fi
 }

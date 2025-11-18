@@ -16,7 +16,8 @@
 
 * {
   font-family: typography(font-family);
-  font-size: 12px;
+  font-size: typography(font-size-sm);
+  color: $white;
 }
 
 
@@ -32,11 +33,11 @@
 tooltip {
   @include gtk-reset;
 
-  border-radius: 8px;
-  background-color: $alpha-dark;
+  border-radius: radius(md);
+  background-color: rgba(0, 0, 0, 0.5);
   border: 1px solid $alpha-light;
-  color: #ffffff;
-  padding: spacing(sm);
+  color: $white;
+  padding: spacing(xs);
 }
 
 // Ensure inner label inherits colors without extra borders
@@ -54,23 +55,23 @@ popover {
     border: 1px solid $alpha-light;
     padding: spacing(md);
     border-radius: radius(md);
-    background-color: $alpha-dark;
+    background-color: rgba(0, 0, 0, 0.5);
   }
 
   arrow {
     @include gtk-reset;
-    opacity: 0;
-    background-color: rgba(0, 0, 0, 0);
+    opacity: opacity(0);
+    background-color: $transparent;
     border: none;
   }
 
   button.model {
     @include gtk-reset;
-    background-color: transparent;
+    background-color: $transparent;
     background-image: none;
     border: none;
-    border-radius: 2px;
-    color: #ffffff;
+    border-radius: radius(2xs);
+    color: $white;
     box-shadow: none;
     outline: none;
     -gtk-icon-filter: none;
@@ -83,7 +84,7 @@ popover {
     }
 
     &:active {
-      background-color: rgba(255, 255, 255, 0.15);
+      background-color: $alpha-medium;
       background-image: none;
     }
 

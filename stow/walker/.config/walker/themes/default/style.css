@@ -1,13 +1,26 @@
-/* Theme variables - Tailwind CSS naming convention */
-@define-color gray-50 rgba(250, 250, 250, 1.0);
-@define-color gray-300 rgba(220, 220, 220, 0.8);
-@define-color gray-400 rgba(180, 180, 180, 1.0);
-@define-color gray-800 rgba(32, 38, 42, 0.4);
-@define-color gray-900 rgba(22, 22, 27, 0.75);
+/* Theme variables - Base16 colors (use alpha() function for opacity) */
 
-@define-color red-500 rgba(255, 100, 100, 1.0);
-@define-color green-500 rgba(100, 200, 100, 1.0);
+/* Base16 grayscale */
+@define-color base00 rgb(40, 41, 54);
+@define-color base01 rgb(58, 60, 78);
+@define-color base02 rgb(77, 79, 104);
+@define-color base03 rgb(98, 100, 131);
+@define-color base04 rgb(98, 214, 232);
+@define-color base05 rgb(233, 233, 244);
+@define-color base06 rgb(241, 242, 248);
+@define-color base07 rgb(247, 247, 251);
 
+/* Base16 accent colors */
+@define-color base08 rgb(234, 81, 178);
+@define-color base09 rgb(180, 91, 207);
+@define-color base0A rgb(0, 247, 105);
+@define-color base0B rgb(235, 255, 135);
+@define-color base0C rgb(161, 239, 228);
+@define-color base0D rgb(98, 214, 232);
+@define-color base0E rgb(180, 91, 207);
+@define-color base0F rgb(0, 247, 105);
+
+/* Alpha overlays (design tokens - not theme colors) */
 @define-color alpha-subtle rgba(255, 255, 255, 0.02);
 @define-color alpha-light rgba(255, 255, 255, 0.05);
 @define-color alpha-medium rgba(255, 255, 255, 0.1);
@@ -28,36 +41,23 @@
   -gtk-icon-size: 21px;
 }
 
-scrollbar {
-  opacity: 0;
-}
-
-scrollbar slider {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 2px;
-  min-height: 16px;
-}
-
-scrollbar slider:hover {
-  background: rgba(255, 255, 255, 0.3);
-}
-
 .box-wrapper {
-  background: @gray-900;
+  background: alpha(@base00, 0.3);
   border: 1px solid @alpha-subtle;
   border-radius: 10px;
   padding: 10px;
+  box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
 }
 
 .preview-box,
 .elephant-hint,
 .placeholder {
-  color: @gray-50;
+  color: white;
   opacity: 0.6;
 }
 
 .search-container {
-  background: alpha(@gray-400, 0.05);
+  background: alpha(@base01, 0.2);
   border: 1px solid @alpha-subtle;
   border-radius: 8px;
   padding: 1px;
@@ -65,15 +65,15 @@ scrollbar slider:hover {
 
 .input {
   background: transparent;
-  color: @gray-50;
+  color: white;
   font-size: 13px;
   font-weight: 400;
-  caret-color: @gray-50;
+  caret-color: white;
   padding: 8px 12px;
 }
 
 .input placeholder {
-  color: @gray-50;
+  color: white;
   opacity: 0.4;
 }
 
@@ -83,7 +83,7 @@ scrollbar slider:hover {
 }
 
 .list {
-  color: @gray-50;
+  color: white;
 }
 
 child {
@@ -98,13 +98,13 @@ child {
 }
 
 .item-quick-activation {
-  background: alpha(@gray-400, 0.15);
+  background: alpha(@base04, 0.15);
   border-radius: 8px;
   padding: 10px;
 }
 
 child:hover .item-box {
-  background: @gray-800;
+  background: alpha(@base01, 0.4);
   border-color: @alpha-subtle;
 }
 
@@ -119,7 +119,7 @@ child:selected .item-box {
 }
 
 .item-text {
-  color: @gray-50;
+  color: white;
   font-size: 13px;
   font-weight: 400;
   line-height: 1.2;
@@ -140,7 +140,7 @@ child:selected .item-box {
 }
 
 .item-activation-label {
-  color: @gray-50;
+  color: white;
   opacity: 0.6;
   font-size: 11px;
   font-weight: 600;
@@ -152,7 +152,7 @@ child:selected .item-box {
 .calc-display {
   font-size: 20px;
   font-weight: 300;
-  color: @gray-50;
+  color: white;
   padding: 8px;
 }
 
@@ -187,7 +187,7 @@ child:selected .item-box {
 }
 
 .error {
-  background: @red-500;
+  background: @base08;
   color: white;
   padding: 12px;
   border-radius: 10px;
@@ -195,20 +195,20 @@ child:selected .item-box {
 }
 
 .ai-item {
-  background: @gray-800;
+  background: alpha(@base01, 0.4);
   border: 1px solid @alpha-subtle;
   border-radius: 12px;
   padding: 12px 16px;
   margin: 6px 0;
-  color: @gray-50;
+  color: @base07;
 }
 
 .ai-item.user {
-  background: alpha(@gray-400, 0.2);
+  background: alpha(@base04, 0.2);
 }
 
 .ai-item.assistant {
-  background: @gray-800;
+  background: alpha(@base01, 0.4);
 }
 
 .password {

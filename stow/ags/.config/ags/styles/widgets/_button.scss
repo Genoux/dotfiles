@@ -8,8 +8,8 @@ button {
     @include gtk-reset;
     border-radius: radius(sm);
     transition: duration(fast) easing(ease);
-    min-height: 15px;
-    padding: 5px;
+    min-height: spacing(15);
+    padding: spacing(sm);
 
     &:hover {
         background-color: $alpha-light;

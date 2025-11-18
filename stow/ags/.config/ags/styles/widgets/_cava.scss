@@ -3,26 +3,26 @@
 
 .cava-island {
   .cava-bar {
-    background: $gray-50;
+    background: $white;
     border-radius: radius(xl);
-    transition: all 0.1s ease-out;
-    min-height: 2px;
-    min-width: 2px;
-    opacity: 0.8;
+    transition: all duration(faster) easing(ease-out);
+    min-height: spacing(2xs);
+    min-width: spacing(2xs);
+    opacity: opacity(80);
 
     &.cava-bar--active {
-      background: $gray-400;
-      opacity: 1;
+      background: $white;
+      opacity: opacity(100);
     }
   }
 }
 
 .cava-island-empty {
   padding: 0;
-  background: transparent;
+  background: $transparent;
 
   .cava-wrapper {
-    background: transparent;
+    background: $transparent;
     padding: spacing(xs);
   }
 }

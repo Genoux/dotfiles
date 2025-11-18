@@ -6,22 +6,22 @@ window.volume-osd-window,
 window.volume-osd-window revealer,
 window.brightness-osd-window,
 window.brightness-osd-window revealer {
-  background-color: transparent;
+  background-color: $transparent;
   border: none;
   outline: none;
   box-shadow: none;
 }
 
 .osd {
-  font-size: 14px;
-  font-weight: 400;
+  font-size: typography(font-size-base);
+  font-weight: typography(font-weight-normal);
   box-shadow: none;
   border-radius: radius(md);
-  margin-bottom: 24px;
+  margin-bottom: spacing(2xl);
   padding-top: spacing(md);
   border: 1px solid $alpha-subtle;
   background: rgba(0, 0, 0, 0.3);
-  color: white;
+  color: $white;
 
   .volume-step-bar,
   .brightness-step-bar {
@@ -31,9 +31,9 @@ window.brightness-osd-window revealer {
   .volume-step,
   .brightness-step {
     background-color: rgba(255, 255, 255, 0.2);
-    border-radius: 1px;
-    min-width: 3px;
-    transition: background-color 0.15s ease;
+    border-radius: radius(xs);
+    min-width: spacing(xs);
+    transition: background-color duration(fast) easing(ease);
 
     &.volume-step-filled,
     &.brightness-step-filled {

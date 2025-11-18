@@ -1,24 +1,35 @@
 #!/bin/bash
+# Display weather - TUI style, no shell prompt
+# Always open a new kitty window with specific size
 
-# Launch weather with single instance support
+# If we're already in display mode (env var set), just run the display
+if [ "$WEATHER_DISPLAY" = "1" ]; then
+    # Clear screen, hide cursor, and position at top
+    tput clear
+    tput civis
+    tput home
 
-TERMINAL_TITLE="weather"
-
-# Check if weather is already running (simplified check)
-window_address=$(hyprctl clients -j | jq -r '.[] | select(.title == "weather") | .address' | head -1)
-if [ -n "$window_address" ]; then
-    # Focus the existing window using address
-    hyprctl dispatch focuswindow address:"$window_address"
-    echo "Focused existing weather window"
-else
-    echo "Launching weather in ${TERMINAL:-xterm}..."
-    
     # Set environment variables to fix EGL/GPU issues
     export LIBGL_ALWAYS_SOFTWARE=1
     export __GL_THREADED_OPTIMIZATIONS=0
     export MESA_GL_VERSION_OVERRIDE=3.3
-    
-    ${TERMINAL:-xterm} --title "$TERMINAL_TITLE" -e sh -c "wego; echo 'Press any key to close...'; read -n 1" 2>/dev/null &
 
-    echo "Launched weather (PID: $!)"
+    # Run wego and ensure we're at the top
+    wego
+    tput home
+
+    # Wait for any keypress (silent, no echo)
+    stty -echo
+    read -n 1 -s
+    stty echo
+
+    # Show cursor and exit cleanly
+    tput cnorm
+    exit 0
 fi
+
+# Always launch kitty (will create new window even if kitty is running)
+exec kitty --class=weather-clear --title=weather \
+    -o initial_window_width=80c \
+    -o initial_window_height=24c \
+    env WEATHER_DISPLAY=1 "$0"

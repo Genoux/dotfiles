@@ -41,10 +41,23 @@ rewrite = true
 file = "~/.config/ags/styles/abstracts/_theme.scss"
 template = "ags"
 subtemplate = "default"
+hook = "systemctl --user restart ags.service"
 rewrite = true
 
 [[items]]
 file = "~/.config/walker/themes/default/style.css"
 template = "walker"
+subtemplate = "default"
+rewrite = true
+
+[[items]]
+file = "~/.config/zsh/highlight-colors.zsh"
+template = "zsh"
+subtemplate = "default"
+rewrite = true
+
+[[items]]
+file = "~/.config/Cursor/User/settings.json"
+template = "vscode"
 subtemplate = "default"
 rewrite = true

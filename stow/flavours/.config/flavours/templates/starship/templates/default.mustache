@@ -1,113 +1,170 @@
-# Include theme colors
-# Starship config schema: https://starship.rs/config-schema.json
+"$schema" = 'https://starship.rs/config-schema.json'
 
-# Starship Configuration
-# A modern, fast, and highly customizable cross-shell prompt
-# Documentation: https://starship.rs/config/
-
-# Use the custom palette
-palette = "custom"
-
-# Prompt format - defines what shows up and in what order
-format = """
-$username$hostname$directory$git_branch$git_status$python$nodejs$rust$package
-$character"""
-
-# Print a new line at the start of the prompt
-add_newline = true
-
-# Username module - show when it matters (SSH, root)
 [username]
-style_user = "bold warning"
-style_root = "bold error"
-format = "[$user]($style)[@](bold success)"
-disabled = false
 show_always = true
+format = '[$user]($style)'
+style_user = "bold #{{base0D-hex}}"
 
-# Hostname module
 [hostname]
 ssh_only = false
-format = "[$hostname](bold success) "
-disabled = false
+format = '[@$hostname]($style)'
+style = "bold #{{base0B-hex}}"
 
-# Directory module
-[directory]
-style = "bold info"
-truncation_length = 3
-truncate_to_repo = true
-format = "[$path]($style)[$read_only]($read_only_style)"
+[bun]
+format = "via [$symbol]($style)"
 
-# Git branch module
-[git_branch]
-style = "bold secondary"
-format = " on [$branch]($style)"
-symbol = ""
+[buf]
+format = "with [$symbol]($style)"
 
-# Git status module
-[git_status]
-style = "bold error"
-format = ' ([\[$all_status$ahead_behind\]]($style))'
+[c]
+format = "via [$symbol($name)]($style)"
 
-# Character module (the prompt symbol)
-[character]
-success_symbol = "[❯](bold success)"
-error_symbol = "[❯](bold error)"
-vicmd_symbol = "[❮](bold warning)"
+[cmake]
+format = "via [$symbol]($style)"
 
-# Programming language modules
-[python]
-style = "bold primary"
-format = '[🐍 $version]($style) '
+[cobol]
+format = "via [$symbol]($style)"
+
+[cpp]
+format = "via [$symbol($name)]($style)"
+
+[crystal]
+format = "via [$symbol]($style)"
+
+[daml]
+format = "via [$symbol]($style)"
+
+[dart]
+format = "via [$symbol]($style)"
+
+[deno]
+format = "via [$symbol]($style)"
+
+[dotnet]
+format = "[$symbol(🎯 $tfm )]($style)"
+
+[elixir]
+format = 'via [$symbol]($style)'
+
+[elm]
+format = 'via [$symbol]($style)'
+
+[erlang]
+format = 'via [$symbol]($style)'
+
+[fennel]
+format = 'via [$symbol]($style)'
+
+[fortran]
+format = 'via [$symbol]($style)'
+
+[gleam]
+format = 'via [$symbol]($style)'
+
+[golang]
+format = 'via [$symbol]($style)'
+
+[gradle]
+format = 'via [$symbol]($style)'
+
+[haskell]
+format = 'via [$symbol]($style)'
+
+[haxe]
+format = 'via [$symbol]($style)'
+
+[helm]
+format = 'via [$symbol]($style)'
+
+[java]
+format = 'via [$symbol]($style)'
+
+[julia]
+format = 'via [$symbol]($style)'
+
+[kotlin]
+format = 'via [$symbol]($style)'
+
+[lua]
+format = 'via [$symbol]($style)'
+
+[meson]
+format = 'via [$symbol]($style)'
+
+[mojo]
+format = 'with [$symbol]($style)'
+
+[nim]
+format = 'via [$symbol]($style)'
 
 [nodejs]
-style = "bold success"
-format = '[⬢ $version]($style) '
+format = 'via [$symbol]($style)'
+
+[ocaml]
+format = 'via [$symbol(\($switch_indicator$switch_name\) )]($style)'
+
+[odin]
+format = 'via [$symbol]($style)'
+
+[opa]
+format = 'via [$symbol]($style)'
+
+[perl]
+format = 'via [$symbol]($style)'
+
+[php]
+format = 'via [$symbol]($style)'
+
+[pixi]
+format = 'via [$symbol($environment )]($style)'
+
+[pulumi]
+format = 'via [$symbol$stack]($style)'
+
+[purescript]
+format = 'via [$symbol]($style)'
+
+[python]
+format = 'via [$symbol]($style)'
+
+[quarto]
+format = 'via [$symbol]($style)'
+
+[raku]
+format = 'via [$symbol]($style)'
+
+[red]
+format = 'via [$symbol]($style)'
+
+[rlang]
+format = 'via [$symbol]($style)'
+
+[ruby]
+format = 'via [$symbol]($style)'
 
 [rust]
-style = "bold accent"
-format = '[🦀 $version]($style) '
+format = 'via [$symbol]($style)'
 
-[package]
-style = "bold secondary"
-format = '[📦 $version]($style) '
+[scala]
+format = 'via [$symbol]($style)'
 
-# System modules
-[cmd_duration]
-min_time = 2_000
-style = "bold warning"
-format = "took [$duration]($style) "
+[solidity]
+format = 'via [$symbol]($style)'
 
-[memory_usage]
-disabled = true
-threshold = 75
-style = "bold dimmed error"
-format = "with [$symbol${ram}]($style) "
+[swift]
+format = 'via [$symbol]($style)'
 
-[time]
-disabled = true
-format = 'at [$time]($style) '
-style = "bold on_surface"
+[typst]
+format = 'via [$symbol]($style)'
 
-# Cloud/container modules
-[docker_context]
-style = "bold info"
-format = '[🐳 $context]($style) '
+[vagrant]
+format = 'via [$symbol]($style)'
 
-[kubernetes]
-disabled = false
-style = "bold info"
-format = '[⎈ $context\($namespace\)]($style) '
+[vlang]
+format = 'via [$symbol]($style)'
 
-# Generated theme colors from {{scheme-name}} by {{scheme-author}}
-[palettes.custom]
-primary = "#{{base07-hex}}"
-secondary = "#{{base05-hex}}"
-accent = "#{{base04-hex}}"
-success = "#{{base0B-hex}}"
-warning = "#{{base09-hex}}"
-error = "#{{base08-hex}}"
-info = "#{{base0D-hex}}"
-surface = "#{{base01-hex}}"
-on_surface = "#{{base07-hex}}"
-background = "#{{base00-hex}}"
-on_background = "#{{base07-hex}}"
+[xmake]
+format = "via [$symbol]($style)"
+
+[zig]
+format = 'via [$symbol]($style)'

@@ -3,27 +3,27 @@
 @use "sass:color";
 
 .bar {
-  background-color: rgba(255, 255, 255, 0.0);
+  background-color: $transparent;
   padding: 0 spacing(md);
   margin-bottom: spacing(sm);
   // Smooth transitions for all bar animations
-  transition: all 400ms cubic-bezier(0.4, 0.0, 0.2, 1),
-    opacity 400ms cubic-bezier(0.4, 0.0, 0.2, 1),
-    transform 400ms cubic-bezier(0.4, 0.0, 0.2, 1);
+  transition: all duration(medium) easing(smooth),
+    opacity duration(medium) easing(smooth),
+    transform duration(medium) easing(smooth);
 
   // Revealer smooth crossfade animation
   revealer {
-    transition: all 400ms cubic-bezier(0.4, 0.0, 0.2, 1);
+    transition: all duration(medium) easing(smooth);
   }
 
   // Enhanced fade animation when bar appears/disappears
   &.hidden {
-    opacity: 0;
-    transform: translateY(10px);
+    opacity: opacity(0);
+    transform: translateY(spacing(10));
   }
 
   &.visible {
-    opacity: 1;
+    opacity: opacity(100);
     transform: translateY(0);
   }
 }

@@ -9,6 +9,9 @@ height=1200
 margin=6
 outer-margin=0,2,6,0
 padding=10
+border-radius=5
+border-size=1
+
 
 default-timeout=5000
 ignore-timeout=0
@@ -23,9 +26,12 @@ max-icon-size=24
 
 [urgency=low]
 default-timeout=5000
+border-color=#ffffff40
 
 [urgency=normal]
 default-timeout=5000
+border-color=#ffffff40
 
 [urgency=critical]
 default-timeout=0
+border-color=#ffffff40

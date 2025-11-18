@@ -1,13 +1,26 @@
-/* Theme variables - Tailwind CSS naming convention */
-@define-color gray-50 rgba({{base07-rgb-r}}, {{base07-rgb-g}}, {{base07-rgb-b}}, 1.0);
-@define-color gray-300 rgba({{base05-rgb-r}}, {{base05-rgb-g}}, {{base05-rgb-b}}, 0.8);
-@define-color gray-400 rgba({{base04-rgb-r}}, {{base04-rgb-g}}, {{base04-rgb-b}}, 1.0);
-@define-color gray-800 rgba({{base01-rgb-r}}, {{base01-rgb-g}}, {{base01-rgb-b}}, 0.4);
-@define-color gray-900 rgba({{base00-rgb-r}}, {{base00-rgb-g}}, {{base00-rgb-b}}, 0.75);
+/* Theme variables - Base16 colors (use alpha() function for opacity) */
 
-@define-color red-500 rgba({{base08-rgb-r}}, {{base08-rgb-g}}, {{base08-rgb-b}}, 1.0);
-@define-color green-500 rgba({{base0B-rgb-r}}, {{base0B-rgb-g}}, {{base0B-rgb-b}}, 1.0);
+/* Base16 grayscale */
+@define-color base00 rgb({{base00-rgb-r}}, {{base00-rgb-g}}, {{base00-rgb-b}});
+@define-color base01 rgb({{base01-rgb-r}}, {{base01-rgb-g}}, {{base01-rgb-b}});
+@define-color base02 rgb({{base02-rgb-r}}, {{base02-rgb-g}}, {{base02-rgb-b}});
+@define-color base03 rgb({{base03-rgb-r}}, {{base03-rgb-g}}, {{base03-rgb-b}});
+@define-color base04 rgb({{base04-rgb-r}}, {{base04-rgb-g}}, {{base04-rgb-b}});
+@define-color base05 rgb({{base05-rgb-r}}, {{base05-rgb-g}}, {{base05-rgb-b}});
+@define-color base06 rgb({{base06-rgb-r}}, {{base06-rgb-g}}, {{base06-rgb-b}});
+@define-color base07 rgb({{base07-rgb-r}}, {{base07-rgb-g}}, {{base07-rgb-b}});
 
+/* Base16 accent colors */
+@define-color base08 rgb({{base08-rgb-r}}, {{base08-rgb-g}}, {{base08-rgb-b}});
+@define-color base09 rgb({{base09-rgb-r}}, {{base09-rgb-g}}, {{base09-rgb-b}});
+@define-color base0A rgb({{base0A-rgb-r}}, {{base0A-rgb-g}}, {{base0A-rgb-b}});
+@define-color base0B rgb({{base0B-rgb-r}}, {{base0B-rgb-g}}, {{base0B-rgb-b}});
+@define-color base0C rgb({{base0C-rgb-r}}, {{base0C-rgb-g}}, {{base0C-rgb-b}});
+@define-color base0D rgb({{base0D-rgb-r}}, {{base0D-rgb-g}}, {{base0D-rgb-b}});
+@define-color base0E rgb({{base0E-rgb-r}}, {{base0E-rgb-g}}, {{base0E-rgb-b}});
+@define-color base0F rgb({{base0F-rgb-r}}, {{base0F-rgb-g}}, {{base0F-rgb-b}});
+
+/* Alpha overlays (design tokens - not theme colors) */
 @define-color alpha-subtle rgba(255, 255, 255, 0.02);
 @define-color alpha-light rgba(255, 255, 255, 0.05);
 @define-color alpha-medium rgba(255, 255, 255, 0.1);
@@ -28,36 +41,23 @@
   -gtk-icon-size: 21px;
 }
 
-scrollbar {
-  opacity: 0;
-}
-
-scrollbar slider {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 2px;
-  min-height: 16px;
-}
-
-scrollbar slider:hover {
-  background: rgba(255, 255, 255, 0.3);
-}
-
 .box-wrapper {
-  background: @gray-900;
+  background: alpha(@base00, 0.3);
   border: 1px solid @alpha-subtle;
   border-radius: 10px;
   padding: 10px;
+  box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
 }
 
 .preview-box,
 .elephant-hint,
 .placeholder {
-  color: @gray-50;
+  color: white;
   opacity: 0.6;
 }
 
 .search-container {
-  background: alpha(@gray-400, 0.05);
+  background: alpha(@base01, 0.2);
   border: 1px solid @alpha-subtle;
   border-radius: 8px;
   padding: 1px;
@@ -65,15 +65,15 @@ scrollbar slider:hover {
 
 .input {
   background: transparent;
-  color: @gray-50;
+  color: white;
   font-size: 13px;
   font-weight: 400;
-  caret-color: @gray-50;
+  caret-color: white;
   padding: 8px 12px;
 }
 
 .input placeholder {
-  color: @gray-50;
+  color: white;
   opacity: 0.4;
 }
 
@@ -83,7 +83,7 @@ scrollbar slider:hover {
 }
 
 .list {
-  color: @gray-50;
+  color: white;
 }
 
 child {
@@ -98,13 +98,13 @@ child {
 }
 
 .item-quick-activation {
-  background: alpha(@gray-400, 0.15);
+  background: alpha(@base04, 0.15);
   border-radius: 8px;
   padding: 10px;
 }
 
 child:hover .item-box {
-  background: @gray-800;
+  background: alpha(@base01, 0.4);
   border-color: @alpha-subtle;
 }
 
@@ -119,7 +119,7 @@ child:selected .item-box {
 }
 
 .item-text {
-  color: @gray-50;
+  color: white;
   font-size: 13px;
   font-weight: 400;
   line-height: 1.2;
@@ -140,7 +140,7 @@ child:selected .item-box {
 }
 
 .item-activation-label {
-  color: @gray-50;
+  color: white;
   opacity: 0.6;
   font-size: 11px;
   font-weight: 600;
@@ -152,7 +152,7 @@ child:selected .item-box {
 .calc-display {
   font-size: 20px;
   font-weight: 300;
-  color: @gray-50;
+  color: white;
   padding: 8px;
 }
 
@@ -187,7 +187,7 @@ child:selected .item-box {
 }
 
 .error {
-  background: @red-500;
+  background: @base08;
   color: white;
   padding: 12px;
   border-radius: 10px;
@@ -195,20 +195,20 @@ child:selected .item-box {
 }
 
 .ai-item {
-  background: @gray-800;
+  background: alpha(@base01, 0.4);
   border: 1px solid @alpha-subtle;
   border-radius: 12px;
   padding: 12px 16px;
   margin: 6px 0;
-  color: @gray-50;
+  color: @base07;
 }
 
 .ai-item.user {
-  background: alpha(@gray-400, 0.2);
+  background: alpha(@base04, 0.2);
 }
 
 .ai-item.assistant {
-  background: @gray-800;
+  background: alpha(@base01, 0.4);
 }
 
 .password {

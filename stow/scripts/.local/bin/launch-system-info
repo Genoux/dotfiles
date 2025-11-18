@@ -22,7 +22,7 @@ if [ "$SYSTEM_INFO_DISPLAY" = "1" ]; then
 fi
 
 # Always launch kitty (will create new window even if kitty is running)
-exec kitty --class=SystemInfo --title=SystemInfo \
+exec kitty --class=help-about --title=SystemInfo \
     -o initial_window_width=80c \
     -o initial_window_height=24c \
     env SYSTEM_INFO_DISPLAY=1 "$0"

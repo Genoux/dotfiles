@@ -11,5 +11,5 @@ if hyprctl clients | grep -q "^[[:space:]]*title: $TERMINAL_TITLE$"; then
     hyprctl dispatch focuswindow title:"$TERMINAL_TITLE"
 else
     # Launch new instance with proper environment
-    ${TERMINAL:-xterm} --title "$TERMINAL_TITLE" --hold -e "$COMMAND" 2>/dev/null &
+    kitty --class=htop --title "$TERMINAL_TITLE" --hold -e "$COMMAND" 2>/dev/null &
 fi

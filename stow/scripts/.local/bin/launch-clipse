@@ -5,12 +5,12 @@
 TERMINAL_TITLE="clipse"
 COMMAND="clipse"
 
-# Check if impala is already running
+# Check if clipse is already running
 if hyprctl clients | grep -q "^[[:space:]]*title: $TERMINAL_TITLE$"; then
     # Focus the existing window
     hyprctl dispatch focuswindow title:"$TERMINAL_TITLE"
 else
     # Launch new instance with EGL error suppression
-    ${TERMINAL:-xterm} --title "$TERMINAL_TITLE" -e $COMMAND 2>/dev/null &
+    kitty --class=edit-paste --title "$TERMINAL_TITLE" -e $COMMAND 2>/dev/null &
 fi
 
