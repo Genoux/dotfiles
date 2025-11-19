@@ -6,75 +6,86 @@
 packages_manage() {
     log_section "Package Management"
 
-    log_info "Analyzing packages..."
+    # Get all installed packages in one call for O(1) lookups
+    local -A all_installed=()
+    while IFS= read -r pkg; do
+        all_installed["$pkg"]=1
+    done < <(pacman -Qq 2>/dev/null)
 
-    # Fast categorization: just use pacman's built-in categorization
+    # Get AUR package list for categorization
+    local -A aur_packages_set=()
+    while IFS= read -r pkg; do
+        aur_packages_set["$pkg"]=1
+    done < <(pacman -Qmq 2>/dev/null)
+
+    # Build arrays and hash maps for installed packages
     local installed_official=()
     local installed_aur=()
+    local -A installed_official_map=()
+    local -A installed_aur_map=()
 
-    # Get official packages (explicitly installed, not from AUR)
     while IFS= read -r pkg; do
-        installed_official+=("$pkg")
-    done < <(pacman -Qeq | grep -vf <(pacman -Qmq))
-
-    # Get AUR packages (explicitly installed from AUR)
-    while IFS= read -r pkg; do
-        installed_aur+=("$pkg")
-    done < <(pacman -Qmq)
+        if [[ -v aur_packages_set["$pkg"] ]]; then
+            installed_aur+=("$pkg")
+            installed_aur_map["$pkg"]=1
+        else
+            installed_official+=("$pkg")
+            installed_official_map["$pkg"]=1
+        fi
+    done < <(pacman -Qeq 2>/dev/null)
 
     # Read dotfiles packages (with hardware filtering)
     local dotfiles_official=()
     local dotfiles_aur=()
+    local -A dotfiles_official_map=()
+    local -A dotfiles_aur_map=()
 
     if [[ -f "$PACKAGES_FILE" ]]; then
-        # Filter packages by hardware (same as install does)
         local filtered_packages=$(filter_packages_by_hardware "$PACKAGES_FILE")
         while IFS= read -r pkg; do
-            [[ -n "$pkg" && ! "$pkg" =~ ^# ]] && dotfiles_official+=("$pkg")
+            if [[ -n "$pkg" && ! "$pkg" =~ ^# ]]; then
+                dotfiles_official+=("$pkg")
+                dotfiles_official_map["$pkg"]=1
+            fi
         done < "$filtered_packages"
         rm -f "$filtered_packages"
     fi
 
     if [[ -f "$AUR_PACKAGES_FILE" ]]; then
         while IFS= read -r pkg; do
-            [[ -n "$pkg" && ! "$pkg" =~ ^# ]] && dotfiles_aur+=("$pkg")
+            if [[ -n "$pkg" && ! "$pkg" =~ ^# ]]; then
+                dotfiles_aur+=("$pkg")
+                dotfiles_aur_map["$pkg"]=1
+            fi
         done < "$AUR_PACKAGES_FILE"
     fi
 
-    # Find differences
+    # Find differences using hash maps for O(1) lookups
     local missing_official=()
     local missing_aur=()
     local extra_official=()
     local extra_aur=()
 
-    # Missing = in dotfiles but not installed (check ANY installation, not just explicit)
     for pkg in "${dotfiles_official[@]}"; do
-        if [[ ! " ${installed_official[@]} " =~ " ${pkg} " ]]; then
-            # Double-check if it's installed as a dependency
-            if ! pacman -Q "$pkg" &>/dev/null; then
-                missing_official+=("$pkg")
-            fi
+        if [[ ! -v all_installed["$pkg"] ]]; then
+            missing_official+=("$pkg")
         fi
     done
 
     for pkg in "${dotfiles_aur[@]}"; do
-        if [[ ! " ${installed_aur[@]} " =~ " ${pkg} " ]]; then
-            # Double-check if it's installed as a dependency
-            if ! pacman -Q "$pkg" &>/dev/null; then
-                missing_aur+=("$pkg")
-            fi
+        if [[ ! -v all_installed["$pkg"] ]]; then
+            missing_aur+=("$pkg")
         fi
     done
 
-    # Extra = installed but not in dotfiles
     for pkg in "${installed_official[@]}"; do
-        if [[ ! " ${dotfiles_official[@]} " =~ " ${pkg} " ]]; then
+        if [[ ! -v dotfiles_official_map["$pkg"] ]]; then
             extra_official+=("$pkg")
         fi
     done
 
     for pkg in "${installed_aur[@]}"; do
-        if [[ ! " ${dotfiles_aur[@]} " =~ " ${pkg} " ]]; then
+        if [[ ! -v dotfiles_aur_map["$pkg"] ]]; then
             extra_aur+=("$pkg")
         fi
     done
@@ -88,18 +99,13 @@ packages_manage() {
     echo
 
     # Simple formatted table (gum table is for selection, not display)
-    printf "  %-12s %10s %10s %10s\n" "Source" "Official" "AUR" "Total"
-    printf "  %-12s %10s %10s %10s\n" "------------" "----------" "----------" "----------"
-    printf "  %-12s %10d %10d %10d\n" "Dotfiles" "${#dotfiles_official[@]}" "${#dotfiles_aur[@]}" "$((${#dotfiles_official[@]} + ${#dotfiles_aur[@]}))"
-    printf "  %-12s %10d %10d %10d\n" "Installed" "${#installed_official[@]}" "${#installed_aur[@]}" "$((${#installed_official[@]} + ${#installed_aur[@]}))"
-    printf "  %-12s %10d %10d %10d\n" "Missing" "${#missing_official[@]}" "${#missing_aur[@]}" "$total_missing"
-    printf "  %-12s %10d %10d %10d\n" "Extra" "${#extra_official[@]}" "${#extra_aur[@]}" "$total_extra"
+    printf "%-12s %10s %10s %10s\n" "Source" "Official" "AUR" "Total"
+    printf "%-12s %10s %10s %10s\n" "------------" "----------" "----------" "----------"
+    printf "%-12s %10d %10d %10d\n" "Dotfiles" "${#dotfiles_official[@]}" "${#dotfiles_aur[@]}" "$((${#dotfiles_official[@]} + ${#dotfiles_aur[@]}))"
+    printf "%-12s %10d %10d %10d\n" "Installed" "${#installed_official[@]}" "${#installed_aur[@]}" "$((${#installed_official[@]} + ${#installed_aur[@]}))"
+    printf "%-12s %10d %10d %10d\n" "Missing" "${#missing_official[@]}" "${#missing_aur[@]}" "$total_missing"
+    printf "%-12s %10d %10d %10d\n" "Extra" "${#extra_official[@]}" "${#extra_aur[@]}" "$total_extra"
     echo
-
-    if [[ $total_missing -eq 0 && $total_extra -eq 0 ]]; then
-        log_success "System and dotfiles are in perfect sync!"
-        return 0
-    fi
 
     # Show missing packages
     if [[ $total_missing -gt 0 ]]; then
@@ -121,23 +127,32 @@ packages_manage() {
     for pkg in "${dotfiles_official[@]}" "${dotfiles_aur[@]}"; do
         dotfiles_map[$pkg]=1
     done
-    
+
+    # Get all dependency info in one batch call instead of per-package
+    local -A package_dependencies=()
+    if [[ ${#extra_official[@]} -gt 0 || ${#extra_aur[@]} -gt 0 ]]; then
+        while IFS='|' read -r pkg required_by; do
+            package_dependencies["$pkg"]="$required_by"
+        done < <(pacman -Qi "${extra_official[@]}" "${extra_aur[@]}" 2>/dev/null | \
+                 awk '/^Name/ {name=$3} /^Required By/ {gsub(/^Required By *: */, ""); print name"|"$0}')
+    fi
+
     # Check each extra package to see if it's a dependency
     for pkg in "${extra_official[@]}" "${extra_aur[@]}"; do
-        local required_by=$(pacman -Qi "$pkg" 2>/dev/null | awk '/^Required By/ {for(i=4;i<=NF;i++) print $i}')
+        local required_by="${package_dependencies[$pkg]}"
         local is_dependency=false
-        
-        if [[ -n "$required_by" ]]; then
-            while IFS= read -r req; do
+
+        if [[ -n "$required_by" && "$required_by" != "None" ]]; then
+            for req in $required_by; do
                 if [[ -n "${dotfiles_map[$req]}" ]]; then
                     is_dependency=true
                     break
                 fi
-            done <<< "$required_by"
+            done
         fi
-        
+
         if $is_dependency; then
-            if pacman -Qm "$pkg" &>/dev/null; then
+            if [[ -v aur_packages_set["$pkg"] ]]; then
                 extra_as_deps_aur+=("$pkg")
             else
                 extra_as_deps_official+=("$pkg")
@@ -170,7 +185,7 @@ packages_manage() {
     # Check if any "missing" packages are actually installed as dependencies
     local deps_as_explicit=()
     for pkg in "${missing_official[@]}" "${missing_aur[@]}"; do
-        if pacman -Q "$pkg" &>/dev/null; then
+        if [[ -v all_installed["$pkg"] ]]; then
             deps_as_explicit+=("$pkg")
         fi
     done
@@ -199,6 +214,8 @@ packages_manage() {
 
     local action=$(choose_option --header "What would you like to do?" "${options[@]}")
     [[ -z "$action" ]] && return 1  # ESC pressed
+
+    clear
 
     case "$action" in
         "Install all from dotfiles"*)
@@ -392,42 +409,57 @@ packages_clean_unlisted() {
     # Read dotfiles packages
     local dotfiles_official=()
     local dotfiles_aur=()
+    local -A dotfiles_official_map=()
+    local -A dotfiles_aur_map=()
 
     if [[ -f "$PACKAGES_FILE" ]]; then
         while IFS= read -r pkg; do
-            [[ -n "$pkg" && ! "$pkg" =~ ^# ]] && dotfiles_official+=("$pkg")
+            if [[ -n "$pkg" && ! "$pkg" =~ ^# ]]; then
+                dotfiles_official+=("$pkg")
+                dotfiles_official_map["$pkg"]=1
+            fi
         done < "$PACKAGES_FILE"
     fi
 
     if [[ -f "$AUR_PACKAGES_FILE" ]]; then
         while IFS= read -r pkg; do
-            [[ -n "$pkg" && ! "$pkg" =~ ^# ]] && dotfiles_aur+=("$pkg")
+            if [[ -n "$pkg" && ! "$pkg" =~ ^# ]]; then
+                dotfiles_aur+=("$pkg")
+                dotfiles_aur_map["$pkg"]=1
+            fi
         done < "$AUR_PACKAGES_FILE"
     fi
 
-    # Get installed packages
+    # Get AUR package set for categorization
+    local -A aur_packages_set=()
+    while IFS= read -r pkg; do
+        aur_packages_set["$pkg"]=1
+    done < <(pacman -Qmq 2>/dev/null)
+
+    # Get installed packages and categorize
     local installed_official=()
-    while IFS= read -r pkg; do
-        installed_official+=("$pkg")
-    done < <(pacman -Qeq | grep -vf <(pacman -Qmq))
-
     local installed_aur=()
-    while IFS= read -r pkg; do
-        installed_aur+=("$pkg")
-    done < <(pacman -Qmq)
 
-    # Find unlisted packages
+    while IFS= read -r pkg; do
+        if [[ -v aur_packages_set["$pkg"] ]]; then
+            installed_aur+=("$pkg")
+        else
+            installed_official+=("$pkg")
+        fi
+    done < <(pacman -Qeq 2>/dev/null)
+
+    # Find unlisted packages using hash maps
     local unlisted_official=()
     local unlisted_aur=()
 
     for pkg in "${installed_official[@]}"; do
-        if [[ ! " ${dotfiles_official[@]} " =~ " ${pkg} " ]]; then
+        if [[ ! -v dotfiles_official_map["$pkg"] ]]; then
             unlisted_official+=("$pkg")
         fi
     done
 
     for pkg in "${installed_aur[@]}"; do
-        if [[ ! " ${dotfiles_aur[@]} " =~ " ${pkg} " ]]; then
+        if [[ ! -v dotfiles_aur_map["$pkg"] ]]; then
             unlisted_aur+=("$pkg")
         fi
     done
@@ -466,6 +498,8 @@ packages_clean_unlisted() {
             "Remove all unlisted packages" \
             "Cancel")
 
+    clear
+
         case "$action" in
             "Select packages to keep (rest will be removed)")
                 local all_unlisted=()
@@ -481,7 +515,7 @@ packages_clean_unlisted() {
                 if [[ ${#all_unlisted[@]} -gt 20 ]]; then
                     log_info "Large list detected. Use fuzzy search to filter packages to KEEP:"
                     echo
-                    selected=$(printf '%s\n' "${all_unlisted[@]}" | gum filter --no-limit --placeholder "Search packages to keep (Tab to select, Enter to confirm)...")
+                    selected=$(printf '%s\n' "${all_unlisted[@]}" | filter_search "Search packages to keep (Tab to select, Enter to confirm)...")
                 else
                     selected=$(printf '%s\n' "${all_unlisted[@]}" | gum choose --no-limit --header "Select packages to KEEP (unselected will be removed):" --no-show-help)
                 fi

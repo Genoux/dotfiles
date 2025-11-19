@@ -15,7 +15,6 @@ show_completion_screen() {
 
     # Check if reboot is needed
     if [[ -f "$HOME/.local/state/dotfiles/.reboot_needed" ]]; then
-        echo
         printf "\033[93m⚠\033[0m  \033[93mReboot required to apply all changes\033[0m\n"
     fi
 

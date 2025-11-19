@@ -620,36 +620,29 @@ config_status() {
 
         # Display status
         if $is_broken; then
-            echo "$(gum style --foreground 1 "✗ $config")$(gum style --foreground 8 " (broken symlink)")"
+            echo "$(status_error) $config$(gum style --foreground 8 " (broken symlink)")"
             broken_configs+=("$config")
             ((broken_count++))
         elif $is_linked; then
-            echo "$(gum style --foreground 2 "✓ $config")$(gum style --foreground 8 " (linked)")"
+            echo "$(status_ok) $config$(gum style --foreground 8 " (linked)")"
             ((linked_count++))
         else
-            echo "$(gum style --foreground 8 "○ $config (not linked)")"
+            echo "$(status_neutral) $config (not linked)"
         fi
     done
-
-    echo
 
     # Show issues if any
     if [[ $broken_count -gt 0 ]]; then
         log_warning "Found $broken_count config(s) with broken symlinks:"
         for config in "${broken_configs[@]}"; do
-            echo "  $(gum style --foreground 1 "✗ $config")"
+            echo "  $(status_error) $config"
         done
-        echo
     fi
 
     # Show actionable info
     local not_linked=$((${#configs[@]} - linked_count - broken_count))
     if [[ $not_linked -gt 0 ]]; then
         log_info "$not_linked config(s) not linked"
-        echo
-    elif [[ $broken_count -eq 0 ]]; then
-        log_success "All configs are properly linked"
-        echo
     fi
 }
 

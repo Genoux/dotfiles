@@ -107,63 +107,57 @@ system_status() {
     local configs_pending=0
 
     # Check makepkg.conf debug status
-    echo
     log_info "Package building:"
     if [[ -f /etc/makepkg.conf ]]; then
         if grep -q "OPTIONS=.*!debug.*" /etc/makepkg.conf; then
-            echo "  $(gum style --foreground 2 "✓") makepkg debug disabled"
+            echo "  $(status_ok) makepkg debug disabled"
             ((configs_applied++))
         else
-            echo "  $(gum style --foreground 3 "○") makepkg debug enabled (should disable)"
+            echo "  $(status_warning) makepkg debug enabled (should disable)"
             ((configs_pending++))
         fi
-        echo "  $(gum style --foreground 8 "  Config: /etc/makepkg.conf")"
+        echo "  $(gum style --foreground 8 "Config: /etc/makepkg.conf")"
     else
-        echo "  $(gum style --foreground 8 "○") makepkg.conf not found"
+        echo "  $(status_neutral) makepkg.conf not found"
         ((configs_pending++))
     fi
-    echo
 
     # Check systemd sleep config
-    echo
     log_info "Power management:"
     if [[ -d /etc/systemd/sleep.conf.d ]]; then
         local sleep_configs=$(find /etc/systemd/sleep.conf.d -type f 2>/dev/null | wc -l)
         if [[ $sleep_configs -gt 0 ]]; then
-            echo "  $(gum style --foreground 2 "✓") systemd sleep configs ($sleep_configs files)"
+            echo "  $(status_ok) systemd sleep configs ($sleep_configs files)"
             ((configs_applied++))
-            echo "  $(gum style --foreground 8 "  Location: /etc/systemd/sleep.conf.d/")"
+            echo "  $(gum style --foreground 8 "Location: /etc/systemd/sleep.conf.d/")"
         else
-            echo "  $(gum style --foreground 3 "○") systemd sleep configs (directory exists but empty)"
+            echo "  $(status_warning) systemd sleep configs (directory exists but empty)"
             ((configs_pending++))
         fi
     else
-        echo "  $(gum style --foreground 3 "○") systemd sleep configs (not configured)"
+        echo "  $(status_warning) systemd sleep configs (not configured)"
         ((configs_pending++))
     fi
-    echo
+
 
     # Check systemd logind config
-    echo
     log_info "Login management:"
     if [[ -d /etc/systemd/logind.conf.d ]]; then
         local logind_configs=$(find /etc/systemd/logind.conf.d -type f 2>/dev/null | wc -l)
         if [[ $logind_configs -gt 0 ]]; then
-            echo "  $(gum style --foreground 2 "✓") systemd logind configs ($logind_configs files)"
+            echo "  $(status_ok) systemd logind configs ($logind_configs files)"
             ((configs_applied++))
-            echo "  $(gum style --foreground 8 "  Location: /etc/systemd/logind.conf.d/")"
+            echo "  $(gum style --foreground 8 "Location: /etc/systemd/logind.conf.d/")"
         else
-            echo "  $(gum style --foreground 3 "○") systemd logind configs (directory exists but empty)"
+            echo "  $(status_warning) systemd logind configs (directory exists but empty)"
             ((configs_pending++))
         fi
     else
-        echo "  $(gum style --foreground 3 "○") systemd logind configs (not configured)"
+        echo "  $(status_warning) systemd logind configs (not configured)"
         ((configs_pending++))
     fi
-    echo
 
     # Check for other system configs
-    echo
     log_info "Other configurations:"
     local other_configs=(
         "/etc/systemd/resolved.conf.d"
@@ -176,20 +170,15 @@ system_status() {
         if [[ -d "$config_path" ]]; then
             local file_count=$(find "$config_path" -type f 2>/dev/null | wc -l)
             if [[ $file_count -gt 0 ]]; then
-                echo "  $(gum style --foreground 2 "✓") $config_name ($file_count files)"
-                echo "  $(gum style --foreground 8 "  Location: $config_path")"
+                echo "  $(status_ok) $config_name ($file_count files)"
+                echo "  $(gum style --foreground 8 "Location: $config_path")"
             fi
         fi
     done
-    echo
 
     # Show actionable info
     if [[ $configs_pending -gt 0 ]]; then
         log_info "$configs_pending configuration(s) pending"
-        echo
-    elif [[ $configs_applied -gt 0 ]]; then
-        log_success "All system configurations are applied"
-        echo
     fi
 }
 

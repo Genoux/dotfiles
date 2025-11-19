@@ -167,22 +167,29 @@ ensure_dir() {
     fi
 }
 
-# Interactive yes/no prompt
+# Interactive yes/no prompt (consolidated from multiple files)
 # Usage: if ask_yes_no "Continue?"; then ...
+#        if ask_yes_no "Continue?" "y"; then ...  # default to yes
+#        if confirm "Continue?"; then ...          # alias, default yes
+#        if confirm_action "Continue?"; then ...   # alias, default yes
 ask_yes_no() {
     local question="$1"
     local default="${2:-n}"  # Default to 'no'
 
     if command -v gum &>/dev/null; then
-        gum confirm "$question"
+        if [[ "$default" == "y" ]] || [[ "$default" == "true" ]]; then
+            gum confirm --default=true "$question"
+        else
+            gum confirm --default=false "$question"
+        fi
     else
         local prompt="$question"
-        [[ "$default" == "y" ]] && prompt="$prompt (Y/n)" || prompt="$prompt (y/N)"
+        [[ "$default" == "y" ]] || [[ "$default" == "true" ]] && prompt="$prompt (Y/n)" || prompt="$prompt (y/N)"
 
         read -p "$prompt " -n 1 -r
         echo
 
-        if [[ "$default" == "y" ]]; then
+        if [[ "$default" == "y" ]] || [[ "$default" == "true" ]]; then
             [[ $REPLY =~ ^[Nn]$ ]] && return 1 || return 0
         else
             [[ $REPLY =~ ^[Yy]$ ]] && return 0 || return 1
@@ -190,18 +197,30 @@ ask_yes_no() {
     fi
 }
 
-# Get user input
-# Usage: name=$(get_input "Enter your name" "default")
+# Alias for ask_yes_no with default yes
+confirm() {
+    ask_yes_no "$1" "y"
+}
+
+# Alias for ask_yes_no (for backward compatibility)
+confirm_action() {
+    ask_yes_no "$1" "y"
+}
+
+# Get user input (consolidated from multiple files)
+# Usage: name=$(get_input "Enter your name")
+#        name=$(get_input "Enter your name" "default value")
+#        name=$(get_input "Enter your name" "" "placeholder text")
 get_input() {
     local prompt="$1"
     local default="$2"
+    local placeholder="${3:-}"
 
     if command -v gum &>/dev/null; then
-        if [[ -n "$default" ]]; then
-            gum input --placeholder "$prompt" --value "$default"
-        else
-            gum input --placeholder "$prompt"
-        fi
+        local cmd=(gum input)
+        [[ -n "$placeholder" ]] && cmd+=(--placeholder "$placeholder") || cmd+=(--prompt "$prompt ")
+        [[ -n "$default" ]] && cmd+=(--value "$default")
+        "${cmd[@]}"
     else
         if [[ -n "$default" ]]; then
             read -p "$prompt [$default]: " value

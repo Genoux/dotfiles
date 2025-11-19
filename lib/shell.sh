@@ -50,10 +50,6 @@ is_omz_installed() {
 
 # Install Oh My Zsh
 install_omz() {
-    if is_omz_installed; then
-        log_info "Oh My Zsh is already installed"
-        return 0
-    fi
     
     log_info "Installing Oh My Zsh..."
     echo
@@ -382,39 +378,31 @@ shell_status() {
     local current_shell=$(getent passwd "$USER" | cut -d: -f7 2>/dev/null || echo "$SHELL")
     local shell_name=$(basename "$current_shell")
     if [[ "$shell_name" == "zsh" ]]; then
-        show_info "Default shell" "$shell_name $(gum style --foreground 2 '✓')"
+        show_info "Default shell" "$shell_name $(status_ok)"
     else
-        show_info "Default shell" "$shell_name $(gum style --foreground 3 '(not zsh)')"
-        echo
+        show_info "Default shell" "$shell_name $(status_warning) (not zsh)"
     fi
 
-    # Check Oh My Zsh installation
     echo
-    if is_omz_installed; then
-        log_success "Oh My Zsh is installed"
-    else
-        log_warning "Oh My Zsh is not installed"
-        echo
-    fi
-
+    
     # Check shell configuration files
-    echo
     log_info "Configuration files:"
     local config_files=("$HOME/.zshrc" "$HOME/.profile" "$HOME/.zprofile")
     local all_linked=true
     for config_file in "${config_files[@]}"; do
         if [[ -L "$config_file" ]]; then
             if [[ -e "$config_file" ]]; then
-                echo "  $(gum style --foreground 2 "✓") $(basename "$config_file") (linked)"
+                echo "$(status_ok) $(basename "$config_file") (linked)"
             else
-                echo "  $(gum style --foreground 1 "✗") $(basename "$config_file") (broken symlink)"
+                echo "$(status_error) $(basename "$config_file") (broken symlink)"
                 all_linked=false
             fi
         elif [[ -f "$config_file" ]]; then
-            echo "  $(gum style --foreground 8 "○") $(basename "$config_file") (not linked)"
+            echo "$(status_neutral) $(basename "$config_file") (not linked)"
             all_linked=false
         fi
     done
+
     echo
 
     # List plugin status
@@ -437,38 +425,30 @@ shell_status() {
 
         if [[ ${#installed_plugins[@]} -gt 0 ]]; then
             for plugin in "${installed_plugins[@]}"; do
-                echo "  $(gum style --foreground 2 "✓") $plugin"
+                echo "$(status_ok) $plugin"
             done
         fi
 
         if [[ ${#missing_plugins[@]} -gt 0 ]]; then
             for plugin in "${missing_plugins[@]}"; do
-                echo "  $(gum style --foreground 3 "○") $plugin (not installed)"
+                echo "$(status_warning) $plugin (not installed)"
             done
-            echo
         elif [[ ${#installed_plugins[@]} -eq 0 ]]; then
-            echo "  $(gum style --foreground 8 "No plugins configured")"
-            echo
-        else
-            log_success "All plugins are installed"
-            echo
+            echo "$(gum style --foreground 8 "No plugins configured")"
         fi
     fi
-    
-    # Check Starship (user said this adds value)
-    if command -v starship &>/dev/null; then
-        local starship_config="$HOME/.config/starship.toml"
-        if [[ -f "$starship_config" ]]; then
-            show_info "Starship config" "$(gum style --foreground 2 '✓ Configured')"
-        else
-            show_info "Starship config" "$(gum style --foreground 3 '✗ Not configured')"
-            echo
-            log_info "Starship is installed but not configured"
-            echo
-        fi
-    else
-        show_info "Starship" "$(gum style --foreground 8 'Not installed')"
-        echo
-    fi
+
+    # Check Starship
+    # if command -v starship &>/dev/null; then
+    #     local starship_config="$HOME/.config/starship.toml"
+    #     if [[ -f "$starship_config" ]]; then
+    #         show_info "Starship config" "$(status_ok) Configured"
+    #     else
+    #         show_info "Starship config" "$(status_warning) Not configured"
+    #         log_info "Starship is installed but not configured"
+    #     fi
+    # else
+    #     show_info "Starship" "$(gum style --foreground 8 'Not installed')"
+    # fi
 }
 

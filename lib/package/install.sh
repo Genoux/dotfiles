@@ -2,17 +2,23 @@
 # Package installation operations
 # Install packages from lists
 packages_install() {
+    # Get sudo first (will prompt for password)
+    sudo -v || {
+        log_error "Failed to obtain sudo privileges"
+        return 1
+    }
+
+    clear
+
     # Always prepare system first
     packages_prepare
 
     log_section "Installing Packages"
 
-    # Remove all debug packages first to avoid conflicts
+    # Remove all debug packages first to avoid conflicts (silent if none found)
     local debug_packages=$(pacman -Qq | grep '\-debug$' 2>/dev/null || true)
     if [[ -n "$debug_packages" ]]; then
-        log_info "Removing debug packages to avoid conflicts..."
-        echo "$debug_packages" | xargs sudo pacman -Rdd --noconfirm 2>/dev/null || true
-        echo
+        echo "$debug_packages" | xargs sudo pacman -Rdd --noconfirm >/dev/null 2>&1 || true
     fi
 
     # Check if package files exist
@@ -51,8 +57,8 @@ packages_install() {
     echo
 
     # Update package databases to ensure latest versions
-    log_info "Updating package databases..."
-    sudo pacman -Sy --noconfirm
+    run_with_spinner "Synchronizing package databases..." bash -c 'sudo pacman -Sy --noconfirm > /dev/null 2>&1'
+    log_success "Package databases synchronized"
     echo
     
     # Just install packages from lists - no checking
@@ -75,35 +81,30 @@ packages_install() {
     if [[ ${#missing_official[@]} -gt 0 ]]; then
         log_info "Installing ${#missing_official[@]} official packages..."
         echo
-        log_info "Packages to install: ${missing_official[*]}"
-        echo
-        log_info "Installing official packages..."
-        echo
+
         # Install packages directly (sudo will prompt for password if needed)
         [[ -n "${DOTFILES_LOG_FILE:-}" ]] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [PACMAN] Installing packages: ${missing_official[*]}" >> "$DOTFILES_LOG_FILE"
         [[ -n "${DOTFILES_LOG_FILE:-}" ]] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [PACMAN] Starting installation..." >> "$DOTFILES_LOG_FILE"
-        
-        # Run pacman with automatic answers to all prompts
-        # Use printf to automatically answer provider selection (default=1) and proceed (Y)
-        printf "1\nY\n" | sudo pacman -S --needed --noconfirm "${missing_official[@]}"
+
+        # Run pacman with spinner (hide verbose output)
+        run_with_spinner "Installing official packages (${#missing_official[@]})..." \
+            bash -c "printf '1\nY\n' | sudo pacman -S --needed --noconfirm ${missing_official[*]} > /dev/null 2>&1"
         local pacman_exit_code=$?
-        
+
         if [[ $pacman_exit_code -eq 0 ]]; then
             [[ -n "${DOTFILES_LOG_FILE:-}" ]] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [PACMAN] Installation completed successfully" >> "$DOTFILES_LOG_FILE"
-            log_success "Official packages installed"
+            log_success "Official packages installed (${#missing_official[@]})"
         else
             [[ -n "${DOTFILES_LOG_FILE:-}" ]] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [PACMAN] Installation completed with some failures (exit code: $pacman_exit_code)" >> "$DOTFILES_LOG_FILE"
             log_warning "Some official packages failed to install, but continuing..."
             echo
-            log_info "You can try installing failed packages manually later with:"
-            log_info "sudo pacman -S <package-name>"
+            log_info "Check log file for details: $DOTFILES_LOG_FILE"
         fi
         echo
     else
         log_success "All official packages already installed"
     fi
     
-    echo
 
     # Ensure yay is installed for AUR packages
     if [[ ${#aur_packages[@]} -gt 0 ]]; then
@@ -129,37 +130,27 @@ packages_install() {
             return 0
         fi
         
-        # Pre-installation cleanup for common AUR build issues
-        log_info "Preparing AUR build environment..."
-        echo
-        
-        # 1. Clean Go module cache permission issues (affects: wego, etc.)
+        # Pre-installation cleanup for common AUR build issues (silent)
+        # 1. Clean Go module cache permission issues
         if command -v go &>/dev/null; then
-            log_info "Cleaning Go-based package caches (fixing permissions)..."
             for pkg in "${missing_aur[@]}"; do
                 if [[ -d "$HOME/.cache/yay/$pkg" ]]; then
-                    # Go modules are read-only, make writable first
                     chmod -R +w "$HOME/.cache/yay/$pkg" 2>/dev/null || true
                     rm -rf "$HOME/.cache/yay/$pkg"
                 fi
             done
         fi
-        
+
         # 2. Temporarily neutralize npm config
         local npmrc_backup=""
         if [[ -f "$HOME/.npmrc" ]]; then
             npmrc_backup="$HOME/.npmrc.aur-install-backup"
-            log_info "Temporarily moving ~/.npmrc to avoid nvm conflicts..."
             mv "$HOME/.npmrc" "$npmrc_backup" 2>/dev/null || true
         fi
 
-        # Also create a temporary empty .npmrc to override any existing config
         echo "" > "$HOME/.npmrc"
-
-        # Export env vars to neutralize npm config
         export NPM_CONFIG_USERCONFIG=/dev/null
         unset NPM_CONFIG_PREFIX npm_config_prefix NPM_CONFIG_GLOBALCONFIG npm_config_globalconfig
-        echo
         
         # Resolve package conflicts
         local conflicts_to_remove=()
@@ -167,8 +158,6 @@ packages_install() {
         # Special case: Migrate elephant-bin to elephant (Go version compatibility)
         if printf '%s\n' "${missing_aur[@]}" | grep -q '^elephant$'; then
             if pacman -Q elephant-bin &>/dev/null; then
-                log_warning "Found elephant-bin (pre-compiled binary)"
-                log_info "Switching to elephant (source build) for Go version compatibility"
                 conflicts_to_remove+=("elephant-bin")
             fi
         fi
@@ -177,36 +166,26 @@ packages_install() {
             if [[ "$pkg" == *"-bin" ]]; then
                 local base_name="${pkg%-bin}"
                 local git_variant="${base_name}-git"
-                # Check for -git variant
                 if pacman -Q "$git_variant" &>/dev/null; then
-                    log_info "Detected conflict: $git_variant installed, but $pkg requested"
                     conflicts_to_remove+=("$git_variant")
                 fi
-                # Check for base package
                 if pacman -Q "$base_name" &>/dev/null; then
-                    log_info "Detected conflict: $base_name installed, but $pkg requested"
                     conflicts_to_remove+=("$base_name")
                 fi
             elif [[ "$pkg" == *"-git" ]]; then
                 local base_name="${pkg%-git}"
                 local bin_variant="${base_name}-bin"
-                # Check for -bin variant
                 if pacman -Q "$bin_variant" &>/dev/null; then
-                    log_info "Detected conflict: $bin_variant installed, but $pkg requested"
                     conflicts_to_remove+=("$bin_variant")
                 fi
-                # Check for base package
                 if pacman -Q "$base_name" &>/dev/null; then
-                    log_info "Detected conflict: $base_name installed, but $pkg requested"
                     conflicts_to_remove+=("$base_name")
                 fi
             fi
         done
-        
-        # Remove conflicting packages before installation
-        if [[ ${#conflicts_to_remove[@]} -gt 0 ]]; then
-            log_info "Resolving package conflicts..."
 
+        # Remove conflicting packages before installation (only show if conflicts found)
+        if [[ ${#conflicts_to_remove[@]} -gt 0 ]]; then
             # Filter out packages that are required by others
             local safe_to_remove=()
             local blocked_conflicts=()
@@ -222,10 +201,8 @@ packages_install() {
             done
 
             if [[ ${#safe_to_remove[@]} -gt 0 ]]; then
-                printf '  - %s\n' "${safe_to_remove[@]}"
-                echo
-                # Use sudo pacman directly with --noconfirm to avoid prompts
-                sudo pacman -Rns --noconfirm "${safe_to_remove[@]}" 2>/dev/null || true
+                log_info "Removing ${#safe_to_remove[@]} conflicting package(s)..."
+                sudo pacman -Rns --noconfirm "${safe_to_remove[@]}" >/dev/null 2>&1 || true
                 echo
             fi
 
@@ -233,53 +210,45 @@ packages_install() {
                 log_warning "Cannot auto-remove these conflicts (dependencies exist):"
                 printf '  - %s\n' "${blocked_conflicts[@]}"
                 echo
-                log_info "You'll need to manually resolve these before installation can proceed"
-                echo
             fi
         fi
         
         # Install missing AUR packages
         log_info "Installing ${#missing_aur[@]} AUR packages..."
         echo
-        log_info "Packages to install: ${missing_aur[*]}"
-        echo
-        log_info "Installing AUR packages..."
-        echo
+
         # Refresh sudo session before yay (yay calls pacman which needs sudo)
         [[ -n "${DOTFILES_LOG_FILE:-}" ]] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] Refreshing sudo session..." >> "$DOTFILES_LOG_FILE"
         sudo -v || {
             log_error "Failed to refresh sudo session"
             return 1
         }
-        
+
         # Install AUR packages directly (yay will handle sudo prompts)
         [[ -n "${DOTFILES_LOG_FILE:-}" ]] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] Installing packages: ${missing_aur[*]}" >> "$DOTFILES_LOG_FILE"
         [[ -n "${DOTFILES_LOG_FILE:-}" ]] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] Starting installation..." >> "$DOTFILES_LOG_FILE"
-        
-        # Run yay with automatic answers to all prompts
-        # Use printf to automatically answer any provider selections and proceed confirmations
-        # --refresh: Download fresh package databases from AUR
-        printf "1\nY\n" | yay -S --needed --noconfirm --refresh --answerclean None --answerdiff None --removemake "${missing_aur[@]}"
+
+        # Run yay with spinner (hide verbose output)
+        run_with_spinner "Installing AUR packages (${#missing_aur[@]})..." \
+            bash -c "printf '1\nY\n' | yay -S --needed --noconfirm --refresh --answerclean None --answerdiff None --removemake ${missing_aur[*]} > /dev/null 2>&1"
         local yay_exit_code=$?
-        
+
         # Restore ~/.npmrc if we moved it, or remove the temporary empty one
         if [[ -n "$npmrc_backup" && -f "$npmrc_backup" ]]; then
-            log_info "Restoring ~/.npmrc..."
             mv "$npmrc_backup" "$HOME/.npmrc" 2>/dev/null || true
         else
             # Remove the temporary empty .npmrc we created
             rm -f "$HOME/.npmrc" 2>/dev/null || true
         fi
-        
+
         if [[ $yay_exit_code -eq 0 ]]; then
             [[ -n "${DOTFILES_LOG_FILE:-}" ]] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] Installation completed successfully" >> "$DOTFILES_LOG_FILE"
-            log_success "AUR packages installed"
+            log_success "AUR packages installed (${#missing_aur[@]})"
         else
             [[ -n "${DOTFILES_LOG_FILE:-}" ]] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] Installation completed with some failures (exit code: $yay_exit_code)" >> "$DOTFILES_LOG_FILE"
             log_warning "Some AUR packages failed to install, but continuing..."
             echo
-            log_info "You can try installing failed packages manually later with:"
-            log_info "yay -S <package-name>"
+            log_info "Check log file for details: $DOTFILES_LOG_FILE"
         fi
         echo
     fi

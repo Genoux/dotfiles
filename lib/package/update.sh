@@ -2,162 +2,121 @@
 # System package updates and conflict resolution
 # Requires: gum (charmbracelet/gum)
 
-# Detect and resolve AUR packages that conflict with official packages
-resolve_aur_official_conflicts() {
-    log_info "Checking for AUR packages conflicting with official packages..."
-
-    # Get all AUR packages
-    local aur_packages=($(pacman -Qmq 2>/dev/null || true))
-
-    if [[ ${#aur_packages[@]} -eq 0 ]]; then
-        return 0
-    fi
-
-    # Refresh package databases to check for conflicts
-    sudo pacman -Sy --noconfirm >/dev/null 2>&1 || true
-
-    local conflicts_to_remove=()
-
-    for aur_pkg in "${aur_packages[@]}"; do
-        # Check if this AUR package provides a base package name (without -git/-bin suffix)
-        local base_name="${aur_pkg%-git}"
-        base_name="${base_name%-bin}"
-
-        # Skip if it's already the base name
-        if [[ "$aur_pkg" == "$base_name" ]]; then
-            continue
-        fi
-
-        # Check if an official package with the base name exists and conflicts
-        if pacman -Si "$base_name" &>/dev/null; then
-            local aur_conflicts=$(pacman -Qi "$aur_pkg" 2>/dev/null | grep "Conflicts With" | cut -d: -f2 | xargs)
-            if [[ "$aur_conflicts" == *"$base_name"* ]]; then
-                log_info "Detected conflict: $aur_pkg (AUR) conflicts with $base_name (official)"
-                conflicts_to_remove+=("$aur_pkg")
-            fi
-        fi
-    done
-
-    if [[ ${#conflicts_to_remove[@]} -eq 0 ]]; then
-        return 0
-    fi
-
-    log_info "Found ${#conflicts_to_remove[@]} conflicting AUR package(s):"
-    printf '  - %s\n' "${conflicts_to_remove[@]}"
-    echo
-
-    log_info "Force-removing conflicting AUR packages (will be replaced by official packages during upgrade)..."
-    sudo pacman -Rdd --noconfirm "${conflicts_to_remove[@]}" 2>&1 || {
-        log_error "Failed to remove conflicting AUR packages"
-        log_info "Manual resolution required. Try:"
-        printf '  sudo pacman -Rdd %s\n' "${conflicts_to_remove[*]}"
-        echo
-        return 1
-    }
-    echo
-
-    # Clean up package files
-    log_info "Cleaning up package lists..."
-    local files_updated=false
-
-    if [[ -f "$AUR_PACKAGES_FILE" ]]; then
-        local temp_file=$(mktemp)
-        local removed_count=0
-
-        while IFS= read -r line; do
-            local should_keep=true
-            for pkg in "${conflicts_to_remove[@]}"; do
-                if [[ "$line" == "$pkg" ]]; then
-                    should_keep=false
-                    ((removed_count++))
-                    break
-                fi
-            done
-            if $should_keep; then
-                echo "$line" >> "$temp_file"
-            fi
-        done < "$AUR_PACKAGES_FILE"
-
-        if [[ $removed_count -gt 0 ]]; then
-            mv "$temp_file" "$AUR_PACKAGES_FILE"
-            files_updated=true
-            log_info "Removed $removed_count package(s) from packages/aur.package"
-        else
-            rm -f "$temp_file"
-        fi
-    fi
-
-    # Add official packages to packages/arch.package if they're not already there
-    if [[ -f "$PACKAGES_FILE" ]]; then
-        local temp_file=$(mktemp)
-        local added_count=0
-
-        cp "$PACKAGES_FILE" "$temp_file"
-
-        for aur_pkg in "${conflicts_to_remove[@]}"; do
-            local base_name="${aur_pkg%-git}"
-            base_name="${base_name%-bin}"
-
-            if pacman -Si "$base_name" &>/dev/null; then
-                if ! grep -qxF "$base_name" "$temp_file" 2>/dev/null; then
-                    echo "$base_name" >> "$temp_file"
-                    ((added_count++))
-                fi
-            fi
-        done
-
-        if [[ $added_count -gt 0 ]]; then
-            sort -u "$temp_file" -o "$temp_file"
-            mv "$temp_file" "$PACKAGES_FILE"
-            files_updated=true
-            log_info "Added $added_count official package(s) to packages/arch.package"
-        else
-            rm -f "$temp_file"
-        fi
-    fi
-
-    if $files_updated; then
-        log_success "Package lists updated"
-    fi
-
-    log_success "Removed ${#conflicts_to_remove[@]} conflicting AUR package(s)"
-    log_info "Official packages will be installed during system upgrade"
-    echo
-}
-
 # Update system packages
 packages_update() {
     log_section "Updating System"
 
     # Validate sudo access upfront
     log_info "Validating sudo access..."
+    echo
     if ! sudo -v; then
         log_error "Failed to obtain sudo privileges"
         return 1
     fi
-    echo
 
-    # Remove debug packages first
+    clear
+
+    log_section "Updating System"
+
+    # Remove debug packages first (silent if none found)
     local debug_packages=$(pacman -Qq | grep '\-debug$' 2>/dev/null || true)
     if [[ -n "$debug_packages" ]]; then
-        log_info "Removing debug packages..."
-        echo "$debug_packages" | xargs sudo pacman -Rdd --noconfirm 2>/dev/null || true
-        echo
+        echo "$debug_packages" | xargs sudo pacman -Rdd --noconfirm >/dev/null 2>&1 || true
     fi
 
     # Resolve AUR vs official package conflicts before updating
-    if ! resolve_aur_official_conflicts; then
-        log_error "Failed to resolve package conflicts. Update cannot proceed."
-        return 1
-    fi
+    local conflicts_found=()
+    {
+        # Capture conflicts list from the spinner operation
+        local conflicts_output=$(mktemp)
+        run_with_spinner "Checking for package conflicts..." bash -c "
+            # Inline conflict checking to avoid function export issues
+            aur_packages=(\$(pacman -Qmq 2>/dev/null || true))
+            [[ \${#aur_packages[@]} -eq 0 ]] && exit 0
+
+            sudo pacman -Sy --noconfirm > /dev/null 2>&1 || true
+
+            conflicts_to_remove=()
+            for aur_pkg in \"\${aur_packages[@]}\"; do
+                base_name=\"\${aur_pkg%-git}\"
+                base_name=\"\${base_name%-bin}\"
+                [[ \"\$aur_pkg\" == \"\$base_name\" ]] && continue
+
+                if pacman -Si \"\$base_name\" &>/dev/null; then
+                    aur_conflicts=\$(pacman -Qi \"\$aur_pkg\" 2>/dev/null | grep \"Conflicts With\" | cut -d: -f2 | xargs)
+                    if [[ \"\$aur_conflicts\" == *\"\$base_name\"* ]]; then
+                        conflicts_to_remove+=(\"\$aur_pkg\")
+                    fi
+                fi
+            done
+
+            [[ \${#conflicts_to_remove[@]} -eq 0 ]] && exit 0
+
+            # Output conflicts to temp file for later processing
+            printf \"%s\\n\" \"\${conflicts_to_remove[@]}\" > \"$conflicts_output\"
+
+            # Remove conflicts
+            sudo pacman -Rdd --noconfirm \"\${conflicts_to_remove[@]}\" > /dev/null 2>&1 || exit 1
+        " || {
+            rm -f "$conflicts_output"
+            log_error "Failed to resolve package conflicts. Update cannot proceed."
+            return 1
+        }
+
+        # Read conflicts from temp file
+        if [[ -f "$conflicts_output" && -s "$conflicts_output" ]]; then
+            readarray -t conflicts_found < "$conflicts_output"
+            rm -f "$conflicts_output"
+
+            # Clean up package files (silent)
+            if [[ ${#conflicts_found[@]} -gt 0 ]]; then
+                # Remove from AUR packages file
+                if [[ -f "$AUR_PACKAGES_FILE" ]]; then
+                    local temp_file=$(mktemp)
+                    while IFS= read -r line; do
+                        local should_keep=true
+                        for pkg in "${conflicts_found[@]}"; do
+                            [[ "$line" == "$pkg" ]] && { should_keep=false; break; }
+                        done
+                        $should_keep && echo "$line" >> "$temp_file"
+                    done < "$AUR_PACKAGES_FILE"
+                    [[ -s "$temp_file" ]] && mv "$temp_file" "$AUR_PACKAGES_FILE" || rm -f "$temp_file"
+                fi
+
+                # Add base packages to official packages file
+                if [[ -f "$PACKAGES_FILE" ]]; then
+                    local temp_file=$(mktemp)
+                    cp "$PACKAGES_FILE" "$temp_file"
+                    for aur_pkg in "${conflicts_found[@]}"; do
+                        local base_name="${aur_pkg%-git}"
+                        base_name="${base_name%-bin}"
+                        if pacman -Si "$base_name" &>/dev/null; then
+                            grep -qxF "$base_name" "$temp_file" 2>/dev/null || echo "$base_name" >> "$temp_file"
+                        fi
+                    done
+                    sort -u "$temp_file" -o "$temp_file"
+                    mv "$temp_file" "$PACKAGES_FILE"
+                fi
+
+                log_success "Resolved ${#conflicts_found[@]} package conflict(s)"
+                echo
+            fi
+        else
+            rm -f "$conflicts_output"
+        fi
+    }
 
     # Update official repositories first with spinner
-    if ! gum spin --spinner dot --title "Updating official repositories (pacman)..." --show-output -- \
-        sudo pacman -Syu --noconfirm; then
+    run_with_spinner "Updating official repositories..." \
+        bash -c 'sudo pacman -Syu --noconfirm > /dev/null 2>&1'
+    local pacman_exit=$?
+
+    if [[ $pacman_exit -eq 0 ]]; then
+        log_success "Official repositories updated"
+    else
         log_error "pacman repo update failed"
         return 1
     fi
-    echo
 
     # Ensure yay is installed for AUR step
     ensure_yay_installed
@@ -172,20 +131,22 @@ packages_update() {
     unset NPM_CONFIG_PREFIX npm_config_prefix NPM_CONFIG_GLOBALCONFIG npm_config_globalconfig
 
     local aur_exit=0
-    local aur_output
 
     # Update AUR packages with spinner
-    aur_output=$(gum spin --spinner dot --title "Updating AUR packages (yay)..." --show-output -- \
-        yay -Sua --noconfirm --answerclean N --answerdiff N 2>&1) || aur_exit=$?
-    echo
+    run_with_spinner "Updating AUR packages..." \
+        bash -c 'yay -Sua --noconfirm --answerclean N --answerdiff N > /dev/null 2>&1' || aur_exit=$?
 
     if [[ $aur_exit -ne 0 ]]; then
         log_warning "AUR update failed (exit $aur_exit) - retrying..."
         aur_exit=0
-        aur_output=$(gum spin --spinner dot --title "Retrying AUR update..." --show-output -- \
-            yay -Sua --noconfirm --answerclean N --answerdiff N 2>&1) || aur_exit=$?
-        echo
+        run_with_spinner "Retrying AUR update..." \
+            bash -c 'yay -Sua --noconfirm --answerclean N --answerdiff N > /dev/null 2>&1' || aur_exit=$?
     fi
+
+    if [[ $aur_exit -eq 0 ]]; then
+        log_success "AUR packages updated"
+    fi
+    echo
 
     # Restore ~/.npmrc if we moved it
     if [[ -n "$npmrc_backup" && -f "$npmrc_backup" ]]; then
@@ -197,12 +158,7 @@ packages_update() {
         return 0
     else
         log_error "AUR update failed (exit code: $aur_exit)"
-        if echo "$aur_output" | grep -qi "TLS handshake timeout"; then
-            log_error "Network timeout talking to AUR; try again later or check connectivity/DNS"
-        fi
-        if echo "$aur_output" | grep -qi "A failure occurred in prepare\(\)"; then
-            log_error "AUR build prepare() failed (often due to user npm prefix/globalconfig). We neutralized ~/.npmrc, but if it persists, try building the package alone with: yay -S <pkg> --debug"
-        fi
+        log_info "Try running: yay -Sua --debug to see detailed error"
         return 1
     fi
 }

@@ -22,7 +22,7 @@ theme_show_current() {
     fi
     
     local scheme_file=""
-    if ! scheme_file=$(find_dotfiles_scheme_file "$current_scheme"); then
+    if ! scheme_file=$(get_scheme_file); then
         # No scheme file found
         if [[ "$current_scheme" != "none" ]]; then
             show_info "Active theme" "$current_scheme (no file in dotfiles)"
@@ -58,7 +58,7 @@ theme_show_current() {
         local base0D=$(grep "^base0D:" "$scheme_file" | awk '{print $2}' | tr -d '"')
         local base0E=$(grep "^base0E:" "$scheme_file" | awk '{print $2}' | tr -d '"')
         local base0F=$(grep "^base0F:" "$scheme_file" | awk '{print $2}' | tr -d '"')
-
+        
         # Display as compact rows of colored circles
         printf "→ Accent Colors: "
         printf "\033[38;2;$((16#${base00:0:2}));$((16#${base00:2:2}));$((16#${base00:4:2}))m●\033[0m "
@@ -81,7 +81,7 @@ theme_show_current() {
         printf "\033[38;2;$((16#${base0F:0:2}));$((16#${base0F:2:2}));$((16#${base0F:4:2}))m●\033[0m"
         echo
     else
-        show_info "Active theme" "default (scheme file not found)"
+        show_info "Active theme" "Scheme file not found"
     fi
 }
 
@@ -232,9 +232,9 @@ theme_select() {
     local selected=""
     if [[ -n "$current_theme" ]]; then
         # Try to preselect current theme
-        selected=$(printf '%s\n' "${themes[@]}" | gum filter --placeholder "Select theme (current: $current_theme)" --limit 1)
+        selected=$(printf '%s\n' "${themes[@]}" | filter_search "Select theme (current: $current_theme)" --limit 1)
     else
-        selected=$(printf '%s\n' "${themes[@]}" | gum filter --placeholder "Select theme" --limit 1)
+        selected=$(printf '%s\n' "${themes[@]}" | filter_search "Select theme" --limit 1)
     fi
 
     # Check if user cancelled
@@ -304,31 +304,24 @@ theme_apply() {
 }
 
 # Find scheme file in dotfiles (checks current scheme name first, then default location)
-find_dotfiles_scheme_file() {
-    local current_scheme="$1"
+get_scheme_file() {
     local schemes_dir="$DOTFILES_DIR/stow/flavours/.config/flavours/schemes"
     
-    # First, try to find scheme file based on current scheme name
+    # Get current scheme from flavours
+    local current_scheme="none"
+    if command -v flavours &>/dev/null || [[ -x "$HOME/.cargo/bin/flavours" ]]; then
+        local flavours_cmd="flavours"
+        [[ ! -x "$(command -v flavours)" ]] && flavours_cmd="$HOME/.cargo/bin/flavours"
+        current_scheme=$("$flavours_cmd" current 2>/dev/null || echo "none")
+    fi
+    
+    # Return scheme file path if it exists
     if [[ "$current_scheme" != "none" ]] && [[ -n "$current_scheme" ]]; then
         local scheme_path="$schemes_dir/$current_scheme/$current_scheme.yaml"
         if [[ -f "$scheme_path" ]]; then
             echo "$scheme_path"
             return 0
         fi
-    fi
-    
-    # Fallback: check default location (convention for storing active scheme)
-    local default_path="$schemes_dir/default/default.yaml"
-    if [[ -f "$default_path" ]]; then
-        echo "$default_path"
-        return 0
-    fi
-    
-    # Last resort: find any scheme file in dotfiles
-    local found_file=$(find "$schemes_dir" -name "*.yaml" -type f 2>/dev/null | head -1)
-    if [[ -n "$found_file" ]]; then
-        echo "$found_file"
-        return 0
     fi
     
     return 1
@@ -345,9 +338,9 @@ theme_status() {
         current_scheme=$("$flavours_cmd" current 2>/dev/null || echo "none")
     fi
 
-    # Find scheme file dynamically
+    # Get scheme file from flavours
     local scheme_file=""
-    if scheme_file=$(find_dotfiles_scheme_file "$current_scheme"); then
+    if scheme_file=$(get_scheme_file); then
         # File exists - check if it's valid
         if grep -q "^base00:" "$scheme_file"; then
             theme_show_current
@@ -355,7 +348,6 @@ theme_status() {
             show_info "Flavours scheme" "$current_scheme"
             log_warning "Scheme file found but invalid: $scheme_file"
         fi
-       
     else
         if [[ "$current_scheme" != "none" ]]; then
             show_info "Flavours scheme" "$current_scheme"
@@ -364,9 +356,7 @@ theme_status() {
             show_info "Flavours scheme" "not applied"
         fi
     fi
-
     echo
-
     # Show GTK theme info if available
     if command -v gsettings &>/dev/null; then
         local gtk_theme=$(gsettings get org.gnome.desktop.interface gtk-theme 2>/dev/null | tr -d "'")
@@ -383,14 +373,11 @@ theme_status() {
         if [[ -n "$cursor_theme" ]]; then
             show_info "Cursor theme" "$cursor_theme (size: $cursor_size)"
         fi
-        echo
     fi
 
     # Show actionable info
     if [[ "$current_scheme_lower" != "$dotfiles_scheme_lower" ]] && [[ "$current_scheme" != "none" ]] && [[ "$dotfiles_scheme" != "none" ]]; then
         log_warning "Theme needs sync"
-    elif [[ "$current_scheme_lower" == "$dotfiles_scheme_lower" ]]; then
-        log_success "Theme is in sync"
     fi
 }
 
@@ -461,7 +448,6 @@ theme_install_gtk() {
             log_info "Running icon theme install script..."
             if eval "$icons_cmd"; then
                 echo
-                log_success "Icon theme installed"
             else
                 echo
                 log_error "Icon theme install failed"
@@ -476,9 +462,6 @@ theme_install_gtk() {
 
     echo
     if [[ $failed -eq 0 ]]; then
-        log_success "GTK theme installed successfully!"
-        echo
-        log_info "Apply with: dotfiles theme apply"
         return 0
     else
         log_error "Installation failed with $failed error(s)"

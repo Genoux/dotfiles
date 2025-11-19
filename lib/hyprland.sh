@@ -245,7 +245,6 @@ hyprland_status() {
 
     if ! command -v hyprctl &>/dev/null; then
         log_error "Hyprland is not installed"
-        echo
         log_info "Install Hyprland to use this feature"
         return 1
     fi
@@ -253,14 +252,11 @@ hyprland_status() {
     # Check if running
     if ! hyprctl version &>/dev/null 2>&1; then
         log_warning "Hyprland is not running"
-        echo
         log_info "Start Hyprland to see full status details"
-        echo
         return 0
     fi
 
     # Show monitors with better formatting
-    echo
     log_info "Monitors:"
     local monitor_count=0
     local current_monitor=""
@@ -275,7 +271,7 @@ hyprland_status() {
         elif [[ $line =~ ^[[:space:]]+([0-9]+x[0-9]+)@([0-9]+\.[0-9]+) ]]; then
             current_res="${BASH_REMATCH[1]}"
             current_refresh=$(printf "%.0f" "${BASH_REMATCH[2]}")
-            echo "  $(gum style --foreground 4 "$current_monitor") $(gum style --foreground 8 "$current_res @ ${current_refresh}Hz")"
+            echo "$(status_info) $current_monitor $(gum style --foreground 8 "$current_res @ ${current_refresh}Hz")"
             ((monitor_count++))
         fi
     done < <(hyprctl monitors 2>/dev/null)
@@ -283,6 +279,7 @@ hyprland_status() {
     if [[ $monitor_count -eq 0 ]]; then
         echo "  $(gum style --foreground 8 "No monitors detected")"
     fi
+
     echo
 
     # Show plugin status
@@ -297,22 +294,15 @@ hyprland_status() {
 
             for plugin_name in "${!HYPRLAND_PLUGINS[@]}"; do
                 if is_plugin_enabled "$plugin_name"; then
-                    echo "  $(gum style --foreground 2 "✓") $plugin_name"
+                    echo "$(status_ok) $plugin_name"
                     ((enabled_count++))
                 else
-                    echo "  $(gum style --foreground 3 "○") $plugin_name (not enabled)"
+                    echo "$(status_warning) $plugin_name (not enabled)"
                     ((missing_count++))
                 fi
             done
             echo
 
-            if [[ $missing_count -gt 0 ]]; then
-                log_info "$missing_count plugin(s) not enabled"
-                echo
-            elif [[ $enabled_count -gt 0 ]]; then
-                log_success "$enabled_count plugin(s) enabled"
-                echo
-            fi
         else
             log_info "No plugins configured"
             echo
@@ -323,13 +313,12 @@ hyprland_status() {
     fi
 
     # Show configuration status
-    echo
     log_info "Configuration:"
     local hypr_config="$HOME/.config/hypr/hyprland.conf"
     if [[ -f "$hypr_config" ]]; then
-        echo "  $(gum style --foreground 2 "✓") Main config: $hypr_config"
+        echo "$(status_ok) Main config: $hypr_config"
     else
-        echo "  $(gum style --foreground 3 "○") Main config: not found"
+        echo "$(status_warning) Main config: not found"
     fi
 
     # Check for config includes
@@ -337,10 +326,9 @@ hyprland_status() {
     if [[ -d "$config_dir" ]]; then
         local config_files=$(find "$config_dir" -name "*.conf" -type f 2>/dev/null | wc -l)
         if [[ $config_files -gt 1 ]]; then
-            echo "  $(gum style --foreground 8 "  $config_files config files found")"
+            echo "$(gum style --foreground 8 "$config_files config files found")"
         fi
     fi
-    echo
 }
 
 # Show Hyprland version information

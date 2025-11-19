@@ -29,6 +29,8 @@ show_submenu() {
         # Handle "Back" option
         [[ "$action" == "Back" ]] && return
 
+        clear
+
         # Execute the action (callback handles it)
         "${callback}_execute" "$action"
     done
@@ -82,12 +84,8 @@ show_quick_summary() {
     echo
 }
 
-# Interactive confirmation with gum
-# Usage: if confirm_action "Are you sure?"; then ...
-confirm_action() {
-    local message="${1:-Are you sure?}"
-    gum confirm "$message"
-}
+# Interactive confirmation is now in lib/common.sh
+# confirm_action() is available from lib/common.sh
 
 # Multi-select menu with gum
 # Usage: selected=$(multi_select "Header" "option1" "option2" "option3")
@@ -127,6 +125,8 @@ simple_menu() {
             "Back")
 
         [[ -z "$action" ]] && return
+
+        clear
 
         case "$action" in
             "Apply")

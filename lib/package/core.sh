@@ -88,17 +88,17 @@ packages_prepare() {
     # Ensure Node.js is installed
     ensure_nodejs_installed
 
-    # Check if mirrors need updating (older than 7 days)
+    # Check if mirrors need updating (older than 30 days)
     local mirrorlist="/etc/pacman.d/mirrorlist"
     local needs_update=false
 
     if [[ -f "$mirrorlist" ]]; then
         local mirror_age=$(($(date +%s) - $(stat -c %Y "$mirrorlist")))
-        local seven_days=$((7 * 24 * 60 * 60))
+        local update_threshold=$((30 * 24 * 60 * 60))
 
-        if [[ $mirror_age -gt $seven_days ]]; then
+        if [[ $mirror_age -gt $update_threshold ]]; then
             needs_update=true
-            log_info "Mirror list is older than 7 days"
+            log_info "Mirror list is older than 30 days"
         else
             log_success "Mirror list is recent (updated $(date -d @$(stat -c %Y "$mirrorlist") '+%Y-%m-%d'))"
         fi
@@ -111,16 +111,15 @@ packages_prepare() {
         echo
 
         if ! command -v reflector &>/dev/null; then
-            log_info "Installing reflector for mirror management..."
-            sudo pacman -S --needed --noconfirm reflector
+            run_with_spinner "Installing reflector..." bash -c 'sudo pacman -S --needed --noconfirm reflector > /dev/null 2>&1'
+            log_success "Reflector installed"
             echo
         fi
 
         # Backup existing mirrorlist
         sudo cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.backup
 
-        log_info "Ranking mirrors by speed..."
-        if ! sudo reflector \
+        if ! run_with_spinner "Ranking mirrors by speed..." sudo reflector \
             --country US \
             --age 6 \
             --protocol https \
@@ -128,7 +127,7 @@ packages_prepare() {
             --fastest 10 \
             --connection-timeout 3 \
             --download-timeout 5 \
-            --save /etc/pacman.d/mirrorlist.new; then
+            --save /etc/pacman.d/mirrorlist.new 2>&1 | grep -v "WARNING"; then
             log_error "Reflector failed, keeping existing mirrors"
             sudo rm -f /etc/pacman.d/mirrorlist.new
         elif [[ ! -s /etc/pacman.d/mirrorlist.new ]]; then
@@ -149,10 +148,9 @@ packages_prepare() {
         sudo sed -i '/^\[multilib\]$/,/^\[/ s/^#Include = \/etc\/pacman\.d\/mirrorlist/Include = \/etc\/pacman.d\/mirrorlist/' /etc/pacman.conf
         echo
     fi
-
+    
     # Sync package databases
-    log_info "Synchronizing package databases..."
-    sudo pacman -Sy --noconfirm
+    run_with_spinner "Synchronizing package databases..." bash -c 'sudo pacman -Sy --noconfirm > /dev/null 2>&1'
     echo
     log_success "Package databases synchronized"
     echo
