@@ -13,7 +13,24 @@ fi
 
 # Show current theme information
 theme_show_current() {
-    local scheme_file="$DOTFILES_DIR/stow/flavours/.config/flavours/schemes/default/default.yaml"
+    # Find scheme file dynamically
+    local current_scheme="none"
+    if command -v flavours &>/dev/null || [[ -x "$HOME/.cargo/bin/flavours" ]]; then
+        local flavours_cmd="flavours"
+        [[ ! -x "$(command -v flavours)" ]] && flavours_cmd="$HOME/.cargo/bin/flavours"
+        current_scheme=$("$flavours_cmd" current 2>/dev/null || echo "none")
+    fi
+    
+    local scheme_file=""
+    if ! scheme_file=$(find_dotfiles_scheme_file "$current_scheme"); then
+        # No scheme file found
+        if [[ "$current_scheme" != "none" ]]; then
+            show_info "Active theme" "$current_scheme (no file in dotfiles)"
+        else
+            show_info "Active theme" "none"
+        fi
+        return
+    fi
 
     if [[ -f "$scheme_file" ]]; then
         local scheme_name=$(grep "^scheme:" "$scheme_file" | cut -d'"' -f2)
@@ -90,7 +107,7 @@ apply_flavours_theme() {
     log_info "Applying theme with flavours..."
 
     # Flavours config is managed via stow (stow/flavours/.config/flavours/config.toml)
-    # Scheme is also managed via stow (stow/flavours/.config/flavours/schemes/default/default.yaml)
+    # Scheme files are managed via stow (stow/flavours/.config/flavours/schemes/)
     # Just apply the scheme
     if "$flavours_cmd" apply default 2>&1 | while IFS= read -r line; do
         log_info "  $line"
@@ -212,9 +229,6 @@ theme_select() {
     local current_theme=$("$flavours_cmd" current 2>/dev/null || echo "")
 
     # Show theme selection
-    log_info "Available themes: ${#themes[@]}"
-    echo
-
     local selected=""
     if [[ -n "$current_theme" ]]; then
         # Try to preselect current theme
@@ -225,20 +239,11 @@ theme_select() {
 
     # Check if user cancelled
     if [[ -z "$selected" ]]; then
-        log_info "Selection cancelled"
         return 0
     fi
 
-    echo
-    log_info "Selected: $selected"
-    echo
-
-    # Apply the selected theme
-    if "$flavours_cmd" apply "$selected" 2>&1 | while IFS= read -r line; do
-        log_info "  $line"
-    done; then
-        echo
-
+    # Apply the selected theme (suppress output)
+    if "$flavours_cmd" apply "$selected" &>/dev/null; then
         # Update the default scheme to the selected one
         # Find the scheme file using flavours info to get the exact path
         local scheme_info=$("$flavours_cmd" info "$selected" 2>&1 | head -1)
@@ -250,25 +255,27 @@ theme_select() {
         fi
 
         if [[ -n "$source_scheme" && -f "$source_scheme" ]]; then
-            # Copy to stow directory (managed by git)
-            local stow_scheme="$DOTFILES_DIR/stow/flavours/.config/flavours/schemes/default/default.yaml"
-            mkdir -p "$(dirname "$stow_scheme")"
+            # Copy to stow directory using scheme name (not hardcoded "default")
+            local schemes_dir="$DOTFILES_DIR/stow/flavours/.config/flavours/schemes"
+            local stow_scheme_dir="$schemes_dir/$selected"
+            local stow_scheme="$stow_scheme_dir/$selected.yaml"
+            mkdir -p "$stow_scheme_dir"
             cp "$source_scheme" "$stow_scheme"
+            
+            # Also copy to default location (convention for active scheme)
+            local default_scheme="$schemes_dir/default/default.yaml"
+            mkdir -p "$(dirname "$default_scheme")"
+            cp "$source_scheme" "$default_scheme"
 
-            # Also copy to active config (if stowed)
-            local config_scheme="$HOME/.config/flavours/schemes/default/default.yaml"
-            if [[ -d "$HOME/.config/flavours/schemes/default" ]]; then
-                cp "$source_scheme" "$config_scheme"
+            # Also copy to active config (if stowed) - use scheme name
+            local config_scheme_dir="$HOME/.config/flavours/schemes/$selected"
+            if [[ -d "$HOME/.config/flavours/schemes" ]]; then
+                mkdir -p "$config_scheme_dir"
+                cp "$source_scheme" "$config_scheme_dir/$selected.yaml"
             fi
-
-            log_info "Updated default scheme to: $selected"
-        else
-            log_warning "Could not find scheme file for: $selected"
         fi
 
         log_success "Theme '$selected' applied!"
-        echo
-        log_info "Restart applications to see changes"
         return 0
     else
         echo
@@ -296,11 +303,69 @@ theme_apply() {
     return 0
 }
 
+# Find scheme file in dotfiles (checks current scheme name first, then default location)
+find_dotfiles_scheme_file() {
+    local current_scheme="$1"
+    local schemes_dir="$DOTFILES_DIR/stow/flavours/.config/flavours/schemes"
+    
+    # First, try to find scheme file based on current scheme name
+    if [[ "$current_scheme" != "none" ]] && [[ -n "$current_scheme" ]]; then
+        local scheme_path="$schemes_dir/$current_scheme/$current_scheme.yaml"
+        if [[ -f "$scheme_path" ]]; then
+            echo "$scheme_path"
+            return 0
+        fi
+    fi
+    
+    # Fallback: check default location (convention for storing active scheme)
+    local default_path="$schemes_dir/default/default.yaml"
+    if [[ -f "$default_path" ]]; then
+        echo "$default_path"
+        return 0
+    fi
+    
+    # Last resort: find any scheme file in dotfiles
+    local found_file=$(find "$schemes_dir" -name "*.yaml" -type f 2>/dev/null | head -1)
+    if [[ -n "$found_file" ]]; then
+        echo "$found_file"
+        return 0
+    fi
+    
+    return 1
+}
+
 # Show theme status
 theme_status() {
     log_section "Theme Status"
 
-    show_info "Theme" "default"
+    local current_scheme="none"
+    if command -v flavours &>/dev/null || [[ -x "$HOME/.cargo/bin/flavours" ]]; then
+        local flavours_cmd="flavours"
+        [[ ! -x "$(command -v flavours)" ]] && flavours_cmd="$HOME/.cargo/bin/flavours"
+        current_scheme=$("$flavours_cmd" current 2>/dev/null || echo "none")
+    fi
+
+    # Find scheme file dynamically
+    local scheme_file=""
+    if scheme_file=$(find_dotfiles_scheme_file "$current_scheme"); then
+        # File exists - check if it's valid
+        if grep -q "^base00:" "$scheme_file"; then
+            theme_show_current
+        else
+            show_info "Flavours scheme" "$current_scheme"
+            log_warning "Scheme file found but invalid: $scheme_file"
+        fi
+       
+    else
+        if [[ "$current_scheme" != "none" ]]; then
+            show_info "Flavours scheme" "$current_scheme"
+            log_info "No scheme file in dotfiles"
+        else
+            show_info "Flavours scheme" "not applied"
+        fi
+    fi
+
+    echo
 
     # Show GTK theme info if available
     if command -v gsettings &>/dev/null; then
@@ -318,15 +383,14 @@ theme_status() {
         if [[ -n "$cursor_theme" ]]; then
             show_info "Cursor theme" "$cursor_theme (size: $cursor_size)"
         fi
+        echo
     fi
 
-    echo
-    log_info "All theme files are managed by flavours"
-    log_info "See: stow/flavours/.config/flavours/config.toml"
-
-    if command -v flavours &>/dev/null; then
-        local current_scheme=$(flavours current 2>/dev/null || echo "none")
-        show_info "Current flavours scheme" "$current_scheme"
+    # Show actionable info
+    if [[ "$current_scheme_lower" != "$dotfiles_scheme_lower" ]] && [[ "$current_scheme" != "none" ]] && [[ "$dotfiles_scheme" != "none" ]]; then
+        log_warning "Theme needs sync"
+    elif [[ "$current_scheme_lower" == "$dotfiles_scheme_lower" ]]; then
+        log_success "Theme is in sync"
     fi
 }
 

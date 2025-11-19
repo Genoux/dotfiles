@@ -105,7 +105,7 @@ show_menu() {
             echo
         fi
 
-        local action=$(gum choose --header "" --selected "System Status" --cursor.foreground 5 \
+        local action=$(choose_option --selected "System Status" \
             "System Status" \
             "Full Install" \
             "Packages" \

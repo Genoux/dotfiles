@@ -84,34 +84,113 @@ system_apply() {
     log_success "System configuration complete"
 }
 
+# Show quick system status summary
+system_show_summary() {
+    source "$DOTFILES_DIR/lib/menu.sh"
+
+    local applied_count=0
+    local total_count=3  # makepkg, sleep, logind
+
+    # Count applied configs (match logic from system_status)
+    [[ -f /etc/makepkg.conf ]] && grep -q "OPTIONS=.*!debug.*" /etc/makepkg.conf && ((applied_count++))
+    [[ -d /etc/systemd/sleep.conf.d ]] && [[ $(find /etc/systemd/sleep.conf.d -type f 2>/dev/null | wc -l) -gt 0 ]] && ((applied_count++))
+    [[ -d /etc/systemd/logind.conf.d ]] && [[ $(find /etc/systemd/logind.conf.d -type f 2>/dev/null | wc -l) -gt 0 ]] && ((applied_count++))
+
+    show_quick_summary "System configs" "$applied_count/$total_count applied"
+}
+
 # Show system status
 system_status() {
     log_section "System Status"
 
-    # makepkg.conf debug status
+    local configs_applied=0
+    local configs_pending=0
+
+    # Check makepkg.conf debug status
+    echo
+    log_info "Package building:"
     if [[ -f /etc/makepkg.conf ]]; then
         if grep -q "OPTIONS=.*!debug.*" /etc/makepkg.conf; then
-            show_info "makepkg debug" "disabled ✓"
+            echo "  $(gum style --foreground 2 "✓") makepkg debug disabled"
+            ((configs_applied++))
         else
-            show_info "makepkg debug" "enabled (should disable)"
+            echo "  $(gum style --foreground 3 "○") makepkg debug enabled (should disable)"
+            ((configs_pending++))
+        fi
+        echo "  $(gum style --foreground 8 "  Config: /etc/makepkg.conf")"
+    else
+        echo "  $(gum style --foreground 8 "○") makepkg.conf not found"
+        ((configs_pending++))
+    fi
+    echo
+
+    # Check systemd sleep config
+    echo
+    log_info "Power management:"
+    if [[ -d /etc/systemd/sleep.conf.d ]]; then
+        local sleep_configs=$(find /etc/systemd/sleep.conf.d -type f 2>/dev/null | wc -l)
+        if [[ $sleep_configs -gt 0 ]]; then
+            echo "  $(gum style --foreground 2 "✓") systemd sleep configs ($sleep_configs files)"
+            ((configs_applied++))
+            echo "  $(gum style --foreground 8 "  Location: /etc/systemd/sleep.conf.d/")"
+        else
+            echo "  $(gum style --foreground 3 "○") systemd sleep configs (directory exists but empty)"
+            ((configs_pending++))
         fi
     else
-        show_info "makepkg.conf" "not found"
+        echo "  $(gum style --foreground 3 "○") systemd sleep configs (not configured)"
+        ((configs_pending++))
     fi
+    echo
 
-    # systemd sleep config
-    local sleep_configs=0
-    if [[ -d /etc/systemd/sleep.conf.d ]]; then
-        sleep_configs=$(find /etc/systemd/sleep.conf.d -type f 2>/dev/null | wc -l)
-    fi
-    show_info "systemd sleep configs" "$sleep_configs installed"
-
-    # systemd logind config
-    local logind_configs=0
+    # Check systemd logind config
+    echo
+    log_info "Login management:"
     if [[ -d /etc/systemd/logind.conf.d ]]; then
-        logind_configs=$(find /etc/systemd/logind.conf.d -type f 2>/dev/null | wc -l)
+        local logind_configs=$(find /etc/systemd/logind.conf.d -type f 2>/dev/null | wc -l)
+        if [[ $logind_configs -gt 0 ]]; then
+            echo "  $(gum style --foreground 2 "✓") systemd logind configs ($logind_configs files)"
+            ((configs_applied++))
+            echo "  $(gum style --foreground 8 "  Location: /etc/systemd/logind.conf.d/")"
+        else
+            echo "  $(gum style --foreground 3 "○") systemd logind configs (directory exists but empty)"
+            ((configs_pending++))
+        fi
+    else
+        echo "  $(gum style --foreground 3 "○") systemd logind configs (not configured)"
+        ((configs_pending++))
     fi
-    show_info "systemd logind configs" "$logind_configs installed"
+    echo
+
+    # Check for other system configs
+    echo
+    log_info "Other configurations:"
+    local other_configs=(
+        "/etc/systemd/resolved.conf.d"
+        "/etc/udev/rules.d"
+        "/etc/modules-load.d"
+    )
+
+    for config_path in "${other_configs[@]}"; do
+        local config_name=$(basename "$config_path")
+        if [[ -d "$config_path" ]]; then
+            local file_count=$(find "$config_path" -type f 2>/dev/null | wc -l)
+            if [[ $file_count -gt 0 ]]; then
+                echo "  $(gum style --foreground 2 "✓") $config_name ($file_count files)"
+                echo "  $(gum style --foreground 8 "  Location: $config_path")"
+            fi
+        fi
+    done
+    echo
+
+    # Show actionable info
+    if [[ $configs_pending -gt 0 ]]; then
+        log_info "$configs_pending configuration(s) pending"
+        echo
+    elif [[ $configs_applied -gt 0 ]]; then
+        log_success "All system configurations are applied"
+        echo
+    fi
 }
 
 # System management menu
@@ -120,9 +199,11 @@ system_menu() {
 
     while true; do
         clear_screen "System"
+        system_show_summary
 
         local action=$(choose_option \
             "Apply configurations" \
+            "Show details" \
             "Back")
 
         [[ -z "$action" ]] && return
@@ -130,6 +211,9 @@ system_menu() {
         case "$action" in
             "Apply configurations")
                 run_operation "" system_apply
+                ;;
+            "Show details")
+                run_operation "" system_status
                 ;;
             "Back")
                 return

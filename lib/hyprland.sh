@@ -244,39 +244,103 @@ hyprland_status() {
     log_section "Hyprland Status"
 
     if ! command -v hyprctl &>/dev/null; then
-        show_info "Hyprland" "✗ Not installed"
+        log_error "Hyprland is not installed"
+        echo
+        log_info "Install Hyprland to use this feature"
         return 1
     fi
 
-    # Get version
-    local version=$(hyprctl version 2>/dev/null | head -1 | grep -oP 'Hyprland \K\d+\.\d+\.\d+' || echo "unknown")
-    show_info "Version" "$version"
-
-    # Check if running and show monitors
-    if hyprctl version &>/dev/null 2>&1; then
+    # Check if running
+    if ! hyprctl version &>/dev/null 2>&1; then
+        log_warning "Hyprland is not running"
         echo
-        log_info "Monitors:"
-
-        # Parse monitor info
-        local current_monitor=""
-        local current_res=""
-        local current_refresh=""
-
-        while IFS= read -r line; do
-            # Monitor name line: "Monitor eDP-1 (ID 0):"
-            if [[ $line =~ ^Monitor\ ([^[:space:]]+)\ \(ID ]]; then
-                current_monitor="${BASH_REMATCH[1]}"
-            # Resolution line: "  1920x1080@60.00000 at 0x0"
-            elif [[ $line =~ ^[[:space:]]+([0-9]+x[0-9]+)@([0-9]+\.[0-9]+) ]]; then
-                current_res="${BASH_REMATCH[1]}"
-                current_refresh=$(printf "%.0f" "${BASH_REMATCH[2]}")
-                printf "  \033[94m%s\033[0m \033[90m%s @ %sHz\033[0m\n" "$current_monitor" "$current_res" "$current_refresh"
-            fi
-        done < <(hyprctl monitors 2>/dev/null)
-    else
+        log_info "Start Hyprland to see full status details"
         echo
-        show_info "Status" "Not running (start Hyprland to see details)"
+        return 0
     fi
+
+    # Show monitors with better formatting
+    echo
+    log_info "Monitors:"
+    local monitor_count=0
+    local current_monitor=""
+    local current_res=""
+    local current_refresh=""
+
+    while IFS= read -r line; do
+        # Monitor name line: "Monitor eDP-1 (ID 0):"
+        if [[ $line =~ ^Monitor\ ([^[:space:]]+)\ \(ID ]]; then
+            current_monitor="${BASH_REMATCH[1]}"
+        # Resolution line: "  1920x1080@60.00000 at 0x0"
+        elif [[ $line =~ ^[[:space:]]+([0-9]+x[0-9]+)@([0-9]+\.[0-9]+) ]]; then
+            current_res="${BASH_REMATCH[1]}"
+            current_refresh=$(printf "%.0f" "${BASH_REMATCH[2]}")
+            echo "  $(gum style --foreground 4 "$current_monitor") $(gum style --foreground 8 "$current_res @ ${current_refresh}Hz")"
+            ((monitor_count++))
+        fi
+    done < <(hyprctl monitors 2>/dev/null)
+
+    if [[ $monitor_count -eq 0 ]]; then
+        echo "  $(gum style --foreground 8 "No monitors detected")"
+    fi
+    echo
+
+    # Show plugin status
+    if command -v hyprpm &>/dev/null; then
+        source "$DOTFILES_DIR/lib/hyprland-plugins.sh"
+        load_plugin_config
+
+        if [[ ${#HYPRLAND_PLUGINS[@]} -gt 0 ]]; then
+            log_info "Plugins:"
+            local enabled_count=0
+            local missing_count=0
+
+            for plugin_name in "${!HYPRLAND_PLUGINS[@]}"; do
+                if is_plugin_enabled "$plugin_name"; then
+                    echo "  $(gum style --foreground 2 "✓") $plugin_name"
+                    ((enabled_count++))
+                else
+                    echo "  $(gum style --foreground 3 "○") $plugin_name (not enabled)"
+                    ((missing_count++))
+                fi
+            done
+            echo
+
+            if [[ $missing_count -gt 0 ]]; then
+                log_info "$missing_count plugin(s) not enabled"
+                echo
+            elif [[ $enabled_count -gt 0 ]]; then
+                log_success "$enabled_count plugin(s) enabled"
+                echo
+            fi
+        else
+            log_info "No plugins configured"
+            echo
+        fi
+    else
+        log_info "hyprpm not found - plugin management unavailable"
+        echo
+    fi
+
+    # Show configuration status
+    echo
+    log_info "Configuration:"
+    local hypr_config="$HOME/.config/hypr/hyprland.conf"
+    if [[ -f "$hypr_config" ]]; then
+        echo "  $(gum style --foreground 2 "✓") Main config: $hypr_config"
+    else
+        echo "  $(gum style --foreground 3 "○") Main config: not found"
+    fi
+
+    # Check for config includes
+    local config_dir="$HOME/.config/hypr"
+    if [[ -d "$config_dir" ]]; then
+        local config_files=$(find "$config_dir" -name "*.conf" -type f 2>/dev/null | wc -l)
+        if [[ $config_files -gt 1 ]]; then
+            echo "  $(gum style --foreground 8 "  $config_files config files found")"
+        fi
+    fi
+    echo
 }
 
 # Show Hyprland version information

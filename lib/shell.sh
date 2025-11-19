@@ -372,57 +372,103 @@ shell_menu() {
 shell_status() {
     log_section "Shell Status"
 
-    # Check zsh version
-    if command -v zsh &>/dev/null; then
-        local version=$(zsh --version | cut -d' ' -f2)
-        show_info "Version" "$version"
-    else
-        show_info "zsh" "✗ Not installed"
+    # Check zsh installation
+    if ! command -v zsh &>/dev/null; then
+        log_error "zsh is not installed"
         return 1
     fi
 
     # Check default shell
     local current_shell=$(getent passwd "$USER" | cut -d: -f7 2>/dev/null || echo "$SHELL")
     local shell_name=$(basename "$current_shell")
-    show_info "Default shell" "$shell_name"
-
-    # List installed plugins
-    if is_omz_installed && [[ -f "$PLUGINS_FILE" ]]; then
+    if [[ "$shell_name" == "zsh" ]]; then
+        show_info "Default shell" "$shell_name $(gum style --foreground 2 '✓')"
+    else
+        show_info "Default shell" "$shell_name $(gum style --foreground 3 '(not zsh)')"
         echo
-        log_info "Plugins:"
+    fi
 
-        local has_plugins=false
+    # Check Oh My Zsh installation
+    echo
+    if is_omz_installed; then
+        log_success "Oh My Zsh is installed"
+    else
+        log_warning "Oh My Zsh is not installed"
+        echo
+    fi
+
+    # Check shell configuration files
+    echo
+    log_info "Configuration files:"
+    local config_files=("$HOME/.zshrc" "$HOME/.profile" "$HOME/.zprofile")
+    local all_linked=true
+    for config_file in "${config_files[@]}"; do
+        if [[ -L "$config_file" ]]; then
+            if [[ -e "$config_file" ]]; then
+                echo "  $(gum style --foreground 2 "✓") $(basename "$config_file") (linked)"
+            else
+                echo "  $(gum style --foreground 1 "✗") $(basename "$config_file") (broken symlink)"
+                all_linked=false
+            fi
+        elif [[ -f "$config_file" ]]; then
+            echo "  $(gum style --foreground 8 "○") $(basename "$config_file") (not linked)"
+            all_linked=false
+        fi
+    done
+    echo
+
+    # List plugin status
+    if is_omz_installed && [[ -f "$PLUGINS_FILE" ]]; then
+        log_info "Plugins:"
+        local -a installed_plugins=()
+        local -a missing_plugins=()
+
         while IFS= read -r plugin_line; do
             [[ -z "$plugin_line" ]] && continue
             [[ "$plugin_line" =~ ^#.*$ ]] && continue
 
             local plugin_name=$(echo "$plugin_line" | cut -d':' -f1)
             if is_plugin_installed "$plugin_name"; then
-                printf "  \033[94m%s\033[0m\n" "$plugin_name"
-                has_plugins=true
+                installed_plugins+=("$plugin_name")
+            else
+                missing_plugins+=("$plugin_name")
             fi
         done < "$PLUGINS_FILE"
 
-        if [[ "$has_plugins" == false ]]; then
-            printf "  \033[90mNo plugins installed\033[0m\n"
+        if [[ ${#installed_plugins[@]} -gt 0 ]]; then
+            for plugin in "${installed_plugins[@]}"; do
+                echo "  $(gum style --foreground 2 "✓") $plugin"
+            done
+        fi
+
+        if [[ ${#missing_plugins[@]} -gt 0 ]]; then
+            for plugin in "${missing_plugins[@]}"; do
+                echo "  $(gum style --foreground 3 "○") $plugin (not installed)"
+            done
+            echo
+        elif [[ ${#installed_plugins[@]} -eq 0 ]]; then
+            echo "  $(gum style --foreground 8 "No plugins configured")"
+            echo
+        else
+            log_success "All plugins are installed"
+            echo
         fi
     fi
     
-    # Check Starship
-    echo
+    # Check Starship (user said this adds value)
     if command -v starship &>/dev/null; then
-        local starship_version=$(starship --version | cut -d' ' -f2)
-        show_info "Starship" "$starship_version"
-        
-        # Check if config exists
         local starship_config="$HOME/.config/starship.toml"
         if [[ -f "$starship_config" ]]; then
-            show_info "Starship config" "✓ Configured"
+            show_info "Starship config" "$(gum style --foreground 2 '✓ Configured')"
         else
-            show_info "Starship config" "✗ Not configured"
+            show_info "Starship config" "$(gum style --foreground 3 '✗ Not configured')"
+            echo
+            log_info "Starship is installed but not configured"
+            echo
         fi
     else
-        show_info "Starship" "✗ Not installed"
+        show_info "Starship" "$(gum style --foreground 8 'Not installed')"
+        echo
     fi
 }
 

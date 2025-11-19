@@ -2,6 +2,26 @@
 # Presentation helpers - gum-powered UI components
 # Requires: gum (charmbracelet/gum)
 
+# Configure gum to use base16 colors for navigation hints
+# Uses base03 (muted/comments) for help text to match theme
+configure_gum_colors() {
+    # Base16 base03 (muted/comments) - typically gray/muted
+    # Use ANSI color 8 (bright black/muted) which maps to base03
+    export GUM_CHOOSE_HELP_FOREGROUND="8"
+    export GUM_CHOOSE_HELP_BACKGROUND=""
+    export GUM_FILTER_HELP_FOREGROUND="8"
+    export GUM_FILTER_HELP_BACKGROUND=""
+    export GUM_CONFIRM_HELP_FOREGROUND="8"
+    export GUM_CONFIRM_HELP_BACKGROUND=""
+    export GUM_INPUT_HELP_FOREGROUND="8"
+    export GUM_INPUT_HELP_BACKGROUND=""
+    export GUM_WRITE_HELP_FOREGROUND="8"
+    export GUM_WRITE_HELP_BACKGROUND=""
+}
+
+# Initialize gum colors on load
+configure_gum_colors
+
 # Centered box UI helpers
 export BOX_WIDTH=70
 
@@ -118,13 +138,37 @@ get_input() {
 }
 
 # Menu selection (uses terminal theme colors)
+# Usage: choose_option [--header "Header text"] [--selected "item"] [options...]
 choose_option() {
-    gum choose --header "" --height 15 --cursor.foreground 5 "$@"
-}
-
-# Multi-select menu
-choose_option_multi() {
-    gum choose --no-limit --height 15 "$@"
+    local header=""
+    local selected=""
+    local args=()
+    
+    # Parse optional flags
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --header)
+                header="$2"
+                shift 2
+                ;;
+            --selected)
+                selected="$2"
+                shift 2
+                ;;
+            *)
+                args+=("$1")
+                shift
+                ;;
+        esac
+    done
+    
+    # Build command
+    local cmd=(gum choose --height 15 --cursor.foreground 5 --no-show-help)
+    [[ -n "$header" ]] && cmd+=(--header "$header") || cmd+=(--header "")
+    [[ -n "$selected" ]] && cmd+=(--selected "$selected")
+    cmd+=("${args[@]}")
+    
+    "${cmd[@]}"
 }
 
 # Fuzzy filter search (for large lists)

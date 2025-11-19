@@ -55,7 +55,7 @@ config_manage_interactive() {
     echo
 
     # Build gum command with pre-selections
-    local gum_args=(--no-limit --height 15)
+    local gum_args=(--no-limit --height 15 --no-show-help)
     for item in "${pre_selected[@]}"; do
         gum_args+=(--selected="$item")
     done
@@ -538,26 +538,119 @@ config_unlink_all() {
     fi
 }
 
+# Check if symlink is broken
+is_symlink_broken() {
+    local path="$1"
+    if [[ -L "$path" ]]; then
+        [[ ! -e "$path" ]]
+    else
+        return 1
+    fi
+}
+
 # Show config status
 config_status() {
     log_section "Config Status"
     
     local configs=($(get_configs))
     local linked_count=0
+    local broken_count=0
+    local -a broken_configs=()
     
     for config in "${configs[@]}"; do
-        if is_config_linked "$config"; then
-            echo "$(gum style --foreground 2 "✓ $config")$(gum style --foreground 8 " (linked)")"  # green + muted
+        local is_linked=false
+        local is_broken=false
+        
+        # Check link status and detect broken symlinks
+        case "$config" in
+            "shell")
+                if [[ -L "$HOME/.zshrc" ]] || [[ -L "$HOME/.profile" ]] || [[ -L "$HOME/.zprofile" ]]; then
+                    is_linked=true
+                    if is_symlink_broken "$HOME/.zshrc" || is_symlink_broken "$HOME/.profile" || is_symlink_broken "$HOME/.zprofile"; then
+                        is_broken=true
+                    fi
+                fi
+                ;;
+            "applications")
+                if [[ -d "$HOME/.local/share/applications" ]]; then
+                    if find "$HOME/.local/share/applications" -type l -exec readlink {} \; 2>/dev/null | grep -q "dotfiles/stow/applications"; then
+                        is_linked=true
+                        # Check for broken symlinks
+                        while IFS= read -r symlink; do
+                            if is_symlink_broken "$symlink"; then
+                                is_broken=true
+                                break
+                            fi
+                        done < <(find "$HOME/.local/share/applications" -type l 2>/dev/null)
+                    fi
+                fi
+                ;;
+            "scripts")
+                if [[ -d "$HOME/.local/bin" ]]; then
+                    if find "$HOME/.local/bin" -type l -exec readlink {} \; 2>/dev/null | grep -q "dotfiles/stow/scripts"; then
+                        is_linked=true
+                        # Check for broken symlinks
+                        while IFS= read -r symlink; do
+                            if is_symlink_broken "$symlink"; then
+                                is_broken=true
+                                break
+                            fi
+                        done < <(find "$HOME/.local/bin" -type l 2>/dev/null)
+                    fi
+                fi
+                ;;
+            *)
+                if [[ -L "$HOME/.config/$config" ]]; then
+                    is_linked=true
+                    if is_symlink_broken "$HOME/.config/$config"; then
+                        is_broken=true
+                    fi
+                elif find "$HOME/.config" "$HOME/.local" -maxdepth 3 -type l 2>/dev/null | xargs readlink 2>/dev/null | grep -q "dotfiles/stow/$config"; then
+                    is_linked=true
+                    # Check for broken symlinks
+                    while IFS= read -r symlink; do
+                        if is_symlink_broken "$symlink"; then
+                            is_broken=true
+                            break
+                        fi
+                    done < <(find "$HOME/.config" "$HOME/.local" -maxdepth 3 -type l 2>/dev/null | grep -q "dotfiles/stow/$config" || true)
+                fi
+                ;;
+        esac
+
+        # Display status
+        if $is_broken; then
+            echo "$(gum style --foreground 1 "✗ $config")$(gum style --foreground 8 " (broken symlink)")"
+            broken_configs+=("$config")
+            ((broken_count++))
+        elif $is_linked; then
+            echo "$(gum style --foreground 2 "✓ $config")$(gum style --foreground 8 " (linked)")"
             ((linked_count++))
         else
-            echo "$(gum style --foreground 8 "○ $config (not linked)")"  # muted
+            echo "$(gum style --foreground 8 "○ $config (not linked)")"
         fi
     done
-    
+
     echo
-    show_info "Total configs" "${#configs[@]}"
-    show_info "Linked" "$linked_count"
-    show_info "Not linked" "$((${#configs[@]} - linked_count))"
+
+    # Show issues if any
+    if [[ $broken_count -gt 0 ]]; then
+        log_warning "Found $broken_count config(s) with broken symlinks:"
+        for config in "${broken_configs[@]}"; do
+            echo "  $(gum style --foreground 1 "✗ $config")"
+        done
+        echo
+    fi
+
+    # Show actionable info
+    local not_linked=$((${#configs[@]} - linked_count - broken_count))
+    if [[ $not_linked -gt 0 ]]; then
+        log_info "$not_linked config(s) not linked"
+        echo
+    elif [[ $broken_count -eq 0 ]]; then
+        log_success "All configs are properly linked"
+        echo
+    fi
 }
 
 # Interactive config selection
@@ -607,8 +700,7 @@ config_menu() {
         for config in "${configs[@]}"; do
             is_config_linked "$config" && ((linked_count++))
         done
-        show_info "Status" "$linked_count/${#configs[@]} linked"
-        echo
+        show_quick_summary "Status" "$linked_count/${#configs[@]} linked"
 
         local action=$(choose_option \
             "Manage links" \

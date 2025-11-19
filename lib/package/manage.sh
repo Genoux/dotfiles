@@ -197,7 +197,7 @@ packages_manage() {
     [[ ${#extra_not_deps[@]} -gt 0 ]] && options+=("Select which to keep/remove")
     [[ $total_missing -gt 0 && $total_extra -gt 0 ]] && options+=("Full sync (install + add)")
 
-    local action=$(gum choose --header "What would you like to do?" "${options[@]}")
+    local action=$(choose_option --header "What would you like to do?" "${options[@]}")
     [[ -z "$action" ]] && return 1  # ESC pressed
 
     case "$action" in
@@ -460,7 +460,7 @@ packages_clean_unlisted() {
     fi
 
     # Interactive selection
-    local action=$(gum choose --header "What would you like to do?" \
+    local action=$(choose_option --header "What would you like to do?" \
             "Select packages to keep (rest will be removed)" \
             "Add all to dotfiles" \
             "Remove all unlisted packages" \
@@ -483,7 +483,7 @@ packages_clean_unlisted() {
                     echo
                     selected=$(printf '%s\n' "${all_unlisted[@]}" | gum filter --no-limit --placeholder "Search packages to keep (Tab to select, Enter to confirm)...")
                 else
-                    selected=$(printf '%s\n' "${all_unlisted[@]}" | gum choose --no-limit --header "Select packages to KEEP (unselected will be removed):")
+                    selected=$(printf '%s\n' "${all_unlisted[@]}" | gum choose --no-limit --header "Select packages to KEEP (unselected will be removed):" --no-show-help)
                 fi
 
                 # Parse selected packages

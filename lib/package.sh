@@ -43,13 +43,12 @@ packages_menu() {
         # Show current package count
         local pkg_count=$(grep -cvE '^#|^$' "$DOTFILES_DIR/packages/arch.package" 2>/dev/null || echo 0)
         local aur_count=$(grep -cvE '^#|^$' "$DOTFILES_DIR/packages/aur.package" 2>/dev/null || echo 0)
-        show_info "Tracked" "$pkg_count official + $aur_count AUR"
-        echo
-        
+        show_quick_summary "Tracked" "$pkg_count official + $aur_count AUR"
+
         local action=$(choose_option \
             "Manage packages" \
             "Update system" \
-            "Show status" \
+            "Show details" \
             "Back")
 
         [[ -z "$action" ]] && return  # ESC pressed
@@ -72,7 +71,7 @@ packages_menu() {
                     fi
                 }
                 ;;
-            "Show status")
+            "Show details")
                 run_operation "" packages_status
                 ;;
             "Back")

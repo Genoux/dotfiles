@@ -71,6 +71,17 @@ show_status_summary() {
     echo
 }
 
+# Show quick summary at top of menus (standardized format)
+# Usage: show_quick_summary "Label1" "Value1" "Label2" "Value2" ...
+# Displays 2-4 key metrics in consistent format
+show_quick_summary() {
+    while [[ $# -ge 2 ]]; do
+        show_info "$1" "$2"
+        shift 2
+    done
+    echo
+}
+
 # Interactive confirmation with gum
 # Usage: if confirm_action "Are you sure?"; then ...
 confirm_action() {
@@ -84,7 +95,7 @@ multi_select() {
     local header="$1"
     shift
     local options=("$@")
-    printf '%s\n' "${options[@]}" | gum choose --no-limit --header "$header"
+    printf '%s\n' "${options[@]}" | gum choose --no-limit --header "$header" --no-show-help
 }
 
 # Show operation spinner

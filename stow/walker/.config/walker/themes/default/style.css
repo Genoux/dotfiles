@@ -42,7 +42,7 @@
 }
 
 .box-wrapper {
-  background: alpha(@base01, 0.5);
+  background: alpha(@base00, 0.3);
   border: 1px solid @alpha-subtle;
   border-radius: 10px;
   padding: 10px;
@@ -57,7 +57,7 @@
 }
 
 .search-container {
-  background: alpha(@base01, 0.3);
+  background: alpha(@base01, 0.2);
   border: 1px solid @alpha-subtle;
   border-radius: 8px;
   padding: 1px;
