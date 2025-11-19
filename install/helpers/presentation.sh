@@ -275,12 +275,13 @@ run_with_clean_ui() {
     echo
 }
 
-# Run command with spinner and scrolling output
+# Run command with full output (no spinner, just like FULL INSTALL)
 run_with_spinner_box() {
     local title="$1"
     local command="$2"
 
-    gum spin --spinner dot --title "$title" --show-output -- bash -c "$command"
+    # Just execute the command and show raw output
+    bash -c "$command"
 }
 
 # =============================================================================

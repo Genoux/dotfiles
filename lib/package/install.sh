@@ -53,12 +53,8 @@ packages_install() {
         aur_packages+=("$pkg")
     done < "$AUR_PACKAGES_FILE"
     
-    log_info "Found ${#packages[@]} official packages and ${#aur_packages[@]} AUR packages"
-    echo
-
     # Update package databases to ensure latest versions
-    run_with_spinner "Synchronizing package databases..." bash -c 'sudo pacman -Sy --noconfirm > /dev/null 2>&1'
-    log_success "Package databases synchronized"
+    sudo pacman -Sy --noconfirm
     echo
     
     # Just install packages from lists - no checking
@@ -79,30 +75,23 @@ packages_install() {
     
     # Install missing official packages
     if [[ ${#missing_official[@]} -gt 0 ]]; then
-        log_info "Installing ${#missing_official[@]} official packages..."
-        echo
-
         # Install packages directly (sudo will prompt for password if needed)
         [[ -n "${DOTFILES_LOG_FILE:-}" ]] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [PACMAN] Installing packages: ${missing_official[*]}" >> "$DOTFILES_LOG_FILE"
         [[ -n "${DOTFILES_LOG_FILE:-}" ]] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [PACMAN] Starting installation..." >> "$DOTFILES_LOG_FILE"
 
-        # Run pacman with spinner (hide verbose output)
-        run_with_spinner "Installing official packages (${#missing_official[@]})..." \
-            bash -c "printf '1\nY\n' | sudo pacman -S --needed --noconfirm ${missing_official[*]} > /dev/null 2>&1"
+        printf '1\nY\n' | sudo pacman -S --needed --noconfirm ${missing_official[*]}
         local pacman_exit_code=$?
+        echo
 
-        if [[ $pacman_exit_code -eq 0 ]]; then
-            [[ -n "${DOTFILES_LOG_FILE:-}" ]] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [PACMAN] Installation completed successfully" >> "$DOTFILES_LOG_FILE"
-            log_success "Official packages installed (${#missing_official[@]})"
-        else
+        if [[ $pacman_exit_code -ne 0 ]]; then
             [[ -n "${DOTFILES_LOG_FILE:-}" ]] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [PACMAN] Installation completed with some failures (exit code: $pacman_exit_code)" >> "$DOTFILES_LOG_FILE"
             log_warning "Some official packages failed to install, but continuing..."
             echo
             log_info "Check log file for details: $DOTFILES_LOG_FILE"
+        else
+            [[ -n "${DOTFILES_LOG_FILE:-}" ]] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [PACMAN] Installation completed successfully" >> "$DOTFILES_LOG_FILE"
         fi
         echo
-    else
-        log_success "All official packages already installed"
     fi
     
 
@@ -126,7 +115,6 @@ packages_install() {
         
         # Exit early if nothing to install
         if [[ ${#missing_aur[@]} -eq 0 ]]; then
-            log_success "All AUR packages already installed"
             return 0
         fi
         
@@ -213,10 +201,6 @@ packages_install() {
             fi
         fi
         
-        # Install missing AUR packages
-        log_info "Installing ${#missing_aur[@]} AUR packages..."
-        echo
-
         # Refresh sudo session before yay (yay calls pacman which needs sudo)
         [[ -n "${DOTFILES_LOG_FILE:-}" ]] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] Refreshing sudo session..." >> "$DOTFILES_LOG_FILE"
         sudo -v || {
@@ -228,10 +212,9 @@ packages_install() {
         [[ -n "${DOTFILES_LOG_FILE:-}" ]] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] Installing packages: ${missing_aur[*]}" >> "$DOTFILES_LOG_FILE"
         [[ -n "${DOTFILES_LOG_FILE:-}" ]] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] Starting installation..." >> "$DOTFILES_LOG_FILE"
 
-        # Run yay with spinner (hide verbose output)
-        run_with_spinner "Installing AUR packages (${#missing_aur[@]})..." \
-            bash -c "printf '1\nY\n' | yay -S --needed --noconfirm --refresh --answerclean None --answerdiff None --removemake ${missing_aur[*]} > /dev/null 2>&1"
+        printf '1\nY\n' | yay -S --needed --noconfirm --refresh --answerclean None --answerdiff None --removemake ${missing_aur[*]}
         local yay_exit_code=$?
+        echo
 
         # Restore ~/.npmrc if we moved it, or remove the temporary empty one
         if [[ -n "$npmrc_backup" && -f "$npmrc_backup" ]]; then
@@ -241,14 +224,13 @@ packages_install() {
             rm -f "$HOME/.npmrc" 2>/dev/null || true
         fi
 
-        if [[ $yay_exit_code -eq 0 ]]; then
-            [[ -n "${DOTFILES_LOG_FILE:-}" ]] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] Installation completed successfully" >> "$DOTFILES_LOG_FILE"
-            log_success "AUR packages installed (${#missing_aur[@]})"
-        else
+        if [[ $yay_exit_code -ne 0 ]]; then
             [[ -n "${DOTFILES_LOG_FILE:-}" ]] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] Installation completed with some failures (exit code: $yay_exit_code)" >> "$DOTFILES_LOG_FILE"
             log_warning "Some AUR packages failed to install, but continuing..."
             echo
             log_info "Check log file for details: $DOTFILES_LOG_FILE"
+        else
+            [[ -n "${DOTFILES_LOG_FILE:-}" ]] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] Installation completed successfully" >> "$DOTFILES_LOG_FILE"
         fi
         echo
     fi
@@ -260,10 +242,8 @@ packages_install() {
     
     # Skip if too many packages (would take too long)
     if [[ $explicit_count -gt 500 ]]; then
-        log_info "Skipping dependency check ($explicit_count packages - would take too long)"
-        log_info "Dependencies will be added automatically when needed"
+        :  # Skip dependency check
     else
-        log_info "Checking for missing dependencies in dotfiles..."
         local deps_to_add_official=()
         local deps_to_add_aur=()
         
@@ -319,27 +299,17 @@ packages_install() {
             
             sort -u "$PACKAGES_FILE" -o "$PACKAGES_FILE"
             sort -u "$AUR_PACKAGES_FILE" -o "$AUR_PACKAGES_FILE"
-            
-            log_success "Added $((${#deps_to_add_official[@]} + ${#deps_to_add_aur[@]})) dependencies to dotfiles"
-        else
-            log_success "All dependencies are already in dotfiles"
         fi
     fi
     
-    echo
-    log_success "Package installation complete"
-    
     # Check for any outdated packages
-    log_info "Checking for package updates..."
     local outdated_official=$(pacman -Qu 2>/dev/null | grep -v "\[ignored\]" | wc -l)
     local outdated_aur=$(yay -Qua 2>/dev/null | wc -l)
-    
+
     if [[ $outdated_official -gt 0 || $outdated_aur -gt 0 ]]; then
         echo
         log_warning "Found $outdated_official official + $outdated_aur AUR packages with updates available"
         log_info "Run 'yay -Syu' or use the update menu option to upgrade"
-    else
-        log_success "All packages are up to date"
+        echo
     fi
-    echo
 }

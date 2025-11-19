@@ -106,6 +106,12 @@
       "keyColor": "blue"
     },
     {
+      "type": "command",
+      "key": "├ 󰎔",
+      "keyColor": "blue",
+      "text": "bash -c '~/.cargo/bin/flavours current 2>/dev/null || echo none'"
+    },
+    {
       "type": "custom",
       "key": "└ 󰏘",
       "keyColor": "blue",

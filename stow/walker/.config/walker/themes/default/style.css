@@ -1,24 +1,24 @@
 /* Theme variables - Base16 colors (use alpha() function for opacity) */
 
 /* Base16 grayscale */
-@define-color base00 rgb(36, 40, 59);
-@define-color base01 rgb(31, 35, 53);
-@define-color base02 rgb(41, 46, 66);
-@define-color base03 rgb(86, 95, 137);
-@define-color base04 rgb(169, 177, 214);
-@define-color base05 rgb(192, 202, 245);
-@define-color base06 rgb(192, 202, 245);
-@define-color base07 rgb(192, 202, 245);
+@define-color base00 rgb(40, 44, 52);
+@define-color base01 rgb(53, 59, 69);
+@define-color base02 rgb(62, 68, 81);
+@define-color base03 rgb(84, 88, 98);
+@define-color base04 rgb(86, 92, 100);
+@define-color base05 rgb(171, 178, 191);
+@define-color base06 rgb(182, 189, 202);
+@define-color base07 rgb(200, 204, 212);
 
 /* Base16 accent colors */
-@define-color base08 rgb(247, 118, 142);
-@define-color base09 rgb(255, 158, 100);
-@define-color base0A rgb(224, 175, 104);
-@define-color base0B rgb(158, 206, 106);
-@define-color base0C rgb(26, 188, 156);
-@define-color base0D rgb(65, 166, 181);
-@define-color base0E rgb(187, 154, 247);
-@define-color base0F rgb(255, 0, 124);
+@define-color base08 rgb(224, 108, 117);
+@define-color base09 rgb(209, 154, 102);
+@define-color base0A rgb(229, 192, 123);
+@define-color base0B rgb(152, 195, 121);
+@define-color base0C rgb(86, 182, 194);
+@define-color base0D rgb(97, 175, 239);
+@define-color base0E rgb(198, 120, 221);
+@define-color base0F rgb(190, 80, 70);
 
 /* Alpha overlays (design tokens - not theme colors) */
 @define-color alpha-subtle rgba(255, 255, 255, 0.02);
@@ -42,10 +42,10 @@
 }
 
 .box-wrapper {
-  background: alpha(@base00, 0.3);
+  background: alpha(@base00, 0.5);
   border: 1px solid @alpha-subtle;
-  border-radius: 10px;
-  padding: 10px;
+  border-radius: 8px;
+  padding: 10px 10px 0px 10px;
   box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
 }
 
@@ -57,7 +57,7 @@
 }
 
 .search-container {
-  background: alpha(@base01, 0.2);
+  background: rgba(0, 0, 0, 0.08);
   border: 1px solid @alpha-subtle;
   border-radius: 8px;
   padding: 1px;
@@ -86,15 +86,12 @@
   color: white;
 }
 
-child {
-}
-
 .item-box {
   background: transparent;
   border-radius: 8px;
   padding: 7px 8px;
   border: 1px solid transparent;
-  transition: all 0.12s easeOut;
+  transition: all 0.12s ease-out;
 }
 
 .item-quick-activation {
@@ -103,13 +100,8 @@ child {
   padding: 10px;
 }
 
-child:hover .item-box {
-  background: alpha(@base01, 0.4);
-  border-color: @alpha-subtle;
-}
-
 child:selected .item-box {
-  background: rgba(255, 255, 255, 0.06);
+  background: @alpha-subtle;
   border-color: @alpha-subtle;
 }
 
@@ -125,7 +117,6 @@ child:selected .item-box {
   line-height: 1.2;
   margin: 0;
   padding: 0;
-  vertical-align: middle;
 }
 
 .item-subtext {
@@ -156,23 +147,6 @@ child:selected .item-box {
   padding: 8px;
 }
 
-.todo-item {
-  transition: opacity 0.2s ease;
-}
-
-.todo-item.active {
-  font-weight: 500;
-}
-
-.todo-item.done {
-  opacity: 0.4;
-  text-decoration: line-through;
-}
-
-.bluetooth-item.disconnected {
-  opacity: 0.5;
-}
-
 .symbol-item {
   font-size: 20px;
 }
@@ -183,7 +157,6 @@ child:selected .item-box {
   margin: 0;
   padding: 0;
   min-height: 0;
-  max-height: 0;
 }
 
 .error {
@@ -192,28 +165,4 @@ child:selected .item-box {
   padding: 12px;
   border-radius: 10px;
   margin-top: 8px;
-}
-
-.ai-item {
-  background: alpha(@base01, 0.4);
-  border: 1px solid @alpha-subtle;
-  border-radius: 12px;
-  padding: 12px 16px;
-  margin: 6px 0;
-  color: @base07;
-}
-
-.ai-item.user {
-  background: alpha(@base04, 0.2);
-}
-
-.ai-item.assistant {
-  background: alpha(@base01, 0.4);
-}
-
-.password {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid @alpha-subtle;
-  border-radius: 12px;
-  padding: 12px 16px;
 }

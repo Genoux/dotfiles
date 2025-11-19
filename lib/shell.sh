@@ -14,31 +14,36 @@ fi
 # Check if zsh is installed, install if missing
 check_zsh() {
     if command -v zsh &>/dev/null; then
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] zsh is already installed" >> "$DOTFILES_LOG_FILE"
         return 0
     fi
-    
+
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] zsh is not installed" >> "$DOTFILES_LOG_FILE"
+
+    # Stop monitor temporarily for user prompt
+    stop_log_monitor
     log_warning "zsh is not installed"
-    
+
     # Ask user if they want to install
     if ! confirm "Install zsh using pacman?"; then
-        graceful_error "zsh not installed" "Install manually or run: dotfiles shell setup"
+        log_error "zsh not installed. Install manually or run: dotfiles shell setup"
         return 1
     fi
-    
-    # Install zsh using pacman
-    log_info "Installing zsh..."
-    if sudo pacman -S --needed --noconfirm zsh; then
-        # Verify installation
-        if command -v zsh &>/dev/null; then
-            log_success "zsh is now installed"
-            return 0
-        else
-            log_error "zsh installation completed but command not found"
-            log_info "You may need to update your PATH or restart your shell"
-            return 1
-        fi
+
+    # Restart monitor and install zsh
+    start_log_monitor
+
+    if ! run_command_logged "Install zsh" sudo pacman -S --needed --noconfirm zsh; then
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Failed: Install zsh" >> "$DOTFILES_LOG_FILE"
+        return 1
+    fi
+
+    # Verify installation
+    if command -v zsh &>/dev/null; then
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Completed: zsh is now installed" >> "$DOTFILES_LOG_FILE"
+        return 0
     else
-        log_error "Failed to install zsh"
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Failed: zsh command not found after installation" >> "$DOTFILES_LOG_FILE"
         return 1
     fi
 }
@@ -50,30 +55,37 @@ is_omz_installed() {
 
 # Install Oh My Zsh
 install_omz() {
-    
-    log_info "Installing Oh My Zsh..."
-    echo
+    if is_omz_installed; then
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Oh My Zsh is already installed" >> "$DOTFILES_LOG_FILE"
+        return 0
+    fi
 
-    log_info "Downloading installer..."
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting: Install Oh My Zsh" >> "$DOTFILES_LOG_FILE"
+
     local temp_file=$(mktemp)
-    if curl -# -fL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh > "$temp_file"; then
-        echo
-        # Run installer in unattended mode
-        run_with_spinner "Installing Oh My Zsh" \
-            env RUNZSH=no CHSH=no sh "$temp_file"
-        
-        if is_omz_installed; then
-            log_success "Oh My Zsh installed"
-            rm -f "$temp_file"
-            return 0
-        else
-            log_error "Oh My Zsh installation failed"
-            rm -f "$temp_file"
-            return 1
-        fi
-    else
-        log_error "Failed to download Oh My Zsh installer"
+
+    # Download installer
+    if ! run_command_logged "Download Oh My Zsh installer" curl -fL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh -o "$temp_file"; then
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Failed: Download Oh My Zsh installer" >> "$DOTFILES_LOG_FILE"
         rm -f "$temp_file"
+        return 1
+    fi
+
+    # Run installer in unattended mode
+    if ! run_command_logged "Install Oh My Zsh" env RUNZSH=no CHSH=no sh "$temp_file"; then
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Failed: Install Oh My Zsh" >> "$DOTFILES_LOG_FILE"
+        rm -f "$temp_file"
+        return 1
+    fi
+
+    rm -f "$temp_file"
+
+    # Verify installation
+    if is_omz_installed; then
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Completed: Oh My Zsh installed successfully" >> "$DOTFILES_LOG_FILE"
+        return 0
+    else
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Failed: Oh My Zsh directory not found after installation" >> "$DOTFILES_LOG_FILE"
         return 1
     fi
 }
@@ -87,115 +99,113 @@ is_plugin_installed() {
 # Install zsh plugins
 install_plugins() {
     if ! is_omz_installed; then
-        graceful_error "Oh My Zsh not installed" "Run: dotfiles shell setup"
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Failed: Oh My Zsh not installed" >> "$DOTFILES_LOG_FILE"
         return 1
     fi
-    
+
     if [[ ! -f "$PLUGINS_FILE" ]]; then
-        graceful_error "Plugin list not found: $PLUGINS_FILE"
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Failed: Plugin list not found" >> "$DOTFILES_LOG_FILE"
         return 1
     fi
-    
-    log_info "Installing zsh plugins..."
-    
+
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting: Install zsh plugins" >> "$DOTFILES_LOG_FILE"
+
     local plugins_dir="$HOME/.oh-my-zsh/custom/plugins"
-    ensure_directory "$plugins_dir"
-    
+    mkdir -p "$plugins_dir"
+
     local installed=0
     local skipped=0
     local failed=0
-    
+
     while IFS= read -r plugin_line; do
         # Skip comments and empty lines
         [[ -z "$plugin_line" ]] && continue
         [[ "$plugin_line" =~ ^#.*$ ]] && continue
-        
+
         local plugin_name=$(echo "$plugin_line" | cut -d':' -f1)
         local plugin_url=$(echo "$plugin_line" | cut -d':' -f2-)
         local plugin_dir="$plugins_dir/$plugin_name"
-        
+
         if is_plugin_installed "$plugin_name"; then
-            log_info "  ○ $plugin_name (already installed)"
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] $plugin_name already installed" >> "$DOTFILES_LOG_FILE"
             ((skipped++))
             continue
         fi
-        
-        log_info "  → Installing $plugin_name..."
-        if git clone --depth=1 --progress "$plugin_url" "$plugin_dir" 2>&1 | grep -E 'Cloning|Receiving|remote:'; then
-            log_success "  ✓ $plugin_name installed"
+
+        if run_command_logged "Install plugin: $plugin_name" git clone --depth=1 "$plugin_url" "$plugin_dir"; then
             ((installed++))
         else
-            log_error "  ✗ $plugin_name failed"
             ((failed++))
         fi
     done < "$PLUGINS_FILE"
-    
-    echo
-    show_info "Installed" "$installed"
-    show_info "Already installed" "$skipped"
-    if [[ $failed -gt 0 ]]; then
-        show_info "Failed" "$failed"
-    fi
-    
+
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Completed: Install zsh plugins (installed: $installed, skipped: $skipped, failed: $failed)" >> "$DOTFILES_LOG_FILE"
+
     return 0
 }
 
 # Check if Starship is installed
 check_starship() {
     if command -v starship &>/dev/null; then
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starship is already installed" >> "$DOTFILES_LOG_FILE"
         return 0
     fi
-    
+
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starship is not installed" >> "$DOTFILES_LOG_FILE"
+
+    # Stop monitor temporarily for user prompt
+    stop_log_monitor
     log_warning "Starship is not installed"
-    
+
     # Ask user if they want to install
     if ! confirm "Install Starship? (via pacman or cargo)"; then
-        log_info "Skipping Starship installation"
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Skipping Starship installation" >> "$DOTFILES_LOG_FILE"
+        start_log_monitor
         return 0
     fi
-    
+
+    # Restart monitor
+    start_log_monitor
+
     # Try pacman first (Arch Linux)
     if command -v pacman &>/dev/null; then
-        log_info "Installing Starship via pacman..."
-        if sudo pacman -S --needed --noconfirm starship; then
+        if run_command_logged "Install Starship via pacman" sudo pacman -S --needed --noconfirm starship; then
             if command -v starship &>/dev/null; then
-                log_success "Starship installed"
+                echo "[$(date '+%Y-%m-%d %H:%M:%S')] Completed: Starship installed" >> "$DOTFILES_LOG_FILE"
                 return 0
             fi
         fi
     fi
-    
+
     # Fallback to cargo if available
     if command -v cargo &>/dev/null; then
-        log_info "Installing Starship via cargo..."
-        if cargo install starship --locked; then
+        if run_command_logged "Install Starship via cargo" cargo install starship --locked; then
             if command -v starship &>/dev/null; then
-                log_success "Starship installed"
+                echo "[$(date '+%Y-%m-%d %H:%M:%S')] Completed: Starship installed" >> "$DOTFILES_LOG_FILE"
                 return 0
             fi
         fi
     fi
-    
-    log_warning "Could not install Starship automatically"
-    log_info "Install manually: https://starship.rs/guide/#%F0%9F%9A%80-installation"
+
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Warning: Could not install Starship automatically" >> "$DOTFILES_LOG_FILE"
     return 0  # Don't fail setup if Starship isn't installed
 }
 
 # Update plugins array in .zshrc
 update_zshrc_plugins() {
     local zshrc_file="$DOTFILES_DIR/stow/shell/.zshrc"
-    
+
     if [[ ! -f "$zshrc_file" ]]; then
-        log_warning "Could not find .zshrc file: $zshrc_file"
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Warning: .zshrc file not found" >> "$DOTFILES_LOG_FILE"
         return 0  # Don't fail setup
     fi
-    
+
     if [[ ! -f "$PLUGINS_FILE" ]]; then
-        log_warning "Plugin list not found, skipping plugin array update"
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Warning: Plugin list not found" >> "$DOTFILES_LOG_FILE"
         return 0
     fi
-    
-    log_info "Updating plugins array in .zshrc..."
+
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting: Update plugins array in .zshrc" >> "$DOTFILES_LOG_FILE"
     
     # Built-in Oh My Zsh plugins (always include these)
     local builtin_plugins=("git" "command-not-found" "sudo" "history" "dirhistory")
@@ -252,10 +262,10 @@ update_zshrc_plugins() {
     
     # Replace original file
     if mv "$temp_file" "$zshrc_file"; then
-        log_success "Updated plugins array ($((${#all_plugins[@]})) plugins)"
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Completed: Updated plugins array ($((${#all_plugins[@]})) plugins)" >> "$DOTFILES_LOG_FILE"
         return 0
     else
-        log_error "Failed to update plugins array"
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Failed: Update plugins array" >> "$DOTFILES_LOG_FILE"
         rm -f "$temp_file"
         return 0  # Don't fail setup
     fi
@@ -265,62 +275,73 @@ update_zshrc_plugins() {
 set_default_shell() {
     local zsh_path=$(which zsh)
     local current_shell=$(getent passwd "$USER" | cut -d: -f7 2>/dev/null || echo "$SHELL")
-    
+
     if [[ "$current_shell" == "$zsh_path" ]]; then
-        log_success "zsh is already the default shell"
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] zsh is already the default shell" >> "$DOTFILES_LOG_FILE"
         return 0
     fi
-    
+
+    # Stop monitor temporarily for user prompt
+    stop_log_monitor
     log_info "Setting zsh as default shell..."
-    
+
     if confirm "Change default shell to zsh? (requires password)"; then
-        if chsh -s "$zsh_path"; then
-            log_success "Default shell changed to zsh"
-            log_info "Log out and back in for changes to take effect"
+        # Restart monitor
+        start_log_monitor
+
+        if run_command_logged "Change default shell to zsh" chsh -s "$zsh_path"; then
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] Completed: Default shell changed to zsh (restart required)" >> "$DOTFILES_LOG_FILE"
             return 0
         else
-            graceful_error "Failed to change default shell" "Try manually: chsh -s $zsh_path"
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] Failed: Change default shell" >> "$DOTFILES_LOG_FILE"
             return 1
         fi
     else
-        log_info "Skipped changing default shell"
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Skipped changing default shell" >> "$DOTFILES_LOG_FILE"
+        start_log_monitor
         return 0
     fi
 }
 
 # Complete shell setup
 shell_setup() {
-    log_section "Shell Setup"
-    
+    # Initialize logging and start monitor
+    init_logging "shell"
+    start_log_monitor
+
     # Check prerequisites
-    check_zsh || return 1
-    
-    echo
-    
+    check_zsh || {
+        finish_logging
+        sleep 1
+        stop_log_monitor
+        return 1
+    }
+
     # Install Oh My Zsh
-    install_omz || return 1
-    
-    echo
-    
+    install_omz || {
+        finish_logging
+        sleep 1
+        stop_log_monitor
+        return 1
+    }
+
     # Install plugins
     install_plugins
-    
-    echo
-    
+
     # Update plugins array in .zshrc
     update_zshrc_plugins
-    
-    echo
-    
+
     # Check/install Starship
     check_starship
-    
-    echo
-    
+
     # Set default shell
     set_default_shell
-    
-    echo
+
+    # Finish logging and keep monitor visible
+    finish_logging
+    sleep 2
+    stop_log_monitor true
+
     log_success "Shell setup complete"
 }
 

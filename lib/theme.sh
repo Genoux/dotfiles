@@ -11,16 +11,20 @@ if [[ -z "${DOTFILES_HELPERS_LOADED:-}" ]]; then
     export DOTFILES_HELPERS_LOADED=true
 fi
 
-# Show current theme information
-theme_show_current() {
-    # Find scheme file dynamically
+get_current_theme_name() {
     local current_scheme="none"
     if command -v flavours &>/dev/null || [[ -x "$HOME/.cargo/bin/flavours" ]]; then
         local flavours_cmd="flavours"
         [[ ! -x "$(command -v flavours)" ]] && flavours_cmd="$HOME/.cargo/bin/flavours"
         current_scheme=$("$flavours_cmd" current 2>/dev/null || echo "none")
     fi
-    
+    echo "$current_scheme"
+}
+
+# Show just the active theme name
+show_theme_name() {
+    local current_scheme=$(get_current_theme_name)
+
     local scheme_file=""
     if ! scheme_file=$(get_scheme_file); then
         # No scheme file found
@@ -36,53 +40,73 @@ theme_show_current() {
         local scheme_name=$(grep "^scheme:" "$scheme_file" | cut -d'"' -f2)
         local scheme_author=$(grep "^author:" "$scheme_file" | cut -d'"' -f2)
         show_info "Active theme" "$scheme_name by $scheme_author"
-        echo
-
-        # Display Base16 color palette (compact)
-        echo -e "${BOLD}Colors:${RESET}"
-
-        # Read colors from scheme
-        local base00=$(grep "^base00:" "$scheme_file" | awk '{print $2}' | tr -d '"')
-        local base01=$(grep "^base01:" "$scheme_file" | awk '{print $2}' | tr -d '"')
-        local base02=$(grep "^base02:" "$scheme_file" | awk '{print $2}' | tr -d '"')
-        local base03=$(grep "^base03:" "$scheme_file" | awk '{print $2}' | tr -d '"')
-        local base04=$(grep "^base04:" "$scheme_file" | awk '{print $2}' | tr -d '"')
-        local base05=$(grep "^base05:" "$scheme_file" | awk '{print $2}' | tr -d '"')
-        local base06=$(grep "^base06:" "$scheme_file" | awk '{print $2}' | tr -d '"')
-        local base07=$(grep "^base07:" "$scheme_file" | awk '{print $2}' | tr -d '"')
-        local base08=$(grep "^base08:" "$scheme_file" | awk '{print $2}' | tr -d '"')
-        local base09=$(grep "^base09:" "$scheme_file" | awk '{print $2}' | tr -d '"')
-        local base0A=$(grep "^base0A:" "$scheme_file" | awk '{print $2}' | tr -d '"')
-        local base0B=$(grep "^base0B:" "$scheme_file" | awk '{print $2}' | tr -d '"')
-        local base0C=$(grep "^base0C:" "$scheme_file" | awk '{print $2}' | tr -d '"')
-        local base0D=$(grep "^base0D:" "$scheme_file" | awk '{print $2}' | tr -d '"')
-        local base0E=$(grep "^base0E:" "$scheme_file" | awk '{print $2}' | tr -d '"')
-        local base0F=$(grep "^base0F:" "$scheme_file" | awk '{print $2}' | tr -d '"')
-        
-        # Display as compact rows of colored circles
-        printf "→ Accent Colors: "
-        printf "\033[38;2;$((16#${base00:0:2}));$((16#${base00:2:2}));$((16#${base00:4:2}))m●\033[0m "
-        printf "\033[38;2;$((16#${base01:0:2}));$((16#${base01:2:2}));$((16#${base01:4:2}))m●\033[0m "
-        printf "\033[38;2;$((16#${base02:0:2}));$((16#${base02:2:2}));$((16#${base02:4:2}))m●\033[0m "
-        printf "\033[38;2;$((16#${base03:0:2}));$((16#${base03:2:2}));$((16#${base03:4:2}))m●\033[0m "
-        printf "\033[38;2;$((16#${base04:0:2}));$((16#${base04:2:2}));$((16#${base04:4:2}))m●\033[0m "
-        printf "\033[38;2;$((16#${base05:0:2}));$((16#${base05:2:2}));$((16#${base05:4:2}))m●\033[0m "
-        printf "\033[38;2;$((16#${base06:0:2}));$((16#${base06:2:2}));$((16#${base06:4:2}))m●\033[0m "
-        printf "\033[38;2;$((16#${base07:0:2}));$((16#${base07:2:2}));$((16#${base07:4:2}))m●\033[0m"
-        echo
-        printf "→ Grayscale Colors: "
-        printf "\033[38;2;$((16#${base08:0:2}));$((16#${base08:2:2}));$((16#${base08:4:2}))m●\033[0m "
-        printf "\033[38;2;$((16#${base09:0:2}));$((16#${base09:2:2}));$((16#${base09:4:2}))m●\033[0m "
-        printf "\033[38;2;$((16#${base0A:0:2}));$((16#${base0A:2:2}));$((16#${base0A:4:2}))m●\033[0m "
-        printf "\033[38;2;$((16#${base0B:0:2}));$((16#${base0B:2:2}));$((16#${base0B:4:2}))m●\033[0m "
-        printf "\033[38;2;$((16#${base0C:0:2}));$((16#${base0C:2:2}));$((16#${base0C:4:2}))m●\033[0m "
-        printf "\033[38;2;$((16#${base0D:0:2}));$((16#${base0D:2:2}));$((16#${base0D:4:2}))m●\033[0m "
-        printf "\033[38;2;$((16#${base0E:0:2}));$((16#${base0E:2:2}));$((16#${base0E:4:2}))m●\033[0m "
-        printf "\033[38;2;$((16#${base0F:0:2}));$((16#${base0F:2:2}));$((16#${base0F:4:2}))m●\033[0m"
-        echo
     else
         show_info "Active theme" "Scheme file not found"
     fi
+}
+
+# Show Base16 color palette
+show_theme_colors() {
+    local scheme_file=""
+    if ! scheme_file=$(get_scheme_file); then
+        return 1
+    fi
+
+    if [[ ! -f "$scheme_file" ]]; then
+        return 1
+    fi
+
+    # Read colors from scheme
+    local base00=$(grep "^base00:" "$scheme_file" | awk '{print $2}' | tr -d '"')
+    local base01=$(grep "^base01:" "$scheme_file" | awk '{print $2}' | tr -d '"')
+    local base02=$(grep "^base02:" "$scheme_file" | awk '{print $2}' | tr -d '"')
+    local base03=$(grep "^base03:" "$scheme_file" | awk '{print $2}' | tr -d '"')
+    local base04=$(grep "^base04:" "$scheme_file" | awk '{print $2}' | tr -d '"')
+    local base05=$(grep "^base05:" "$scheme_file" | awk '{print $2}' | tr -d '"')
+    local base06=$(grep "^base06:" "$scheme_file" | awk '{print $2}' | tr -d '"')
+    local base07=$(grep "^base07:" "$scheme_file" | awk '{print $2}' | tr -d '"')
+    local base08=$(grep "^base08:" "$scheme_file" | awk '{print $2}' | tr -d '"')
+    local base09=$(grep "^base09:" "$scheme_file" | awk '{print $2}' | tr -d '"')
+    local base0A=$(grep "^base0A:" "$scheme_file" | awk '{print $2}' | tr -d '"')
+    local base0B=$(grep "^base0B:" "$scheme_file" | awk '{print $2}' | tr -d '"')
+    local base0C=$(grep "^base0C:" "$scheme_file" | awk '{print $2}' | tr -d '"')
+    local base0D=$(grep "^base0D:" "$scheme_file" | awk '{print $2}' | tr -d '"')
+    local base0E=$(grep "^base0E:" "$scheme_file" | awk '{print $2}' | tr -d '"')
+    local base0F=$(grep "^base0F:" "$scheme_file" | awk '{print $2}' | tr -d '"')
+
+    echo -e "${BOLD}Base16 Colors:${RESET}"
+
+    # Background shades
+    printf "  \033[38;2;$((16#${base00:0:2}));$((16#${base00:2:2}));$((16#${base00:4:2}))m●\033[0m base00 (#%s)         " "$base00"
+    printf "\033[38;2;$((16#${base01:0:2}));$((16#${base01:2:2}));$((16#${base01:4:2}))m●\033[0m base01 (#%s)\n" "$base01"
+
+    printf "  \033[38;2;$((16#${base02:0:2}));$((16#${base02:2:2}));$((16#${base02:4:2}))m●\033[0m base02 (#%s)         " "$base02"
+    printf "\033[38;2;$((16#${base03:0:2}));$((16#${base03:2:2}));$((16#${base03:4:2}))m●\033[0m base03 (#%s)\n" "$base03"
+
+    # Foreground shades
+    printf "  \033[38;2;$((16#${base04:0:2}));$((16#${base04:2:2}));$((16#${base04:4:2}))m●\033[0m base04 (#%s)         " "$base04"
+    printf "\033[38;2;$((16#${base05:0:2}));$((16#${base05:2:2}));$((16#${base05:4:2}))m●\033[0m base05 (#%s)\n" "$base05"
+
+    printf "  \033[38;2;$((16#${base06:0:2}));$((16#${base06:2:2}));$((16#${base06:4:2}))m●\033[0m base06 (#%s)         " "$base06"
+    printf "\033[38;2;$((16#${base07:0:2}));$((16#${base07:2:2}));$((16#${base07:4:2}))m●\033[0m base07 (#%s)\n" "$base07"
+
+    # Accent colors
+    printf "  \033[38;2;$((16#${base08:0:2}));$((16#${base08:2:2}));$((16#${base08:4:2}))m●\033[0m base08 (#%s)         " "$base08"
+    printf "\033[38;2;$((16#${base09:0:2}));$((16#${base09:2:2}));$((16#${base09:4:2}))m●\033[0m base09 (#%s)\n" "$base09"
+
+    printf "  \033[38;2;$((16#${base0A:0:2}));$((16#${base0A:2:2}));$((16#${base0A:4:2}))m●\033[0m base0A (#%s)         " "$base0A"
+    printf "\033[38;2;$((16#${base0B:0:2}));$((16#${base0B:2:2}));$((16#${base0B:4:2}))m●\033[0m base0B (#%s)\n" "$base0B"
+
+    printf "  \033[38;2;$((16#${base0C:0:2}));$((16#${base0C:2:2}));$((16#${base0C:4:2}))m●\033[0m base0C (#%s)         " "$base0C"
+    printf "\033[38;2;$((16#${base0D:0:2}));$((16#${base0D:2:2}));$((16#${base0D:4:2}))m●\033[0m base0D (#%s)\n" "$base0D"
+
+    printf "  \033[38;2;$((16#${base0E:0:2}));$((16#${base0E:2:2}));$((16#${base0E:4:2}))m●\033[0m base0E (#%s)         " "$base0E"
+    printf "\033[38;2;$((16#${base0F:0:2}));$((16#${base0F:2:2}));$((16#${base0F:4:2}))m●\033[0m base0F (#%s)\n" "$base0F"
+}
+
+# Show current theme information (for menu header)
+theme_show_current() {
+    show_theme_name
 }
 
 # Apply flavours theme using base16 scheme
@@ -260,18 +284,27 @@ theme_select() {
             local stow_scheme_dir="$schemes_dir/$selected"
             local stow_scheme="$stow_scheme_dir/$selected.yaml"
             mkdir -p "$stow_scheme_dir"
-            cp "$source_scheme" "$stow_scheme"
-            
+
+            # Only copy if source and destination are different
+            if [[ "$(realpath "$source_scheme")" != "$(realpath "$stow_scheme" 2>/dev/null || echo "$stow_scheme")" ]]; then
+                cp "$source_scheme" "$stow_scheme"
+            fi
+
             # Also copy to default location (convention for active scheme)
             local default_scheme="$schemes_dir/default/default.yaml"
             mkdir -p "$(dirname "$default_scheme")"
-            cp "$source_scheme" "$default_scheme"
+            if [[ "$(realpath "$source_scheme")" != "$(realpath "$default_scheme" 2>/dev/null || echo "$default_scheme")" ]]; then
+                cp "$source_scheme" "$default_scheme"
+            fi
 
             # Also copy to active config (if stowed) - use scheme name
             local config_scheme_dir="$HOME/.config/flavours/schemes/$selected"
+            local config_scheme_file="$config_scheme_dir/$selected.yaml"
             if [[ -d "$HOME/.config/flavours/schemes" ]]; then
                 mkdir -p "$config_scheme_dir"
-                cp "$source_scheme" "$config_scheme_dir/$selected.yaml"
+                if [[ "$(realpath "$source_scheme")" != "$(realpath "$config_scheme_file" 2>/dev/null || echo "$config_scheme_file")" ]]; then
+                    cp "$source_scheme" "$config_scheme_file"
+                fi
             fi
         fi
 
@@ -343,7 +376,9 @@ theme_status() {
     if scheme_file=$(get_scheme_file); then
         # File exists - check if it's valid
         if grep -q "^base00:" "$scheme_file"; then
-            theme_show_current
+            show_theme_name
+            echo
+            show_theme_colors
         else
             show_info "Flavours scheme" "$current_scheme"
             log_warning "Scheme file found but invalid: $scheme_file"

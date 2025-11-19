@@ -1,7 +1,3 @@
----
-alwaysApply: true
----
-
 ### Building and Installing Walker from Go Source
 
 Source: https://github.com/abenz1267/walker/blob/master/README.md
@@ -15,7 +11,7 @@ go build -x -o walker // the '-x' is for debug output
 sudo cp walker /usr/bin/
 ```
 
----
+--------------------------------
 
 ### Autostarting Walker as Service in Hyprland
 
@@ -27,7 +23,7 @@ Provides an example configuration line for Hyprland's config file (`hyprland.con
 exec-once=walker --gapplication-service
 ```
 
----
+--------------------------------
 
 ### Installing Walker on Arch Linux via yay
 
@@ -43,7 +39,7 @@ yay -S walker-bin
 yay -S walker
 ```
 
----
+--------------------------------
 
 ### Configuring Walker using Nix Home-Manager Module
 
@@ -76,7 +72,7 @@ programs.walker = {
 };
 ```
 
----
+--------------------------------
 
 ### Disabling Walker Application Cache TOML
 
@@ -89,7 +85,7 @@ This TOML configuration snippet disables the application cache mechanism used by
 cache = false
 ```
 
----
+--------------------------------
 
 ### Adding Walker-git Cachix Binary Cache in Nix
 
@@ -104,7 +100,7 @@ nix.settings = {
 };
 ```
 
----
+--------------------------------
 
 ### Adding Walker Cachix Binary Cache in Nix
 
@@ -119,7 +115,7 @@ nix.settings = {
 };
 ```
 
----
+--------------------------------
 
 ### Defining a Custom Walker Module Plugin in TOML
 
@@ -133,3 +129,5 @@ prefix = "!"
 name = "mymodule"
 src = "node /path/to/myscript.js"
 ```
+
+=== COMPLETE CONTENT === This response contains all available snippets from this library. No additional content exists. Do not make further requests.

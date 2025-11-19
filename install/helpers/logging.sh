@@ -127,6 +127,8 @@ start_log_monitor() {
 
 # Stop live log monitor
 stop_log_monitor() {
+    local keep_visible="${1:-false}"
+
     if [ -n "${DOTFILES_LOG_MONITOR_PID:-}" ]; then
         kill $DOTFILES_LOG_MONITOR_PID 2>/dev/null || true
         wait $DOTFILES_LOG_MONITOR_PID 2>/dev/null || true
@@ -136,7 +138,27 @@ stop_log_monitor() {
     # Restore terminal
     tput cnorm 2>/dev/null  # Show cursor
     tput rmcup 2>/dev/null  # Exit alternate screen
-    clear
+
+    # If keep_visible, show the full log with colors (scrollable)
+    if [[ "$keep_visible" == "true" ]] && [[ -f "$DOTFILES_LOG_FILE" ]]; then
+        clear
+        # Display entire log with colors - terminal scrollback allows scrolling up
+        while IFS= read -r line; do
+            # Highlight package-related lines in blue
+            if [[ "$line" =~ \[PACMAN\]|\[YAY\] ]]; then
+                printf "\033[94m%s\033[0m\n" "$line"
+            elif [[ "$line" =~ Starting:|Completed:|Failed: ]]; then
+                printf "\033[92m%s\033[0m\n" "$line"
+            elif [[ "$line" =~ ===.*=== ]]; then
+                printf "\033[1m%s\033[0m\n" "$line"
+            else
+                printf "\033[90m%s\033[0m\n" "$line"
+            fi
+        done < "$DOTFILES_LOG_FILE"
+        echo
+    else
+        clear
+    fi
 }
 
 # Run a command with logging
@@ -163,6 +185,33 @@ run_logged() {
         echo "[$(date '+%Y-%m-%d %H:%M:%S')] Completed: $script" >> "$DOTFILES_LOG_FILE"
     else
         echo "[$(date '+%Y-%m-%d %H:%M:%S')] Failed: $script (exit code: $exit_code)" >> "$DOTFILES_LOG_FILE"
+    fi
+
+    return $exit_code
+}
+
+# Run a command with real-time logging and ANSI stripping
+run_command_logged() {
+    local step_name="$1"
+    shift
+    local command=("$@")
+
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting: $step_name" >> "$DOTFILES_LOG_FILE"
+
+    local exit_code=0
+
+    # Use stdbuf for unbuffered output and sed to strip ANSI escape codes
+    if command -v stdbuf &>/dev/null; then
+        stdbuf -oL -eL "${command[@]}" 2>&1 | sed -u 's/\x1b\[[0-9;]*[a-zA-Z]//g' >> "$DOTFILES_LOG_FILE" || exit_code=$?
+    else
+        # Fallback: use script with col to strip control characters
+        script -q -e -c "${command[*]}" /dev/null 2>&1 | col -b >> "$DOTFILES_LOG_FILE" || exit_code=$?
+    fi
+
+    if [ $exit_code -eq 0 ]; then
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Completed: $step_name" >> "$DOTFILES_LOG_FILE"
+    else
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Failed: $step_name (exit code: $exit_code)" >> "$DOTFILES_LOG_FILE"
     fi
 
     return $exit_code

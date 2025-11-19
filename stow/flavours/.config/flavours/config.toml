@@ -9,6 +9,7 @@ shell = "bash -c '{}'"
 file = "~/.config/kitty/theme.conf"
 template = "kitty"
 subtemplate = "default-256"
+hook = "kitty @ load-config"
 rewrite = true
 
 [[items]]

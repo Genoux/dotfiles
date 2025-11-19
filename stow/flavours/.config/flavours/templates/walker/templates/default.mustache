@@ -42,10 +42,10 @@
 }
 
 .box-wrapper {
-  background: alpha(@base00, 0.3);
+  background: alpha(@base00, 0.5);
   border: 1px solid @alpha-subtle;
-  border-radius: 10px;
-  padding: 10px;
+  border-radius: 8px;
+  padding: 10px 10px 0px 10px;
   box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
 }
 
@@ -57,7 +57,7 @@
 }
 
 .search-container {
-  background: alpha(@base01, 0.2);
+  background: rgba(0, 0, 0, 0.08);
   border: 1px solid @alpha-subtle;
   border-radius: 8px;
   padding: 1px;
@@ -86,15 +86,12 @@
   color: white;
 }
 
-child {
-}
-
 .item-box {
   background: transparent;
   border-radius: 8px;
   padding: 7px 8px;
   border: 1px solid transparent;
-  transition: all 0.12s easeOut;
+  transition: all 0.12s ease-out;
 }
 
 .item-quick-activation {
@@ -103,13 +100,8 @@ child {
   padding: 10px;
 }
 
-child:hover .item-box {
-  background: alpha(@base01, 0.4);
-  border-color: @alpha-subtle;
-}
-
 child:selected .item-box {
-  background: rgba(255, 255, 255, 0.06);
+  background: @alpha-subtle;
   border-color: @alpha-subtle;
 }
 
@@ -125,7 +117,6 @@ child:selected .item-box {
   line-height: 1.2;
   margin: 0;
   padding: 0;
-  vertical-align: middle;
 }
 
 .item-subtext {
@@ -156,23 +147,6 @@ child:selected .item-box {
   padding: 8px;
 }
 
-.todo-item {
-  transition: opacity 0.2s ease;
-}
-
-.todo-item.active {
-  font-weight: 500;
-}
-
-.todo-item.done {
-  opacity: 0.4;
-  text-decoration: line-through;
-}
-
-.bluetooth-item.disconnected {
-  opacity: 0.5;
-}
-
 .symbol-item {
   font-size: 20px;
 }
@@ -183,7 +157,6 @@ child:selected .item-box {
   margin: 0;
   padding: 0;
   min-height: 0;
-  max-height: 0;
 }
 
 .error {
@@ -192,28 +165,4 @@ child:selected .item-box {
   padding: 12px;
   border-radius: 10px;
   margin-top: 8px;
-}
-
-.ai-item {
-  background: alpha(@base01, 0.4);
-  border: 1px solid @alpha-subtle;
-  border-radius: 12px;
-  padding: 12px 16px;
-  margin: 6px 0;
-  color: @base07;
-}
-
-.ai-item.user {
-  background: alpha(@base04, 0.2);
-}
-
-.ai-item.assistant {
-  background: alpha(@base01, 0.4);
-}
-
-.password {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid @alpha-subtle;
-  border-radius: 12px;
-  padding: 12px 16px;
 }
