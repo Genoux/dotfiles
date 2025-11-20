@@ -15,6 +15,7 @@ import { SystemMenuButton } from "./systemmenu";
 import { BatteryButton } from "./battery";
 import { ScreenRecordButton } from "./screenrecord";
 import { SystemInfoButton } from "./systeminfo";
+import { SystemDotfilesButton } from "./systemdotfiles";
 
 export default function Bar(gdkmonitor: Gdk.Monitor) {
   const { TOP, LEFT, RIGHT, BOTTOM } = Astal.WindowAnchor;
@@ -56,6 +57,7 @@ export default function Bar(gdkmonitor: Gdk.Monitor) {
               <SystemTemp />
               <TimeDisplay />
               <SystemInfoButton />
+              <SystemDotfilesButton />
               <SystemMenuButton />
             </box>
           </box>

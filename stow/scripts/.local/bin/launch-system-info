@@ -2,7 +2,7 @@
 # Display system info - TUI style, no shell prompt
 # Single instance support - focuses existing window if already running
 
-TERMINAL_TITLE="SystemInfo"
+TERMINAL_TITLE="System Info"
 
 # If we're already in display mode (env var set), just run the display
 if [ "$SYSTEM_INFO_DISPLAY" = "1" ]; then

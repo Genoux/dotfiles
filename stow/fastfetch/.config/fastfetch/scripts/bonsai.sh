@@ -226,18 +226,21 @@ if ((termColors)); then
 	DARK_GREEN="$BOLD$(tput setaf 10)"
 	GREEN="$(tput setaf 2)"
 	GRAY="$BOLD$(tput setaf 8)"
+	ACCENT="$BOLD$(tput setaf 12)"  # Blue accent color (base0D)
 elif ((nfetch)); then
 	BROWN='${c1}'
 	DARK_BROWN='${c2}'
 	DARK_GREEN='${c3}'
 	GREEN='${c4}'
 	GRAY='${c5}'
+	ACCENT='${c6}'  # Use color variable for accent
 else
 	BROWN='\e[38;5;172m'
 	DARK_BROWN='\e[38;5;130m'
 	DARK_GREEN='\e[38;5;142m'
 	GREEN='\e[38;5;106m'
 	GRAY='\e[38;5;243m'
+	ACCENT='\e[38;5;75m'  # Blue accent color (approximate base0D)
 fi
 
 # create ascii base in lines
@@ -245,7 +248,7 @@ case "$baseType" in
 	1)
 		width=15
 		art="\
-${GRAY}:${GREEN}___________${DARK_BROWN}./~~\\.${GREEN}___________${GRAY}:
+${ACCENT}:${GREEN}___________${DARK_BROWN}./~~\\.${GREEN}___________${ACCENT}:
  \\                          /
   \\________________________/
   (_)                    (_)"
@@ -254,7 +257,7 @@ ${GRAY}:${GREEN}___________${DARK_BROWN}./~~\\.${GREEN}___________${GRAY}:
 	2)
 		width=7
 		art="\
-${GRAY}(${GREEN}---${DARK_BROWN}./~~\\.${GREEN}---${GRAY})
+${ACCENT}(${GREEN}---${DARK_BROWN}./~~\\.${GREEN}---${ACCENT})
  (          )
   (________)"
 		;;
@@ -262,7 +265,7 @@ ${GRAY}(${GREEN}---${DARK_BROWN}./~~\\.${GREEN}---${GRAY})
 	3)
 		width=15
 		art="\
-${GRAY}╓${GREEN}───────────${DARK_BROWN}╭╱⎨⏆╲╮${GREEN}───────────${GRAY}╖
+${ACCENT}╓${GREEN}───────────${DARK_BROWN}╭╱⎨⏆╲╮${GREEN}───────────${ACCENT}╖
 ║                            ║
 ╟────────────────────────────╢
 ╟────────────────────────────╢

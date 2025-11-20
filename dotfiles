@@ -90,6 +90,31 @@ show_status() {
     hyprland_status
 }
 
+# Display system.txt with TTE animation
+# Always animates the banner when displaying
+display_system_banner() {
+    if [[ ! -f "$DOTFILES_DIR/system.txt" ]]; then
+        return
+    fi
+
+    # Use Python script to animate banner
+    local python_script="$DOTFILES_DIR/system-text.py"
+    if [[ ! -f "$python_script" ]]; then
+        return
+    fi
+
+    # Run animation script
+    # Parameters: banner_file, effect, frame_rate
+    # Effects: print, slide, beams
+    # frame_rate: 100 = default, higher = slower, lower = faster
+    echo
+    python3 "$python_script" "$DOTFILES_DIR/system.txt" "beams" 900 2>/dev/null
+    
+    # Reset terminal state after animation
+    tput cnorm 2>/dev/null || true
+    printf '\033[0m'  # Reset all attributes
+}
+
 # Interactive menu
 show_menu() {
     while true; do
@@ -100,10 +125,7 @@ show_menu() {
         fi
 
         clear
-        if [[ -f "$DOTFILES_DIR/system.txt" ]]; then
-            gum style --foreground 5 < "$DOTFILES_DIR/system.txt"
-            echo
-        fi
+        display_system_banner
 
         local action=$(choose_option --selected "System Status" \
             "System Status" \

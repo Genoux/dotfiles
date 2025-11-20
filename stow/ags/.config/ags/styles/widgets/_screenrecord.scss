@@ -1,28 +1,25 @@
 @use "../tokens" as *;
 @use "../abstracts/theme" as *;
 
-@use 'sass:color';
-
 .recording-indicator button {
-    animation: pulse duration(slowest) easing(ease-in-out) infinite;
-    color: $base08;
-    background-color: color.change($base08, $alpha: 0.1);
-    border-radius: radius(xl);
+  animation: pulse duration(slowest) easing(ease-in-out) infinite;
+  color: $base0F;
+  background-color: rgba(216, 29, 29, 0.6);
+  border-radius: radius(xl);
 
-    &:hover {
-        animation: none;
-        background-color: color.change($base08, $alpha: 0.2);
-    }
+  &:hover {
+    animation: none;
+    background-color: rgba(216, 29, 29, 1);
+  }
 }
 
 @keyframes pulse {
+  0%,
+  100% {
+    opacity: opacity(100);
+  }
 
-    0%,
-    100% {
-        opacity: opacity(100);
-    }
-
-    50% {
-        opacity: opacity(60);
-    }
+  50% {
+    opacity: opacity(60);
+  }
 }

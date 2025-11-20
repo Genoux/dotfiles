@@ -27,9 +27,12 @@ configure_gum_colors() {
     # Note: gum log handles level colors automatically (INFO=blue, WARN=yellow, ERROR=red)
     # We let gum log use its defaults for consistent, readable output
     
-    # Base16 base03 (muted/comments) - typically gray/muted
-    # Use ANSI color 8 (bright black/muted) which maps to base03 for help text
-    export GUM_CHOOSE_HELP_FOREGROUND="8"
+    # Use blue color scheme matching the beams animation
+    # ANSI color 12 is bright blue (base0D) in most themes
+    # Gum only accepts ANSI color codes (0-15), not hex colors
+    export GUM_CHOOSE_CURSOR_FOREGROUND="12"  # Cursor color (the ">" indicator)
+    export GUM_CHOOSE_CURSOR_BACKGROUND=""
+    export GUM_CHOOSE_HELP_FOREGROUND="12"    # Help text color
     export GUM_CHOOSE_HELP_BACKGROUND=""
     export GUM_FILTER_HELP_FOREGROUND="8"
     export GUM_FILTER_HELP_BACKGROUND=""
@@ -189,7 +192,7 @@ choose_option() {
     done
     
     # Build command
-    local cmd=(gum choose --height 15 --cursor.foreground 5 --no-show-help)
+    local cmd=(gum choose --no-show-help)
     [[ -n "$header" ]] && cmd+=(--header "$header") || cmd+=(--header "")
     [[ -n "$selected" ]] && cmd+=(--selected "$selected")
     cmd+=("${args[@]}")

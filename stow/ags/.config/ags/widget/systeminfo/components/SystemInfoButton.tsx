@@ -5,7 +5,7 @@ import Icon from "../../../components/Icon";
 export function SystemInfoButton() {
   return (
     <Button onClicked={openSystemInfo}>
-      <Icon icon="system-run-symbolic" />
+      <Icon icon="emblem-favorite-symbolic" />
     </Button>
   );
 }
