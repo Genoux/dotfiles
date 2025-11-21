@@ -33,6 +33,13 @@
   font-size: 13px;
 }
 
+/* Text selection highlighting */
+*::selection,
+*:selected {
+  background-color: alpha(@base0D, 0.4);
+  color: white;
+}
+
 .normal-icons {
   -gtk-icon-size: 16px;
 }
@@ -70,6 +77,11 @@
   font-weight: 400;
   caret-color: white;
   padding: 8px 12px;
+}
+
+.input selection {
+  background-color: alpha(@base0D, 0.4);
+  color: white;
 }
 
 .input placeholder {

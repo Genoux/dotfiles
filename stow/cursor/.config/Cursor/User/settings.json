@@ -2,5 +2,9 @@
     "workbench.colorTheme": "Tokyo Night",
     "[scss]": {
         "editor.defaultFormatter": "esbenp.prettier-vscode"
-    }
+    },
+    "[typescript]": {
+        "editor.defaultFormatter": "biomejs.biome"
+    },
+    "editor.formatOnSave": true
 }
