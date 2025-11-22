@@ -517,7 +517,7 @@ packages_clean_unlisted() {
                     echo
                     selected=$(printf '%s\n' "${all_unlisted[@]}" | filter_search "Search packages to keep (Tab to select, Enter to confirm)...")
                 else
-                    selected=$(printf '%s\n' "${all_unlisted[@]}" | gum choose --no-limit --header "Select packages to KEEP (unselected will be removed):" --no-show-help)
+                    selected=$(printf '%s\n' "${all_unlisted[@]}" | gum choose --cursor-prefix ">" --no-limit --header "Select packages to KEEP (unselected will be removed):" --no-show-help)
                 fi
 
                 # Parse selected packages

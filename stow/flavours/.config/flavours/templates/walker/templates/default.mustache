@@ -49,7 +49,7 @@
 }
 
 .box-wrapper {
-  background: alpha(@base00, 0.5);
+  background: alpha(@base00, 0.3);
   border: 1px solid @alpha-subtle;
   border-radius: 8px;
   padding: 10px 10px 0px 10px;
@@ -131,9 +131,27 @@ child:selected .item-box {
   padding: 0;
 }
 
+/* Search text highlight - Pango markup <mark> tags */
+.item-text mark {
+  background-color: alpha(@base0D, 0.4);
+  color: @base00;
+  font-weight: 600;
+  border-radius: 2px;
+  padding: 1px 2px;
+}
+
 .item-subtext {
   font-size: 11px;
   opacity: 0.5;
+}
+
+/* Search highlight in subtext */
+.item-subtext mark {
+  background-color: alpha(@base0D, 0.4);
+  color: @base00;
+  font-weight: 600;
+  border-radius: 2px;
+  padding: 1px 2px;
 }
 
 .item-icon {

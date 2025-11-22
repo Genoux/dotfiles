@@ -2,7 +2,7 @@
 """
 Animate system.txt banner using TerminalTextEffects.
 Uses TTE CLI via subprocess for reliability.
-Three preconfigured effects: print, slide, beams
+Effect: beams - beams travel over canvas illuminating characters
 """
 
 import sys
@@ -41,107 +41,9 @@ def _restore_terminal_input(old_settings):
     except (termios.error, OSError, AttributeError):
         pass
 
-def animate_print(banner_file: str, frame_rate: int = 100):
-    """Animate with print effect - fast character-by-character printing.
-    Uses current flavours theme colors if available."""
-    if not os.path.exists(banner_file):
-        return False
-    
-    tte_cmd = shutil.which("tte") or shutil.which("terminaltexteffects")
-    if not tte_cmd:
-        return False
-    
-    # Get theme colors
-    theme_colors = get_flavours_colors()
-    
-    # Disable terminal input during animation
-    old_settings = _disable_terminal_input()
-    
-    try:
-        cmd = [
-            tte_cmd,
-            "--frame-rate", str(frame_rate),
-            "--input-file", banner_file,
-            "print",
-            "--print-speed", "50",
-            "--print-head-return-speed", "2.0"
-        ]
-        
-        # Add theme colors if available
-        if theme_colors:
-            cmd.extend([
-                "--final-gradient-stops",
-                theme_colors['base0D'],  # Blue
-                theme_colors['base0C'],  # Cyan
-                theme_colors['base0B'],  # Green
-                theme_colors['base07'],  # Light text
-            ])
-        
-        # Redirect stdin to /dev/null to prevent any input from reaching TTE
-        with open(os.devnull, 'r') as devnull:
-            result = subprocess.run(cmd, stdin=devnull, check=True)
-        return result.returncode == 0
-    except subprocess.CalledProcessError:
-        return False
-    except Exception as e:
-        print(f"Error: {e}", file=sys.stderr)
-        return False
-    finally:
-        # Always restore terminal input
-        _restore_terminal_input(old_settings)
-
-def animate_slide(banner_file: str, frame_rate: int = 100):
-    """Animate with slide effect - characters slide in from outside.
-    Uses current flavours theme colors if available."""
-    if not os.path.exists(banner_file):
-        return False
-    
-    tte_cmd = shutil.which("tte") or shutil.which("terminaltexteffects")
-    if not tte_cmd:
-        return False
-    
-    # Get theme colors
-    theme_colors = get_flavours_colors()
-    
-    # Disable terminal input during animation
-    old_settings = _disable_terminal_input()
-    
-    try:
-        cmd = [
-            tte_cmd,
-            "--frame-rate", str(frame_rate),
-            "--input-file", banner_file,
-            "slide",
-            "--movement-speed", "1.5",
-            "--grouping", "row",
-            "--gap", "1"
-        ]
-        
-        # Add theme colors if available
-        if theme_colors:
-            cmd.extend([
-                "--final-gradient-stops",
-                theme_colors['base0D'],  # Blue
-                theme_colors['base0E'],  # Purple/Keyword
-                theme_colors['base0C'],  # Cyan
-                theme_colors['base07'],  # Light text
-            ])
-        
-        # Redirect stdin to /dev/null to prevent any input from reaching TTE
-        with open(os.devnull, 'r') as devnull:
-            result = subprocess.run(cmd, stdin=devnull, check=True)
-        return result.returncode == 0
-    except subprocess.CalledProcessError:
-        return False
-    except Exception as e:
-        print(f"Error: {e}", file=sys.stderr)
-        return False
-    finally:
-        # Always restore terminal input
-        _restore_terminal_input(old_settings)
-
 def get_flavours_colors():
-    """Get current flavours theme colors from scheme file."""
+    """Get current flavours theme colors from scheme file.
+    Returns dict with base00-base0F colors from current theme."""
     # Try to get current theme from flavours
     flavours_cmd = shutil.which("flavours") or shutil.which(os.path.expanduser("~/.cargo/bin/flavours"))
     if not flavours_cmd:
@@ -166,14 +68,8 @@ def get_flavours_colors():
             if os.path.exists(scheme_path):
                 with open(scheme_path, 'r') as f:
                     scheme = yaml.safe_load(f)
-                    # Extract colors - use blue color scheme
-                    colors = {
-                        'base0D': scheme.get('base0D', '41a6b5'),  # Blue (color12)
-                        'base0C': scheme.get('base0C', '1abc9c'),  # Cyan (color14)
-                        'base0B': scheme.get('base0B', '9ece6a'),  # Green
-                        'base07': scheme.get('base07', 'fafafa'),  # Primary text (for other effects)
-                    }
-                    return colors
+                    # Return all base16 colors from scheme
+                    return scheme
         
         return None
     except Exception:
@@ -207,21 +103,21 @@ def animate_beams(banner_file: str, frame_rate: int = 100):
             "--final-wipe-speed", "2"
         ]
         
-        # Add theme colors if available
+        # Add theme colors if available - use Base16 accent colors
         if theme_colors:
-            # Use subtle blue gradient (matching gum's blue scheme)
-            # Beam gradient: blue → cyan
+            # Beam gradient: base0F → base0B (warm to cool)
             cmd.extend([
                 "--beam-gradient-stops",
-                theme_colors['base0D'],  # Blue
-                theme_colors['base0C'],  # Cyan
+                theme_colors.get('base0F', 'bf8585'),  # Deeper coral
+                theme_colors.get('base0B', '85a89d'),  # Sage/teal
             ])
-            # Final gradient: subtle blue transition
+            # Final gradient: rich color progression using theme accent colors
             cmd.extend([
                 "--final-gradient-stops",
-                theme_colors['base0D'],  # Blue
-                theme_colors['base0C'],  # Cyan
-                theme_colors['base0B'],  # Green
+                theme_colors.get('base0F', 'bf8585'),  # Deeper coral
+                theme_colors.get('base09', 'cca882'),  # Warm orange
+                theme_colors.get('base0B', '85a89d'),  # Sage/teal
+                theme_colors.get('base0D', '859dbf'),  # Soft blue
             ])
         
         # Redirect stdin to /dev/null to prevent any input from reaching TTE
@@ -239,22 +135,11 @@ def animate_beams(banner_file: str, frame_rate: int = 100):
 
 if __name__ == "__main__":
     banner_file = sys.argv[1] if len(sys.argv) > 1 else None
-    effect = sys.argv[2] if len(sys.argv) > 2 else "print"
-    frame_rate = int(sys.argv[3]) if len(sys.argv) > 3 else 100  # 100 = default TTE frame rate
+    frame_rate = int(sys.argv[2]) if len(sys.argv) > 2 else 100  # 100 = default TTE frame rate
     
     if not banner_file:
         sys.exit(1)
     
-    success = False
-    if effect == "print":
-        success = animate_print(banner_file, frame_rate)
-    elif effect == "slide":
-        success = animate_slide(banner_file, frame_rate)
-    elif effect == "beams":
-        success = animate_beams(banner_file, frame_rate)
-    else:
-        print(f"Unknown effect: {effect}. Use: print, slide, or beams", file=sys.stderr)
-        sys.exit(1)
-    
+    success = animate_beams(banner_file, frame_rate)
     sys.exit(0 if success else 1)
 

@@ -23,7 +23,7 @@
 
 .group {
   border: 1px solid $alpha-light;
-  background-color: rgba(0, 0, 0, 0.05);
+  background-color: color.adjust($base00, $alpha: -0.95);
   border-radius: radius(md);
   padding: spacing(xs);
 }
@@ -34,7 +34,7 @@ tooltip {
   @include gtk-reset;
 
   border-radius: radius(md);
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: color.adjust($base00, $alpha: -0.5);
   border: 1px solid $alpha-light;
   color: $white;
   padding: spacing(xs);
@@ -55,7 +55,7 @@ popover {
     border: 1px solid $alpha-light;
     padding: spacing(md);
     border-radius: radius(md);
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: color.adjust($base00, $alpha: -0.5);
   }
 
   arrow {

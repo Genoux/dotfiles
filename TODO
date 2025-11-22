@@ -1,6 +1,9 @@
 ✔ Fix walker menu bottom spacing @done(25-11-21 17:45)
 [] Build custom theme
 ✔ Fix terminal low contrast @done(25-11-21 17:45)
-[] Fix hightlight text on Walker
+✔ Fix hightlight text on Walker @done(25-11-22 09:42)
 [] remove ~ from Walker
 [] After screen close going back to the lockscreen the WP won't load  
+[] Fix walker/elephant should run via systemd instead of exec-once
+[] Try Ghostly terminal
+[] Fix TUI installer should use xdg-terminal-exec to be in line with other changes

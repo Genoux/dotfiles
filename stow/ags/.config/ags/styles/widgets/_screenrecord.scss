@@ -1,15 +1,17 @@
 @use "../tokens" as *;
 @use "../abstracts/theme" as *;
 
+@use 'sass:color';
+
 .recording-indicator button {
   animation: pulse duration(slowest) easing(ease-in-out) infinite;
-  color: $base0F;
-  background-color: rgba(216, 29, 29, 0.6);
+  color: $base07;
+  background-color: color.adjust($base08, $alpha: -0.4);
   border-radius: radius(xl);
 
   &:hover {
     animation: none;
-    background-color: rgba(216, 29, 29, 1);
+    background-color: $base08;
   }
 }
 
