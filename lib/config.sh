@@ -351,36 +351,6 @@ config_link() {
                 fi
                 ;;
         esac
-
-        # Enable user systemd services if present (for any config that has them)
-        if [[ -d "$HOME/.config/systemd/user" ]]; then
-            for service in "$HOME/.config/systemd/user"/*.service; do
-                if [[ -f "$service" ]]; then
-                    local service_name=$(basename "$service")
-
-                    # Check if this service was just linked by this config
-                    if readlink "$service" 2>/dev/null | grep -q "dotfiles/stow/$config"; then
-                        # Check if already enabled
-                        if systemctl --user is-enabled "$service_name" &>/dev/null; then
-                            if systemctl --user is-active "$service_name" &>/dev/null; then
-                                log_info "$service_name already enabled and running, restarting to apply changes..."
-                                systemctl --user restart "$service_name" 2>/dev/null && \
-                                    log_success "Restarted $service_name" || \
-                                    log_warning "Could not restart $service_name"
-                            else
-                                systemctl --user start "$service_name" 2>/dev/null && \
-                                    log_success "Started $service_name" || \
-                                    log_warning "Could not start $service_name"
-                            fi
-                        else
-                            systemctl --user enable --now "$service_name" 2>/dev/null && \
-                                log_success "Enabled and started $service_name" || \
-                                log_warning "Could not enable $service_name"
-                        fi
-                    fi
-                fi
-            done
-        fi
     fi
 
     return 0
@@ -514,6 +484,12 @@ config_link_all() {
         log_success "All configs linked successfully"
     else
         log_warning "$failed config(s) failed to link"
+    fi
+
+    # Restart systemd services after config changes
+    echo
+    if [[ -f "$DOTFILES_INSTALL/config/services.sh" ]]; then
+        bash "$DOTFILES_INSTALL/config/services.sh"
     fi
 }
 

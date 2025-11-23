@@ -1,12 +1,11 @@
 [Unit]
-Description=AGS (Aylur's GTK Shell)
-Documentation=https://github.com/aylur/ags
+Description=Elephant Emoji Picker
 After=graphical-session.target
 PartOf=graphical-session.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/ags run
+ExecStart=/usr/bin/elephant
 Restart=on-failure
 RestartSec=3
 KillMode=mixed
@@ -14,3 +13,4 @@ TimeoutStopSec=5
 
 [Install]
 WantedBy=graphical-session.target
+

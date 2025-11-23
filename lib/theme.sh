@@ -266,8 +266,12 @@ theme_select() {
         return 0
     fi
 
-    # Apply the selected theme (suppress output)
-    if "$flavours_cmd" apply "$selected" &>/dev/null; then
+    # Apply the selected theme and capture errors
+    local apply_output
+    apply_output=$("$flavours_cmd" apply "$selected" 2>&1)
+    local apply_exit=$?
+
+    if [[ $apply_exit -eq 0 ]]; then
         # Update the default scheme to the selected one
         # Find the scheme file using flavours info to get the exact path
         local scheme_info=$("$flavours_cmd" info "$selected" 2>&1 | head -1)
@@ -311,8 +315,16 @@ theme_select() {
         log_success "Theme '$selected' applied!"
         return 0
     else
-        echo
         log_error "Failed to apply theme '$selected'"
+        echo
+        log_warning "Some templates may have applied successfully, others failed"
+        echo
+        # Show the error output (indented)
+        if [[ -n "$apply_output" ]]; then
+            echo "$apply_output" | sed 's/^/  /'
+            echo
+        fi
+        # run_operation will handle the pause
         return 1
     fi
 }

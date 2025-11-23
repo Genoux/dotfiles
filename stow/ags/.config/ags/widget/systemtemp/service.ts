@@ -178,7 +178,7 @@ export const systemTemps = systemTempsState;
 
 export function openSystemMonitor() {
   try {
-    GLib.spawn_command_line_async(`${GLib.get_home_dir()}/.local/bin/launch-btop`);
+    GLib.spawn_command_line_async('launch-or-focus "btop" "btop" "htop"');
   } catch (error) {
     console.error("Failed to launch btop:", error);
   }

@@ -106,5 +106,7 @@ export function forceWeatherRefresh() {
 }
 
 export function openWeatherApp() {
-  GLib.spawn_command_line_async(`${GLib.get_home_dir()}/.local/bin/launch-weather`);
+  const homeDir = GLib.get_home_dir();
+  const wthrrPath = `${homeDir}/.cargo/bin/wthrr`;
+  GLib.spawn_command_line_async(`launch-or-focus "weather" "${wthrrPath}" "weather"`);
 }

@@ -4,6 +4,7 @@
 ✔ Fix hightlight text on Walker @done(25-11-22 09:42)
 [] remove ~ from Walker
 [] After screen close going back to the lockscreen the WP won't load  
-[] Fix walker/elephant should run via systemd instead of exec-once
+✔ Fix walker/elephant should run via systemd instead of exec-once @done(25-11-22 16:30)
 [] Try Ghostly terminal
-[] Fix TUI installer should use xdg-terminal-exec to be in line with other changes
+✘ Fix TUI installer should use xdg-terminal-exec to be in line with other changes @cancelled(25-11-22 19:33)
+ 

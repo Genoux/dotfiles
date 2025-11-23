@@ -155,9 +155,6 @@ fi
 # Created by `pipx` on 2025-05-19 14:48:23
 export PATH="$PATH:/home/john/.local/bin"
 
-# Custom script directories
-export PATH="$HOME/.local/bin/launchers:$HOME/.local/bin/system:$PATH"
-
 # Console Ninja extension (only add if directory exists)
 if [ -d "/home/john/.console-ninja/.bin" ]; then
     export PATH="$PATH:/home/john/.console-ninja/.bin"

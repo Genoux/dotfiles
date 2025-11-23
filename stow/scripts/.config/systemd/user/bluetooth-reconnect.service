@@ -1,0 +1,15 @@
+[Unit]
+Description=Bluetooth Auto-Reconnect
+Documentation=man:bluetoothctl(1)
+After=bluetooth.service graphical-session.target
+Wants=bluetooth.service
+PartOf=graphical-session.target
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/system/system-bluetooth-reconnect
+RemainAfterExit=yes
+
+[Install]
+WantedBy=graphical-session.target
+

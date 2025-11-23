@@ -130,8 +130,8 @@ setupSpeakerSignals();
 
 export function openVolumeManager() {
   try {
-    GLib.spawn_command_line_async(`${GLib.get_home_dir()}/.local/bin/launch-wiremix`);
+    GLib.spawn_command_line_async('launch-or-focus "wiremix" "wiremix" "multimedia-volume-control"');
   } catch (error) {
-    console.error("Failed to launch launch-wiremix:", error);
+    console.error("Failed to launch wiremix:", error);
   }
 }

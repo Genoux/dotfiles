@@ -27,12 +27,12 @@ configure_gum_colors() {
     # Note: gum log handles level colors automatically (INFO=blue, WARN=yellow, ERROR=red)
     # We let gum log use its defaults for consistent, readable output
     
-    # Use blue color scheme matching the beams animation
-    # ANSI color 12 is bright blue (base0D) in most themes
+    # Use green color scheme (base0B) as the single accent color
+    # ANSI color 2 is green (base0B) in most themes
     # Gum only accepts ANSI color codes (0-15), not hex colors
-    export GUM_CHOOSE_CURSOR_FOREGROUND="12"  # Cursor color (the ">" indicator)
+    export GUM_CHOOSE_CURSOR_FOREGROUND="2"  # Cursor color (the ">" indicator) - green
     export GUM_CHOOSE_CURSOR_BACKGROUND=""
-    export GUM_CHOOSE_HELP_FOREGROUND="12"    # Help text color
+    export GUM_CHOOSE_HELP_FOREGROUND="2"    # Help text color - green
     export GUM_CHOOSE_HELP_BACKGROUND=""
     export GUM_FILTER_HELP_FOREGROUND="8"
     export GUM_FILTER_HELP_BACKGROUND=""
@@ -249,7 +249,7 @@ clear_screen() {
 show_info() {
     local key="$1"
     local value="$2"
-    echo "$(gum style --foreground 8 "$key:") $(gum style "$value")"  # base03 muted for key
+    echo "$(gum style --bold --foreground 2 "$key:") $(gum style "$value")"  # base03 muted for key
 }
 
 # Run command with clean UI: header + muted boxed output

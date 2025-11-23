@@ -1,12 +1,12 @@
 [Unit]
-Description=AGS (Aylur's GTK Shell)
-Documentation=https://github.com/aylur/ags
+Description=Hypridle Idle Management Daemon
+Documentation=https://github.com/hyprwm/hypridle
 After=graphical-session.target
 PartOf=graphical-session.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/ags run
+ExecStart=/usr/bin/hypridle
 Restart=on-failure
 RestartSec=3
 KillMode=mixed
@@ -14,3 +14,4 @@ TimeoutStopSec=5
 
 [Install]
 WantedBy=graphical-session.target
+

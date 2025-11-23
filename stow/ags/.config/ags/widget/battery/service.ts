@@ -100,7 +100,7 @@ export const hasBatteryAvailable = hasBattery;
 
 export function openBattop() {
   try {
-    GLib.spawn_command_line_async(`${GLib.get_home_dir()}/.local/bin/launch-battop`);
+    GLib.spawn_command_line_async('launch-or-focus "battop" "battop" "gnome-power-manager"');
   } catch (error) {
     console.error("Failed to launch battop:", error);
   }

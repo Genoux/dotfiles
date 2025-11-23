@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# Generic launcher with single-instance support
+# Usage: launch-or-focus TITLE COMMAND [CLASS] [ARGS...]
+
+TITLE="${1:?Usage: launch-or-focus TITLE COMMAND [CLASS] [ARGS...]}"
+COMMAND="${2:?Usage: launch-or-focus TITLE COMMAND [CLASS] [ARGS...]}"
+CLASS="${3:-$TITLE}"
+shift 3
+EXTRA_ARGS="$@"
+
+# If we're in display mode, run the TUI cleanly
+if [ "$LAUNCH_OR_FOCUS_DISPLAY" = "1" ]; then
+    tput clear
+    tput civis
+    
+    $COMMAND $EXTRA_ARGS
+    
+    stty -echo
+    read -n 1 -s
+    stty echo
+    
+    tput cnorm
+    exit 0
+fi
+
+# Check if window already exists (by title)
+if hyprctl clients | grep -q "^[[:space:]]*title: $TITLE$"; then
+    # Focus existing window
+    hyprctl dispatch focuswindow title:"$TITLE"
+else
+    # Launch new instance in kitty with TUI wrapper
+    kitty --class="$CLASS" --title "$TITLE" \
+        env LAUNCH_OR_FOCUS_DISPLAY=1 "$0" "$TITLE" "$COMMAND" "$CLASS" $EXTRA_ARGS 2>/dev/null &
+fi
+

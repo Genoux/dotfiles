@@ -103,21 +103,19 @@ def animate_beams(banner_file: str, frame_rate: int = 100):
             "--final-wipe-speed", "2"
         ]
         
-        # Add theme colors if available - use Base16 accent colors
+        # Add theme colors if available - use only green (base0B) as single solid color
         if theme_colors:
-            # Beam gradient: base0F → base0B (warm to cool)
+            theme_color = theme_colors.get('base0B', '4ade7f')
+            # Beam gradient: use same color for solid (no gradient)
             cmd.extend([
                 "--beam-gradient-stops",
-                theme_colors.get('base0F', 'bf8585'),  # Deeper coral
-                theme_colors.get('base0B', '85a89d'),  # Sage/teal
+                theme_color,
+                theme_color,
             ])
-            # Final gradient: rich color progression using theme accent colors
+            # Final gradient: use same color for solid (no gradient)
             cmd.extend([
                 "--final-gradient-stops",
-                theme_colors.get('base0F', 'bf8585'),  # Deeper coral
-                theme_colors.get('base09', 'cca882'),  # Warm orange
-                theme_colors.get('base0B', '85a89d'),  # Sage/teal
-                theme_colors.get('base0D', '859dbf'),  # Soft blue
+                    theme_color,
             ])
         
         # Redirect stdin to /dev/null to prevent any input from reaching TTE

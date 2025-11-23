@@ -25,7 +25,7 @@ export function openBluetoothManager() {
   }
   
   try {
-    GLib.spawn_command_line_async(`${GLib.get_home_dir()}/.local/bin/launch-bluetui`);
+    GLib.spawn_command_line_async('launch-or-focus "bluetui" "bluetui" "bluetooth"');
   } catch (error) {
     console.error("Failed to launch bluetui:", error);
   }

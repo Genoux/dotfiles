@@ -226,21 +226,21 @@ if ((termColors)); then
 	DARK_GREEN="$BOLD$(tput setaf 10)"
 	GREEN="$(tput setaf 2)"
 	GRAY="$BOLD$(tput setaf 8)"
-	ACCENT="$BOLD$(tput setaf 12)"  # Blue accent color (base0D)
+	ACCENT="$BOLD$(tput setaf 8)"  # Gray for bucket (consistent with terminal)
 elif ((nfetch)); then
 	BROWN='${c1}'
 	DARK_BROWN='${c2}'
 	DARK_GREEN='${c3}'
 	GREEN='${c4}'
 	GRAY='${c5}'
-	ACCENT='${c6}'  # Use color variable for accent
+	ACCENT='${c5}'  # Gray for bucket (use same as GRAY)
 else
 	BROWN='\e[38;5;172m'
 	DARK_BROWN='\e[38;5;130m'
 	DARK_GREEN='\e[38;5;142m'
 	GREEN='\e[38;5;106m'
 	GRAY='\e[38;5;243m'
-	ACCENT='\e[38;5;75m'  # Blue accent color (approximate base0D)
+	ACCENT='\e[38;5;243m'  # Gray for bucket (use same as GRAY)
 fi
 
 # create ascii base in lines

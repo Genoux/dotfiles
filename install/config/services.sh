@@ -1,11 +1,12 @@
 #!/bin/bash
 # Enable and restart systemd user services
 
-# Source helpers first
-if [[ -z "${DOTFILES_HELPERS_LOADED:-}" ]]; then
-    source "$DOTFILES_INSTALL/helpers/all.sh"
-    export DOTFILES_HELPERS_LOADED=true
-fi
+# Get script directory and dotfiles root
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DOTFILES_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
+# Source helpers directly
+source "$DOTFILES_DIR/install/helpers/all.sh"
 
 echo
 log_section "Managing Systemd Services"
@@ -36,9 +37,9 @@ if [[ ${#services[@]} -gt 0 ]]; then
     ' _ "${services[@]}"
     
     log_success "All services enabled and started"
+    
 else
     log_info "No services found"
 fi
 
 echo
-

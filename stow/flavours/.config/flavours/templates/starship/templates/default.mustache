@@ -1,14 +1,54 @@
 "$schema" = 'https://starship.rs/config-schema.json'
 
+# Cleaner, minimal prompt with reduced visual weight
+format = """
+$directory\
+$git_branch\
+$git_status\
+$character\
+"""
+
+# Reduce scan timeout for faster prompt
+scan_timeout = 10
+
 [username]
 show_always = true
 format = '[$user]($style)'
-style_user = "bold #{{base0D-hex}}"
+style_user = "bold #{{base0A-hex}}"
 
 [hostname]
 ssh_only = false
-format = '[@$hostname]($style)'
+format = '[@$hostname]($style) '
 style = "bold #{{base0B-hex}}"
+
+[directory]
+format = '[$path]($style) '
+style = "bold #{{base0B-hex}}"
+truncation_length = 3
+truncate_to_repo = true
+
+[git_branch]
+format = '[$symbol$branch]($style) '
+symbol = " "
+style = "#{{base0D-hex}}"
+
+[git_status]
+format = '([$all_status$ahead_behind]($style) )'
+style = "bold #{{base08-hex}}"
+conflicted = "="
+ahead = ""
+behind = "⇣"
+diverged = "⇕"
+untracked = ""
+stashed = ""
+modified = ""
+staged = ""
+renamed = "»"
+deleted = ""
+
+[character]
+success_symbol = "[❯](#{{base0B-hex}})"
+error_symbol = "[❯](#{{base0B-hex}})"
 
 [bun]
 format = "via [$symbol]($style)"
