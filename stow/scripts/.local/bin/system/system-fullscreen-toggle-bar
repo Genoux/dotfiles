@@ -1,0 +1,128 @@
+# #!/bin/bash
+
+# # Script to detect fullscreen windows and toggle AGS bar visibility
+# # This script monitors Hyprland events and hides/shows the AGS bar accordingly
+# # Enhanced to detect games (Steam, Lutris, etc.) that may not trigger fullscreen events
+
+# BAR_NAME="bar"
+# BAR_VISIBLE=true
+
+# # Game window class patterns (regex)
+# GAME_PATTERNS=(
+#     "^steam_app_"           # Steam games
+#     "^gamescope"            # Gamescope
+#     "^[Ll]utris"            # Lutris
+#     "^[Ww]ine"              # Wine games
+#     "^[Pp]roton"            # Proton games
+#     "^retroarch"            # RetroArch
+#     "^rpcs3"                # RPCS3 (PS3 emulator)
+#     "^yuzu"                 # Yuzu (Switch emulator)
+#     "^ryujinx"              # Ryujinx (Switch emulator)
+#     "^dolphin-emu"          # Dolphin (GameCube/Wii emulator)
+#     "^pcsx2"                # PCSX2 (PS2 emulator)
+#     "^ppsspp"               # PPSSPP (PSP emulator)
+#     "^duckstation"          # DuckStation (PS1 emulator)
+#     "^melonds"              # melonDS (NDS emulator)
+# )
+
+# hide_bar() {
+#     if [ "$BAR_VISIBLE" = true ]; then
+#         # Smooth delay to start animation
+#         sleep 0.1
+#         ags toggle "$BAR_NAME"
+#         BAR_VISIBLE=false
+#         echo "Hiding bar with smooth fade animation"
+#         # Wait for animation to complete (400ms = 0.4s)
+#         sleep 0.4
+#     fi
+# }
+
+# show_bar() {
+#     if [ "$BAR_VISIBLE" = false ]; then
+#         # Smooth delay to start animation
+#         sleep 0.1
+#         ags toggle "$BAR_NAME"
+#         BAR_VISIBLE=true
+#         echo "Showing bar with smooth fade animation"
+#         # Wait for animation to complete (400ms = 0.4s)
+#         sleep 0.4
+#     fi
+# }
+
+# # Check if window class matches game patterns
+# is_game_window() {
+#     local window_class="$1"
+    
+#     for pattern in "${GAME_PATTERNS[@]}"; do
+#         if echo "$window_class" | grep -qE "$pattern"; then
+#             return 0
+#         fi
+#     done
+    
+#     return 1
+# }
+
+# # Function to check if any window is fullscreen or a game on current workspace
+# check_fullscreen() {
+#     local active_workspace=$(hyprctl activeworkspace -j | jq -r '.id')
+    
+#     # Check for traditional fullscreen windows
+#     local fullscreen_count=$(hyprctl clients -j | jq --arg ws "$active_workspace" \
+#         '[.[] | select(.workspace.id == ($ws | tonumber) and .fullscreen != 0)] | length')
+    
+#     # Check for game windows on active workspace (even if not technically fullscreen)
+#     local game_windows=$(hyprctl clients -j | jq -r --arg ws "$active_workspace" \
+#         '.[] | select(.workspace.id == ($ws | tonumber)) | .class')
+    
+#     local has_game=false
+#     while IFS= read -r window_class; do
+#         if [ -n "$window_class" ] && is_game_window "$window_class"; then
+#             has_game=true
+#             echo "Detected game window: $window_class"
+#             break
+#         fi
+#     done <<< "$game_windows"
+    
+#     echo "Active workspace: $active_workspace, Fullscreen count: $fullscreen_count, Has game: $has_game, Bar visible: $BAR_VISIBLE"
+    
+#     # Hide bar if fullscreen window or game detected
+#     if [ "$fullscreen_count" -gt 0 ] || [ "$has_game" = true ]; then
+#         hide_bar
+#     else
+#         show_bar
+#     fi
+# }
+
+# # Initial check
+# check_fullscreen
+
+# # Monitor Hyprland events for fullscreen changes and game windows
+# socat -u UNIX-CONNECT:$XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE/.socket2.sock - | while read -r line; do
+#     echo "Event: $line"  # Debug output
+    
+#     # Check for fullscreen events
+#     if echo "$line" | grep -q "fullscreen>>"; then
+#         echo "Fullscreen event detected"
+#         check_fullscreen
+#     fi
+    
+#     # Monitor workspace changes
+#     if echo "$line" | grep -q "workspace>>"; then
+#         sleep 0.1
+#         check_fullscreen
+#     fi
+    
+#     # Monitor window open/close events (important for games)
+#     if echo "$line" | grep -qE "openwindow>>|closewindow>>"; then
+#         echo "Window open/close event detected"
+#         sleep 0.1
+#         check_fullscreen
+#     fi
+    
+#     # Monitor window move events (games switching workspaces)
+#     if echo "$line" | grep -q "movewindow>>"; then
+#         echo "Window move event detected"
+#         sleep 0.1
+#         check_fullscreen
+#     fi
+# done

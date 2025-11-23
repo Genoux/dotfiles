@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# Launch impala (WiFi TUI manager) with single instance support
+
+TERMINAL_TITLE="impala"
+COMMAND="/home/john/.cargo/bin/impala"
+
+# Check if impala is already running
+if hyprctl clients | grep -q "^[[:space:]]*title: $TERMINAL_TITLE$"; then
+    # Focus the existing window
+    hyprctl dispatch focuswindow title:"$TERMINAL_TITLE"
+else
+    # Set up proper environment for TUI applications
+    export TERM=xterm-256color
+    export COLORTERM=truecolor
+    export PATH="$HOME/.cargo/bin:$PATH"
+
+    # Launch new instance with proper error handling
+    kitty --class=network-wireless --title "$TERMINAL_TITLE" --hold -e bash -c "
+        echo 'Starting impala...'
+        if command -v impala >/dev/null 2>&1; then
+            impala
+        else
+            echo 'Error: impala not found in PATH'
+            echo 'PATH: $PATH'
+            sleep 3
+        fi
+    " 2>/dev/null &
+fi
+

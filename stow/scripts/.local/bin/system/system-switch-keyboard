@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Switch keyboard layout for all actual keyboard devices
+
+hyprctl devices -j | jq -r '.keyboards[].name' | \
+    grep -v -E '^(power-button|video-bus|sleep-button|lid-switch)' | \
+    while IFS= read -r keyboard; do
+        hyprctl switchxkblayout "$keyboard" next 2>/dev/null
+    done
+

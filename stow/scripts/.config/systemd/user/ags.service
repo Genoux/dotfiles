@@ -6,6 +6,7 @@ PartOf=graphical-session.target
 
 [Service]
 Type=simple
+Environment="PATH=%h/.local/bin/launchers:%h/.local/bin/system:%h/.local/bin:/usr/local/bin:/usr/bin:/bin"
 ExecStart=/usr/bin/ags run
 Restart=on-failure
 RestartSec=3
