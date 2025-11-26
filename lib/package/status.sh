@@ -54,7 +54,7 @@ packages_status() {
             done
         fi
     fi
-
+    echo
     # Check for outdated packages
     if command -v yay &>/dev/null; then
         local outdated_packages=$(yay -Qu 2>/dev/null)

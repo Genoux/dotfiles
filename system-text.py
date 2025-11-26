@@ -105,7 +105,7 @@ def animate_beams(banner_file: str, frame_rate: int = 100):
         
         # Add theme colors if available - use only green (base0B) as single solid color
         if theme_colors:
-            theme_color = theme_colors.get('base0B', '4ade7f')
+            theme_color = theme_colors.get('base06')
             # Beam gradient: use same color for solid (no gradient)
             cmd.extend([
                 "--beam-gradient-stops",

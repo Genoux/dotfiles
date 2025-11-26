@@ -27,20 +27,21 @@ configure_gum_colors() {
     # Note: gum log handles level colors automatically (INFO=blue, WARN=yellow, ERROR=red)
     # We let gum log use its defaults for consistent, readable output
     
-    # Use green color scheme (base0B) as the single accent color
-    # ANSI color 2 is green (base0B) in most themes
+    # Use base04 (mid-gray) for monochrome theme consistency
+    # ANSI color 8 maps to base04 in base16 schemes
     # Gum only accepts ANSI color codes (0-15), not hex colors
-    export GUM_CHOOSE_CURSOR_FOREGROUND="2"  # Cursor color (the ">" indicator) - green
+    export COLOR_INDEX="6"
+    export GUM_CHOOSE_CURSOR_FOREGROUND="$COLOR_INDEX"
     export GUM_CHOOSE_CURSOR_BACKGROUND=""
-    export GUM_CHOOSE_HELP_FOREGROUND="2"    # Help text color - green
+    export GUM_CHOOSE_HELP_FOREGROUND="$COLOR_INDEX"
     export GUM_CHOOSE_HELP_BACKGROUND=""
-    export GUM_FILTER_HELP_FOREGROUND="8"
+    export GUM_FILTER_HELP_FOREGROUND="$COLOR_INDEX"
     export GUM_FILTER_HELP_BACKGROUND=""
-    export GUM_CONFIRM_HELP_FOREGROUND="8"
+    export GUM_CONFIRM_HELP_FOREGROUND="$COLOR_INDEX"
     export GUM_CONFIRM_HELP_BACKGROUND=""
-    export GUM_INPUT_HELP_FOREGROUND="8"
+    export GUM_INPUT_HELP_FOREGROUND="$COLOR_INDEX"
     export GUM_INPUT_HELP_BACKGROUND=""
-    export GUM_WRITE_HELP_FOREGROUND="8"
+    export GUM_WRITE_HELP_FOREGROUND="$COLOR_INDEX"
     export GUM_WRITE_HELP_BACKGROUND=""
 }
 
@@ -249,7 +250,7 @@ clear_screen() {
 show_info() {
     local key="$1"
     local value="$2"
-    echo "$(gum style --bold --foreground 2 "$key:") $(gum style "$value")"  # base03 muted for key
+    echo "$(gum style --bold --foreground 7 "$key:") $(gum style "$value")"  # base03 muted for key
 }
 
 # Run command with clean UI: header + muted boxed output

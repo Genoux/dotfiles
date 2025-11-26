@@ -2,23 +2,23 @@
 
 /* Base16 grayscale */
 @define-color base00 rgb(0, 0, 0);
-@define-color base01 rgb(26, 26, 26);
-@define-color base02 rgb(42, 42, 42);
-@define-color base03 rgb(80, 80, 80);
-@define-color base04 rgb(112, 112, 112);
-@define-color base05 rgb(240, 240, 240);
-@define-color base06 rgb(248, 248, 248);
+@define-color base01 rgb(25, 25, 25);
+@define-color base02 rgb(51, 51, 51);
+@define-color base03 rgb(113, 118, 123);
+@define-color base04 rgb(90, 90, 90);
+@define-color base05 rgb(231, 233, 234);
+@define-color base06 rgb(234, 234, 234);
 @define-color base07 rgb(255, 255, 255);
 
 /* Base16 accent colors */
-@define-color base08 rgb(66, 165, 245);
-@define-color base09 rgb(66, 165, 245);
-@define-color base0A rgb(66, 165, 245);
-@define-color base0B rgb(74, 222, 127);
-@define-color base0C rgb(0, 188, 212);
-@define-color base0D rgb(0, 188, 212);
-@define-color base0E rgb(66, 165, 245);
-@define-color base0F rgb(66, 165, 245);
+@define-color base08 rgb(190, 190, 190);
+@define-color base09 rgb(198, 198, 198);
+@define-color base0A rgb(208, 208, 208);
+@define-color base0B rgb(224, 224, 224);
+@define-color base0C rgb(160, 160, 160);
+@define-color base0D rgb(176, 176, 176);
+@define-color base0E rgb(192, 192, 192);
+@define-color base0F rgb(213, 213, 213);
 
 /* Alpha overlays (design tokens - not theme colors) */
 @define-color alpha-subtle rgba(255, 255, 255, 0.02);
