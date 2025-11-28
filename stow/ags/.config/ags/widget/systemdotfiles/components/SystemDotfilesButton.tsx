@@ -5,7 +5,7 @@ import Icon from "../../../components/Icon";
 export function SystemDotfilesButton() {
   return (
     <Button onClicked={openDotfilesMenu}>
-      <Icon icon="view-grid" />
+      <Icon icon="input-keyboard" />
     </Button>
   );
 }

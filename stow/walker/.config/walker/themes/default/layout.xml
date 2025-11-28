@@ -24,7 +24,7 @@
             <property name="orientation">vertical</property>
             <property name="hexpand-set">true</property>
             <property name="hexpand">true</property>
-            <property name="spacing">10</property>
+            <property name="spacing">0</property>
             <child>
               <object class="GtkBox" id="SearchContainer">
                 <style>
@@ -133,8 +133,8 @@
                 </child>
                 <child>
                   <object class="GtkBox" id="ItemKeybinds">
-                    <property name="spacing">0</property>
-                    <property name="visible">false</property>
+                  <property name="spacing">0</property>
+                   <property name="visible">false</property>
                     <style>
                       <class name="item-keybinds"></class>
                     </style>
@@ -147,7 +147,6 @@
                 <style>
                   <class name="error"></class>
                 </style>
-                <property name="xalign">0</property>
                 <property name="visible">false</property>
               </object>
             </child>

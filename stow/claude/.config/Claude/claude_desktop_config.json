@@ -1,0 +1,19 @@
+{
+  "preferences": {
+    "menuBarEnabled": true
+  },
+  "globalShortcut": "",
+  "mcpServers": {
+    "mcp-obsidian": {
+      "command": "uvx",
+      "args": [
+        "mcp-obsidian"
+      ],
+      "env": {
+        "OBSIDIAN_API_KEY": "fc32aaa45c1d8c4c5797808cdbb999a72e2232f0bcfe01c1d7dbd7b66fcc2cb7",
+        "OBSIDIAN_HOST": "127.0.0.1",
+        "OBSIDIAN_PORT": "27124"
+      }
+    }
+  }
+}

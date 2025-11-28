@@ -1,10 +1,9 @@
 {
     "workbench.colorTheme": "Catppuccin Mocha",
-    "extensions.recommendations": [
-        "GitHub.github-vscode-theme"
-    ],
     "window.confirmBeforeClose": "always",
     "window.dialogStyle": "custom",
-    "files.simpleDialog.enable": true,
-    "idf.hasWalkthroughBeenShown": true
+    "explorer.confirmDelete": false,
+    "remote.SSH.remotePlatform": {
+        "192.168.86.32": "linux"
+    },
 }

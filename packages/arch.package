@@ -31,6 +31,8 @@ fish
 flatpak
 font-manager
 fzf
+ghostty-shell-integration
+ghostty-terminfo
 git
 git-delta
 github-cli
