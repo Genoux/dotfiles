@@ -14,6 +14,14 @@ export DOTFILES_INSTALL="$DOTFILES_DIR/install"
 # Load helpers
 source "$DOTFILES_DIR/install/helpers/all.sh"
 
+# Bootstrap: ensure tte is installed for banner animation
+if ! command -v tte &>/dev/null; then
+    if command -v yay &>/dev/null; then
+        echo "Installing banner animation..."
+        yay -S --noconfirm python-terminaltexteffects >/dev/null 2>&1
+    fi
+fi
+
 # Initialize logging for daily operations
 init_logging "daily"
 

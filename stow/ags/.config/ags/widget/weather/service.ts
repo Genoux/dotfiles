@@ -106,7 +106,22 @@ export function forceWeatherRefresh() {
 }
 
 export function openWeatherApp() {
-  const homeDir = GLib.get_home_dir();
-  const wthrrPath = `${homeDir}/.cargo/bin/wthrr`;
-  GLib.spawn_command_line_async(`launch-or-focus "weather" "${wthrrPath}" "weather"`);
+  // Try wego (AUR package) first, fallback to checking PATH
+  const wegoPath = GLib.find_program_in_path("wego");
+  
+  if (!wegoPath) {
+    console.error(`[Weather] wego not found. Install with: yay -S wego`);
+    return;
+  }
+  
+  // Get API key from environment or use fallback from Hyprland config
+  const apiKey = GLib.getenv("OPENWEATHERMAP_API_KEY") || "d9219c0472bace98bededdf4f2701585";
+  
+  // Get location from environment or use default
+  const city = GLib.getenv("WEATHER_CITY") || "Montreal";
+  
+  // Launch wego with API key and location
+  // Format: launch-or-focus TITLE COMMAND CLASS EXTRA_ARGS...
+  const command = `launch-or-focus "weather" "${wegoPath}" "weather" "-owm-api-key" "${apiKey}" "-l" "${city}"`;
+  GLib.spawn_command_line_async(command);
 }

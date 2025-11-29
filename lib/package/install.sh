@@ -53,9 +53,11 @@ packages_install() {
         aur_packages+=("$pkg")
     done < "$AUR_PACKAGES_FILE"
     
-    # Update package databases to ensure latest versions
-    sudo pacman -Sy --noconfirm
-    echo
+    # Update package databases (log monitor already started by packages_prepare)
+    if ! run_command_logged "Sync package databases" sudo pacman -Sy --noconfirm; then
+        log_error "Failed to sync package databases"
+        return 1
+    fi
     
     # Just install packages from lists - no checking
     # For auditing system vs dotfiles, use package_audit function instead
@@ -75,23 +77,9 @@ packages_install() {
     
     # Install missing official packages
     if [[ ${#missing_official[@]} -gt 0 ]]; then
-        # Install packages directly (sudo will prompt for password if needed)
-        [[ -n "${DOTFILES_LOG_FILE:-}" ]] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [PACMAN] Installing packages: ${missing_official[*]}" >> "$DOTFILES_LOG_FILE"
-        [[ -n "${DOTFILES_LOG_FILE:-}" ]] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [PACMAN] Starting installation..." >> "$DOTFILES_LOG_FILE"
-
-        printf '1\nY\n' | sudo pacman -S --needed --noconfirm ${missing_official[*]}
-        local pacman_exit_code=$?
-        echo
-
-        if [[ $pacman_exit_code -ne 0 ]]; then
-            [[ -n "${DOTFILES_LOG_FILE:-}" ]] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [PACMAN] Installation completed with some failures (exit code: $pacman_exit_code)" >> "$DOTFILES_LOG_FILE"
+        if ! run_command_logged "Install ${#missing_official[@]} official packages" sudo pacman -S --needed --noconfirm "${missing_official[@]}"; then
             log_warning "Some official packages failed to install, but continuing..."
-            echo
-            log_info "Check log file for details: $DOTFILES_LOG_FILE"
-        else
-            [[ -n "${DOTFILES_LOG_FILE:-}" ]] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [PACMAN] Installation completed successfully" >> "$DOTFILES_LOG_FILE"
         fi
-        echo
     fi
     
 

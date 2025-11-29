@@ -12,4 +12,3 @@ source "$DOTFILES_DIR/lib/package.sh"
 
 # Install packages
 packages_install
-
