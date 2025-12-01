@@ -1,11 +1,11 @@
 {
     "workbench.colorTheme": "Catppuccin Mocha",
     "window.confirmBeforeClose": "always",
+    "window.titleBarStyle": "custom",
     "window.dialogStyle": "custom",
-    "window.tray": "never",
     "explorer.confirmDelete": false,
     "remote.SSH.remotePlatform": {
         "192.168.86.32": "linux"
     },
-    "claudeCode.preferredLocation": "panel",
+    "claudeCode.preferredLocation": "panel"
 }
