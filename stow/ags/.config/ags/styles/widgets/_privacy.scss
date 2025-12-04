@@ -1,0 +1,26 @@
+@use "../tokens" as *;
+@use "../abstracts/theme" as *;
+
+// macOS-style privacy indicator with icons
+.privacy-indicator {
+  button.privacy-btn {
+    border-radius: radius(sm);
+    transition: duration(fast) easing(ease);
+    padding: 2px 6px;
+
+    &--webcam {
+      background-color: #4dff85c0;
+      border: 1px solid #47c55e58;
+    }
+
+    &--mic {
+      background-color: #ff9c32d2;
+      border: 1px solid #FC952638;
+    }
+
+    &--screenrecord {
+      background-color: #ff6dffb1;
+      border: 1px solid #AF53DE38;
+    }
+  }
+}

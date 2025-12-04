@@ -6,12 +6,12 @@
 .recording-indicator button {
   animation: pulse duration(slowest) easing(ease-in-out) infinite;
   color: $base07;
-  background-color: color.adjust($base08, $alpha: -0.4);
+  background-color: #ff1c1cc7;
   border-radius: radius(xl);
 
   &:hover {
     animation: none;
-    background-color: $base08;
+    background-color: #dc2929b9;
   }
 }
 

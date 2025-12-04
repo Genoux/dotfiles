@@ -15,7 +15,7 @@ export function WindowTitle() {
         size={18}
       />
       <label
-        label={clientTitle((title) => truncateText(title.trim(), 54))}
+        label={clientTitle((title) => truncateText(title.trim(), 40))}
       />
     </box>
   );

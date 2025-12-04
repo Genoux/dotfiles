@@ -1,7 +1,7 @@
 [Desktop Entry]
 Name=Live Cam
 Comment=View RTSP camera stream
-Exec=mpv --title="Live Cam" rtsp://192.168.86.32:8554/stream
+Exec=mpv --title="Live Cam" rtsp://pi:8554/stream
 Icon=accessories-camera
 Terminal=false
 Type=Application

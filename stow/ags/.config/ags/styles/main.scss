@@ -13,13 +13,13 @@
 @use "widgets/button";
 @use "widgets/screenrecord";
 @use "widgets/keyboard";
+@use "widgets/privacy";
 
 * {
   font-family: typography(font-family);
   font-size: typography(font-size-sm);
   color: $white;
 }
-
 
 .group {
   border: 1px solid $alpha-light;
@@ -32,7 +32,6 @@
 // Remove harsh borders and align visuals with theme
 tooltip {
   @include gtk-reset;
-
   border-radius: radius(md);
   background-color: color.adjust($base00, $alpha: -0.5);
   border: 1px solid $alpha-light;

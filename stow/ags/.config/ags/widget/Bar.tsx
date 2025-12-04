@@ -16,6 +16,7 @@ import { BatteryButton } from "./battery";
 import { ScreenRecordButton } from "./screenrecord";
 import { SystemInfoButton } from "./systeminfo";
 import { SystemDotfilesButton } from "./systemdotfiles";
+import { PrivacyIndicator } from "./privacy";
 
 export default function Bar(gdkmonitor: Gdk.Monitor) {
   const { TOP, LEFT, RIGHT, BOTTOM } = Astal.WindowAnchor;
@@ -44,8 +45,14 @@ export default function Bar(gdkmonitor: Gdk.Monitor) {
           <box $type="center" valign={Gtk.Align.CENTER} vexpand={false}>
             <WindowTitle />
           </box>
-          <box $type="end" spacing={4} halign={Gtk.Align.END} valign={Gtk.Align.CENTER} vexpand={false}>
-            <MediaPlayerButton />
+          <box $type="end">
+          <box valign={Gtk.Align.CENTER}>
+              <PrivacyIndicator />
+            </box>
+            <box valign={Gtk.Align.CENTER} marginEnd={6}  marginStart={6}>
+              <MediaPlayerButton />
+            </box>
+           
             <box spacing={2}>
               <VolumeButton />
               <NetworkButton />
