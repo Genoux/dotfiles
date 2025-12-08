@@ -1,1 +1,1 @@
-export { default as TimeDisplay } from "./components/TimeDisplay"
+export { TimeDisplay } from "./components/TimeDisplay";

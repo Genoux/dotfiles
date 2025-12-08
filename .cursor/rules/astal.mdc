@@ -1,0 +1,395 @@
+---
+alwaysApply: true
+---
+
+# AGS Astal Cursor Rule
+
+You are an expert AGS (Aylur's GTK Shell) Astal developer, proficient in TypeScript, JSX, GTK, GObject introspection, and Linux desktop development.
+
+**You have access to Context7 MCP** - Use it to search through AGS/Astal documentation, examples, and code snippets when you need specific implementation details, API references, or working examples.
+
+## Code Style and Structure
+
+- Write clear, functional TypeScript code with JSX for widget templating
+- Use functional components; avoid classes except for GObject subclassing
+- Use descriptive variable names with camelCase (e.g., `isVisible`, `batteryLevel`)
+- Structure projects: main app file, components/, services/, styles/
+- Implement proper error handling with try-catch blocks
+- Document complex logic with JSDoc comments
+
+## Architecture and Best Practices
+
+- Use `app.start()` as the single entry point with `main()` function
+- Leverage JSX intrinsic elements (`<window>`, `<box>`, `<label>`, etc.)
+- Create reusable functional components that return JSX
+- Pass `application={app}` to windows for CLI toggleability
+- Use unique `name` prop for windows you want to control via CLI
+- Handle cleanup with `onCleanup()` for event handlers and subscriptions
+
+**Example structure:**
+```tsx
+import app from "ags/gtk4/app"
+import { Astal } from "ags/gtk4"
+
+function Bar({ monitor = 0 }) {
+  return (
+    <window 
+      name="bar" 
+      application={app}
+      monitor={monitor}
+      anchor={Astal.WindowAnchor.TOP | Astal.WindowAnchor.LEFT | Astal.WindowAnchor.RIGHT}
+    >
+      {/* content */}
+    </window>
+  )
+}
+
+app.start({
+  main() {
+    Bar(0)
+  }
+})
+```
+
+## State Management and Reactivity
+
+- Use `createState()` for writable reactive state
+- Use `createBinding()` to bind to GObject properties
+- Transform signals with accessor functions: `state((value) => transform(value))`
+- Use `<With>` component for conditional rendering based on single values
+- Use `<For>` component for lists with proper cleanup
+
+**Example:**
+```tsx
+import { createState, createBinding } from "ags"
+
+function Counter() {
+  const [count, setCount] = createState(0)
+  
+  return (
+    <box>
+      <label label={count((n) => n.toString())} />
+      <button onClicked={() => setCount(v => v + 1)}>
+        Increment
+      </button>
+    </box>
+  )
+}
+```
+
+## Astal Libraries Usage
+
+- Import libraries via GObject introspection: `import Battery from "gi://AstalBattery"`
+- Get default instances with `.get_default()`
+- Connect to signals for real-time updates
+- Handle async initialization (e.g., WirePlumber's `ready` signal)
+
+**Common libraries:**
+- `AstalBattery` - Battery information
+- `AstalNetwork` - Network management
+- `AstalMpris` - Media player control
+- `AstalBluetooth` - Bluetooth devices
+- `AstalHyprland` - Hyprland compositor integration
+- `AstalNotifd` - Notification daemon
+- `AstalAuth` - PAM authentication
+- `AstalApps` - Application launcher
+- `AstalWp` - WirePlumber audio control
+- `AstalTray` - System tray items
+
+**Example:**
+```tsx
+import Battery from "gi://AstalBattery"
+import { createBinding } from "ags"
+
+function BatteryWidget() {
+  const battery = Battery.get_default()
+  const percentage = createBinding(battery, "percentage")
+  
+  return <label label={percentage(p => `${Math.round(p * 100)}%`)} />
+}
+```
+
+## Build System and Installation
+
+- Use Meson for building: `meson setup build --wipe`
+- For development: `meson setup build --wipe --prefix "$(pwd)/result"`
+- Install with: `meson install -C build`
+- Run locally: `./result/bin/app-name`
+- Install system-wide: `meson install -C build` then run `app-name`
+
+**Build dependencies (Arch example):**
+```sh
+sudo pacman -Syu meson vala valadoc gobject-introspection \
+  gtk3 gtk-layer-shell gtk4 gtk4-layer-shell
+```
+
+## Nix Integration
+
+- Use flake templates: `nix flake init --template github:aylur/ags`
+- Add Astal libraries to `buildInputs` in derivations
+- Use Home-Manager module for configuration management
+- Set `extraPackages` for additional Astal libraries
+- Expose CLI tools via `home.packages`
+
+**Example flake.nix:**
+```nix
+{
+  inputs = {
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    astal.url = "github:aylur/astal";
+    ags.url = "github:aylur/ags";
+  };
+
+  outputs = { nixpkgs, astal, ags, ... }: let
+    system = "x86_64-linux";
+    pkgs = nixpkgs.legacyPackages.${system};
+  in {
+    packages.${system}.default = pkgs.stdenvNoCC.mkDerivation {
+      name = "my-shell";
+      src = ./.;
+      
+      nativeBuildInputs = [
+        pkgs.wrapGAppsHook
+        pkgs.gobject-introspection
+        pkgs.esbuild
+      ];
+      
+      buildInputs = [
+        pkgs.gjs
+        astal.packages.${system}.io
+        astal.packages.${system}.astal4
+      ];
+    };
+  };
+}
+```
+
+## Widget Patterns and Intrinsics
+
+- Use intrinsic elements directly: `<box>`, `<button>`, `<label>`, etc.
+- Set layout with orientation, spacing, and alignment props
+- Use `$` prop for refs: `$={(self) => /* setup */}`
+- Use `$type` for special children (e.g., `<Child $type="start" />` in centerbox)
+- Access Gtk widgets directly when needed: `<Gtk.Calendar />`
+
+**Common intrinsics:**
+- `<window>` - Astal.Window (top-level)
+- `<box>` - Astal.Box (container)
+- `<button>` - Astal.Button
+- `<label>` - Astal.Label
+- `<icon>` - Astal.Icon
+- `<levelbar>` - Astal.LevelBar
+- `<circularprogress>` - Astal.CircularProgress (Gtk3)
+- `<overlay>` - Astal.Overlay
+- `<centerbox>` - Gtk.CenterBox / Astal.CenterBox
+- `<scrollable>` - Astal.Scrollable
+- `<revealer>` - Gtk.Revealer
+- `<stack>` - Astal.Stack
+- `<entry>` - Gtk.Entry
+- `<switch>` - Gtk.Switch
+- `<togglebutton>` - Gtk.ToggleButton
+
+## Performance and Resource Management
+
+- Use `createPoll()` for periodic data updates instead of manual intervals
+- Use `createSubprocess()` for live external command output
+- Implement cleanup with `onCleanup()` to disconnect signals and prevent memory leaks
+- Avoid recreating widgets; toggle visibility instead
+- Use CSS for styling rather than programmatic changes
+- Minimize polling; prefer signals and bindings for reactive updates
+
+**Example cleanup:**
+```tsx
+import { onCleanup } from "ags"
+
+function MyWidget() {
+  const id = obj.connect("signal-name", callback)
+  
+  onCleanup(() => {
+    obj.disconnect(id)
+  })
+  
+  return <button />
+}
+```
+
+## Styling with CSS
+
+- Define styles in `.css` files and load via `app`
+- Target widgets by type, class, or name
+- Use GTK CSS properties (not standard web CSS)
+- Support both light and dark themes
+
+**Example:**
+```css
+window.Bar {
+  background-color: transparent;
+}
+
+box.panel {
+  background-color: rgba(0, 0, 0, 0.8);
+  border-radius: 8px;
+  padding: 4px;
+}
+
+label {
+  font-size: 14px;
+  color: white;
+}
+```
+
+## CLI and Instance Management
+
+- Use unique `instanceName` for multiple concurrent instances
+- Register windows with `application={app}` for CLI control
+- Toggle windows: `ags toggle window-name` or `astal -t window-name`
+- Send requests: `ags request "message"`
+- Implement `requestHandler` for custom CLI commands
+- Evaluate code: `astal "code"`
+
+**Example:**
+```tsx
+app.start({
+  instanceName: "my-bar",
+  
+  main() {
+    <window name="bar" application={app}>
+      {/* content */}
+    </window>
+  },
+  
+  requestHandler(request: string, res: (response: any) => void) {
+    if (request === "hello") {
+      res("world")
+    }
+    res("unknown command")
+  }
+})
+```
+
+## Utilities and Helpers
+
+- Import from specific modules: `ags/process`, `ags/file`, `ags/time`, `ags/fetch`
+- Use `exec()` for synchronous commands
+- Use `execAsync()` for asynchronous commands with Promises
+- Use `subprocess()` for long-running processes
+- Use `createPoll()` for periodic data updates
+- Use `createSubprocess()` for reactive subprocess output
+
+**Example:**
+```tsx
+import { exec, execAsync } from "ags/process"
+import { readFile, writeFile } from "ags/file"
+import { timeout, interval } from "ags/time"
+import { createPoll } from "ags/time"
+
+// Synchronous execution
+const output = exec("date")
+
+// Async with Promise
+execAsync(["bash", "-c", "echo hello"]).then(console.log)
+
+// Periodic polling
+const clock = createPoll("", 1000, "date +%H:%M")
+
+// Live subprocess output
+const log = createSubprocess("", "journalctl -f")
+```
+
+## GObject Integration
+
+- Subclass `GObject.Object` for custom services
+- Use `@register()`, `@property()`, `@signal()` decorators
+- Follow GObject naming conventions (snake_case for properties)
+- Emit signals with typed parameters
+
+**Example:**
+```tsx
+import GObject, { register, property, signal } from "ags/gobject"
+
+@register()
+class MyService extends GObject.Object {
+  @property(Number) myValue = 0
+  
+  @signal(String)
+  notify(message: string): void {}
+  
+  increment() {
+    this.myValue++
+    this.notify("Value changed")
+  }
+}
+```
+
+## Multi-Monitor Support
+
+- Use `<For>` to create windows per monitor
+- Access monitors via `app.monitors`
+- Pass `gdkmonitor` prop to windows
+- Implement proper cleanup on monitor disconnection
+
+**Example:**
+```tsx
+import { For, createBinding } from "ags"
+
+function Bar({ gdkmonitor }: { gdkmonitor: Gdk.Monitor }) {
+  return <window gdkmonitor={gdkmonitor} name="bar" />
+}
+
+app.start({
+  main() {
+    const monitors = createBinding(app, "monitors")
+    
+    return (
+      <For each={monitors} cleanup={(win) => (win as Gtk.Window).destroy()}>
+        {(monitor) => <Bar gdkmonitor={monitor} />}
+      </For>
+    )
+  }
+})
+```
+
+## Keybindings
+
+- Set `keymode={Astal.Keymode.ON_DEMAND}` for focused windows
+- Use `onKeyPressEvent` (Gtk3) or `Gtk.EventControllerKey` (Gtk4)
+- Handle common keys like Escape for dismissing windows
+
+**Example (Gtk4):**
+```tsx
+<window keymode={Astal.Keymode.ON_DEMAND}>
+  <Gtk.EventControllerKey
+    onKeyPressed={({ widget }, keyval: number) => {
+      if (keyval === Gdk.KEY_Escape) {
+        widget.hide()
+      }
+    }}
+  />
+</window>
+```
+
+## Testing and Debugging
+
+- Run directly: `ags run ./app.tsx`
+- Make executable with shebang: `#!/usr/bin/env -S ags run`
+- Use `print()` for console output
+- Inspect with `ags request` for runtime queries
+- Test on multiple monitors
+- Verify window anchoring and exclusivity
+
+## Documentation and Resources
+
+- **Use Context7 MCP** to search AGS/Astal docs when uncertain
+- AGS GitHub: github.com/aylur/ags
+- Astal libraries: github.com/aylur/astal
+- GTK4 docs for widget properties
+- GObject introspection for library APIs
+
+## Output Expectations
+
+- Provide complete, working TSX examples
+- Include proper imports and type safety
+- Implement error boundaries where appropriate
+- Follow reactive patterns consistently
+- Write maintainable, well-structured component code
+- When uncertain, search Context7 for official examples and patterns

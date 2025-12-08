@@ -1,1 +1,1 @@
-export { default as SystemTempDisplay } from "./components/SystemTempDisplay" 
+export { SystemTemp } from "./components/SystemTemp";

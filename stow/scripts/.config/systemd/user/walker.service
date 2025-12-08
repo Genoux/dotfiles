@@ -1,0 +1,17 @@
+[Unit]
+Description=Walker Application Launcher
+Documentation=https://github.com/abenz1267/walker
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/walker --gapplication-service --nohints
+Restart=on-failure
+RestartSec=3
+KillMode=mixed
+TimeoutStopSec=5
+
+[Install]
+WantedBy=graphical-session.target
+

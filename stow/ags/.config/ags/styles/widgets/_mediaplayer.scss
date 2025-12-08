@@ -1,78 +1,10 @@
-@use "../abstracts/variables" as *;
-@use "../abstracts/mixins" as *;
+@use "../tokens" as *;
+@use "../abstracts/theme" as *;
 
-// =============================================================================
-// Media Player Widget Styling
-// =============================================================================
-
-.MediaPlayer {
-    border: none;
-    border-radius: $radius-lg;
-    padding: $spacing-lg;
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-color: $bg-primary;
+.mediaplayer {
+  .media-info {
+    font-size: typography(font-size-2xs);
+    font-weight: typography(font-weight-normal);
+    font-family: typography(font-family-mono);
+  }
 }
-
-.MediaPlayer__track-info {
-    margin-bottom: $spacing-sm;
-    min-width: 0;
-}
-
-.MediaPlayer__title-row {
-    margin-bottom: 1px;
-    min-width: 0;
-}
-
-.MediaPlayer__player-indicator {
-    margin-left: $spacing-sm;
-}
-
-.MediaPlayer__player-indicator icon {
-    @include icon-base($font-size-md, 0.9);
-    margin-right: $spacing-xs;
-    color: $white;
-}
-
-.MediaPlayer__player-name {
-    font-size: $font-size-sm;
-    color: $text-secondary;
-    opacity: 0.7;
-    font-weight: normal;
-}
-
-.MediaPlayer__track-title {
-    font-weight: 600;
-    font-size: $font-size-md;
-    color: $white;
-    min-width: 0;
-    text-decoration: none;
-    transition: $transition-hover;
-    
-    &:hover {
-        text-decoration: underline;
-    }
-}
-
-.MediaPlayer__track-artist {
-    font-size: $font-size-sm;
-    color: $white;
-    opacity: 0.9;
-    min-width: 0;
-}
-
-.MediaPlayer__progress-container {
-    min-height: 2px;
-}
-
-.MediaPlayer__progress-scale {
-    @include slider-base($spacing-md, $bg-quaternary, $white);
-}
-
-.current-time,
-.total-time {
-    font-size: $font-size-sm;
-}
-
-

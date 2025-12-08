@@ -1,43 +1,105 @@
-// =============================================================================
-// ABSTRACTS - Variables, mixins, functions first
-// =============================================================================
-@use "abstracts/variables";
-@use "abstracts/mixins";
-@use "abstracts/animations";
+@use "./tokens" as *;
+@use "./abstracts/theme" as *;
+@use "./abstracts/reset" as *;
 
-// =============================================================================
-// WIDGETS - Import all widget styles
-// =============================================================================
+@use 'sass:color';
+
 @use "widgets/bar";
-@use "widgets/audiocontrols";
-@use "widgets/battery";
-@use "widgets/mediaplayer";
-@use "widgets/notifications";
 @use "widgets/windowtitle";
 @use "widgets/workspaces";
-@use "widgets/controlpanel";
-@use "widgets/systemcontrol";
-@use "widgets/systemtray";
-@use "widgets/applauncher";
-@use "widgets/osd";
 @use "widgets/cava";
-@use "widgets/bluetooth";
+@use "widgets/mediaplayer";
+@use "widgets/osd";
+@use "widgets/button";
+@use "widgets/screenrecord";
+@use "widgets/keyboard";
+@use "widgets/privacy";
 
 * {
-  font-family: "SF Pro Text", monospace;
-  letter-spacing: 0.02em;
-}
-// Global GTK reset for common elements
-box,
-window,
-eventbox,
-overlay,
-scrolled,
-scrolledwindow,
-viewport {
-  @include mixins.gtk-reset;
+  font-family: typography(font-family);
+  font-size: typography(font-size-sm);
+  color: $white;
 }
 
-button {
-  @include mixins.button-base;
+.group {
+  border: 1px solid $alpha-light;
+  background-color: color.adjust($base00, $alpha: -0.95);
+  border-radius: radius(md);
+  padding: spacing(xs);
+}
+
+// GTK4 tooltip styling (used by system tray and other widgets)
+// Remove harsh borders and align visuals with theme
+tooltip {
+  @include gtk-reset;
+  border-radius: radius(md);
+  background-color: color.adjust($base00, $alpha: -0.5);
+  border: 1px solid $alpha-light;
+  color: $white;
+  padding: spacing(xs);
+}
+
+// Ensure inner label inherits colors without extra borders
+tooltip label {
+  border: none;
+  color: inherit;
+}
+
+// PopoverMenu styling (right-click context menus)
+popover {
+  contents {
+    @include gtk-reset;
+
+    transform: translateY(5px);
+    border: 1px solid $alpha-light;
+    padding: spacing(md);
+    border-radius: radius(md);
+    background-color: color.adjust($base00, $alpha: -0.5);
+  }
+
+  arrow {
+    @include gtk-reset;
+    opacity: opacity(0);
+    background-color: $transparent;
+    border: none;
+  }
+
+  button.model {
+    @include gtk-reset;
+    background-color: $transparent;
+    background-image: none;
+    border: none;
+    border-radius: radius(2xs);
+    color: $white;
+    box-shadow: none;
+    outline: none;
+    -gtk-icon-filter: none;
+
+    &:hover {
+      background-color: $alpha-medium;
+      background-image: none;
+      box-shadow: none;
+      outline: none;
+    }
+
+    &:active {
+      background-color: $alpha-medium;
+      background-image: none;
+    }
+
+    &:focus {
+      outline: none;
+      box-shadow: none;
+      background-image: none;
+    }
+
+    &:focus-visible {
+      outline: none;
+      box-shadow: none;
+    }
+  }
+
+  label {
+    color: inherit;
+  }
 }

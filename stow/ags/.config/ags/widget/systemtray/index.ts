@@ -1,3 +1,1 @@
-export { default as SystemTray } from "./components/SystemTray"
-export { trayItems } from "./components/SystemTray"
-
+export { SystemTray } from "./components/SystemTray";

@@ -1,0 +1,12 @@
+@mixin gtk-reset {
+    all: unset;
+    padding: 0;
+    margin: 0;
+    border: none;
+    background-color: transparent;
+    color: inherit;
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: inherit;
+  }
+  

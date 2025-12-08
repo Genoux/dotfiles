@@ -1,0 +1,133 @@
+### Building and Installing Walker from Go Source
+
+Source: https://github.com/abenz1267/walker/blob/master/README.md
+
+Details the bash commands required to clone the Walker Git repository, navigate to the command directory, build the Go executable, and copy the resulting binary to a standard system path (`/usr/bin/`). Requires Go, GTK4, gtk4-layer-shell, gobject-introspection, libvips, libvips-dev, and potentially their development packages as prerequisites.
+
+```bash
+git clone https://github.com/abenz1267/walker /tmp/walker
+cd /tmp/walker/cmd
+go build -x -o walker // the '-x' is for debug output
+sudo cp walker /usr/bin/
+```
+
+--------------------------------
+
+### Autostarting Walker as Service in Hyprland
+
+Source: https://github.com/abenz1267/walker/blob/master/README.md
+
+Provides an example configuration line for Hyprland's config file (`hyprland.conf`) to start Walker in background service mode (`--gapplication-service`) automatically when the Hyprland session starts. This allows subsequent calls to `walker` to be faster. Requires Walker to be installed and Hyprland to be your window manager.
+
+```bash
+exec-once=walker --gapplication-service
+```
+
+--------------------------------
+
+### Installing Walker on Arch Linux via yay
+
+Source: https://github.com/abenz1267/walker/blob/master/README.md
+
+Provides commands using the `yay` AUR helper to either install the pre-built binary package (`walker-bin`) or build the application from source (`walker`) on Arch Linux. Requires the `yay` utility to be installed on the system.
+
+```bash
+arch:
+yay -S walker-bin
+
+// or to build from source
+yay -S walker
+```
+
+--------------------------------
+
+### Configuring Walker using Nix Home-Manager Module
+
+Source: https://github.com/abenz1267/walker/blob/master/README.md
+
+Shows an example Nix configuration snippet for home-manager to enable and customize the Walker program. It demonstrates setting options like enabling the service, placeholder text, fullscreen mode, list height, and custom styling using a style string. Requires the Walker home-manager module to be imported into your configuration.
+
+```nix
+programs.walker = {
+  enable = true;
+  runAsService = true;
+
+  # All options from the config.json can be used here.
+  config = {
+    search.placeholder = "Example";
+    ui.fullscreen = true;
+    list = {
+      height = 200;
+    };
+    websearch.prefix = "?";
+    switcher.prefix = "/";
+  };
+
+  # If this is not set the default styling is used.
+  style = ''
+    * {
+      color: #dcd7ba;
+    }
+  '';
+};
+```
+
+--------------------------------
+
+### Disabling Walker Application Cache TOML
+
+Source: https://github.com/abenz1267/walker/blob/master/README.md
+
+This TOML configuration snippet disables the application cache mechanism used by Walker. Setting `cache` to `false` under the `[applications]` section prevents Walker from storing application lists, ensuring that newly installed or removed applications are immediately reflected without needing to clear the cache manually. It requires editing the Walker configuration file.
+
+```toml
+[applications]
+cache = false
+```
+
+--------------------------------
+
+### Adding Walker-git Cachix Binary Cache in Nix
+
+Source: https://github.com/abenz1267/walker/blob/master/README.md
+
+Provides the Nix settings configuration to add the development version Walker binary cache (`walker-git.cachix.org`) as a substituter. This allows Nix to fetch pre-built development snapshots of Walker from the cache. Requires editing the Nix configuration file (e.g., `/etc/nix/nix.conf`).
+
+```nix
+nix.settings = {
+  substituters = ["https://walker-git.cachix.org"];
+  trusted-public-keys = ["walker-git.cachix.org-1:vmC0ocfPWh0S/vRAQGtChuiZBTAe4wiKDeyyXM0/7pM="];
+};
+```
+
+--------------------------------
+
+### Adding Walker Cachix Binary Cache in Nix
+
+Source: https://github.com/abenz1267/walker/blob/master/README.md
+
+Provides the Nix settings configuration to add the standard Walker binary cache (`walker.cachix.org`) as a substituter. This allows Nix to fetch pre-built Walker packages from the cache, potentially speeding up builds. Requires editing the Nix configuration file (e.g., `/etc/nix/nix.conf`).
+
+```nix
+nix.settings = {
+  substituters = ["https://walker.cachix.org"];
+  trusted-public-keys = ["walker.cachix.org-1:fG8q+uAaMqhsMxWjwvk0IMb4mFPFLqHjuvfwQxE4oJM="];
+};
+```
+
+--------------------------------
+
+### Defining a Custom Walker Module Plugin in TOML
+
+Source: https://github.com/abenz1267/walker/blob/master/README.md
+
+Illustrates the TOML syntax for defining a custom external module plugin within Walker's configuration file. It specifies the `prefix` to trigger the module, a descriptive `name`, and the `src` command (e.g., executing a Node.js script) that Walker will run to interact with the plugin. Requires an external script that adheres to Walker's plugin interface via stdin/stdout.
+
+```toml
+[[plugins]]
+prefix = "!"
+name = "mymodule"
+src = "node /path/to/myscript.js"
+```
+
+=== COMPLETE CONTENT === This response contains all available snippets from this library. No additional content exists. Do not make further requests.

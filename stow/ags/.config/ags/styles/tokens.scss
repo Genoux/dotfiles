@@ -1,0 +1,145 @@
+// Design tokens - spacing, typography, and utilities
+// Colors come from Base16 theme (see abstracts/_theme.scss)
+@use "sass:map";
+@use "sass:color";
+@use "./abstracts/theme" as *;
+
+// Spacing scale
+$spacing: (
+    2xs: 2px,
+    xs: 3px,
+    sm: 4px,
+    md: 8px,
+    10: 10px,
+    lg: 12px,
+    14: 14px,
+    15: 15px,
+    xl: 16px,
+    2xl: 24px,
+    3xl: 32px,
+    4xl: 48px,
+);
+
+// Typography
+$typography: (
+    font-family: "SF Pro Text",
+    font-family-mono: "JetBrainsMono Nerd Font Mono",
+    font-size-xs: 10px,
+    font-size-2xs: 11px,
+    font-size-sm: 12px,
+    font-size-base: 14px,
+    font-size-lg: 16px,
+    font-size-xl: 18px,
+    font-size-2xl: 20px,
+    font-size-3xl: 24px,
+    font-weight-normal: 400,
+    font-weight-medium: 500,
+    font-weight-semibold: 600,
+    font-weight-bold: 700,
+    line-height-tight: 1.2,
+    line-height-normal: 1.5,
+    line-height-relaxed: 1.75,
+);
+
+// Border radius
+$radius: (
+    none: 0,
+    xs: 1px,
+    2xs: 2px,
+    sm: 4px,
+    md: 8px,
+    lg: 12px,
+    xl: 16px,
+    full: 9999px,
+);
+
+// Z-index scale
+$z-index: (
+    base: 0,
+    dropdown: 10,
+    sticky: 20,
+    fixed: 30,
+    modal-backdrop: 40,
+    modal: 50,
+    popover: 60,
+    tooltip: 70,
+    notification: 80,
+    overlay: 90,
+    max: 100,
+);
+
+// Animation durations
+$duration: (
+    faster: 100ms,
+    fast: 150ms,
+    normal: 250ms,
+    slow: 350ms,
+    medium: 400ms,
+    slower: 500ms,
+    slowest: 2000ms,
+);
+
+// Easing functions
+$easing: (
+    linear: linear,
+    ease: ease,
+    ease-in: ease-in,
+    ease-out: ease-out,
+    ease-in-out: ease-in-out,
+    smooth: cubic-bezier(0.4, 0.0, 0.2, 1),
+);
+
+// Opacity scale
+$opacity: (
+    0: 0,
+    10: 0.1,
+    20: 0.2,
+    30: 0.3,
+    40: 0.4,
+    50: 0.5,
+    60: 0.6,
+    70: 0.7,
+    80: 0.8,
+    90: 0.9,
+    100: 1,
+);
+
+// Common colors
+$white: #ffffff;
+$black: #000000;
+$transparent: transparent;
+
+// Alpha overlays
+$alpha-subtle: color.adjust($white, $alpha: -0.98); // Very subtle overlay
+$alpha-light: color.adjust($white, $alpha: -0.95); // Light overlay
+$alpha-medium: color.adjust($white, $alpha: -0.9); // Medium overlay
+$alpha-dark: color.adjust($black, $alpha: 0.5); // Dark overlay
+
+// Helper functions to access tokens
+@function spacing($key) {
+    @return map.get($spacing, $key);
+}
+
+@function typography($key) {
+    @return map.get($typography, $key);
+}
+
+@function radius($key) {
+    @return map.get($radius, $key);
+}
+
+@function z-index($key) {
+    @return map.get($z-index, $key);
+}
+
+@function duration($key) {
+    @return map.get($duration, $key);
+}
+
+@function easing($key) {
+    @return map.get($easing, $key);
+}
+
+@function opacity($key) {
+    @return map.get($opacity, $key);
+}

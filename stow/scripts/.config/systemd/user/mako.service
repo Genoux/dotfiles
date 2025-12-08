@@ -1,0 +1,17 @@
+[Unit]
+Description=Mako Notification Daemon
+Documentation=https://github.com/emersion/mako
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=dbus
+BusName=org.freedesktop.Notifications
+ExecStart=/usr/bin/mako
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=5
+
+[Install]
+WantedBy=graphical-session.target
+

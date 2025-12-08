@@ -1,46 +1,10 @@
-@use "../abstracts/variables" as *;
-@use "../abstracts/mixins" as *;
+@use "../tokens" as *;
+@use "../abstracts/theme" as *;
 
-// =============================================================================
-// Workspaces Widget Styling
-// =============================================================================
 
-.workspaces {
-  .workspace {
-    border-radius: $radius-sm;
-    background: transparent;
-    transition: background-color $transition-normal;
-
-    &:hover:not(.focused) {
-      background: $state-hover;
+.workspace {
+    button {
+        min-width: spacing(14);
     }
 
-    &.focused {
-      background: $state-active;
-    }
-  }
-
-  .dot {
-    background-color: $white;
-    border-radius: $radius-md;
-    transition: min-width $transition-normal;
-    min-height: 2px;
-    min-width: $spacing-md;
-
-    &.focused {
-      background-color: $white;
-      min-width: $spacing-xl;
-      min-height: 2px;
-    }
-
-    &:hover {
-      background-color: $white;
-    }
-  }
-
-  .number {
-    &:hover {
-      color: $white;
-    }
-  }
 }

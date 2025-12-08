@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Dotfiles Manager
+Comment=Manage dotfiles configuration
+Icon=help-contents
+Exec=/home/john/dotfiles/bin/dotfiles-menu
+Terminal=false
+Categories=System;Settings;Utility;
+Keywords=dotfiles;config;theme;packages;
+StartupNotify=true

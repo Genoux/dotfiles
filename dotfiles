@@ -1,0 +1,296 @@
+#!/bin/bash
+# Dotfiles Daily Management CLI
+
+# Get dotfiles directory (follow symlinks)
+SCRIPT_PATH="${BASH_SOURCE[0]}"
+while [[ -L "$SCRIPT_PATH" ]]; do
+    SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
+    SCRIPT_PATH="$(readlink "$SCRIPT_PATH")"
+    [[ "$SCRIPT_PATH" != /* ]] && SCRIPT_PATH="$SCRIPT_DIR/$SCRIPT_PATH"
+done
+export DOTFILES_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
+export DOTFILES_INSTALL="$DOTFILES_DIR/install"
+
+# Load helpers
+source "$DOTFILES_DIR/install/helpers/all.sh"
+
+# Bootstrap: ensure tte is installed for banner animation
+if ! command -v tte &>/dev/null; then
+    if command -v yay &>/dev/null; then
+        echo "Installing banner animation..."
+        yay -S --noconfirm python-terminaltexteffects >/dev/null 2>&1
+    fi
+fi
+
+# Initialize logging for daily operations
+init_logging "daily"
+
+# Show usage (gum-powered)
+show_usage() {
+    gum style --bold "Dotfiles Manager"
+    echo
+    echo "Usage: dotfiles <command> [subcommand] [options]"
+    echo
+    echo "Commands:"
+    echo
+    echo "  status               Show system state"
+    echo "  install              Run full installation"
+    echo
+    echo "  packages             Manage packages"
+    echo "    manage                 Interactive package management (default)"
+    echo "    update                 System update (yay -Syu)"
+    echo "    status                 Show package info"
+    echo
+    echo "  config               Manage configurations"
+    echo "    link [name]            Link configs (all or specific)"
+    echo "    unlink [name]          Unlink configs"
+    echo "    status                 Show link status"
+    echo
+    echo "  system               System-level configurations"
+    echo "    apply                  Apply system configs"
+    echo "    status                 Show system info"
+    echo
+    echo "  theme                Manage theme"
+    echo "    select                 Select and apply theme"
+    echo "    install-gtk            Install GTK theme"
+    echo "    status                 Show theme info"
+    echo
+    echo "  shell                Shell management"
+    echo "    setup                  Setup zsh + omz + plugins"
+    echo "    status                 Show shell info"
+    echo
+    echo "  hyprland             Hyprland configuration"
+    echo "    setup                  Setup plugins and monitors"
+    echo "    status                 Show Hyprland info"
+    echo
+    echo "  menu                 Show interactive menu"
+}
+
+# Show overall system status
+show_status() {
+    clear_screen "System Status"
+    
+    # Hardware info
+    show_hardware_info
+    
+    # Package status
+    source "$DOTFILES_DIR/lib/package.sh"
+    packages_status
+    echo
+    
+    # Config status
+    source "$DOTFILES_DIR/lib/config.sh"
+    config_status
+    echo
+    
+    # Theme status
+    source "$DOTFILES_DIR/lib/theme.sh"
+    theme_status
+    echo
+    
+    # Shell status
+    source "$DOTFILES_DIR/lib/shell.sh"
+    shell_status
+    echo
+    
+    # Hyprland status
+    source "$DOTFILES_DIR/lib/hyprland.sh"
+    hyprland_status
+}
+
+# Display system.txt with TTE animation
+# Always animates the banner when displaying
+display_system_banner() {
+    if [[ ! -f "$DOTFILES_DIR/system.txt" ]]; then
+        return
+    fi
+
+    # Use Python script to animate banner
+    local python_script="$DOTFILES_DIR/system-text.py"
+    if [[ ! -f "$python_script" ]]; then
+        return
+    fi
+
+    # Run animation script
+    # Parameters: banner_file, effect, frame_rate
+    # Effects: print, slide, beams
+    # frame_rate: 100 = default, higher = slower, lower = faster
+    echo
+    python3 "$python_script" "$DOTFILES_DIR/system.txt" 900 2>/dev/null
+    
+    # Reset terminal state after animation
+    tput cnorm 2>/dev/null || true
+    printf '\033[0m'  # Reset all attributes
+}
+
+# Interactive menu
+show_menu() {
+    while true; do
+        # Check if terminal was deleted (orphaned process)
+        if [[ -t 0 ]] && readlink /proc/self/fd/0 2>/dev/null | grep -q "deleted"; then
+            log_error "Terminal lost. Exiting menu."
+            exit 1
+        fi
+
+        clear
+        display_system_banner
+
+        local action=$(choose_option --selected "System Status" \
+            "System Status" \
+            "Full Install" \
+            "Packages" \
+            "Configs" \
+            "System" \
+            "Themes" \
+            "Shell" \
+            "Hyprland" \
+            "" \
+            "Exit")
+
+        [[ -z "$action" ]] && exit 0  # ESC pressed
+
+        case "$action" in
+            "System Status")
+                show_status
+                pause
+                ;;
+            "Full Install")
+                # Exit menu and run installation with clean screen
+                clear
+                exec bash "$DOTFILES_DIR/install.sh"
+                ;;
+            "Packages")
+                source "$DOTFILES_DIR/lib/package.sh"
+                packages_menu
+                ;;
+            "Configs")
+                source "$DOTFILES_DIR/lib/config.sh"
+                config_menu
+                ;;
+            "System")
+                source "$DOTFILES_DIR/lib/system.sh"
+                system_menu
+                ;;
+            "Themes")
+                source "$DOTFILES_DIR/lib/theme.sh"
+                theme_menu
+                ;;
+            "Shell")
+                source "$DOTFILES_DIR/lib/shell.sh"
+                shell_menu
+                ;;
+            "Hyprland")
+                source "$DOTFILES_DIR/lib/hyprland.sh"
+                hyprland_menu
+                ;;
+            "Exit")
+                clear
+                log_success "Goodbye!"
+                exit 0
+                ;;
+            "")
+                continue
+                ;;
+        esac
+    done
+}
+
+
+# Main command routing
+main() {
+    local command="${1:-menu}"
+    local subcommand="${2:-}"
+    local arg3="${3:-}"
+    
+    case "$command" in
+        status)
+            show_status
+            ;;
+        install)
+            clear
+            exec bash "$DOTFILES_DIR/install.sh"
+            ;;
+        packages|pkg)
+            source "$DOTFILES_DIR/lib/package.sh"
+            case "$subcommand" in
+                manage|"") packages_manage ;;
+                update) packages_update || exit $? ;;
+                status) packages_status ;;
+                *) log_error "Unknown subcommand: $subcommand"; show_usage; exit 1 ;;
+            esac
+            ;;
+        config|cfg)
+            source "$DOTFILES_DIR/lib/config.sh"
+            case "$subcommand" in
+                link) 
+                    if [[ -n "$arg3" ]]; then
+                        config_link "$arg3"
+                    else
+                        config_link_all
+                    fi
+                    ;;
+                unlink)
+                    if [[ -n "$arg3" ]]; then
+                        config_unlink "$arg3"
+                    else
+                        config_unlink_all
+                    fi
+                    ;;
+                status|"") config_status ;;
+                *) log_error "Unknown subcommand: $subcommand"; show_usage; exit 1 ;;
+            esac
+            ;;
+        system)
+            source "$DOTFILES_DIR/lib/system.sh"
+            case "$subcommand" in
+                apply) system_apply ;;
+                status|"") system_status ;;
+                *) log_error "Unknown subcommand: $subcommand"; show_usage; exit 1 ;;
+            esac
+            ;;
+        theme)
+            source "$DOTFILES_DIR/lib/theme.sh"
+            case "$subcommand" in
+                select) theme_select ;;
+                apply) theme_apply ;;
+                install-gtk) theme_install_gtk ;;
+                status|"") theme_status ;;
+                *) log_error "Unknown subcommand: $subcommand"; show_usage; exit 1 ;;
+            esac
+            ;;
+        shell)
+            source "$DOTFILES_DIR/lib/shell.sh"
+            case "$subcommand" in
+                setup) shell_setup ;;
+                status|"") shell_status ;;
+                *) log_error "Unknown subcommand: $subcommand"; show_usage; exit 1 ;;
+            esac
+            ;;
+        hyprland)
+            source "$DOTFILES_DIR/lib/hyprland.sh"
+            case "$subcommand" in
+                setup) hyprland_setup_all ;;
+                status|"") hyprland_status ;;
+                *) log_error "Unknown subcommand: $subcommand"; show_usage; exit 1 ;;
+            esac
+            ;;
+        menu)
+            show_menu
+            ;;
+        help|--help|-h|"")
+            show_usage
+            ;;
+        *)
+            log_error "Unknown command: $command"
+            show_usage
+            exit 1
+            ;;
+    esac
+    
+    # Finish logging
+    finish_logging
+}
+
+# Run main
+main "$@"
+

@@ -217,27 +217,30 @@ trap 'setGeometry' WINCH	# respond to window resize
 IFS=$'\n'	# delimit by newline
 ((! nfetch)) && tabs 4
 
-# define colors
+# define colors - using bright theme colors
 BOLD="$(tput bold)"
 RESET="$(tput sgr0)"
 if ((termColors)); then
-	BROWN="$BOLD$(tput setaf 11)"
-	DARK_BROWN="$(tput setaf 3)"
-	DARK_GREEN="$BOLD$(tput setaf 10)"
-	GREEN="$(tput setaf 2)"
-	GRAY="$BOLD$(tput setaf 8)"
+	BROWN="$BOLD$(tput setaf 11)"    # bright yellow (stem highlight)
+	DARK_BROWN="$BOLD$(tput setaf 3)" # yellow (stem)
+	DARK_GREEN="$BOLD$(tput setaf 10)" # bright green (dying)
+	GREEN="$BOLD$(tput setaf 2)"     # green (leaves)
+	GRAY="$BOLD$(tput setaf 14)"     # bright cyan
+	ACCENT="$BOLD$(tput setaf 15)"   # bright white (pot)
 elif ((nfetch)); then
-	BROWN='${c1}'
-	DARK_BROWN='${c2}'
-	DARK_GREEN='${c3}'
-	GREEN='${c4}'
-	GRAY='${c5}'
+	BROWN='${c3}'      # yellow (stem highlight)
+	DARK_BROWN='${c5}' # magenta (stem)
+	DARK_GREEN='${c2}' # green (dying)
+	GREEN='${c6}'      # cyan (leaves)
+	GRAY='${c6}'       # cyan
+	ACCENT='${c7}'     # white (pot)
 else
-	BROWN='\e[38;5;172m'
-	DARK_BROWN='\e[38;5;130m'
-	DARK_GREEN='\e[38;5;142m'
-	GREEN='\e[38;5;106m'
-	GRAY='\e[38;5;243m'
+	BROWN='\e[38;5;249m'   # light gray (stem highlight)
+	DARK_BROWN='\e[38;5;245m' # medium gray (stem)
+	DARK_GREEN='\e[38;5;251m' # lighter gray (dying)
+	GREEN='\e[38;5;253m'   # near white (leaves)
+	GRAY='\e[38;5;251m'    # lighter gray
+	ACCENT='\e[38;5;255m'  # bright white (pot)
 fi
 
 # create ascii base in lines
@@ -245,7 +248,7 @@ case "$baseType" in
 	1)
 		width=15
 		art="\
-${GRAY}:${GREEN}___________${DARK_BROWN}./~~\\.${GREEN}___________${GRAY}:
+${ACCENT}:${GREEN}___________${DARK_BROWN}./~~\\.${GREEN}___________${ACCENT}:
  \\                          /
   \\________________________/
   (_)                    (_)"
@@ -254,7 +257,7 @@ ${GRAY}:${GREEN}___________${DARK_BROWN}./~~\\.${GREEN}___________${GRAY}:
 	2)
 		width=7
 		art="\
-${GRAY}(${GREEN}---${DARK_BROWN}./~~\\.${GREEN}---${GRAY})
+${ACCENT}(${GREEN}---${DARK_BROWN}./~~\\.${GREEN}---${ACCENT})
  (          )
   (________)"
 		;;
@@ -262,7 +265,7 @@ ${GRAY}(${GREEN}---${DARK_BROWN}./~~\\.${GREEN}---${GRAY})
 	3)
 		width=15
 		art="\
-${GRAY}╓${GREEN}───────────${DARK_BROWN}╭╱⎨⏆╲╮${GREEN}───────────${GRAY}╖
+${ACCENT}╓${GREEN}───────────${DARK_BROWN}╭╱⎨⏆╲╮${GREEN}───────────${ACCENT}╖
 ║                            ║
 ╟────────────────────────────╢
 ╟────────────────────────────╢

@@ -1,14 +1,29 @@
-@use "../abstracts/variables" as *;
-@use "../abstracts/mixins" as *;
+@use "../abstracts/theme" as *;
+@use "../tokens" as *;
+@use "sass:color";
 
-window.Bar {  
-  @include text-primary;
+.bar {
+  background-color: $transparent;
+  padding: 0 spacing(md);
+  margin-bottom: spacing(sm);
+  // Smooth transitions for all bar animations
+  transition: all duration(medium) easing(smooth),
+    opacity duration(medium) easing(smooth),
+    transform duration(medium) easing(smooth);
 
-  .bar-container {
-    .bar-section {
-      padding: $spacing-sm;
-      border-radius: $radius-md;
-      background: $bg-translucent;
-    }
+  // Revealer smooth crossfade animation
+  revealer {
+    transition: all duration(medium) easing(smooth);
+  }
+
+  // Enhanced fade animation when bar appears/disappears
+  &.hidden {
+    opacity: opacity(0);
+    transform: translateY(spacing(10));
+  }
+
+  &.visible {
+    opacity: opacity(100);
+    transform: translateY(0);
   }
 }

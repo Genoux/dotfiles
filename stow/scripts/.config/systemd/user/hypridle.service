@@ -1,0 +1,17 @@
+[Unit]
+Description=Hypridle Idle Management Daemon
+Documentation=https://github.com/hyprwm/hypridle
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/hypridle
+Restart=on-failure
+RestartSec=3
+KillMode=mixed
+TimeoutStopSec=5
+
+[Install]
+WantedBy=graphical-session.target
+

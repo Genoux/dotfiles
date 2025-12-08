@@ -1,17 +1,6 @@
-@use "../abstracts/variables" as *;
-@use "../abstracts/mixins" as *;
-
-// =============================================================================
-// Window Title Widget Styling
-// =============================================================================
+@use "../tokens" as *;
+@use "../abstracts/theme" as *;
 
 .window-title {
-  box {
-    padding: 0 $spacing-md;
-
-    icon {
-      color: $white;
-      opacity: 0.9;
-    }
-  }
+  .window-title__container {}
 }

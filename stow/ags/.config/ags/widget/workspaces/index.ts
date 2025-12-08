@@ -1,1 +1,1 @@
-export { default as Workspaces } from "./components/Workspaces"
+export { Workspaces } from "./components/Workspaces";

@@ -1,0 +1,25 @@
+show_actions = true
+only_search_title = true
+history = true
+history_when_empty = true
+blacklist = [
+  "electron\\d+",
+  "avahi.*",
+  "bssh",
+  "bvnc",
+  "vncviewer",
+  "x11vnc",
+  ".*-handler$",
+  ".*-agent$",
+  ".*-daemon$",
+  ".*demo.*",
+  ".*-demo$",
+  ".*widget.*factory.*",
+  "jconsole.*",
+  "jshell.*",
+  "qdbusviewer",
+  "polkit.*authentication.*",
+  "gcr-.*",
+  "geoclue-.*",
+  ".*xwayland.*",
+]

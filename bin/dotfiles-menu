@@ -1,0 +1,31 @@
+#!/bin/bash
+# Desktop launcher wrapper for dotfiles menu with fixed window size
+
+DOTFILES_DIR="$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" && pwd)"
+
+# Terminal configuration
+TERMINAL="kitty"
+WINDOW_TITLE="Dotfiles Manager"
+WINDOW_CLASS="dotfiles-manager"
+
+# Window size (columns x rows)
+WINDOW_COLS=80
+WINDOW_ROWS=25
+
+# Check if window is already running
+if command -v hyprctl &>/dev/null; then
+    if hyprctl clients | grep -q "^[[:space:]]*title: $WINDOW_TITLE$"; then
+        # Focus the existing window
+        hyprctl dispatch focuswindow title:"$WINDOW_TITLE"
+        exit 0
+    fi
+fi
+
+# Launch in kitty with fixed size
+exec kitty \
+    --class="$WINDOW_CLASS" \
+    --title="$WINDOW_TITLE" \
+    --override "remember_window_size=no" \
+    --override "initial_window_width=${WINDOW_COLS}c" \
+    --override "initial_window_height=${WINDOW_ROWS}c" \
+    "$DOTFILES_DIR/dotfiles" menu

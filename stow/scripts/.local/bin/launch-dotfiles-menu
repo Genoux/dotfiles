@@ -1,0 +1,29 @@
+#!/bin/sh
+# Display dotfiles menu - TUI style, no shell prompt
+# Single instance support - focuses existing window if already running
+
+TERMINAL_TITLE="Dotfiles Manager"
+
+# Get dotfiles directory
+DOTFILES_DIR="$HOME/dotfiles"
+
+# If we're already in display mode (env var set), just run the menu
+if [ "$DOTFILES_MENU_DISPLAY" = "1" ]; then
+    # Run dotfiles menu
+    "$DOTFILES_DIR/dotfiles" menu
+    
+    exit 0
+fi
+
+# Check if Dotfiles Manager window is already running
+if hyprctl clients 2>/dev/null | grep -q "^[[:space:]]*title: $TERMINAL_TITLE$"; then
+    # Focus the existing window
+    hyprctl dispatch focuswindow title:"$TERMINAL_TITLE" 2>/dev/null
+else
+    # Launch new instance with specific size
+    kitty --class=dotfiles-manager --title "$TERMINAL_TITLE" \
+        -o initial_window_width=80c \
+        -o initial_window_height=25c \
+        env DOTFILES_MENU_DISPLAY=1 "$0" 2>/dev/null &
+fi
+

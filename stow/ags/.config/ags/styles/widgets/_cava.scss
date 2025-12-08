@@ -1,24 +1,28 @@
-@use "../abstracts/variables" as *;
-
-// =============================================================================
-// CAVA AUDIO VISUALIZER - CENTER-GROWING ROUNDED BARS
-// =============================================================================
+@use "../tokens" as *;
+@use "../abstracts/theme" as *;
 
 .cava-island {
-  padding: $spacing-sm;
-  
-  .cava-bars {
-      .cava-bar {
-    background: white;
-    border-radius: $radius-xl;
-    transition: all 0.1s ease-out;
-    min-height: 2px; // Minimum height so bars never disappear
-   
+  .cava-bar {
+    background: $white;
+    border-radius: radius(xl);
+    transition: all duration(faster) easing(ease-out);
+    min-height: spacing(2xs);
+    min-width: spacing(2xs);
+    opacity: opacity(80);
+
+    &.cava-bar--active {
+      background: $white;
+      opacity: opacity(100);
     }
   }
 }
 
 .cava-island-empty {
   padding: 0;
-  background: transparent;
+  background: $transparent;
+
+  .cava-wrapper {
+    background: $transparent;
+    padding: spacing(xs);
+  }
 }

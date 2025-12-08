@@ -1,0 +1,17 @@
+[Unit]
+Description=SWWW Wallpaper Daemon
+Documentation=https://github.com/LGFae/swww
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/swww-daemon
+Restart=on-failure
+RestartSec=3
+KillMode=mixed
+TimeoutStopSec=5
+
+[Install]
+WantedBy=graphical-session.target
+

@@ -1,0 +1,15 @@
+@use "../tokens" as *;
+@use "../abstracts/theme" as *;
+@use "../abstracts/reset" as *;
+
+button {
+    @include gtk-reset;
+    border-radius: radius(sm);
+    transition: duration(fast) easing(ease);
+    min-height: spacing(15);
+    padding: spacing(sm) spacing(sm) spacing(xs) spacing(sm);
+
+    &:hover {
+        background-color: $alpha-light;
+    }
+}

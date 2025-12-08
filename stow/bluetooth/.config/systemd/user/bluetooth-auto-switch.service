@@ -1,0 +1,22 @@
+[Unit]
+Description=Auto-switch audio to Bluetooth devices
+After=pipewire.service wireplumber.service
+
+[Service]
+Type=simple
+ExecStart=/bin/bash -c 'pactl subscribe | while read -r event; do \
+  if echo "$event" | grep -q "Event .new. on sink"; then \
+    sleep 1; \
+    DEFAULT_SINK=$(pactl get-default-sink); \
+    if echo "$DEFAULT_SINK" | grep -q "bluez"; then \
+      pactl list sink-inputs short | awk "{print \\$1}" | while read -r stream; do \
+        [ -n "$stream" ] && pactl move-sink-input "$stream" "@DEFAULT_SINK@" 2>/dev/null || true; \
+      done; \
+    fi; \
+  fi; \
+done'
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target

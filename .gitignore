@@ -36,14 +36,6 @@ Thumbs.db
 .tmp/
 temp/
 
-# Wallpaper images only (keep scripts and configs)
-stow/hypr/.config/hypr/wallpapers/*.jpg
-stow/hypr/.config/hypr/wallpapers/*.png
-stow/hypr/.config/hypr/wallpapers/*.webp
-stow/hypr/.config/hypr/wallpapers/*/*.jpg
-stow/hypr/.config/hypr/wallpapers/*/*.png
-stow/hypr/.config/hypr/wallpapers/*/*.webp
-
 # AGS specific
 stow/ags/.config/ags/node_modules/
 stow/ags/.config/ags/@girs/
@@ -53,3 +45,11 @@ stow/ags/.config/ags/*.logmonitors.conf
 # Hyprland specific
 *.backup.*
 stow/hypr/.config/hypr/monitors.conf
+
+# Wallpapers
+stow/hypr/.config/hypr/wallpapers/current/current_wallpaper.jpg
+
+*.bak
+TODO
+
+.cursor

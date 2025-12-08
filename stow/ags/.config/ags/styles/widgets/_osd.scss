@@ -1,31 +1,43 @@
-@use "../abstracts/variables" as *;
-@use "../abstracts/mixins" as *;
+@use "../tokens" as *;
+@use "../abstracts/theme" as *;
+@use "sass:color";
 
-// =============================================================================
-// OSD (ON-SCREEN DISPLAY) WIDGET
-// =============================================================================
+window.volume-osd-window,
+window.volume-osd-window revealer,
+window.brightness-osd-window,
+window.brightness-osd-window revealer {
+  background-color: $transparent;
+  border: none;
+  outline: none;
+  box-shadow: none;
+}
 
-.OSDWindow {
-    .osd-container {
-        border-radius: $radius-md;
-        background: $bg-translucent;
-        margin-bottom: $spacing-2xl;
-        padding: 0 $spacing-xl;
-        
-        .osd-icon {
-            @include icon-base($spacing-xl, 1.0);
-            color: $white;
-            min-width: $spacing-xl;
-            min-height: $spacing-xl;
-        }
-        
-        .osd-slider {
-            @include slider-base($spacing-md, $bg-tertiary, $white);
-        }
-        
-        .osd-label {
-            @include text-primary;
-            opacity: 0.7;
-        }
+.osd {
+  font-size: typography(font-size-base);
+  font-weight: typography(font-weight-normal);
+  box-shadow: none;
+  border-radius: radius(md);
+  margin-bottom: spacing(2xl);
+  padding-top: spacing(md);
+  border: 1px solid $alpha-subtle;
+  background: color.adjust($base00, $alpha: -0.7);
+  color: $white;
+
+  .volume-step-bar,
+  .brightness-step-bar {
+    margin-top: spacing(xs);
+  }
+
+  .volume-step,
+  .brightness-step {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: radius(xs);
+    min-width: spacing(xs);
+    transition: background-color duration(fast) easing(ease);
+
+    &.volume-step-filled,
+    &.brightness-step-filled {
+      background-color: white
     }
+  }
 }

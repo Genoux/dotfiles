@@ -1,135 +1,75 @@
-import { App, Astal, Gtk, Gdk } from "astal/gtk3";
-import { bind } from "astal/binding";
+import app from "ags/gtk4/app";
+import { Astal, Gtk, Gdk } from "ags/gtk4";
 import { Workspaces } from "./workspaces";
+import { SystemTray } from "./systemtray";
 import { WindowTitle } from "./windowtitle";
-import { KeyboardSwitcher } from "./keyboardswitcher";
+import { SystemTemp } from "./systemtemp";
+import { Weather } from "./weather";
 import { TimeDisplay } from "./timedisplay";
-import { WeatherDisplay } from "./weather";
-import { SystemTempDisplay } from "./systemtemp";
-import { BatteryDisplay, batteryVisible } from "./battery";
-import { AudioButton } from "./audiocontrols";
-import { ControlPanelButton } from "./controlpanel";
-import { NotificationButton } from "./notifications";
-import { SystemTray, trayItems } from "./systemtray";
-import { CavaVisualizer, isPlaying } from "./cava";
-import { windowManager } from "./utils";
+import { BluetoothButton } from "./bluetooth";
+import { VolumeButton } from "./volume";
+import { NetworkButton } from "./network";
+import { KeyboardButton } from "./keyboard";
+import { MediaPlayerButton } from "./mediaplayer";
+import { SystemMenuButton } from "./systemmenu";
+import { BatteryButton } from "./battery";
+import { ScreenRecordButton } from "./screenrecord";
+import { SystemInfoButton } from "./systeminfo";
+import { SystemDotfilesButton } from "./systemdotfiles";
+import { PrivacyIndicator } from "./privacy";
 
-
-function LeftSection() {
-  return (
-    <>
-      <box className="bar-section" halign={Gtk.Align.START} spacing={4}>
-        <Workspaces />
-      </box>
-      <SystemTraySection />
-    </>
-
-  );
-}
-
-function CenterSection() {
-  return (
-    <box className="bar-section">
-      <WindowTitle />
-    </box>
-  );
-}
-
-function CavaSection() {
-  return (
-    <box className="bar-section">
-      <CavaVisualizer />
-    </box>
-  );
-}
-
-function SystemTraySection() {
-  return (
-    <box className="bar-section" visible={bind(trayItems).as(items => items.length > 0)}>
-      <SystemTray />
-    </box>
-  );
-}
-
-function WeatherSection() {
-  return (
-    <box className="bar-section" spacing={4}>
-      <WeatherDisplay />
-    </box>
-  );
-}
-
-function SystemTempSection() {
-  return (
-    <box className="bar-section" halign={Gtk.Align.END} spacing={4}>
-      <SystemTempDisplay />
-    </box>
-  );
-}
-
-function BatterySection() {
-  return (
-    <box 
-      className="bar-section" 
-      spacing={4}
-      visible={batteryVisible}
-    >
-      <BatteryDisplay />
-    </box>
-  );
-}
-
-function RightSection() {
-  return (
-    <box className="bar-section" halign={Gtk.Align.END} spacing={0}>
-      <ControlPanelButton />
-      <KeyboardSwitcher />
-      <AudioButton />
-      <TimeDisplay />
-    </box>
-  );
-}
-
-interface BarProps {
-  gdkmonitor: Gdk.Monitor;
-}
-
-export default function Bar({ gdkmonitor }: BarProps) {
-  const { BOTTOM, LEFT, RIGHT } = Astal.WindowAnchor;
+export default function Bar(gdkmonitor: Gdk.Monitor) {
+  const { TOP, LEFT, RIGHT, BOTTOM } = Astal.WindowAnchor;
 
   return (
     <window
-      name="Bar"
-      className="Bar"
+      visible
+      name="bar"
+      class="bar"
       gdkmonitor={gdkmonitor}
       exclusivity={Astal.Exclusivity.EXCLUSIVE}
       anchor={BOTTOM | LEFT | RIGHT}
-      layer={Astal.Layer.OVERLAY}
-      heightRequest={24}
-      marginLeft={8}
-      marginRight={8}
-      marginTop={0}
-      marginBottom={6}
-      application={App}
-      onButtonPressEvent={() => {
-        windowManager.hide("*")
-      }}
+      application={app}
     >
-      <box className="bar-container" hexpand homogeneous>
-        <box halign={Gtk.Align.START} spacing={4}>
-          <LeftSection />
-        </box>
-        <box halign={Gtk.Align.CENTER}>
-          <CenterSection />
-        </box>
-        <box halign={Gtk.Align.END} spacing={4}>
-          <CavaSection />
-          <SystemTempSection />
-          <BatterySection />
-          <WeatherSection />
-          <RightSection />
-        </box>
-      </box>
+      <Gtk.Revealer
+        revealChild={true}
+        transitionType={Gtk.RevealerTransitionType.CROSSFADE}
+        transitionDuration={400}
+        valign={Gtk.Align.CENTER}
+      >
+        <centerbox valign={Gtk.Align.CENTER}>
+          <box $type="start" spacing={4} halign={Gtk.Align.CENTER} vexpand={false} valign={Gtk.Align.CENTER}>
+            <Workspaces />
+            <SystemTray />
+          </box>
+          <box $type="center" valign={Gtk.Align.CENTER} vexpand={false}>
+            <WindowTitle />
+          </box>
+          <box $type="end">
+          <box valign={Gtk.Align.CENTER}>
+              <PrivacyIndicator />
+            </box>
+            <box valign={Gtk.Align.CENTER} marginEnd={6}  marginStart={6}>
+              <MediaPlayerButton />
+            </box>
+           
+            <box spacing={2}>
+              <VolumeButton />
+              <NetworkButton />
+              <BluetoothButton />
+              <ScreenRecordButton />
+              <KeyboardButton />
+              <BatteryButton />
+              <Weather />
+              <SystemTemp />
+              <TimeDisplay />
+              <SystemInfoButton />
+              <SystemDotfilesButton />
+              <SystemMenuButton />
+            </box>
+          </box>
+        </centerbox>
+      </Gtk.Revealer>
     </window>
   );
 }

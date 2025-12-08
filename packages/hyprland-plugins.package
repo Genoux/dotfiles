@@ -1,0 +1,4 @@
+# Hyprland Plugins Configuration
+# Format: plugin_name = repository_url
+
+Hyprspace = https://github.com/KZDKM/Hyprspace

@@ -1,0 +1,29 @@
+# Elephant ArchLinux Packages Provider Configuration
+# Simplified configuration for AUR package search
+icon = "applications-all"
+
+# Basic search settings
+[search]
+mode = "contains"
+by = "name_desc"
+max_results = 50
+
+# Package management commands
+[commands]
+install = "yay -S"
+remove = "yay -Rs"
+update = "yay -Syu"
+info = "yay -Si"
+
+# Display settings
+[display]
+show_descriptions = true
+show_versions = true
+show_sources = true
+show_popularity = true
+
+# Cache settings
+[cache]
+enabled = true
+expiry_minutes = 30
+max_size_mb = 100

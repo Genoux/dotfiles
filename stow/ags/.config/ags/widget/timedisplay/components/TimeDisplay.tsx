@@ -1,13 +1,10 @@
-import { Gtk } from "astal/gtk3"
-import { time } from "../Service"
+import { openCalendar, time } from "../service";
+import { Button } from "../../../lib/components";
 
-// UI Component - 100% Pure UI
-export default function TimeDisplay() {
+export function TimeDisplay() {
   return (
-    <button
-      halign={Gtk.Align.CENTER}
-    >
-      <label label={time()} />
-    </button>
-  )
-} 
+    <Button onClicked={openCalendar}>
+      <label label={time((t) => t)} />
+    </Button>
+  );
+}
