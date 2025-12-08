@@ -7,14 +7,14 @@ export function PrivacyIndicator() {
     <revealer
       revealChild={isAnyActive}
       transitionType={Gtk.RevealerTransitionType.SLIDE_LEFT}
-      transitionDuration={200}
+      transitionDuration={100}
       valign={Gtk.Align.CENTER}
     >
       <box class="privacy-indicator" vexpand={true} valign={Gtk.Align.CENTER} halign={Gtk.Align.CENTER} spacing={2}>
         <revealer
           revealChild={privacy((s) => s.webcam)}
           transitionType={Gtk.RevealerTransitionType.SLIDE_LEFT}
-          transitionDuration={150}
+          transitionDuration={80}
         >
           <button
             class="privacy-btn privacy-btn--webcam"
@@ -32,7 +32,7 @@ export function PrivacyIndicator() {
         <revealer
           revealChild={privacy((s) => s.mic)}
           transitionType={Gtk.RevealerTransitionType.SLIDE_LEFT}
-          transitionDuration={150}
+          transitionDuration={80}
         >
           <button
             class="privacy-btn privacy-btn--mic"
@@ -50,7 +50,7 @@ export function PrivacyIndicator() {
         <revealer
           revealChild={privacy((s) => s.screenrecord)}
           transitionType={Gtk.RevealerTransitionType.SLIDE_LEFT}
-          transitionDuration={150}
+          transitionDuration={80}
         >
           <button
             class="privacy-btn privacy-btn--screenrecord"

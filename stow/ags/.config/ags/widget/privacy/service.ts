@@ -25,9 +25,16 @@ function startMonitoring() {
   monitorProcess = subprocess(
     ["bash", "-c", `
       check_webcam() {
-        # Check if any video device is being used
+        # Check if any video device is being used via lsof
+        # Check each video device individually to avoid glob expansion issues
         for dev in /dev/video*; do
-          [ -e "$dev" ] && fuser "$dev" 2>/dev/null | grep -q . && echo 1 && return
+          if [ -e "$dev" ]; then
+            # Use lsof without timeout first (faster), with timeout as fallback
+            if lsof "$dev" 2>/dev/null | grep -q .; then
+              echo 1
+              return
+            fi
+          fi
         done
         echo 0
       }
@@ -71,7 +78,9 @@ function startMonitoring() {
       first_run=true
 
       while true; do
+        # Always check webcam to ensure we detect state changes
         cur_webcam=$(check_webcam)
+        
         cur_mic=$(check_mic)
         cur_webcam_mic=$(check_webcam_mic "$cur_webcam")
         cur_screen=$(check_screenrecord)
@@ -93,7 +102,7 @@ function startMonitoring() {
           first_run=false
         fi
 
-        sleep 1
+        sleep 0.05
       done
     `],
     (out) => {
@@ -142,7 +151,8 @@ export function getMicApps(): string[] {
 
 export function getWebcamApps(): string[] {
   try {
-    const out = exec(["bash", "-c", `for dev in /dev/video*; do fuser "$dev" 2>/dev/null; done | xargs -r ps -o comm= -p 2>/dev/null | sort -u`]);
+    // Use lsof with timeout to avoid high CPU usage
+    const out = exec(["bash", "-c", `timeout 0.1 lsof -t /dev/video* 2>/dev/null | xargs -r ps -o comm= -p 2>/dev/null | sort -u`]);
     return out.trim().split("\n").filter(Boolean);
   } catch {
     return [];

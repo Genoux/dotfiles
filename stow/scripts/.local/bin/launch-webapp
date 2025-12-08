@@ -1,0 +1,26 @@
+#!/bin/bash
+
+browser=$(xdg-settings get default-web-browser)
+
+# For --app= mode, we need a Chromium-based browser
+case $browser in
+google-chrome* | brave-browser* | microsoft-edge* | opera* | vivaldi* | helium-browser*)
+    # Already a Chromium-based browser, extract its executable
+    browser_exec=$(sed -n 's/^Exec=\([^ ]*\).*/\1/p' {~/.local,~/.nix-profile,/usr}/share/applications/$browser 2>/dev/null | head -1)
+    ;;
+*)
+    # Try to find a Chromium-based browser
+    for candidate in google-chrome.desktop brave-browser.desktop chromium.desktop microsoft-edge.desktop opera.desktop vivaldi.desktop; do
+        browser_exec=$(sed -n 's/^Exec=\([^ ]*\).*/\1/p' {~/.local,~/.nix-profile,/usr}/share/applications/$candidate 2>/dev/null | head -1)
+        [ -n "$browser_exec" ] && break
+    done
+    ;;
+esac
+
+# Check if we found a browser
+if [ -z "$browser_exec" ]; then
+    echo "Error: Could not find a suitable Chromium-based browser for app mode" >&2
+    exit 1
+fi
+
+exec setsid uwsm app -- "$browser_exec" --enable-features=UseOzonePlatform --ozone-platform=wayland --app="$1" "${@:2}"

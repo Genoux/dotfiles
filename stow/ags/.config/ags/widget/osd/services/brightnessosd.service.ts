@@ -1,4 +1,5 @@
 import { createState } from "ags";
+import { exec } from "ags/process";
 import { timeout, interval } from "ags/time";
 import GLib from "gi://GLib";
 import { createOSDService } from "../../../services/osd";
@@ -9,6 +10,16 @@ const [brightnessState, setBrightnessState] = createState({ brightness: 0 });
 const [brightnessIcon, setBrightnessIcon] = createState("display-brightness-symbolic");
 
 let lastBrightness = 0;
+let hasBacklight = false;
+
+// Check if backlight is available (laptop detection)
+try {
+  const result = exec("sh -c 'ls -d /sys/class/backlight/* 2>/dev/null | head -1 | grep -q . && echo yes || echo no'");
+  hasBacklight = result.trim() === "yes";
+} catch (error) {
+  console.log("No backlight available:", error);
+  hasBacklight = false;
+}
 
 function getBrightnessIcon(brightness: number): string {
   if (brightness <= 0.1) return "display-brightness-off-symbolic";
@@ -35,28 +46,33 @@ function readBrightness(): number {
   }
 }
 
-lastBrightness = readBrightness();
-setBrightnessState({ brightness: lastBrightness });
-setBrightnessIcon(getBrightnessIcon(lastBrightness));
+// Only initialize if backlight is available
+if (hasBacklight) {
+  lastBrightness = readBrightness();
+  setBrightnessState({ brightness: lastBrightness });
+  setBrightnessIcon(getBrightnessIcon(lastBrightness));
 
-interval(100, () => {
-  const currentBrightness = readBrightness();
-  const brightnessChanged = Math.abs(currentBrightness - lastBrightness) > 0.0001;
+  interval(100, () => {
+    const currentBrightness = readBrightness();
+    const brightnessChanged = Math.abs(currentBrightness - lastBrightness) > 0.0001;
 
-  if (brightnessChanged) {
-    lastBrightness = currentBrightness;
-    setBrightnessState({ brightness: currentBrightness });
-    setBrightnessIcon(getBrightnessIcon(currentBrightness));
+    if (brightnessChanged) {
+      lastBrightness = currentBrightness;
+      setBrightnessState({ brightness: currentBrightness });
+      setBrightnessIcon(getBrightnessIcon(currentBrightness));
 
-    if (!osd.initializing) {
-      osd.show();
+      if (!osd.initializing) {
+        osd.show();
+      }
     }
-  }
-});
+  });
 
-timeout(300, () => {
-  osd.finishInitialization();
-});
+  timeout(300, () => {
+    osd.finishInitialization();
+  });
+} else {
+  console.log("Brightness OSD disabled: no backlight detected (desktop system)");
+}
 
 export { osd, brightnessState, brightnessIcon };
 
