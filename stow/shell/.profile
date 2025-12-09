@@ -1,4 +1,4 @@
-export GTK_USE_PORTAL=1
+export GTK_USE_PORTAL=0
 export CHROME_FLAGS="--enable-features=UseOzonePlatform --ozone-platform=wayland"
 [ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
 export HYPRLAND_INSTANCE_SIGNATURE="4e242d086e20b32951fdc0ebcbfb4d41b5be8dcc_1757858270_1207836934"

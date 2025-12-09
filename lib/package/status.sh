@@ -2,6 +2,26 @@
 # Package status display
 
 packages_status() {
+    local updates_only="${1:-}"
+    
+    # If called from System Status, only show updates count
+    if [[ "$updates_only" == "--updates-only" ]]; then
+        
+        # Check for outdated packages
+        if command -v yay &>/dev/null; then
+            local outdated_packages=$(yay -Qu 2>/dev/null)
+            if [[ -n "$outdated_packages" ]]; then
+                local outdated_count=$(echo "$outdated_packages" | wc -l)
+                log_info "Packages with available updates ($outdated_count)"
+                echo
+            else
+                log_info "All packages are up to date"
+                echo
+            fi
+        fi
+        return
+    fi
+
     log_section "Package Status"
 
     # Get package lists
@@ -60,11 +80,7 @@ packages_status() {
         local outdated_packages=$(yay -Qu 2>/dev/null)
         if [[ -n "$outdated_packages" ]]; then
             local outdated_count=$(echo "$outdated_packages" | wc -l)
-            log_info "Packages with available updates ($outdated_count):"
-            echo "$outdated_packages" | while IFS= read -r line; do
-                local pkg_name=$(echo "$line" | awk '{print $1}')
-                echo "  $(status_warning) $pkg_name"
-            done
+            log_info "Packages with available updates ($outdated_count)"
             echo
         fi
     fi

@@ -2,6 +2,7 @@ ags-hyprpanel-git
 app2unit-git
 apple-fonts
 appmenu-glib-translator-git
+arc-gtk-theme
 arduino-ide-bin
 aylurs-gtk-shell-git
 battop
@@ -29,7 +30,8 @@ elephant-providerlist
 elephant-symbols
 elephant-websearch
 elephant-windows
-figma-linux
+fabric-ai
+figma-linux-bin
 gitkraken
 gnu-netcat
 google-breakpad
@@ -62,6 +64,7 @@ libastal-river-git
 libastal-tray-git
 libastal-wireplumber-git
 libcava
+matugen-bin
 minigalaxy
 ngrok
 nordvpn-bin
@@ -84,6 +87,7 @@ slack-desktop
 spotify
 swaylock-effects
 sysc-greet-hyprland
+tinty-git
 ttf-material-design-icons-git
 ttf-rubik-vf
 tzupdate

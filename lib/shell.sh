@@ -387,7 +387,8 @@ shell_menu() {
 
 # Show shell status
 shell_status() {
-    log_section "Shell Status"
+    local skip_title="${1:-}"
+    [[ -z "$skip_title" ]] && log_section "Shell Status"
 
     # Check zsh installation
     if ! command -v zsh &>/dev/null; then

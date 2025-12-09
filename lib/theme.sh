@@ -3,7 +3,6 @@
 
 DOTFILES_DIR="$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" && pwd)"
 THEME_DIR="$DOTFILES_DIR/theme"
-THEME_CONFIG="$THEME_DIR/gtk.json"
 
 # Source helpers if not already loaded
 if [[ -z "${DOTFILES_HELPERS_LOADED:-}" ]]; then
@@ -146,75 +145,6 @@ apply_flavours_theme() {
 }
 
 
-# Apply GTK theme from theme config
-apply_theme_gtk() {
-    if [[ ! -f "$THEME_CONFIG" ]]; then
-        log_info "No GTK theme config found"
-        return 0
-    fi
-
-    if ! command -v gsettings &>/dev/null; then
-        log_warning "gsettings not found - skipping GTK theme"
-        return 0
-    fi
-
-    # Read GTK theme details from theme config
-    local gtk_theme=$(jq -r ".gtk.theme // empty" "$THEME_CONFIG" 2>/dev/null)
-    local icon_theme=$(jq -r ".gtk.icons // empty" "$THEME_CONFIG" 2>/dev/null)
-
-    if [[ -z "$gtk_theme" ]]; then
-        log_info "No GTK theme defined"
-        return 0
-    fi
-
-    log_info "Applying GTK theme..."
-
-    # Check if installed
-    if [[ ! -d "$HOME/.themes/$gtk_theme" ]]; then
-        log_warning "  GTK theme not installed: $gtk_theme"
-        log_info "  Install with: dotfiles theme install-gtk"
-        return 0
-    fi
-
-    # Apply GTK theme
-    gsettings set org.gnome.desktop.interface gtk-theme "$gtk_theme"
-    log_success "  ✓ GTK: $gtk_theme"
-
-    # Apply icon theme if available
-    if [[ -n "$icon_theme" ]] && [[ -d "$HOME/.local/share/icons/$icon_theme" ]]; then
-        gsettings set org.gnome.desktop.interface icon-theme "$icon_theme"
-        log_success "  ✓ Icons: $icon_theme"
-    fi
-
-    # Apply cursor theme if available
-    local cursor_theme=$(jq -r ".gtk.cursor // empty" "$THEME_CONFIG" 2>/dev/null)
-    local cursor_size=$(jq -r ".gtk.cursor_size // 24" "$THEME_CONFIG" 2>/dev/null)
-
-    if [[ -n "$cursor_theme" ]]; then
-        # Check if cursor theme is installed
-        if [[ -d "$HOME/.local/share/icons/$cursor_theme/cursors" ]] || [[ -d "/usr/share/icons/$cursor_theme/cursors" ]]; then
-            gsettings set org.gnome.desktop.interface cursor-theme "$cursor_theme"
-            gsettings set org.gnome.desktop.interface cursor-size "$cursor_size"
-            log_success "  ✓ Cursor: $cursor_theme (size: $cursor_size)"
-
-            # Also set for Hyprland
-            export XCURSOR_THEME="$cursor_theme"
-            export XCURSOR_SIZE="$cursor_size"
-        else
-            log_warning "  ⊘ Cursor theme not installed: $cursor_theme"
-        fi
-    fi
-
-    # Set color scheme based on theme name
-    if [[ "$gtk_theme" =~ -[Dd]ark || "$gtk_theme" =~ -dark ]]; then
-        gsettings set org.gnome.desktop.interface color-scheme "prefer-dark"
-    else
-        gsettings set org.gnome.desktop.interface color-scheme "prefer-light"
-    fi
-
-    return 0
-}
-
 # Select and apply theme interactively
 theme_select() {
     # Ensure flavours is available
@@ -337,10 +267,6 @@ theme_apply() {
     apply_flavours_theme
     echo
 
-    # Apply GTK theme
-    apply_theme_gtk
-    echo
-
     log_success "Theme applied!"
     echo
     log_info "Restart applications to see changes"
@@ -374,7 +300,8 @@ get_scheme_file() {
 
 # Show theme status
 theme_status() {
-    log_section "Theme Status"
+    local skip_title="${1:-}"
+    [[ -z "$skip_title" ]] && log_section "Theme Status"
 
     local current_scheme="none"
     if command -v flavours &>/dev/null || [[ -x "$HOME/.cargo/bin/flavours" ]]; then
@@ -428,93 +355,6 @@ theme_status() {
     fi
 }
 
-# Install GTK theme from theme config
-theme_install_gtk() {
-    if [[ ! -f "$THEME_CONFIG" ]]; then
-        graceful_error "Theme config not found: $THEME_CONFIG"
-        return 1
-    fi
-
-    local name=$(jq -r ".gtk.name // empty" "$THEME_CONFIG")
-    local gtk_repo=$(jq -r ".gtk.install.gtk_repo // empty" "$THEME_CONFIG")
-    local gtk_cmd=$(jq -r ".gtk.install.gtk_cmd // empty" "$THEME_CONFIG")
-    local icons_repo=$(jq -r ".gtk.install.icons_repo // empty" "$THEME_CONFIG")
-    local icons_cmd=$(jq -r ".gtk.install.icons_cmd // empty" "$THEME_CONFIG")
-
-    if [[ -z "$gtk_repo" ]]; then
-        graceful_error "No GTK theme install info in gtk.json"
-        return 1
-    fi
-
-    log_section "Installing GTK Theme"
-
-    if [[ -n "$name" ]]; then
-        show_info "Theme" "$name"
-        echo
-    fi
-
-    local temp_dir=$(mktemp -d)
-    trap "rm -rf '$temp_dir'" RETURN
-
-    local failed=0
-
-    # Install GTK theme
-    log_info "Installing GTK theme from repository..."
-    local repo_name=$(basename "$gtk_repo" .git)
-    echo
-
-    if git clone --depth=1 --progress "$gtk_repo" "$temp_dir/$repo_name"; then
-        echo
-        cd "$temp_dir/$repo_name"
-        log_info "Running GTK theme install script..."
-        if eval "$gtk_cmd"; then
-            echo
-            log_success "GTK theme installed"
-        else
-            echo
-            log_error "GTK theme install failed"
-            ((failed++))
-        fi
-        cd - >/dev/null
-    else
-        echo
-        log_error "Failed to clone GTK repository"
-        ((failed++))
-    fi
-
-    # Install icon theme
-    if [[ -n "$icons_repo" ]]; then
-        echo
-        log_info "Installing icon theme from repository..."
-        local repo_name=$(basename "$icons_repo" .git)
-        echo
-
-        if git clone --depth=1 --progress "$icons_repo" "$temp_dir/$repo_name"; then
-            echo
-            cd "$temp_dir/$repo_name"
-            log_info "Running icon theme install script..."
-            if eval "$icons_cmd"; then
-                echo
-            else
-                echo
-                log_error "Icon theme install failed"
-                ((failed++))
-            fi
-            cd - &>/dev/null
-        else
-            log_error "  ✗ Failed to clone icon repo"
-            ((failed++))
-        fi
-    fi
-
-    echo
-    if [[ $failed -eq 0 ]]; then
-        return 0
-    else
-        log_error "Installation failed with $failed error(s)"
-        return 1
-    fi
-}
 
 # Theme management menu
 theme_menu() {
@@ -527,7 +367,6 @@ theme_menu() {
 
         local action=$(choose_option \
             "Select theme" \
-            "Install GTK theme" \
             "Show details" \
             "Back")
 
@@ -536,9 +375,6 @@ theme_menu() {
         case "$action" in
             "Select theme")
                 run_operation "" theme_select
-                ;;
-            "Install GTK theme")
-                run_operation "" theme_install_gtk
                 ;;
             "Show details")
                 run_operation "" theme_status

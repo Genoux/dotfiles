@@ -73,29 +73,29 @@ show_status() {
     # Hardware info
     show_hardware_info
     
-    # Package status
+    # Package status (only show updates in System Status)
     source "$DOTFILES_DIR/lib/package.sh"
-    packages_status
+    packages_status --updates-only
     echo
     
     # Config status
     source "$DOTFILES_DIR/lib/config.sh"
-    config_status
+    config_status --skip-title
     echo
     
     # Theme status
     source "$DOTFILES_DIR/lib/theme.sh"
-    theme_status
+    theme_status --skip-title
     echo
     
     # Shell status
     source "$DOTFILES_DIR/lib/shell.sh"
-    shell_status
+    shell_status --skip-title
     echo
     
     # Hyprland status
     source "$DOTFILES_DIR/lib/hyprland.sh"
-    hyprland_status
+    hyprland_status --skip-title
 }
 
 # Display system.txt with TTE animation

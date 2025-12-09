@@ -526,7 +526,8 @@ is_symlink_broken() {
 
 # Show config status
 config_status() {
-    log_section "Config Status"
+    local skip_title="${1:-}"
+    [[ -z "$skip_title" ]] && log_section "Config Status"
     
     local configs=($(get_configs))
     local linked_count=0

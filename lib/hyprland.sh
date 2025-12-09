@@ -241,7 +241,8 @@ hyprland_setup() {
 
 # Show Hyprland status
 hyprland_status() {
-    log_section "Hyprland Status"
+    local skip_title="${1:-}"
+    [[ -z "$skip_title" ]] && log_section "Hyprland Status"
 
     if ! command -v hyprctl &>/dev/null; then
         log_error "Hyprland is not installed"

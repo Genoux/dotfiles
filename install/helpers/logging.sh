@@ -80,12 +80,12 @@ start_log_monitor() {
                 tput cup 0 0 2>/dev/null
                 tput ed 2>/dev/null
 
-                # Print spinner line (blue)
+                # Print spinner line (white)
                 local status_line="${spinners[$spinner_index]} Installing ${current_step}..."
                 if [ ${#status_line} -gt $term_width ]; then
                     status_line="${status_line:0:$term_width}"
                 fi
-                printf "\033[94m%s\033[0m\n" "$status_line"
+                printf "\033[97m%s\033[0m\n" "$status_line"
 
                 # Show help text
                 printf "\033[90mPress Ctrl+C to stop installation\033[0m\n"
@@ -113,7 +113,7 @@ start_log_monitor() {
                 if [ ${#status_line} -gt $term_width ]; then
                     status_line="${status_line:0:$term_width}"
                 fi
-                printf "\033[94m%s\033[0m" "$status_line"
+                printf "\033[97m%s\033[0m" "$status_line"
                 tput el 2>/dev/null  # Clear to end of line
             fi
 

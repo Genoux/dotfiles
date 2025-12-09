@@ -265,7 +265,20 @@ packages_manage() {
             if [[ ${#missing_official[@]} -gt 0 ]]; then
                 log_info "Installing ${#missing_official[@]} official packages..."
                 echo
-                printf "1\nY\n" | sudo pacman -S --needed --noconfirm "${missing_official[@]}"
+                if printf "1\nY\n" | sudo pacman -S --needed --noconfirm "${missing_official[@]}"; then
+                    # Verify installation
+                    local failed_official=()
+                    for pkg in "${missing_official[@]}"; do
+                        if ! pacman -Qq "$pkg" &>/dev/null; then
+                            failed_official+=("$pkg")
+                        fi
+                    done
+                    if [[ ${#failed_official[@]} -gt 0 ]]; then
+                        log_warning "Failed to install: ${failed_official[*]}"
+                    fi
+                else
+                    log_error "Failed to install official packages"
+                fi
                 echo
             fi
             
@@ -274,7 +287,20 @@ packages_manage() {
                 ensure_yay_installed
                 log_info "Installing ${#missing_aur[@]} AUR packages..."
                 echo
-                printf "1\nY\n" | yay -S --needed --noconfirm --refresh --answerclean None --answerdiff None --removemake "${missing_aur[@]}"
+                if printf "1\nY\n" | yay -S --needed --noconfirm --refresh --answerclean None --answerdiff None --removemake "${missing_aur[@]}"; then
+                    # Verify installation
+                    local failed_aur=()
+                    for pkg in "${missing_aur[@]}"; do
+                        if ! pacman -Qq "$pkg" &>/dev/null; then
+                            failed_aur+=("$pkg")
+                        fi
+                    done
+                    if [[ ${#failed_aur[@]} -gt 0 ]]; then
+                        log_warning "Failed to install: ${failed_aur[*]}"
+                    fi
+                else
+                    log_error "Failed to install AUR packages"
+                fi
                 echo
             fi
             

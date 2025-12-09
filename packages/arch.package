@@ -153,6 +153,7 @@ qt6ct
 reflector
 ripgrep
 rpi-imager
+rsync
 sassc
 satty
 socat
@@ -163,6 +164,7 @@ stow
 swaync
 swayosd
 swww
+tailscale
 tcpdump
 ttf-fantasque-nerd
 ttf-fira-code
@@ -186,6 +188,7 @@ wireplumber
 woff2-font-awesome
 wol
 x11vnc
+xclip
 xcursor-vanilla-dmz
 xdg-desktop-portal
 xdg-desktop-portal-gtk
