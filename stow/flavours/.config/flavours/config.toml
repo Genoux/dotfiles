@@ -49,10 +49,10 @@ subtemplate = "default"
 rewrite = true
 
 [[items]]
-file = "~/.config/kitty/theme.conf"
+file = "~/.config/kitty/current-theme.conf"
 template = "kitty"
 subtemplate = "default-256"
-hook = "kitty @ load-config"
+hook = "kill -SIGUSR1 $(pgrep kitty)"
 rewrite = true
 
 # [[items]]

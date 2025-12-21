@@ -8,6 +8,7 @@ aylurs-gtk-shell-git
 battop
 caelestia-cli-git
 caelestia-shell-git
+calcure
 caprine-bin
 ch34x-dkms-git
 claude-desktop-bin
@@ -33,11 +34,13 @@ elephant-windows
 fabric-ai
 figma-linux-bin
 gitkraken
+gnome-shell-extension-blur-my-shell
 gnu-netcat
 google-breakpad
 google-chrome
 gpu-screen-recorder
 grimblast-git
+gtk-engine-murrine
 heroic-games-launcher-bin
 http-parser
 hyprfloat
@@ -92,6 +95,7 @@ ttf-material-design-icons-git
 ttf-rubik-vf
 tzupdate
 walker-bin
+warp-terminal-bin
 wego
 wiremix-git
 wl-screenrec

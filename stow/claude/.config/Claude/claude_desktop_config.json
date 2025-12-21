@@ -1,7 +1,4 @@
 {
-  "preferences": {
-    "menuBarEnabled": true
-  },
   "globalShortcut": "",
   "mcpServers": {
     "mcp-obsidian": {
@@ -15,5 +12,8 @@
         "OBSIDIAN_PORT": "27124"
       }
     }
+  },
+  "preferences": {
+    "menuBarEnabled": false
   }
 }

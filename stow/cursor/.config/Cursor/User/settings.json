@@ -1,11 +1,13 @@
 {
-    "workbench.colorTheme": "Catppuccin Mocha",
-    "window.confirmBeforeClose": "always",
-    "window.titleBarStyle": "custom",
-    "window.dialogStyle": "custom",
-    "explorer.confirmDelete": false,
-    "remote.SSH.remotePlatform": {
-        "192.168.86.32": "linux"
-    },
-    "claudeCode.preferredLocation": "panel"
+  "terminal.integrated.fontFamily": "JetBrainsMono Nerd Font",
+  "terminal.integrated.defaultProfile.linux": "zsh",
+  "claudeCode.preferredLocation": "panel",
+  "window.dialogStyle": "custom",
+  "window.confirmBeforeClose": "always",
+  "files.simpleDialog.enable": false,
+  "workbench.iconTheme": "material-icon-theme",
+  "editor.hover.enabled": false,
+  "window.commandCenter": true,
+  "workbench.colorTheme": "Catppuccin Mocha",
+  "editor.fontFamily": "JetBrainsMono Nerd Font Prono, JetBrainsMono Nerd Font"
 }

@@ -8,7 +8,7 @@
 @define-color base04 rgb(171, 171, 171);
 @define-color base05 rgb(185, 185, 185);
 @define-color base06 rgb(227, 227, 227);
-@define-color base07 rgb(247, 247, 247);
+@define-color base07 rgb(255, 255, 255);
 
 /* Base16 accent colors */
 @define-color base08 rgb(124, 124, 124);
@@ -49,7 +49,7 @@
 }
 
 .box-wrapper {
-  background: alpha(@base00, 0.3);
+  background: alpha(@base00, 0.5);
   border: 1px solid @alpha-subtle;
   border-radius: 8px;
   padding: 10px;

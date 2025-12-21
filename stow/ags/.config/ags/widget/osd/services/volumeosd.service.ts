@@ -7,7 +7,6 @@ import { getVolumeIcon } from "../../../services/volume";
 const wp = Wp.get_default();
 const osd = createOSDService(2000);
 
-// Volume-specific state management
 const [volumeState, setVolumeState] = createState({ volume: 0, muted: false });
 const [volumeIcon, setVolumeIcon] = createState("audio-volume-medium-symbolic");
 const [volumeLabel, setVolumeLabel] = createState("0%");
@@ -53,19 +52,16 @@ function setupSpeakerSignals() {
   }
 }
 
+updateVolumeState();
+setupSpeakerSignals();
+
 wp.audio.connect("notify::default-speaker", () => {
   updateVolumeState();
   setupSpeakerSignals();
 });
 
-// Initialize state
-updateVolumeState();
-
-// Connect signals and finish initialization after delay
 timeout(250, () => {
-  setupSpeakerSignals();
   osd.finishInitialization();
 });
 
 export { osd, volumeState, volumeIcon, volumeLabel };
-

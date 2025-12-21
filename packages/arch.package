@@ -5,6 +5,7 @@ base
 base-devel
 bat
 bc
+bind
 blueberry
 bluetui
 brightnessctl
@@ -42,8 +43,8 @@ glfw
 glm
 glu
 gnome-calculator
-gnome-calendar
 gnome-keyring
+gnome-shell
 greetd
 greetd-tuigreet
 gst-plugin-pipewire
@@ -125,7 +126,7 @@ noto-fonts-cjk
 noto-fonts-emoji
 noto-fonts-extra
 npm
-nvidia
+nvidia-dkms
 nvidia-prime
 nvidia-settings
 nvidia-utils
@@ -141,6 +142,7 @@ pipewire
 pipewire-alsa
 pipewire-jack
 pipewire-pulse
+pnpm
 polkit-gnome
 power-profiles-daemon
 prismlauncher

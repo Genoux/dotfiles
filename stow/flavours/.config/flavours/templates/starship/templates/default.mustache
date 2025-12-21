@@ -1,210 +1,134 @@
 "$schema" = 'https://starship.rs/config-schema.json'
 
-# Cleaner, minimal prompt with reduced visual weight
 format = """
+$username\
 $directory\
+${custom.git_host}\
 $git_branch\
-$git_status\
-$character\
-"""
+$git_commit\
+$line_break\
+$character"""
 
-# Reduce scan timeout for faster prompt
 scan_timeout = 10
+
+add_newline = true
+
+[battery]
+disabled = true
+
+[character]
+success_symbol = "[](fg:#{{base0D-hex}})"
+error_symbol = "[](fg:#{{base08-hex}})"
+
+[cmd_duration]
+show_notifications = true
+min_time_to_notify = 60_000
+style = "fg:#{{base05-hex}}"
+
+[git_branch]
+format = "\\[[$symbol$branch]($style)\\]"
+symbol = "󰊢 "
+style = "fg:#{{base07-hex}}"
+
+[git_state]
+format = '\(:[$state( $progress_current/$progress_total)]($style)\)'
+style = "fg:#{{base05-hex}}"
+
+[git_commit]
+style = "fg:#{{base05-hex}}"
+
+[directory]
+truncation_length = 1
+format = "[󰉋](fg:#{{base09-hex}}) [$path](fg:#{{base09-hex}})[$read_only]($read_only_style)"
+read_only = " "
+truncation_symbol = ""
+fish_style_pwd_dir_length = 0
+style = "fg:#{{base07-hex}}"
+read_only_style = "fg:#{{base05-hex}}"
+
+[directory.substitutions]
+"Documents" = "󰈙"
+"Downloads" = ""
+"Music" = "󰝚"
+"Pictures" = ""
+"Developer" = "󰲋"
 
 [username]
 show_always = true
-format = '[$user]($style)'
-style_user = "bold #{{base0A-hex}}"
+style_user = "fg:#{{base07-hex}}"
+style_root = "fg:#{{base08-hex}}"
+format = '[$user ]($style)'
+
+[custom.git_host]
+command = """
+URL=$(command git ls-remote --get-url 2> /dev/null)
+
+if [[ "$URL" =~ "github" ]]; then
+    ICON=" "
+elif [[ "$URL" =~ "gitlab" ]]; then
+    ICON=" "
+elif [[ "$URL" =~ "bitbucket" ]];then
+    ICON=" "
+elif [[ "$URL" =~ "kernel" ]];then
+    ICON=" "
+elif [[ "$URL" =~ "archlinux" ]];then
+    ICON=" "
+elif [[ "$URL" =~ "gnu" ]];then
+    ICON=" "
+elif [[ "$URL" =~ "git" ]];then
+    ICON=" "
+else
+    ICON=" "
+    URL="localhost"
+fi
+
+# Extract username/repo from URL
+for PATTERN in "https://" "http://" "git://" "git@" "ssh://git@"; do
+    [[ "$URL" == "$PATTERN"* ]] && URL="${URL##$PATTERN}"
+done
+
+# Remove port if present (e.g., git@host:port/...)
+# Use bash parameter expansion to remove :port pattern
+case "$URL" in
+    *:[0-9]*/*)
+        # Extract everything before :port and after port/
+        BEFORE_PORT="${URL%%:[0-9]*}"
+        AFTER_PORT="${URL#*:[0-9]*/}"
+        URL="${BEFORE_PORT}/${AFTER_PORT}"
+        ;;
+esac
+
+# Extract host and path
+if [[ "$URL" =~ @ ]]; then
+    # SSH format: git@host:path
+    URL="${URL#*@}"
+    URL="${URL/://}"
+elif [[ "$URL" =~ :// ]]; then
+    # HTTP format: https://host/path
+    URL="${URL#*://}"
+fi
+
+# Remove hostname, keep only path
+if [[ "$URL" =~ / ]]; then
+    URL="${URL#*/}"
+fi
+
+# Remove .git suffix
+URL="${URL%.git}"
+
+# Remove trailing slash
+URL="${URL%/}"
+
+printf "%s%s" "$ICON" "$URL"
+"""
+directories = [".git"]
+when = 'git rev-parse --is-inside-work-tree 2> /dev/null'
+shell = ["bash","--norc","--noprofile"]
+style = "fg:#{{base0A-hex}}"
+format = " at [$output]($style) "
 
 [hostname]
-ssh_only = false
-format = '[@$hostname]($style) '
-style = "bold #{{base0B-hex}}"
+disabled = true
 
-[directory]
-format = '[$path]($style) '
-style = "bold #{{base07-hex}}"
-truncation_length = 3
-truncate_to_repo = true
-
-[git_branch]
-format = '[$symbol$branch]($style) '
-symbol = " "
-style = "#{{base09-hex}}"
-
-[git_status]
-format = '([$all_status$ahead_behind]($style) )'
-style = "bold #{{base07-hex}}"
-conflicted = "="
-ahead = ""
-behind = "⇣"
-diverged = "⇕"
-untracked = ""
-stashed = ""
-modified = ""
-staged = ""
-renamed = "»"
-deleted = ""
-
-[character]
-success_symbol = "[❯](#{{base07-hex}})"
-error_symbol = "[❯](#{{base07-hex}})"
-
-[bun]
-format = "via [$symbol]($style)"
-
-[buf]
-format = "with [$symbol]($style)"
-
-[c]
-format = "via [$symbol($name)]($style)"
-
-[cmake]
-format = "via [$symbol]($style)"
-
-[cobol]
-format = "via [$symbol]($style)"
-
-[cpp]
-format = "via [$symbol($name)]($style)"
-
-[crystal]
-format = "via [$symbol]($style)"
-
-[daml]
-format = "via [$symbol]($style)"
-
-[dart]
-format = "via [$symbol]($style)"
-
-[deno]
-format = "via [$symbol]($style)"
-
-[dotnet]
-format = "[$symbol(🎯 $tfm )]($style)"
-
-[elixir]
-format = 'via [$symbol]($style)'
-
-[elm]
-format = 'via [$symbol]($style)'
-
-[erlang]
-format = 'via [$symbol]($style)'
-
-[fennel]
-format = 'via [$symbol]($style)'
-
-[fortran]
-format = 'via [$symbol]($style)'
-
-[gleam]
-format = 'via [$symbol]($style)'
-
-[golang]
-format = 'via [$symbol]($style)'
-
-[gradle]
-format = 'via [$symbol]($style)'
-
-[haskell]
-format = 'via [$symbol]($style)'
-
-[haxe]
-format = 'via [$symbol]($style)'
-
-[helm]
-format = 'via [$symbol]($style)'
-
-[java]
-format = 'via [$symbol]($style)'
-
-[julia]
-format = 'via [$symbol]($style)'
-
-[kotlin]
-format = 'via [$symbol]($style)'
-
-[lua]
-format = 'via [$symbol]($style)'
-
-[meson]
-format = 'via [$symbol]($style)'
-
-[mojo]
-format = 'with [$symbol]($style)'
-
-[nim]
-format = 'via [$symbol]($style)'
-
-[nodejs]
-format = 'via [$symbol]($style)'
-
-[ocaml]
-format = 'via [$symbol(\($switch_indicator$switch_name\) )]($style)'
-
-[odin]
-format = 'via [$symbol]($style)'
-
-[opa]
-format = 'via [$symbol]($style)'
-
-[perl]
-format = 'via [$symbol]($style)'
-
-[php]
-format = 'via [$symbol]($style)'
-
-[pixi]
-format = 'via [$symbol($environment )]($style)'
-
-[pulumi]
-format = 'via [$symbol$stack]($style)'
-
-[purescript]
-format = 'via [$symbol]($style)'
-
-[python]
-format = 'via [$symbol]($style)'
-
-[quarto]
-format = 'via [$symbol]($style)'
-
-[raku]
-format = 'via [$symbol]($style)'
-
-[red]
-format = 'via [$symbol]($style)'
-
-[rlang]
-format = 'via [$symbol]($style)'
-
-[ruby]
-format = 'via [$symbol]($style)'
-
-[rust]
-format = 'via [$symbol]($style)'
-
-[scala]
-format = 'via [$symbol]($style)'
-
-[solidity]
-format = 'via [$symbol]($style)'
-
-[swift]
-format = 'via [$symbol]($style)'
-
-[typst]
-format = 'via [$symbol]($style)'
-
-[vagrant]
-format = 'via [$symbol]($style)'
-
-[vlang]
-format = 'via [$symbol]($style)'
-
-[xmake]
-format = "via [$symbol]($style)"
-
-[zig]
-format = 'via [$symbol]($style)'
+[line_break]
+disabled = false

@@ -33,7 +33,7 @@ const scrollingText = createPoll("", SCROLL_SPEED, () => {
 export function MediaPlayerButton() {
 
   return (
-    <box spacing={3} class='mediaplayer group' visible={currentPlayerInfo((info) => info !== "No media")}>
+    <box spacing={3} class='mediaplayer group' visible={currentPlayerInfo((info) => info !== "No media" && info !== "Unknown")}>
       <Button onClicked={toggleMediaPanel}>
         <box
           spacing={6}

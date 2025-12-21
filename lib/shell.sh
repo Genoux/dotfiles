@@ -191,6 +191,65 @@ check_starship() {
     return 0  # Don't fail setup if Starship isn't installed
 }
 
+# Check if blur-my-shell extension is installed
+check_blur_my_shell() {
+    # Check if gnome-extensions command is available
+    if ! command -v gnome-extensions &>/dev/null; then
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] GNOME extensions not available, skipping blur-my-shell" >> "$DOTFILES_LOG_FILE"
+        return 0
+    fi
+
+    # Check if extension is already installed
+    if pacman -Qi gnome-shell-extension-blur-my-shell &>/dev/null; then
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] blur-my-shell is already installed" >> "$DOTFILES_LOG_FILE"
+
+        # Enable extension if installed
+        if ! gnome-extensions list | grep -q "blur-my-shell@aunetx"; then
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] Enabling blur-my-shell extension" >> "$DOTFILES_LOG_FILE"
+            gnome-extensions enable blur-my-shell@aunetx &>/dev/null || true
+        fi
+        return 0
+    fi
+
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] blur-my-shell is not installed" >> "$DOTFILES_LOG_FILE"
+
+    # Check if yay is available
+    if ! command -v yay &>/dev/null; then
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Warning: yay not available, skipping blur-my-shell" >> "$DOTFILES_LOG_FILE"
+        return 0
+    fi
+
+    # Stop monitor temporarily for user prompt
+    stop_log_monitor
+    log_warning "blur-my-shell GNOME extension is not installed"
+
+    # Ask user if they want to install
+    if ! confirm "Install blur-my-shell extension? (via yay)"; then
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Skipping blur-my-shell installation" >> "$DOTFILES_LOG_FILE"
+        start_log_monitor
+        return 0
+    fi
+
+    # Restart monitor
+    start_log_monitor
+
+    # Install via yay
+    if run_command_logged "Install blur-my-shell extension" yay -S --needed --noconfirm gnome-shell-extension-blur-my-shell; then
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Completed: blur-my-shell installed" >> "$DOTFILES_LOG_FILE"
+
+        # Enable the extension
+        if command -v gnome-extensions &>/dev/null; then
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] Enabling blur-my-shell extension" >> "$DOTFILES_LOG_FILE"
+            gnome-extensions enable blur-my-shell@aunetx &>/dev/null || true
+        fi
+
+        return 0
+    else
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Warning: Could not install blur-my-shell" >> "$DOTFILES_LOG_FILE"
+        return 0  # Don't fail setup if blur-my-shell isn't installed
+    fi
+}
+
 # Update plugins array in .zshrc
 update_zshrc_plugins() {
     local zshrc_file="$DOTFILES_DIR/stow/shell/.zshrc"
@@ -334,6 +393,9 @@ shell_setup() {
     # Check/install Starship
     check_starship
 
+    # Check/install blur-my-shell extension
+    check_blur_my_shell
+
     # Set default shell
     set_default_shell
 
@@ -457,6 +519,26 @@ shell_status() {
             done
         elif [[ ${#installed_plugins[@]} -eq 0 ]]; then
             echo "$(gum style --foreground 8 "No plugins configured")"
+        fi
+    fi
+
+    # Check blur-my-shell extension
+    if command -v gnome-extensions &>/dev/null; then
+        echo
+        log_info "GNOME Extensions:"
+        if pacman -Qi gnome-shell-extension-blur-my-shell &>/dev/null; then
+            if gnome-extensions list 2>/dev/null | grep -q "blur-my-shell@aunetx"; then
+                local status=$(gnome-extensions info blur-my-shell@aunetx 2>/dev/null | grep "State:" | awk '{print $2}')
+                if [[ "$status" == "ENABLED" ]]; then
+                    echo "$(status_ok) blur-my-shell (enabled)"
+                else
+                    echo "$(status_warning) blur-my-shell (disabled)"
+                fi
+            else
+                echo "$(status_warning) blur-my-shell (installed, not loaded)"
+            fi
+        else
+            echo "$(status_neutral) blur-my-shell (not installed)"
         fi
     fi
 

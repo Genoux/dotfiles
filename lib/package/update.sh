@@ -1,6 +1,33 @@
 #!/bin/bash
 # System package updates and conflict resolution
 
+# Rebuild yay if it's broken (e.g., after libalpm update)
+rebuild_yay_if_broken() {
+    if ! command -v yay &>/dev/null; then
+        return 0
+    fi
+
+    if yay --version &>/dev/null; then
+        return 0
+    fi
+
+    log_warning "yay is broken (likely due to library update), rebuilding..."
+
+    if ! run_command_logged "Rebuild yay" bash -c '
+        cd /tmp
+        rm -rf yay
+        git clone https://aur.archlinux.org/yay.git
+        cd yay
+        makepkg -si --noconfirm
+    '; then
+        log_error "Failed to rebuild yay"
+        return 1
+    fi
+
+    log_success "yay rebuilt successfully"
+    return 0
+}
+
 # Update system packages
 packages_update() {
     # Validate sudo access upfront
@@ -39,6 +66,9 @@ packages_update() {
         log_error "pacman update failed"
         return 1
     fi
+
+    # Rebuild yay if broken (e.g., after libalpm/pacman update)
+    rebuild_yay_if_broken
 
     # Ensure yay is installed for AUR step
     ensure_yay_installed

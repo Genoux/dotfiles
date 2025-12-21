@@ -1,0 +1,134 @@
+"$schema" = 'https://starship.rs/config-schema.json'
+
+format = """
+$username\
+$directory\
+${custom.git_host}\
+$git_branch\
+$git_commit\
+$line_break\
+$character"""
+
+scan_timeout = 10
+
+add_newline = true
+
+[battery]
+disabled = true
+
+[character]
+success_symbol = "[](fg:#686868)"
+error_symbol = "[](fg:#7c7c7c)"
+
+[cmd_duration]
+show_notifications = true
+min_time_to_notify = 60_000
+style = "fg:#b9b9b9"
+
+[git_branch]
+format = "\\[[$symbol$branch]($style)\\]"
+symbol = "󰊢 "
+style = "fg:#ffffff"
+
+[git_state]
+format = '\(:[$state( $progress_current/$progress_total)]($style)\)'
+style = "fg:#b9b9b9"
+
+[git_commit]
+style = "fg:#b9b9b9"
+
+[directory]
+truncation_length = 1
+format = "[󰉋](fg:#999999) [$path](fg:#999999)[$read_only]($read_only_style)"
+read_only = " "
+truncation_symbol = ""
+fish_style_pwd_dir_length = 0
+style = "fg:#ffffff"
+read_only_style = "fg:#b9b9b9"
+
+[directory.substitutions]
+"Documents" = "󰈙"
+"Downloads" = ""
+"Music" = "󰝚"
+"Pictures" = ""
+"Developer" = "󰲋"
+
+[username]
+show_always = true
+style_user = "fg:#ffffff"
+style_root = "fg:#7c7c7c"
+format = '[$user ]($style)'
+
+[custom.git_host]
+command = """
+URL=$(command git ls-remote --get-url 2> /dev/null)
+
+if [[ "$URL" =~ "github" ]]; then
+    ICON=" "
+elif [[ "$URL" =~ "gitlab" ]]; then
+    ICON=" "
+elif [[ "$URL" =~ "bitbucket" ]];then
+    ICON=" "
+elif [[ "$URL" =~ "kernel" ]];then
+    ICON=" "
+elif [[ "$URL" =~ "archlinux" ]];then
+    ICON=" "
+elif [[ "$URL" =~ "gnu" ]];then
+    ICON=" "
+elif [[ "$URL" =~ "git" ]];then
+    ICON=" "
+else
+    ICON=" "
+    URL="localhost"
+fi
+
+# Extract username/repo from URL
+for PATTERN in "https://" "http://" "git://" "git@" "ssh://git@"; do
+    [[ "$URL" == "$PATTERN"* ]] && URL="${URL##$PATTERN}"
+done
+
+# Remove port if present (e.g., git@host:port/...)
+# Use bash parameter expansion to remove :port pattern
+case "$URL" in
+    *:[0-9]*/*)
+        # Extract everything before :port and after port/
+        BEFORE_PORT="${URL%%:[0-9]*}"
+        AFTER_PORT="${URL#*:[0-9]*/}"
+        URL="${BEFORE_PORT}/${AFTER_PORT}"
+        ;;
+esac
+
+# Extract host and path
+if [[ "$URL" =~ @ ]]; then
+    # SSH format: git@host:path
+    URL="${URL#*@}"
+    URL="${URL/://}"
+elif [[ "$URL" =~ :// ]]; then
+    # HTTP format: https://host/path
+    URL="${URL#*://}"
+fi
+
+# Remove hostname, keep only path
+if [[ "$URL" =~ / ]]; then
+    URL="${URL#*/}"
+fi
+
+# Remove .git suffix
+URL="${URL%.git}"
+
+# Remove trailing slash
+URL="${URL%/}"
+
+printf "%s%s" "$ICON" "$URL"
+"""
+directories = [".git"]
+when = 'git rev-parse --is-inside-work-tree 2> /dev/null'
+shell = ["bash","--norc","--noprofile"]
+style = "fg:#a0a0a0"
+format = " at [$output]($style) "
+
+[hostname]
+disabled = true
+
+[line_break]
+disabled = false

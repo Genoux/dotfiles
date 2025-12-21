@@ -14,7 +14,7 @@ border-size=1
 
 
 default-timeout=5000
-ignore-timeout=0
+ignore-timeout=5000
 
 layer=overlay
 anchor=bottom-right

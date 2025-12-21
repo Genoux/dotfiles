@@ -1,7 +1,6 @@
 import { createState } from "ags";
-import { exec } from "ags/process";
+import { exec, execAsync } from "ags/process";
 import { timeout, interval } from "ags/time";
-import GLib from "gi://GLib";
 import { createOSDService } from "../../../services/osd";
 
 const osd = createOSDService(2000);
@@ -11,10 +10,14 @@ const [brightnessIcon, setBrightnessIcon] = createState("display-brightness-symb
 
 let lastBrightness = 0;
 let hasBacklight = false;
+let isReading = false;
+let consecutiveErrors = 0;
+const MAX_ERRORS = 5;
 
-// Check if backlight is available (laptop detection)
 try {
-  const result = exec("sh -c 'ls -d /sys/class/backlight/* 2>/dev/null | head -1 | grep -q . && echo yes || echo no'");
+  const result = exec(
+    "sh -c 'ls -d /sys/class/backlight/* 2>/dev/null | head -1 | grep -q . && echo yes || echo no'"
+  );
   hasBacklight = result.trim() === "yes";
 } catch (error) {
   console.log("No backlight available:", error);
@@ -28,42 +31,58 @@ function getBrightnessIcon(brightness: number): string {
   return "display-brightness-high-symbolic";
 }
 
-function readBrightness(): number {
+async function readBrightnessAsync(): Promise<number> {
   try {
-    const [ok1, stdout1] = GLib.spawn_command_line_sync("brightnessctl get");
-    if (!ok1 || !stdout1) throw new Error("Failed to run 'brightnessctl get'");
-    const current = parseInt(new TextDecoder().decode(stdout1).trim());
+    const currentStr = await execAsync("brightnessctl get");
+    const maxStr = await execAsync("brightnessctl max");
 
-    const [ok2, stdout2] = GLib.spawn_command_line_sync("brightnessctl max");
-    if (!ok2 || !stdout2) throw new Error("Failed to run 'brightnessctl max'");
-    const max = parseInt(new TextDecoder().decode(stdout2).trim());
+    const current = parseInt(currentStr.trim());
+    const max = parseInt(maxStr.trim());
 
-    if (isNaN(current) || isNaN(max) || max === 0) return 0;
+    if (isNaN(current) || isNaN(max) || max === 0) {
+      throw new Error("Invalid brightness values");
+    }
+
+    consecutiveErrors = 0;
     return current / max;
   } catch (error) {
-    console.error("Failed to read brightness:", error);
-    return 0;
+    consecutiveErrors++;
+    if (consecutiveErrors <= 3) {
+      console.error("Failed to read brightness:", error);
+    }
+    if (consecutiveErrors === MAX_ERRORS) {
+      console.error(`Brightness polling failed ${MAX_ERRORS} times, may indicate hardware issue`);
+    }
+    return lastBrightness;
   }
 }
 
-// Only initialize if backlight is available
 if (hasBacklight) {
-  lastBrightness = readBrightness();
-  setBrightnessState({ brightness: lastBrightness });
-  setBrightnessIcon(getBrightnessIcon(lastBrightness));
+  readBrightnessAsync().then((initialBrightness) => {
+    lastBrightness = initialBrightness;
+    setBrightnessState({ brightness: initialBrightness });
+    setBrightnessIcon(getBrightnessIcon(initialBrightness));
+  });
 
-  interval(100, () => {
-    const currentBrightness = readBrightness();
-    const brightnessChanged = Math.abs(currentBrightness - lastBrightness) > 0.0001;
+  interval(250, async () => {
+    if (isReading) return;
 
-    if (brightnessChanged) {
-      lastBrightness = currentBrightness;
-      setBrightnessState({ brightness: currentBrightness });
-      setBrightnessIcon(getBrightnessIcon(currentBrightness));
+    isReading = true;
+    try {
+      const currentBrightness = await readBrightnessAsync();
+      const brightnessChanged = Math.abs(currentBrightness - lastBrightness) > 0.0001;
 
-      if (!osd.initializing) {
-        osd.show();
+      if (brightnessChanged && currentBrightness !== lastBrightness) {
+        lastBrightness = currentBrightness;
+        setBrightnessState({ brightness: currentBrightness });
+        setBrightnessIcon(getBrightnessIcon(currentBrightness));
+
+        if (!osd.initializing) {
+          osd.show();
+        }
       }
+    } finally {
+      isReading = false;
     }
   });
 
@@ -75,4 +94,3 @@ if (hasBacklight) {
 }
 
 export { osd, brightnessState, brightnessIcon };
-

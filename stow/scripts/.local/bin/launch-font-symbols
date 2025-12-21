@@ -1,0 +1,215 @@
+#!/usr/bin/env bash
+# Browse Nerd Font symbols interactively
+
+# Common Nerd Font symbol categories
+declare -A SYMBOLS=(
+    # Git
+    ["Git Branch"]="󰘬"
+    ["Git Branch Alt"]="󰁨"
+    ["Git Commit"]="󰜘"
+    ["Git Merge"]="󰘭"
+    ["Git Pull"]="󰘯"
+    ["Git Push"]="󰘰"
+    ["Git Status"]="󰊢"
+    ["Git Repo"]="󰊢"
+    ["Git Tag"]="󰓅"
+    
+    # OS/Distro
+    ["Arch Linux"]="󰣇"
+    ["Ubuntu"]="󰕈"
+    ["Debian"]="󰣚"
+    ["Fedora"]="󰣛"
+    ["Linux"]="󰌽"
+    ["Windows"]=""
+    ["MacOS"]="󰀵"
+    ["Gentoo"]="󰣨"
+    ["Manjaro"]="󰣒"
+    ["SUSE"]="󰔔"
+    ["Raspbian"]="󰐿"
+    ["Mint"]="󰣭"
+    ["Alpine"]="󰌀"
+    ["Amazon"]="󰉰"
+    ["Android"]="󰎤"
+    ["CentOS"]="󰄄"
+    ["RedHat"]="󰱄"
+    ["Artix"]="󰣇"
+    
+    # Directories
+    ["Documents"]="󰈙"
+    ["Downloads"]="󰏔"
+    ["Music"]="󰝚"
+    ["Pictures"]="󰋼"
+    ["Videos"]="󰕧"
+    ["Developer"]="󰲋"
+    ["Home"]="󰋜"
+    
+    # File Types
+    ["File"]="󰈔"
+    ["Folder"]="󰉋"
+    ["Image"]="󰋼"
+    ["Video"]="󰕧"
+    ["Audio"]="󰝚"
+    ["Archive"]="󰆼"
+    ["Code"]="󰨞"
+    ["Config"]="󰒓"
+    
+    # Time/Date
+    ["Clock"]="󰥔"
+    ["Clock Alt"]="󰐺"
+    ["Calendar"]="󰃭"
+    ["Time"]="󰥔"
+    ["Stopwatch"]="󱎫"
+    
+    # Status
+    ["Success"]="󰄬"
+    ["Error"]="󰅖"
+    ["Warning"]="󰀪"
+    ["Info"]="󰋼"
+    
+    # Arrows
+    ["Arrow Right"]="󰁔"
+    ["Arrow Left"]="󰁍"
+    ["Arrow Up"]="󰁝"
+    ["Arrow Down"]="󰁠"
+    
+    # Power
+    ["Battery"]="󰁹"
+    ["Power"]="󰐥"
+    ["Plug"]="󰚥"
+    
+    # Network
+    ["WiFi"]="󰤨"
+    ["Ethernet"]="󰈀"
+    ["Bluetooth"]="󰂯"
+    
+    # Media
+    ["Play"]="󰐊"
+    ["Pause"]="󰏤"
+    ["Stop"]="󰓛"
+    ["Volume"]="󰕾"
+    
+    # Tools
+    ["Terminal"]="󰆍"
+    ["Editor"]="󰨞"
+    ["Browser"]="󰖟"
+    ["Settings"]="󰒓"
+    ["Gear"]="󰒓"
+    ["Wrench"]="󰏬"
+    
+    # Separators/Arrows (Powerline)
+    ["Separator Right"]=""
+    ["Separator Right Round"]=""
+    ["Separator Right Thick"]=""
+    ["Separator Left"]=""
+    ["Separator Left Round"]=""
+    
+    # Common Starship symbols
+    ["Starship Prompt"]="❯"
+    ["Starship Success"]="❯"
+    ["Starship Error"]="✖"
+    ["Starship Vim"]="V"
+    
+    # Programming Languages
+    ["Python"]="󰌠"
+    ["JavaScript"]="󰌞"
+    ["TypeScript"]="󰛦"
+    ["Rust"]="󰀵"
+    ["Go"]="󰟓"
+    ["Java"]="󰬷"
+    ["C"]="󰙱"
+    ["C++"]="󰙲"
+    ["Shell"]="󰆍"
+    ["Bash"]="󰆍"
+    ["Zsh"]="󰆍"
+    
+    # Package Managers
+    ["NPM"]="󰎙"
+    ["Yarn"]="󰎚"
+    ["Cargo"]="󰏗"
+    ["Pip"]="󰏗"
+    
+    # Cloud/Services
+    ["Docker"]="󰡨"
+    ["Kubernetes"]="󰟳"
+    ["AWS"]="󰉰"
+    ["Azure"]="󰠅"
+    ["GCP"]="󰠅"
+    
+    # Version Control
+    ["GitHub"]="󰊤"
+    ["GitLab"]="󰬧"
+    ["Bitbucket"]="󰊞"
+)
+
+# Function to search and copy symbol using fzf
+search_symbol() {
+    local category_filter="$1"
+    local selected
+    
+    # Build symbol list with format: "Name | Symbol"
+    local symbol_list
+    if [[ -n "$category_filter" ]]; then
+        # Filter by category pattern
+        symbol_list=$(for key in "${!SYMBOLS[@]}"; do
+            if echo "$key" | grep -qiE "$category_filter"; then
+                printf "%s | %s\n" "$key" "${SYMBOLS[$key]}"
+            fi
+        done | sort)
+    else
+        # All symbols
+        symbol_list=$(for key in "${!SYMBOLS[@]}"; do
+            printf "%s | %s\n" "$key" "${SYMBOLS[$key]}"
+        done | sort)
+    fi
+    
+    if [[ -z "$symbol_list" ]]; then
+        echo "No symbols found in this category."
+        return 1
+    fi
+    
+    # Use fzf for search and selection
+    if command -v fzf &> /dev/null; then
+        selected=$(echo "$symbol_list" | fzf \
+            --header "Search symbols (type to filter, Enter to select, Esc to cancel)" \
+            --preview 'echo {} | cut -d"|" -f2 | xargs' \
+            --preview-window=up:3 \
+            --height=80% \
+            --border \
+            --ansi)
+    elif command -v gum &> /dev/null; then
+        # Fallback to gum if fzf not available
+        selected=$(echo "$symbol_list" | gum choose --header "Select a symbol to copy")
+    else
+        # Fallback to basic selection
+        echo "Available symbols:"
+        echo "$symbol_list" | nl
+        read -p "Enter number: " num
+        selected=$(echo "$symbol_list" | sed -n "${num}p")
+    fi
+    
+    if [[ -n "$selected" ]]; then
+        local name=$(echo "$selected" | cut -d'|' -f1 | xargs)
+        local symbol=$(echo "$selected" | cut -d'|' -f2 | xargs)
+        
+        # Copy to clipboard if available
+        if command -v wl-copy &> /dev/null; then
+            echo -n "$symbol" | wl-copy
+            echo "✓ Copied '$name' symbol: $symbol"
+        elif command -v xclip &> /dev/null; then
+            echo -n "$symbol" | xclip -selection clipboard
+            echo "✓ Copied '$name' symbol: $symbol"
+        else
+            echo "Symbol '$name': $symbol"
+            echo "Install wl-copy or xclip to copy to clipboard"
+        fi
+    fi
+}
+
+# Main - just open fzf search directly
+main() {
+    # Optional category filter from command line argument
+    local category_filter="${1:-}"
+    search_symbol "$category_filter"
+}
+
+main "$@"
