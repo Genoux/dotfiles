@@ -102,7 +102,7 @@ function startMonitoring() {
           first_run=false
         fi
 
-        sleep 0.05
+        sleep 1
       done
     `],
     (out) => {

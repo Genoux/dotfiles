@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Idleon Web
+Comment=Play Legends of Idleon in browser
+Exec=google-chrome-stable --app=https://www.legendsofidleon.com/ytGl5oc/
+Icon=/home/john/.local/share/icons/idleon-web.png
+Terminal=false
+Categories=Game;
+StartupWMClass=Google-chrome

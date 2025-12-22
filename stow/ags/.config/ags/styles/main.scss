@@ -36,7 +36,6 @@ tooltip {
   background-color: color.adjust($base00, $alpha: -0.5);
   border: 1px solid $alpha-light;
   color: $white;
-  padding: spacing(xs);
 }
 
 // Ensure inner label inherits colors without extra borders
@@ -52,7 +51,6 @@ popover {
 
     transform: translateY(5px);
     border: 1px solid $alpha-light;
-    padding: spacing(md);
     border-radius: radius(md);
     background-color: color.adjust($base00, $alpha: -0.5);
   }

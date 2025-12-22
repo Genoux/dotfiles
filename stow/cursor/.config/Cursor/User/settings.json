@@ -9,5 +9,6 @@
   "editor.hover.enabled": false,
   "window.commandCenter": true,
   "workbench.colorTheme": "Catppuccin Mocha",
-  "editor.fontFamily": "JetBrainsMono Nerd Font Prono, JetBrainsMono Nerd Font"
+  "editor.fontFamily": "JetBrainsMono Nerd Font Prono, JetBrainsMono Nerd Font",
+  "editor.largeFileOptimizations": false
 }

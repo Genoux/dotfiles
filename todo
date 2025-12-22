@@ -8,6 +8,8 @@
 ✔ Try Ghostly terminal @done(25-11-27 11:00)
 ✘ Fix TUI installer should use xdg-terminal-exec to be in line with other changes @cancelled(25-11-22 19:33)
 ✔ Make cursor use it's own Dialog theme @done(25-12-12 19:23)
+[] FIx were on login ags ton run and walker takes time to load
+[] FInd a way to make the system more optimized
 [] Setup constant GTK theme
 [] Fix login. AGS walker don't show (cant't reproduce)
 [] Setup Plymouth
