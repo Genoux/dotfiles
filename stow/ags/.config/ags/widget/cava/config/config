@@ -16,7 +16,8 @@ ascii_max_range = 1000
 # mode = normal
 
 # Accepts only non-negative values.
-framerate = 60
+# Battery optimization: Reduced from 60 to 15 FPS for lower CPU usage
+framerate = 15
 
 # 'autosens' will attempt to decrease sensitivity if the bars peak. 1 = on, 0 = off
 # new as of 0.6.0 autosens of low values (dynamic range)

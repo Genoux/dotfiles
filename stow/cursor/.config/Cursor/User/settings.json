@@ -10,5 +10,9 @@
   "window.commandCenter": true,
   "workbench.colorTheme": "Catppuccin Mocha",
   "editor.fontFamily": "JetBrainsMono Nerd Font Prono, JetBrainsMono Nerd Font",
-  "editor.largeFileOptimizations": false
+  "editor.largeFileOptimizations": false,
+  "window.titleBarStyle": "custom",
+  "window.customMenuBarAltFocus": false,
+  "terminal.integrated.allowMnemonics": false
+
 }

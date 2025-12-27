@@ -71,11 +71,44 @@ get_enabled_plugins() {
     hyprpm list 2>/dev/null | grep "Plugin" | awk '{print $2}' || true
 }
 
+# Get list of all installed plugins (enabled or disabled)
+get_all_installed_plugins() {
+    # Get all plugin names from hyprpm list
+    # Format: "│ Plugin PluginName" or "→ Repository PluginName:"
+    hyprpm list 2>/dev/null | sed 's/\x1b\[[0-9;]*m//g' | grep -E "(^│ Plugin|^→ Repository)" | sed 's/^│ Plugin //; s/^→ Repository //; s/:$//' | sort -u || true
+}
+
 # Check if plugin is enabled
 is_plugin_enabled() {
     local plugin_name="$1"
     # Strip ANSI codes and check if plugin is enabled
     hyprpm list 2>/dev/null | sed 's/\x1b\[[0-9;]*m//g' | grep -A1 "Plugin $plugin_name" | grep -q "enabled.*true"
+}
+
+# Check if plugin is installed (enabled or disabled)
+is_plugin_installed() {
+    local plugin_name="$1"
+    # Check if plugin appears in the list (either as "│ Plugin PluginName" or "→ Repository PluginName:")
+    hyprpm list 2>/dev/null | sed 's/\x1b\[[0-9;]*m//g' | grep -qE "(│ Plugin $plugin_name|→ Repository $plugin_name:)"
+}
+
+# Remove a plugin
+remove_plugin() {
+    local plugin_name="$1"
+    
+    # Disable first if enabled
+    if is_plugin_enabled "$plugin_name"; then
+        hyprpm disable "$plugin_name" 2>/dev/null || true
+    fi
+    
+    # Remove plugin
+    if hyprpm remove "$plugin_name" 2>/dev/null; then
+        log_success "Removed: $plugin_name"
+        return 0
+    else
+        log_warning "Failed to remove: $plugin_name"
+        return 1
+    fi
 }
 
 # Install and enable a plugin
@@ -121,14 +154,10 @@ setup_hyprland_plugins() {
 
     ensure_hyprpm
 
-    # Load plugin configuration first to check if there are any plugins
+    # Load plugin configuration
     load_plugin_config
-    if [[ ${#HYPRLAND_PLUGINS[@]} -eq 0 ]]; then
-        log_info "No plugins configured in $HYPRLAND_PLUGINS_FILE"
-        return 0
-    fi
 
-    # Ensure build dependencies are installed
+    # Ensure build dependencies are installed first (before any plugin operations)
     log_info "Checking build dependencies..."
     local deps=(cmake meson cpio git gcc)
     local missing=()
@@ -151,39 +180,74 @@ setup_hyprland_plugins() {
     fi
     echo
 
-    # Install each plugin
-    local installed_count=0
-    local failed_count=0
+    # Get list of currently installed plugins and remove orphaned ones
+    local installed_plugins=()
+    while IFS= read -r plugin; do
+        [[ -n "$plugin" ]] && installed_plugins+=("$plugin")
+    done < <(get_all_installed_plugins)
 
-    for plugin_name in "${!HYPRLAND_PLUGINS[@]}"; do
-        local plugin_url="${HYPRLAND_PLUGINS[$plugin_name]}"
-
-        if is_plugin_enabled "$plugin_name"; then
-            log_success "Plugin already enabled: $plugin_name"
-            ((installed_count++))
-        else
-            if install_plugin "$plugin_name" "$plugin_url"; then
-                ((installed_count++))
-            else
-                ((failed_count++))
+    # Remove plugins that are installed but not in config
+    if [[ ${#installed_plugins[@]} -gt 0 ]]; then
+        local removed_count=0
+        
+        for installed_plugin in "${installed_plugins[@]}"; do
+            # Check if plugin is in config
+            if [[ -z "${HYPRLAND_PLUGINS[$installed_plugin]:-}" ]]; then
+                if remove_plugin "$installed_plugin"; then
+                    ((removed_count++))
+                fi
             fi
+        done
+        
+        if [[ $removed_count -gt 0 ]]; then
+            log_success "Removed $removed_count orphaned plugin(s)"
+            echo
         fi
-    done
-
-    echo
-    if [[ $failed_count -eq 0 ]]; then
-        log_success "All plugins configured successfully ($installed_count/${#HYPRLAND_PLUGINS[@]})"
-    else
-        log_warning "$failed_count plugin(s) failed to install"
     fi
 
-    # Update plugins
-    log_info "Updating plugins..."
-    hyprpm update
+    # Install/update each plugin from config
+    if [[ ${#HYPRLAND_PLUGINS[@]} -eq 0 ]]; then
+        log_info "No plugins configured in $HYPRLAND_PLUGINS_FILE"
+    else
+        local installed_count=0
+        local updated_count=0
+        local failed_count=0
 
-    echo
-    log_info "To load plugins at startup, ensure this is in your hyprland.conf:"
-    echo "  exec-once = hyprpm reload -n"
+        for plugin_name in "${!HYPRLAND_PLUGINS[@]}"; do
+            local plugin_url="${HYPRLAND_PLUGINS[$plugin_name]}"
+
+            if is_plugin_enabled "$plugin_name"; then
+                log_info "Plugin already enabled: $plugin_name (will update)"
+                ((installed_count++))
+            elif is_plugin_installed "$plugin_name"; then
+                log_info "Plugin installed but disabled: $plugin_name (enabling and updating)"
+                if hyprpm enable "$plugin_name" 2>/dev/null; then
+                    ((installed_count++))
+                else
+                    log_warning "Failed to enable plugin: $plugin_name"
+                    ((failed_count++))
+                fi
+            else
+                if install_plugin "$plugin_name" "$plugin_url"; then
+                    ((installed_count++))
+                else
+                    ((failed_count++))
+                fi
+            fi
+        done
+
+        echo
+        if [[ $failed_count -eq 0 ]]; then
+            log_success "All plugins configured successfully ($installed_count/${#HYPRLAND_PLUGINS[@]})"
+        else
+            log_warning "$failed_count plugin(s) failed to install"
+        fi
+
+        # Update all plugins
+        log_info "Updating plugins..."
+        hyprpm update
+    fi
+
 }
 
 # Reload plugins

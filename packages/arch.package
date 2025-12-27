@@ -43,6 +43,7 @@ glfw
 glm
 glu
 gnome-calculator
+gnome-calendar
 gnome-keyring
 gnome-shell
 greetd
@@ -79,6 +80,7 @@ kdbusaddons5
 kdeconnect
 kdialog
 kdoctools
+keyd
 ki18n5
 kiconthemes5
 kio5
@@ -168,6 +170,8 @@ swayosd
 swww
 tailscale
 tcpdump
+tlp
+tlp-rdw
 ttf-fantasque-nerd
 ttf-fira-code
 ttf-firacode-nerd
@@ -203,5 +207,6 @@ xorg-xinit
 xterm
 yad
 yazi
+zed
 zenity
 zsh

@@ -114,13 +114,42 @@ function readCpuTempFromHwmon(): number {
 
 function getGpuTemp(): number {
   try {
-    const out = GLib.spawn_command_line_sync(
-      "nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader,nounits"
-    )[1];
-    if (!out) return 0;
+    // Try AMD GPU first (amdgpu driver)
+    const amdTempPath = "/sys/class/drm/card0/device/hwmon/hwmon*/temp1_input";
+    const amdTempFile = Gio.File.new_for_path("/sys/class/drm/card0/device/hwmon");
 
-    const temp = parseInt(new TextDecoder().decode(out).trim());
-    return isNaN(temp) ? 0 : temp;
+    if (amdTempFile.query_exists(null)) {
+      // Find hwmon directory
+      const enumerator = amdTempFile.enumerate_children("standard::name", Gio.FileQueryInfoFlags.NONE, null);
+      let info;
+      while ((info = enumerator.next_file(null)) !== null) {
+        const name = info.get_name();
+        if (name.startsWith("hwmon")) {
+          const tempPath = `/sys/class/drm/card0/device/hwmon/${name}/temp1_input`;
+          const tempFile = Gio.File.new_for_path(tempPath);
+          if (tempFile.query_exists(null)) {
+            const [, tempData] = tempFile.load_contents(null);
+            const temp = parseInt(new TextDecoder().decode(tempData).trim());
+            if (!isNaN(temp) && temp > 0) {
+              return Math.round(temp / 1000); // Convert from millidegrees
+            }
+          }
+        }
+      }
+    }
+
+    // Fallback to nvidia-smi if AMD fails (for systems with Nvidia)
+    try {
+      const out = GLib.spawn_command_line_sync(
+        "nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader,nounits"
+      )[1];
+      if (out) {
+        const temp = parseInt(new TextDecoder().decode(out).trim());
+        if (!isNaN(temp)) return temp;
+      }
+    } catch {}
+
+    return 0;
   } catch {
     return 0;
   }
@@ -167,9 +196,9 @@ try {
   console.error("Failed to setup hwmon file monitoring:", error);
 }
 
-// Fallback: Poll GPU less frequently (every 10s) since it changes slower
-// and we don't have a reliable file-based source for it
-const gpuPollInterval = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 10, () => {
+// Fallback: Poll GPU less frequently (every 30s) since it changes slower
+// Battery optimization: Reduced from 10s to 30s for lower CPU usage
+const gpuPollInterval = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 30, () => {
   updateTemps();
   return true; // Continue polling
 });
