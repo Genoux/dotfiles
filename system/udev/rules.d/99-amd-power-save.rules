@@ -1,0 +1,11 @@
+# AMD GPU Power Management Rules
+# Automatically set AMD GPU to power-saving mode for better battery life
+
+# AMD GPU power management
+ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x1002", ATTR{power/control}="auto"
+
+# AMD GPU DPM (Dynamic Power Management) - force low power state
+ACTION=="add", SUBSYSTEM=="drm", KERNEL=="card[0-9]*", ATTR{device/power_dpm_force_performance_level}="auto", ATTR{device/power_dpm_state}="battery"
+
+# PCIe ASPM (Active State Power Management) for power saving
+ACTION=="add", SUBSYSTEM=="pci", ATTR{power/control}="auto"

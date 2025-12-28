@@ -4,21 +4,36 @@ import { createState } from "ags";
 
 const [connected, setConnected] = createState<boolean>(false);
 
+// Check connection status immediately on load using actual route check
+function checkInitialConnection(): boolean {
+  try {
+    const [success, stdout] = GLib.spawn_command_line_sync("ip route get 8.8.8.8");
+    return success && !!stdout;
+  } catch (error) {
+    console.error("Initial connection check failed:", error);
+    return false;
+  }
+}
+
+// Set initial connection status based on actual route check
+setConnected(() => checkInitialConnection());
+
 try {
   const net = Gio.NetworkMonitor.get_default();
-  const initial = (net as any).get_network_available ? net.get_network_available() : true;
-  setConnected(() => !!initial);
-
+  
   let last = Date.now();
-  net.connect("network-changed", (_m, available: boolean) => {
+  net.connect("network-changed", (_m: Gio.NetworkMonitor, available: boolean) => {
     const now = Date.now();
     if (now - last < 500) return;
     last = now;
-    setConnected(() => !!available);
+    // Also verify with actual route check when network changes
+    const actuallyConnected = checkInitialConnection();
+    setConnected(() => actuallyConnected);
   });
 } catch (error) {
   console.error("NetworkMonitor initialization failed:", error);
-  setConnected(() => true);
+  // Fallback to route check
+  setConnected(() => checkInitialConnection());
 }
 
 export { connected };

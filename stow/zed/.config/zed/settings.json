@@ -1,10 +1,13 @@
 {
-  "search_wrap": false,
+  "hover_popover_enabled": false,
+  "buffer_font_fallbacks": ["JetBrainsMono Nerd Font"],
+  "search_wrap": true,
+  "format_on_save": "off",
   "file_finder": {
-    "modal_max_width": "medium"
+    "modal_max_width": "medium",
   },
   "theme": "Catppuccin Espresso (Blur) [Light]",
-  "icon_theme": "Material Icon Theme",
+  "icon_theme": "Zed (Default)",
   "git_panel": {
     "collapse_untracked_diff": true,
   },
@@ -15,6 +18,7 @@
     "show_branch_icon": true,
   },
   "terminal": {
+    "font_family": "JetBrainsMono Nerd Font",
     "shell": "system",
   },
   "cursor_blink": false,
@@ -34,8 +38,7 @@
   "context_servers": {
     "mcp-server-github": {
       "enabled": true,
-      "settings": {
-      },
+      "settings": {},
     },
     "mcp-server-context7": {
       "enabled": true,
@@ -45,11 +48,11 @@
     },
   },
   "ui_font_family": ".SystemUIFont",
-  "buffer_font_family": "JetBrainsMono Nerd Font",
+  "buffer_font_family": ".ZedMono",
   "vim_mode": false,
   "disable_ai": false,
   "use_system_path_prompts": false,
-  "base_keymap": "Cursor",
+  "base_keymap": "VSCode",
   "confirm_quit": true,
   "minimap": {
     "show": "never",
@@ -71,9 +74,19 @@
 
   "project_panel": {
     "dock": "left",
-
+    "sticky_scroll": false,
     "indent_guides": {
-      "show": "never",
+      "show": "always",
     },
+  },
+  "experimental.theme_overrides": {
+    "border": "#ffffff15",
+    "border.variant": "#ffffff15",
+    "border.focused": "#ffffff30",
+    "pane.focused_border": "#ffffff15",
+    "pane_group.border": "#ffffff15",
+    "panel.indent_guide": "#ffffff10",
+    "editor.indent_guide": "#ffffff10",
+    "element.hover": "#ffffff10",
   },
 }

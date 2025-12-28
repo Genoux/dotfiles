@@ -3,6 +3,7 @@ import { timeout } from "ags/time";
 import GLib from "gi://GLib";
 import Gio from "gi://Gio";
 import { httpGet } from "../../services/network";
+import { getPositionSync } from "../../services/position";
 
 interface WeatherData {
   temperature: number;
@@ -26,26 +27,23 @@ function getWeatherIcon(code: number): string {
   return ""; // default
 }
 
-function getCity(): string {
-  try {
-    const response = httpGet("http://ip-api.com/json/", 10, 5);
-    if (!response) throw new Error("No data");
-    const data = JSON.parse(response);
-    if (data && typeof data.city === "string" && data.city.length > 0) {
-      return data.city;
-    }
-  } catch {}
-
-  return "Montreal";
-}
-
 function fetchWeather(): WeatherData | null {
   try {
     const apiKey = GLib.getenv("OPENWEATHERMAP_API_KEY") || "d9219c0472bace98bededdf4f2701585";
     if (!apiKey) return null;
 
-    const city = getCity();
-    const url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(city)}&appid=${apiKey}&units=metric`;
+    const pos = getPositionSync();
+    let url: string;
+
+    if (pos && pos.lat && pos.lon) {
+      // Use coordinates for more accurate weather (from position service)
+      url = `https://api.openweathermap.org/data/2.5/weather?lat=${pos.lat}&lon=${pos.lon}&appid=${apiKey}&units=metric`;
+    } else {
+      // Fallback to hardcoded city
+      const fallbackCity = GLib.getenv("WEATHER_CITY") || "Montreal";
+      url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(fallbackCity)}&appid=${apiKey}&units=metric`;
+    }
+
     const response = httpGet(url);
     if (!response) throw new Error("No data");
 
@@ -58,7 +56,8 @@ function fetchWeather(): WeatherData | null {
       icon: getWeatherIcon(data.weather[0].id),
       location: data.name,
     };
-  } catch {
+  } catch (e) {
+    console.error("[Weather] Failed to fetch weather:", e);
     return null;
   }
 }
@@ -83,7 +82,7 @@ timeout(600000, () => {
     const net = Gio.NetworkMonitor.get_default();
     let lastTrigger = 0;
     let wasConnected = (net as any).get_network_available ? net.get_network_available() : true;
-    
+
     net.connect("network-changed", (_m, available: boolean) => {
       // Only trigger on transition from disconnected to connected
       if (!wasConnected && available) {
@@ -93,7 +92,7 @@ timeout(600000, () => {
           triggerRefresh();
         }
       }
-      
+
       wasConnected = available;
     });
   } catch (error) {
@@ -108,20 +107,29 @@ export function forceWeatherRefresh() {
 export function openWeatherApp() {
   // Try wego (AUR package) first, fallback to checking PATH
   const wegoPath = GLib.find_program_in_path("wego");
-  
+
   if (!wegoPath) {
     console.error(`[Weather] wego not found. Install with: yay -S wego`);
     return;
   }
-  
-  // Get API key from environment or use fallback from Hyprland config
+
+  // Get API key from environment or use fallback
   const apiKey = GLib.getenv("OPENWEATHERMAP_API_KEY") || "d9219c0472bace98bededdf4f2701585";
-  
-  // Get location from environment or use default
-  const city = GLib.getenv("WEATHER_CITY") || "Montreal";
-  
+
+  // Get location from position service (use coordinates for wego, city names with special chars fail)
+  const pos = getPositionSync();
+  let location: string;
+
+  if (pos && pos.lat && pos.lon) {
+    // Use lat,lon format which wego accepts
+    location = `${pos.lat},${pos.lon}`;
+  } else {
+    // Fallback to environment or default
+    location = GLib.getenv("WEATHER_CITY") || "Montreal";
+  }
+
   // Launch wego with API key and location
   // Format: launch-or-focus TITLE COMMAND CLASS EXTRA_ARGS...
-  const command = `launch-or-focus "weather" "${wegoPath}" "weather" "-owm-api-key" "${apiKey}" "-l" "${city}"`;
+  const command = `launch-or-focus "weather" "${wegoPath}" "weather" "-owm-api-key" "${apiKey}" "-l" "${location}"`;
   GLib.spawn_command_line_async(command);
 }

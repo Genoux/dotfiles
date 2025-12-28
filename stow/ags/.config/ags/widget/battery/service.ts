@@ -42,6 +42,13 @@ const batteryIcons = {
 function getBatteryIcon(percentage: number, charging: boolean): string {
   const icons = charging ? batteryIcons.charging : batteryIcons.discharging;
   const index = Math.min(Math.floor(percentage / 10), 10);
+  
+  // Fallback: battery-level-100-charging-symbolic doesn't exist in most icon themes
+  // Use battery-level-100-charged-symbolic or battery-full-charged-symbolic instead
+  if (charging && index === 10) {
+    return "battery-level-100-charged-symbolic";
+  }
+  
   return icons[index];
 }
 
@@ -65,10 +72,10 @@ try {
 }
 
 const [batteryState, setBatteryState] = createState<BatteryState>({
-  percentage: battery?.percentage || 0,
+  percentage: Math.round((battery?.percentage || 0) * 100),
   charging: battery?.charging || false,
   available: hasBattery,
-  icon: getBatteryIcon(battery?.percentage || 0, battery?.charging || false),
+  icon: getBatteryIcon(Math.round((battery?.percentage || 0) * 100), battery?.charging || false),
 });
 
 function updateBatteryState() {

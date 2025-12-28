@@ -13,6 +13,6 @@
   "editor.largeFileOptimizations": false,
   "window.titleBarStyle": "custom",
   "window.customMenuBarAltFocus": false,
-  "terminal.integrated.allowMnemonics": false
-
+  "terminal.integrated.allowMnemonics": false,
+  "disable-hardware-acceleration": false
 }

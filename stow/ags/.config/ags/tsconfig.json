@@ -10,5 +10,10 @@
     // "allowJs": true,
     "jsx": "react-jsx",
     "jsxImportSource": "ags/gtk4"
-  }
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "env.d.ts"
+  ]
 }

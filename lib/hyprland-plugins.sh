@@ -180,6 +180,10 @@ setup_hyprland_plugins() {
     fi
     echo
 
+    # Cache sudo credentials upfront to avoid multiple password prompts
+    # hyprpm operations may require sudo for loading/unloading plugins
+    sudo -v 2>/dev/null || true
+
     # Get list of currently installed plugins and remove orphaned ones
     local installed_plugins=()
     while IFS= read -r plugin; do

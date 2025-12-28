@@ -43,6 +43,10 @@ run_logged "$DOTFILES_DIR/install/system/systemd-resolved.sh"
 run_logged "$DOTFILES_DIR/install/system/network.sh"
 run_logged "$DOTFILES_DIR/install/system/bluetooth.sh"
 run_logged "$DOTFILES_DIR/install/system/esp32.sh"
+run_logged "$DOTFILES_DIR/install/system/keyd.sh"
+run_logged "$DOTFILES_DIR/install/system/tlp.sh"
+run_logged "$DOTFILES_DIR/install/system/zram.sh"
+run_logged "$DOTFILES_DIR/install/system/cpufreq.sh"
 
 # Cleanup
 cleanup_sudo
