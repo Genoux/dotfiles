@@ -1,12 +1,8 @@
 import GLib from "gi://GLib";
 import { Gtk } from "ags/gtk4";
-import { connected, checkConnection, getNetworkSpeed } from "../../services/network";
+import { connected, connectionIcon, getNetworkSpeed } from "../../services/network";
 
-export { connected };
-
-export const connectionIcon = connected((isOn: boolean) =>
-  isOn ? checkConnection() : "network-offline-symbolic"
-);
+export { connected, connectionIcon };
 
 export function openNetworkManager() {
   try {

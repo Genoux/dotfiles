@@ -3,6 +3,7 @@ import Gio from "gi://Gio";
 import { createState } from "ags";
 
 const [connected, setConnected] = createState<boolean>(false);
+const [connectionIcon, setConnectionIcon] = createState<string>("network-offline-symbolic");
 
 // Check connection status immediately on load using actual route check
 function checkInitialConnection(): boolean {
@@ -15,8 +16,15 @@ function checkInitialConnection(): boolean {
   }
 }
 
+// Helper to update both connected state and icon
+function updateConnectionState() {
+  const isConnected = checkInitialConnection();
+  setConnected(() => isConnected);
+  setConnectionIcon(() => isConnected ? checkConnection() : "network-offline-symbolic");
+}
+
 // Set initial connection status based on actual route check
-setConnected(() => checkInitialConnection());
+updateConnectionState();
 
 try {
   const net = Gio.NetworkMonitor.get_default();
@@ -26,17 +34,16 @@ try {
     const now = Date.now();
     if (now - last < 500) return;
     last = now;
-    // Also verify with actual route check when network changes
-    const actuallyConnected = checkInitialConnection();
-    setConnected(() => actuallyConnected);
+    // Update both connected state and icon when network changes
+    updateConnectionState();
   });
 } catch (error) {
   console.error("NetworkMonitor initialization failed:", error);
   // Fallback to route check
-  setConnected(() => checkInitialConnection());
+  updateConnectionState();
 }
 
-export { connected };
+export { connected, connectionIcon };
 
 interface NetworkSpeed {
   download: number; // bytes/sec

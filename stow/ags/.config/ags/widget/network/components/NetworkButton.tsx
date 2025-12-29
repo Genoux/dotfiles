@@ -14,7 +14,7 @@ export function NetworkButton() {
         self.add_controller(rightClick);
       }}
     >
-      <Icon icon={connectionIcon((icon) => icon)} />
+      <Icon icon={connectionIcon} />
     </Button>
   );
 }

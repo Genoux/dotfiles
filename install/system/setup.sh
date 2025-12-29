@@ -47,6 +47,7 @@ run_logged "$DOTFILES_DIR/install/system/keyd.sh"
 run_logged "$DOTFILES_DIR/install/system/tlp.sh"
 run_logged "$DOTFILES_DIR/install/system/zram.sh"
 run_logged "$DOTFILES_DIR/install/system/cpufreq.sh"
+run_logged "$DOTFILES_DIR/install/system/plymouth.sh"
 
 # Cleanup
 cleanup_sudo

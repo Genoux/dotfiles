@@ -1,6 +1,6 @@
 #!/bin/bash
 # systemd-resolved configuration
-# Enables systemd-resolved for proper DNS handling with NetworkManager
+# Enables systemd-resolved for proper DNS handling with systemd-networkd and iwd
 
 # Get dotfiles directory
 DOTFILES_DIR="$(cd "$(dirname "$(dirname "$(dirname "${BASH_SOURCE[0]}")")")" && pwd)"

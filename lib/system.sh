@@ -63,6 +63,7 @@ system_apply() {
     run_logged "$DOTFILES_DIR/install/system/esp32.sh"
     run_logged "$DOTFILES_DIR/install/system/app-launcher.sh"
     run_logged "$DOTFILES_DIR/install/system/greeter.sh"
+    run_logged "$DOTFILES_DIR/install/system/plymouth.sh"
 
     # Configure laptop-specific settings
     configure_laptop_settings
@@ -70,18 +71,55 @@ system_apply() {
     # Cleanup
     cleanup_sudo
 
-    # Check if reboot is needed and prompt (only if not in full install)
-    if [[ -f "$HOME/.local/state/dotfiles/.reboot_needed" && -z "${FULL_INSTALL:-}" ]]; then
+    # Show completion with options
+    tput civis 2>/dev/null  # Hide cursor
+    while true; do
+        clear
         echo
-        log_warning "Reboot required to apply changes"
-        if confirm "Reboot now?"; then
-            rm -f "$HOME/.local/state/dotfiles/.reboot_needed"
-            sudo systemctl reboot
-        fi
-    fi
+        printf "\033[92m✓\033[0m \033[94mSystem configuration complete\033[0m\n"
+        echo
+        echo "[L] View log  [R] Reboot now  [Q] Continue"
+        echo
 
-    echo
-    log_success "System configuration complete"
+        read -n 1 -s -r key
+        case "${key,,}" in
+            l)
+                if [[ -f "$DOTFILES_LOG_FILE" ]]; then
+                    tput cnorm 2>/dev/null  # Show cursor for less
+                    clear
+                    if command -v less &>/dev/null; then
+                        less "$DOTFILES_LOG_FILE"
+                    else
+                        cat "$DOTFILES_LOG_FILE"
+                        echo
+                        read -n 1 -s -r -p "Press any key to continue..."
+                    fi
+                    tput civis 2>/dev/null  # Hide cursor again
+                else
+                    tput cnorm 2>/dev/null  # Show cursor
+                    clear
+                    echo
+                    echo "Log file not found"
+                    echo
+                    read -n 1 -s -r -p "Press any key to continue..."
+                    tput civis 2>/dev/null  # Hide cursor again
+                fi
+                ;;
+            r)
+                clear
+                echo
+                printf "\033[94mRebooting system...\033[0m\n"
+                echo
+                rm -f "$HOME/.local/state/dotfiles/.reboot_needed"
+                sudo systemctl reboot
+                ;;
+            q|$'\n'|$'\x0a')
+                tput cnorm 2>/dev/null  # Show cursor
+                clear
+                break
+                ;;
+        esac
+    done
 }
 
 # Show quick system status summary
@@ -89,97 +127,65 @@ system_show_summary() {
     source "$DOTFILES_DIR/lib/menu.sh"
 
     local applied_count=0
-    local total_count=3  # makepkg, sleep, logind
+    local total_count=0
 
-    # Count applied configs (match logic from system_status)
-    [[ -f /etc/makepkg.conf ]] && grep -q "OPTIONS=.*!debug.*" /etc/makepkg.conf && ((applied_count++))
-    [[ -d /etc/systemd/sleep.conf.d ]] && [[ $(find /etc/systemd/sleep.conf.d -type f 2>/dev/null | wc -l) -gt 0 ]] && ((applied_count++))
-    [[ -d /etc/systemd/logind.conf.d ]] && [[ $(find /etc/systemd/logind.conf.d -type f 2>/dev/null | wc -l) -gt 0 ]] && ((applied_count++))
+    # Count all system config scripts (excluding setup.sh)
+    for script in "$DOTFILES_DIR/install/system"/*.sh; do
+        [[ ! -f "$script" ]] && continue
+        [[ "$(basename "$script")" == "setup.sh" ]] && continue
+        ((total_count++))
+    done
+
+    # Dynamically check status for each config script
+    for script in "$DOTFILES_DIR/install/system"/*.sh; do
+        [[ ! -f "$script" ]] && continue
+        [[ "$(basename "$script")" == "setup.sh" ]] && continue
+
+        # Check if script has a status check function
+        if grep -q "^check_config_status()" "$script" 2>/dev/null; then
+            # Source and run the status check
+            if (source "$script" 2>/dev/null && check_config_status 2>/dev/null); then
+                ((applied_count++))
+            fi
+        else
+            # If no status check defined, assume applied (can't verify)
+            ((applied_count++))
+        fi
+    done
 
     show_quick_summary "System configs" "$applied_count/$total_count applied"
 }
 
 # Show system status
 system_status() {
-    log_section "System Status"
+    log_section "Available System Configurations"
+    echo
 
-    local configs_applied=0
-    local configs_pending=0
+    # List all available config scripts
+    for script in "$DOTFILES_DIR/install/system"/*.sh; do
+        [[ ! -f "$script" ]] && continue
+        [[ "$(basename "$script")" == "setup.sh" ]] && continue
 
-    # Check makepkg.conf debug status
-    log_info "Package building:"
-    if [[ -f /etc/makepkg.conf ]]; then
-        if grep -q "OPTIONS=.*!debug.*" /etc/makepkg.conf; then
-            echo "  $(status_ok) makepkg debug disabled"
-            ((configs_applied++))
-        else
-            echo "  $(status_warning) makepkg debug enabled (should disable)"
-            ((configs_pending++))
-        fi
-        echo "  $(gum style --foreground 8 "Config: /etc/makepkg.conf")"
-    else
-        echo "  $(status_neutral) makepkg.conf not found"
-        ((configs_pending++))
-    fi
+        local script_name=$(basename "$script" .sh)
+        local status_icon
 
-    # Check systemd sleep config
-    log_info "Power management:"
-    if [[ -d /etc/systemd/sleep.conf.d ]]; then
-        local sleep_configs=$(find /etc/systemd/sleep.conf.d -type f 2>/dev/null | wc -l)
-        if [[ $sleep_configs -gt 0 ]]; then
-            echo "  $(status_ok) systemd sleep configs ($sleep_configs files)"
-            ((configs_applied++))
-            echo "  $(gum style --foreground 8 "Location: /etc/systemd/sleep.conf.d/")"
-        else
-            echo "  $(status_warning) systemd sleep configs (directory exists but empty)"
-            ((configs_pending++))
-        fi
-    else
-        echo "  $(status_warning) systemd sleep configs (not configured)"
-        ((configs_pending++))
-    fi
-
-
-    # Check systemd logind config
-    log_info "Login management:"
-    if [[ -d /etc/systemd/logind.conf.d ]]; then
-        local logind_configs=$(find /etc/systemd/logind.conf.d -type f 2>/dev/null | wc -l)
-        if [[ $logind_configs -gt 0 ]]; then
-            echo "  $(status_ok) systemd logind configs ($logind_configs files)"
-            ((configs_applied++))
-            echo "  $(gum style --foreground 8 "Location: /etc/systemd/logind.conf.d/")"
-        else
-            echo "  $(status_warning) systemd logind configs (directory exists but empty)"
-            ((configs_pending++))
-        fi
-    else
-        echo "  $(status_warning) systemd logind configs (not configured)"
-        ((configs_pending++))
-    fi
-
-    # Check for other system configs
-    log_info "Other configurations:"
-    local other_configs=(
-        "/etc/systemd/resolved.conf.d"
-        "/etc/udev/rules.d"
-        "/etc/modules-load.d"
-    )
-
-    for config_path in "${other_configs[@]}"; do
-        local config_name=$(basename "$config_path")
-        if [[ -d "$config_path" ]]; then
-            local file_count=$(find "$config_path" -type f 2>/dev/null | wc -l)
-            if [[ $file_count -gt 0 ]]; then
-                echo "  $(status_ok) $config_name ($file_count files)"
-                echo "  $(gum style --foreground 8 "Location: $config_path")"
+        # Check if config has status function and is applied
+        if grep -q "^check_config_status()" "$script" 2>/dev/null; then
+            if (source "$script" 2>/dev/null && check_config_status 2>/dev/null); then
+                status_icon="$(status_ok)"
+            else
+                status_icon="$(status_warning)"
             fi
+        else
+            # No status check - assume applied
+            status_icon="$(status_ok)"
         fi
+
+        echo "  $status_icon $script_name"
     done
 
-    # Show actionable info
-    if [[ $configs_pending -gt 0 ]]; then
-        log_info "$configs_pending configuration(s) pending"
-    fi
+    echo
+    log_info "Run 'Apply configurations' to apply all system configs"
 }
 
 # System management menu
@@ -199,7 +205,7 @@ system_menu() {
 
         case "$action" in
             "Apply configurations")
-                run_operation "" system_apply
+                system_apply
                 ;;
             "Show details")
                 run_operation "" system_status

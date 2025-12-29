@@ -125,6 +125,12 @@ display_system_banner() {
 
 # Interactive menu
 show_menu() {
+    # Hide cursor
+    tput civis 2>/dev/null
+
+    # Ensure cursor is shown on exit
+    trap 'tput cnorm 2>/dev/null' EXIT INT TERM
+
     while true; do
         # Check if terminal was deleted (orphaned process)
         if [[ -t 0 ]] && readlink /proc/self/fd/0 2>/dev/null | grep -q "deleted"; then
@@ -186,6 +192,7 @@ show_menu() {
             "Exit")
                 clear
                 log_success "Goodbye!"
+                tput cnorm 2>/dev/null
                 exit 0
                 ;;
             "")

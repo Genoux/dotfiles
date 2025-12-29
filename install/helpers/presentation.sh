@@ -328,7 +328,9 @@ run_with_spin() {
 pause() {
     local message="${1:-Press any key to continue...}"
     echo
-    read -p "$message " -n 1 -r
+    tput civis 2>/dev/null  # Hide cursor
+    read -p "$message " -n 1 -r -s
+    tput cnorm 2>/dev/null  # Show cursor
     echo
 }
 
