@@ -1,4 +1,4 @@
-import { createState, createBinding } from "ags";
+import { createState } from "ags";
 import { exec } from "ags/process";
 import Battery from "gi://AstalBattery";
 import GLib from "gi://GLib";
@@ -42,13 +42,13 @@ const batteryIcons = {
 function getBatteryIcon(percentage: number, charging: boolean): string {
   const icons = charging ? batteryIcons.charging : batteryIcons.discharging;
   const index = Math.min(Math.floor(percentage / 10), 10);
-  
+
   // Fallback: battery-level-100-charging-symbolic doesn't exist in most icon themes
   // Use battery-level-100-charged-symbolic or battery-full-charged-symbolic instead
   if (charging && index === 10) {
     return "battery-level-100-charged-symbolic";
   }
-  
+
   return icons[index];
 }
 
@@ -112,4 +112,3 @@ export function openBattop() {
     console.error("Failed to launch battop:", error);
   }
 }
-

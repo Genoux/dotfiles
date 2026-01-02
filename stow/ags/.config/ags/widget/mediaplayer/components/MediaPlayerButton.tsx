@@ -10,7 +10,7 @@ import { CavaVisualizer } from "../../cava";
 import { Button } from "../../../lib/components";
 import Icon from "../../../components/Icon";
 
-const MAX_LENGTH = 30;
+const MAX_LENGTH = 15;
 const SCROLL_SPEED = 400;
 
 let scrollOffset = 0;
@@ -33,7 +33,7 @@ const scrollingText = createPoll("", SCROLL_SPEED, () => {
 export function MediaPlayerButton() {
 
   return (
-    <box spacing={3} class='mediaplayer group' visible={currentPlayerInfo((info) => info !== "No media" && info !== "Unknown")}>
+    <box spacing={3} class='mediaplayer group' visible={currentPlayerInfo((info) => !!getActivePlayer() && info !== "No media" && info !== "Unknown")}>
       <Button onClicked={toggleMediaPanel}>
         <box
           spacing={6}

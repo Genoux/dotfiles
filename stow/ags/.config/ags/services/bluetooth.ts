@@ -22,7 +22,7 @@ export function openBluetoothManager() {
     console.warn("[Bluetooth] Bluetooth service not available");
     return;
   }
-  
+
   try {
     GLib.spawn_command_line_async('launch-or-focus "bluetui" "bluetui" "bluetooth"');
   } catch (error) {

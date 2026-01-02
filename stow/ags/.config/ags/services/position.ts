@@ -105,7 +105,6 @@ function loadPosition(): Position | null {
   // Try cache first
   const cached = readCache();
   if (cached) {
-    console.log("[Position] Using cached position:", cached.city);
     return cached;
   }
 

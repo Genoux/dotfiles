@@ -42,7 +42,7 @@ export default function Bar(gdkmonitor: Gdk.Monitor) {
             <Workspaces />
             <SystemTray />
           </box>
-          <box $type="center" valign={Gtk.Align.CENTER} vexpand={false}>
+          <box $type="center" valign={Gtk.Align.CENTER} vexpand={false} marginStart={12} marginEnd={12}>
             <WindowTitle />
           </box>
           <box $type="end">
@@ -52,7 +52,7 @@ export default function Bar(gdkmonitor: Gdk.Monitor) {
             <box valign={Gtk.Align.CENTER} marginEnd={6}  marginStart={6}>
               <MediaPlayerButton />
             </box>
-           
+
             <box spacing={2}>
               <VolumeButton />
               <NetworkButton />

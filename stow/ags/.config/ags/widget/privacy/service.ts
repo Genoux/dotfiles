@@ -25,18 +25,13 @@ function startMonitoring() {
   monitorProcess = subprocess(
     ["bash", "-c", `
       check_webcam() {
-        # Check if any video device is being used via lsof
-        # Check each video device individually to avoid glob expansion issues
-        for dev in /dev/video*; do
-          if [ -e "$dev" ]; then
-            # Use lsof without timeout first (faster), with timeout as fallback
-            if lsof "$dev" 2>/dev/null | grep -q .; then
-              echo 1
-              return
-            fi
-          fi
-        done
-        echo 0
+        # Check all video devices at once using fuser (much faster than lsof)
+        # fuser returns exit code 0 if any device is in use
+        if fuser /dev/video* 2>/dev/null | grep -q .; then
+          echo 1
+        else
+          echo 0
+        fi
       }
 
       check_mic() {
@@ -151,8 +146,8 @@ export function getMicApps(): string[] {
 
 export function getWebcamApps(): string[] {
   try {
-    // Use lsof with timeout to avoid high CPU usage
-    const out = exec(["bash", "-c", `timeout 0.1 lsof -t /dev/video* 2>/dev/null | xargs -r ps -o comm= -p 2>/dev/null | sort -u`]);
+    // Use fuser instead of lsof - much faster and lighter
+    const out = exec(["bash", "-c", `fuser /dev/video* 2>/dev/null | tr ' ' '\\n' | xargs -r ps -o comm= -p 2>/dev/null | sort -u`]);
     return out.trim().split("\n").filter(Boolean);
   } catch {
     return [];

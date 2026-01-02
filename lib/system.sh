@@ -54,6 +54,7 @@ system_apply() {
     trap cleanup_sudo EXIT INT TERM
 
     # Run individual system configuration scripts with logging
+    run_logged "$DOTFILES_DIR/install/system/tlp.sh"
     run_logged "$DOTFILES_DIR/install/system/systemd-sleep.sh"
     run_logged "$DOTFILES_DIR/install/system/logind.sh"
     run_logged "$DOTFILES_DIR/install/system/makepkg.sh"

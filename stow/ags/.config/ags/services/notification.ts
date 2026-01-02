@@ -14,27 +14,27 @@ export interface NotificationOptions {
 export function notify(options: NotificationOptions): void {
   try {
     const { title, body, timeout = 3000, urgency = "normal", icon } = options;
-    
+
     let command = "notify-send";
-    
+
     // Add urgency
     command += ` --urgency=${urgency}`;
-    
+
     // Add timeout (convert ms to seconds for notify-send)
     const timeoutSeconds = Math.round(timeout / 1000);
     command += ` -t ${timeoutSeconds}`;
-    
+
     // Add icon if provided
     if (icon) {
       command += ` --icon=${icon}`;
     }
-    
+
     // Add title and body
     command += ` "${title}"`;
     if (body) {
       command += ` "${body}"`;
     }
-    
+
     GLib.spawn_command_line_async(command);
   } catch (error) {
     console.error("[Notification] Failed to send notification:", error);
@@ -61,4 +61,3 @@ export function notifyError(title: string, body?: string): void {
 export function notifySuccess(title: string, body?: string): void {
   notify({ title, body, urgency: "normal", timeout: 3000 });
 }
-

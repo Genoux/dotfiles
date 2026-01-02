@@ -22,7 +22,7 @@ const setupPlayerWatchers = () => {
   playerHandlers.clear();
 
   // Connect new handlers
-  mpris.players.forEach((player) => {
+  mpris.players.forEach((player: Mpris.Player) => {
     const handlers = [
       player.connect("notify::playback-status", forceUpdate),
       player.connect("notify::title", forceUpdate),
@@ -38,7 +38,7 @@ mpris.connect("notify::players", setupPlayerWatchers);
 // Get the active player (playing or first available)
 export function getActivePlayer() {
   const playerList = mpris.players;
-  return playerList.find((p) => p.playbackStatus === Mpris.PlaybackStatus.PLAYING) || playerList[0];
+  return playerList.find((p: Mpris.Player) => p.playbackStatus === Mpris.PlaybackStatus.PLAYING) || playerList[0];
 }
 
 // Reactive player info
@@ -69,7 +69,7 @@ export function hideMediaPanel() {
 }
 
 export function toggleMediaPanel() {
-  const player = mpris.players.find((p) => p.playbackStatus === Mpris.PlaybackStatus.PLAYING);
+  const player = mpris.players.find((p: Mpris.Player) => p.playbackStatus === Mpris.PlaybackStatus.PLAYING);
   if (player && hypr) {
     hypr.dispatch("focuswindow", `class:${player.entry}`);
   }

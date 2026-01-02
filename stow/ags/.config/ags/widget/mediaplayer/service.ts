@@ -35,10 +35,15 @@ const setupPlayerWatchers = () => {
 setupPlayerWatchers();
 mpris.connect("notify::players", setupPlayerWatchers);
 
-// Get the active player (playing or first available)
+// Get the active player (playing or paused with valid controls)
 export function getActivePlayer() {
   const playerList = mpris.players;
-  return playerList.find((p) => p.playbackStatus === Mpris.PlaybackStatus.PLAYING) || playerList[0];
+  return playerList.find((p) => {
+    const isActive = p.playbackStatus === Mpris.PlaybackStatus.PLAYING || 
+                     p.playbackStatus === Mpris.PlaybackStatus.PAUSED;
+    // Only show if player has control capabilities (indicates active media source)
+    return isActive && p.canControl;
+  });
 }
 
 // Reactive player info

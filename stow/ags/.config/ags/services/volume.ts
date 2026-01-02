@@ -18,7 +18,7 @@ let lastMutedState: boolean | null = null;
 export function getVolumeIcon(volume: number, muted: boolean): string {
   // Track mute state changes - always update icon when mute state changes
   const muteStateChanged = lastMutedState !== null && lastMutedState !== muted;
-  
+
   // Muted always shows muted icon (highest priority)
   if (muted) {
     lastIcon = "audio-volume-muted";
@@ -26,11 +26,11 @@ export function getVolumeIcon(volume: number, muted: boolean): string {
     lastMutedState = muted;
     return lastIcon;
   }
-  
+
   // Normalize volume to 0-1.0 range for icon selection
   // WirePlumber uses 0-2.0 scale, but icons should treat 1.0+ as high
   const normalizedVol = Math.min(volume, 1.0);
-  
+
   // Handle zero or near-zero volume
   if (normalizedVol <= 0.01) {
     lastIcon = "audio-volume-low";
@@ -38,7 +38,7 @@ export function getVolumeIcon(volume: number, muted: boolean): string {
     lastMutedState = muted;
     return lastIcon;
   }
-  
+
   // Use clear, non-overlapping thresholds for smoother transitions
   // Thresholds: 0-33% = low, 33-66% = medium, 66-100% = high
   let newIcon: string;
@@ -49,7 +49,7 @@ export function getVolumeIcon(volume: number, muted: boolean): string {
   } else {
     newIcon = "audio-volume-low";
   }
-  
+
   // Add hysteresis: only change icon if volume has moved significantly
   // This prevents rapid icon changes when volume hovers around threshold values
   // BUT: always update if mute state changed (unmuting should immediately show correct icon)
@@ -60,7 +60,7 @@ export function getVolumeIcon(volume: number, muted: boolean): string {
     lastMutedState = muted;
     return newIcon;
   }
-  
+
   // If icon would change, require a meaningful volume change to prevent flickering
   if (newIcon !== lastIcon) {
     const volumeDelta = Math.abs(volume - lastVolumeForIcon);
@@ -74,7 +74,7 @@ export function getVolumeIcon(volume: number, muted: boolean): string {
     // Keep previous icon if volume change is too small
     return lastIcon;
   }
-  
+
   // Icon hasn't changed, but update tracking volume
   lastVolumeForIcon = volume;
   lastMutedState = muted;
@@ -83,7 +83,7 @@ export function getVolumeIcon(volume: number, muted: boolean): string {
 
 function updateIcon(): string {
   try {
-    const spk = wp.audio.default_speaker;
+    const spk = wp!.audio.default_speaker;
     if (spk) {
       return getVolumeIcon(spk.volume, spk.mute);
     }
@@ -103,14 +103,14 @@ let speakerHandlerIds: number[] = [];
 // Setup signal handlers for reactive updates
 function setupSpeakerSignals() {
   // Disconnect old handlers
-  const oldSpk = wp.audio.default_speaker;
+  const oldSpk = wp!.audio.default_speaker;
   if (oldSpk && speakerHandlerIds.length > 0) {
     speakerHandlerIds.forEach((id) => oldSpk.disconnect(id));
     speakerHandlerIds = [];
   }
 
   // Connect new handlers
-  const spk = wp.audio.default_speaker;
+  const spk = wp!.audio.default_speaker;
   if (spk) {
     speakerHandlerIds = [
       spk.connect("notify::volume", () => setCurrentIcon(updateIcon())),
@@ -120,7 +120,7 @@ function setupSpeakerSignals() {
 }
 
 // Listen for default speaker property changes
-wp.audio.connect("notify::default-speaker", () => {
+wp!.audio.connect("notify::default-speaker", () => {
   setCurrentIcon(updateIcon());
   setupSpeakerSignals();
 });
