@@ -22,6 +22,7 @@ dialog
 discord
 dmenu
 docker
+earlyoom
 efibootmgr
 ethtool
 extra-cmake-modules
@@ -145,6 +146,7 @@ pipewire
 pipewire-alsa
 pipewire-jack
 pipewire-pulse
+plymouth
 pnpm
 polkit-gnome
 power-profiles-daemon

@@ -6,7 +6,7 @@
   "file_finder": {
     "modal_max_width": "medium",
   },
-  "theme": "Catppuccin Espresso (Blur) [Light]",
+  "theme": "Catppuccin Mocha (Blur) [Light]",
   "icon_theme": "Zed (Default)",
   "git_panel": {
     "collapse_untracked_diff": true,
@@ -63,6 +63,9 @@
     "CSS": {
       "enable_language_server": false,
     },
+  },
+  "file_types": {
+    "Editorconfig": ["*.conf"]
   },
   "gutter": {
     "line_numbers": true,

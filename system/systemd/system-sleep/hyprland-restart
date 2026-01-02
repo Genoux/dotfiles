@@ -1,0 +1,13 @@
+#!/bin/bash
+# Restart Hyprland after hibernate resume to avoid crash
+# AMD Renoir has issues with Wayland compositor resume after hibernate
+
+if [ "$1" = "post" ]; then
+    # Get the user running Hyprland
+    HYPR_USER=$(ps aux | grep "Hyprland" | grep -v grep | awk '{print $1}' | head -1)
+
+    if [ -n "$HYPR_USER" ]; then
+        # Kill Hyprland - login manager will restart it
+        pkill -u "$HYPR_USER" Hyprland
+    fi
+fi

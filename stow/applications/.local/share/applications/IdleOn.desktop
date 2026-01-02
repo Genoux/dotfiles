@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=IdleOn
+Comment=Play this game on Steam
+Exec=steam steam://rungameid/1476970
+Icon=steam_icon_1476970
+Terminal=false
+Type=Application
+Categories=Game;

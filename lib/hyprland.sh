@@ -342,8 +342,158 @@ hyprland_show_version() {
     fi
 }
 
+# Generate GPU-specific configuration
+generate_gpu_config() {
+    local gpu_conf="$HOME/.config/hypr/gpu.conf"
+    local gpu_type=""
+
+    # Detect GPU
+    if has_nvidia_gpu; then
+        gpu_type="NVIDIA"
+    elif has_amd_gpu; then
+        gpu_type="AMD"
+    elif has_intel_gpu; then
+        gpu_type="Intel"
+    else
+        gpu_type="Unknown"
+    fi
+
+    log_info "Detected GPU: $gpu_type"
+
+    # Find the correct DRI devices
+    local dri_card=$(ls -1 /dev/dri/card* 2>/dev/null | grep -v 'card0' | head -1 | sed 's|/dev/dri/||')
+    local render_device=$(ls -1 /dev/dri/renderD* 2>/dev/null | head -1 | sed 's|/dev/dri/||')
+
+    # Fallback to card0 if no other card found
+    [[ -z "$dri_card" ]] && dri_card="card0"
+    [[ -z "$render_device" ]] && render_device="renderD128"
+
+    # Backup existing gpu.conf
+    if [[ -f "$gpu_conf" ]]; then
+        cp "$gpu_conf" "${gpu_conf}.backup.$(date +%Y%m%d_%H%M%S)"
+        log_info "Backed up existing gpu.conf"
+    fi
+
+    # Generate header
+    cat > "$gpu_conf" << EOF
+# ================================
+# GPU-SPECIFIC CONFIGURATION
+# ================================
+# Auto-generated on $(date)
+# Detected GPU: $gpu_type
+# DRI card: /dev/dri/$dri_card
+# Render device: /dev/dri/$render_device
+
+EOF
+
+    # Add GPU-specific settings
+    if [[ "$gpu_type" == "NVIDIA" ]]; then
+        cat >> "$gpu_conf" << EOF
+# ================================
+# NVIDIA GPU SETTINGS
+# ================================
+env = GBM_BACKEND,nvidia-drm
+env = __GLX_VENDOR_LIBRARY_NAME,nvidia
+env = LIBVA_DRIVER_NAME,nvidia
+env = NVIDIA_WAYLAND_ENABLE_DRM_KMS,1
+env = __GL_GSYNC_ALLOWED,0
+env = __GL_VRR_ALLOWED,0
+
+# NVIDIA suspend/resume fixes
+env = __GL_MaxFramesAllowed,1
+env = __GL_SYNC_TO_VBLANK,0
+env = NVIDIA_FORCE_COMPOSITION_PIPELINE,1
+env = __GL_THREADED_OPTIMIZATIONS,0
+
+# WLR settings for NVIDIA
+env = WLR_NO_HARDWARE_CURSORS,1
+env = WLR_RENDERER,vulkan
+env = WLR_DRM_DEVICES,/dev/dri/${dri_card}
+env = WLR_RENDER_DRM_DEVICE,/dev/dri/${render_device}
+EOF
+    elif [[ "$gpu_type" == "AMD" ]]; then
+        cat >> "$gpu_conf" << EOF
+# ================================
+# AMD GPU SETTINGS
+# ================================
+# Hardware video acceleration
+env = LIBVA_DRIVER_NAME,radeonsi
+env = VDPAU_DRIVER,radeonsi
+
+# WLR settings for AMD
+env = WLR_RENDERER,vulkan
+env = WLR_DRM_DEVICES,/dev/dri/${dri_card}
+env = WLR_RENDER_DRM_DEVICE,/dev/dri/${render_device}
+
+# Mesa/AMD optimizations
+env = MESA_SHADER_CACHE_DISABLE,false
+env = RADV_PERFTEST,gpl,nggc,sam
+env = AMD_VULKAN_ICD,RADV
+EOF
+    elif [[ "$gpu_type" == "Intel" ]]; then
+        cat >> "$gpu_conf" << EOF
+# ================================
+# INTEL GPU SETTINGS
+# ================================
+# Hardware video acceleration
+env = LIBVA_DRIVER_NAME,iHD
+env = VDPAU_DRIVER,va_gl
+
+# WLR settings for Intel
+env = WLR_RENDERER,vulkan
+env = WLR_DRM_DEVICES,/dev/dri/${dri_card}
+env = WLR_RENDER_DRM_DEVICE,/dev/dri/${render_device}
+EOF
+    else
+        cat >> "$gpu_conf" << EOF
+# ================================
+# GENERIC GPU SETTINGS
+# ================================
+env = WLR_RENDERER,vulkan
+EOF
+    fi
+
+    log_success "Generated gpu.conf for $gpu_type"
+    log_info "DRI card: /dev/dri/$dri_card"
+    log_info "Render device: /dev/dri/$render_device"
+}
+
+# Setup GPU configuration
+hyprland_setup_gpu() {
+    log_section "GPU Configuration Setup"
+
+    # Ensure directory exists
+    ensure_directory "$HOME/.config/hypr"
+
+    generate_gpu_config
+
+    # Update hyprland.conf to source gpu.conf if not already there
+    local main_config="$HOME/.config/hypr/hyprland.conf"
+    if [[ -f "$main_config" ]] && ! grep -q "source.*gpu\.conf" "$main_config"; then
+        # Add before other sources to ensure GPU settings load first
+        if grep -q "^source = " "$main_config"; then
+            # Insert before the first source line
+            sed -i '0,/^source = /{s/^source = /source = ~\/.config\/hypr\/gpu.conf\n&/}' "$main_config"
+        else
+            # Add at the beginning of the file after comments
+            sed -i '1a source = ~/.config/hypr/gpu.conf' "$main_config"
+        fi
+        log_success "Added gpu.conf to hyprland.conf"
+    elif [[ -f "$main_config" ]]; then
+        log_info "gpu.conf already sourced in hyprland.conf"
+    fi
+
+    echo
+    log_warning "You need to restart Hyprland for GPU changes to take effect"
+    log_info "Log out and log back in, or restart your system"
+}
+
 # Setup Hyprland with plugins and monitors
 hyprland_setup_all() {
+    # Setup GPU configuration first
+    hyprland_setup_gpu
+    echo
+
     if command -v hyprpm &>/dev/null; then
         source "$DOTFILES_DIR/lib/hyprland-plugins.sh"
         setup_hyprland_plugins
