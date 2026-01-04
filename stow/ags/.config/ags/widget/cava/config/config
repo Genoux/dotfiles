@@ -44,7 +44,8 @@ bar_height = 2
 
 # Seconds with no input before cava goes to sleep mode. Cava will not perform FFT or drawing and
 # only check for input once per second. Cava will wake up once input is detected. 0 = disable.
-# sleep_timer = 0
+# Battery optimization: Enable sleep mode after 5 seconds of silence
+sleep_timer = 5
 
 # Visual channels. Can be 'stereo' or 'mono'.
 # 'stereo' mirrors both channels with low frequencies in center.

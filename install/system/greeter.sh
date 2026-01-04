@@ -28,9 +28,16 @@ if ! id greeter &>/dev/null; then
 fi
 
 # Create necessary directories
-sudo mkdir -p /var/cache/sysc-greet /var/lib/greeter/Pictures/wallpapers 2>/dev/null
+sudo mkdir -p /var/cache/sysc-greet /var/lib/greeter/Pictures/wallpapers /var/lib/greeter/.cache/sysc-greet 2>/dev/null
 sudo chown -R greeter:greeter /var/cache/sysc-greet /var/lib/greeter 2>/dev/null
 sudo chmod 755 /var/lib/greeter 2>/dev/null
+
+# Deploy greeter preferences
+if [[ -f "$DOTFILES_DIR/system/greetd/preferences.json" ]]; then
+    sudo cp "$DOTFILES_DIR/system/greetd/preferences.json" /var/lib/greeter/.cache/sysc-greet/preferences 2>/dev/null
+    sudo chown greeter:greeter /var/lib/greeter/.cache/sysc-greet/preferences 2>/dev/null
+    log_success "Greeter preferences deployed"
+fi
 
 # Copy wallpapers if user has any
 if [[ -d "$HOME/.config/hypr/wallpapers" ]]; then

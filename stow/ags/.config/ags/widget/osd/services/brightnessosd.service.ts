@@ -1,6 +1,7 @@
 import { createState } from "ags";
+import { Variable } from "astal";
 import { exec, execAsync } from "ags/process";
-import { timeout, interval } from "ags/time";
+import { timeout } from "ags/time";
 import { createOSDService } from "../../../services/osd";
 
 const osd = createOSDService(2000);
@@ -64,25 +65,35 @@ if (hasBacklight) {
     setBrightnessIcon(getBrightnessIcon(initialBrightness));
   });
 
-  interval(250, async () => {
-    if (isReading) return;
+  // EVENT-DRIVEN: Monitor brightness changes via udevadm (only triggers on actual changes)
+  // Replaces 250ms polling that wasted CPU with 8 process spawns/second
+  const brightnessMonitor = Variable(0).watch(
+    "sh -c 'udevadm monitor --subsystem-match=backlight | while read line; do brightnessctl get; done'",
+    (out) => parseInt(out.trim())
+  );
 
-    isReading = true;
+  // Update state when brightness changes (event-driven, not polled!)
+  brightnessMonitor.subscribe(async (current) => {
     try {
-      const currentBrightness = await readBrightnessAsync();
-      const brightnessChanged = Math.abs(currentBrightness - lastBrightness) > 0.0001;
+      const maxStr = await execAsync("brightnessctl max");
+      const max = parseInt(maxStr.trim());
 
-      if (brightnessChanged && currentBrightness !== lastBrightness) {
-        lastBrightness = currentBrightness;
-        setBrightnessState({ brightness: currentBrightness });
-        setBrightnessIcon(getBrightnessIcon(currentBrightness));
+      if (!isNaN(current) && !isNaN(max) && max > 0) {
+        const brightness = current / max;
+        const brightnessChanged = Math.abs(brightness - lastBrightness) > 0.0001;
 
-        if (!osd.initializing) {
-          osd.show();
+        if (brightnessChanged) {
+          lastBrightness = brightness;
+          setBrightnessState({ brightness });
+          setBrightnessIcon(getBrightnessIcon(brightness));
+
+          if (!osd.initializing) {
+            osd.show();
+          }
         }
       }
-    } finally {
-      isReading = false;
+    } catch (error) {
+      console.error("Failed to update brightness:", error);
     }
   });
 

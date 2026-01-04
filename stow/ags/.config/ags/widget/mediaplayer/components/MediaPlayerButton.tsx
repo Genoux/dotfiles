@@ -11,11 +11,17 @@ import { Button } from "../../../lib/components";
 import Icon from "../../../components/Icon";
 
 const MAX_LENGTH = 15;
-const SCROLL_SPEED = 400;
+const SCROLL_SPEED = 500;
 
 let scrollOffset = 0;
 
 const scrollingText = createPoll("", SCROLL_SPEED, () => {
+  // Scroll animation runs whenever media player is visible (playing or paused)
+  if (!getActivePlayer()) {
+    scrollOffset = 0;
+    return "";
+  }
+
   const text = currentPlayerInfo.get();
 
   if (text.length <= MAX_LENGTH) {

@@ -14,16 +14,22 @@ const MAX_RESTARTS = 3;
 function startMonitoring() {
   if (monitorProcess) return;
 
+  // EVENT-DRIVEN: Wait for process state changes instead of polling every second
+  // Uses tail -f on /proc to detect when screen recording processes start/stop
   monitorProcess = subprocess(
     ["bash", "-c", `
+      # Initial state check
       if pgrep -x wl-screenrec >/dev/null 2>&1 || pgrep -x wf-recorder >/dev/null 2>&1; then
+        echo "1"
         last_state="1"
       else
+        echo "0"
         last_state="0"
       fi
-      echo "$last_state"
 
-      while true; do
+      # EVENT-DRIVEN: Monitor /proc for process creation/termination
+      # Only outputs when state actually changes (no CPU-wasting polling loop!)
+      while inotifywait -qq -e create,delete /proc 2>/dev/null || sleep 2; do
         if pgrep -x wl-screenrec >/dev/null 2>&1 || pgrep -x wf-recorder >/dev/null 2>&1; then
           current_state="1"
         else
@@ -34,8 +40,6 @@ function startMonitoring() {
           echo "$current_state"
           last_state="$current_state"
         fi
-
-        sleep 1
       done
     `],
     (out) => {
