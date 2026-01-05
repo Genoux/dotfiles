@@ -6,7 +6,7 @@
   "file_finder": {
     "modal_max_width": "medium",
   },
-  "theme": "Catppuccin Macchiato (Blur) [Heavy]",
+  "theme": "workspace",
   "icon_theme": "Zed (Default)",
   "git_panel": {
     "collapse_untracked_diff": true,

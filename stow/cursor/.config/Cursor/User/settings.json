@@ -6,7 +6,6 @@
   "window.confirmBeforeClose": "always",
   "files.simpleDialog.enable": false,
   "workbench.iconTheme": "material-icon-theme",
-  "editor.hover.enabled": false,
   "window.commandCenter": true,
   "workbench.colorTheme": "Catppuccin Mocha",
   "editor.fontFamily": "JetBrainsMono Nerd Font Prono, JetBrainsMono Nerd Font",

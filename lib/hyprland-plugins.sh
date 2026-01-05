@@ -101,8 +101,8 @@ remove_plugin() {
         hyprpm disable "$plugin_name" 2>/dev/null || true
     fi
     
-    # Remove plugin
-    if hyprpm remove "$plugin_name" 2>/dev/null; then
+    # Remove plugin (auto-confirm with 'y' via process substitution)
+    if hyprpm remove "$plugin_name" < <(echo "y") 2>/dev/null; then
         log_success "Removed: $plugin_name"
         return 0
     else
@@ -128,7 +128,7 @@ install_plugin() {
     # Add plugin if not already added
     if ! hyprpm list 2>/dev/null | grep -q "$plugin_url"; then
         log_info "Adding plugin from $plugin_url..."
-        if ! hyprpm add "$plugin_url"; then
+        if ! hyprpm add "$plugin_url" < <(echo "y"); then
             log_error "Failed to add plugin: $plugin_name"
             log_info "Please run manually: hyprpm add $plugin_url"
             return 1
@@ -249,7 +249,7 @@ setup_hyprland_plugins() {
 
         # Update all plugins
         log_info "Updating plugins..."
-        hyprpm update
+        hyprpm update < <(echo "y")
     fi
 
 }

@@ -1,6 +1,5 @@
 import { createState } from "ags";
-import { Variable } from "astal";
-import { exec, execAsync } from "ags/process";
+import { exec, execAsync, subprocess } from "ags/process";
 import { timeout } from "ags/time";
 import { createOSDService } from "../../../services/osd";
 
@@ -67,35 +66,36 @@ if (hasBacklight) {
 
   // EVENT-DRIVEN: Monitor brightness changes via udevadm (only triggers on actual changes)
   // Replaces 250ms polling that wasted CPU with 8 process spawns/second
-  const brightnessMonitor = Variable(0).watch(
-    "sh -c 'udevadm monitor --subsystem-match=backlight | while read line; do brightnessctl get; done'",
-    (out) => parseInt(out.trim())
-  );
+  subprocess(
+    ["sh", "-c", "udevadm monitor --subsystem-match=backlight | while read line; do brightnessctl get; done"],
+    async (out: string) => {
+      try {
+        const current = parseInt(out.trim());
+        const maxStr = await execAsync("brightnessctl max");
+        const max = parseInt(maxStr.trim());
 
-  // Update state when brightness changes (event-driven, not polled!)
-  brightnessMonitor.subscribe(async (current) => {
-    try {
-      const maxStr = await execAsync("brightnessctl max");
-      const max = parseInt(maxStr.trim());
+        if (!isNaN(current) && !isNaN(max) && max > 0) {
+          const brightness = current / max;
+          const brightnessChanged = Math.abs(brightness - lastBrightness) > 0.0001;
 
-      if (!isNaN(current) && !isNaN(max) && max > 0) {
-        const brightness = current / max;
-        const brightnessChanged = Math.abs(brightness - lastBrightness) > 0.0001;
+          if (brightnessChanged) {
+            lastBrightness = brightness;
+            setBrightnessState({ brightness });
+            setBrightnessIcon(getBrightnessIcon(brightness));
 
-        if (brightnessChanged) {
-          lastBrightness = brightness;
-          setBrightnessState({ brightness });
-          setBrightnessIcon(getBrightnessIcon(brightness));
-
-          if (!osd.initializing) {
-            osd.show();
+            if (!osd.initializing) {
+              osd.show();
+            }
           }
         }
+      } catch (error) {
+        console.error("Failed to update brightness:", error);
       }
-    } catch (error) {
-      console.error("Failed to update brightness:", error);
+    },
+    (err: string) => {
+      console.error("Brightness monitor error:", err);
     }
-  });
+  );
 
   timeout(300, () => {
     osd.finishInitialization();
