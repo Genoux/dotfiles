@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch",
+      "Bash(ls:*)"
+    ]
+  },
+  "enabledPlugins": {
+    "backend-development@claude-code-workflows": true,
+    "javascript-typescript@claude-code-workflows": true,
+    "frontend-excellence@dotclaude-plugins": true,
+    "ui-designer@claude-code-marketplace": true,
+    "security-guidance@claude-code-plugins": true
+  }
+}

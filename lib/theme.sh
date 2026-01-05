@@ -32,15 +32,20 @@ show_theme_name() {
         else
             show_info "Active theme" "none"
         fi
-        return
-    fi
-
-    if [[ -f "$scheme_file" ]]; then
-        local scheme_name=$(grep "^scheme:" "$scheme_file" | cut -d'"' -f2)
-        local scheme_author=$(grep "^author:" "$scheme_file" | cut -d'"' -f2)
-        show_info "Active theme" "$scheme_name by $scheme_author"
     else
-        show_info "Active theme" "Scheme file not found"
+        if [[ -f "$scheme_file" ]]; then
+            local scheme_name=$(grep "^scheme:" "$scheme_file" | cut -d'"' -f2)
+            local scheme_author=$(grep "^author:" "$scheme_file" | cut -d'"' -f2)
+            show_info "Active theme" "$scheme_name by $scheme_author"
+        else
+            show_info "Active theme" "Scheme file not found"
+        fi
+    fi
+    
+    # Show GTK theme
+    local current_gtk=$(get_current_gtk_theme)
+    if [[ -n "$current_gtk" ]] && [[ "$current_gtk" != "unknown" ]]; then
+        show_info "GTK theme" "$current_gtk"
     fi
 }
 
@@ -106,6 +111,7 @@ show_theme_colors() {
 # Show current theme information (for menu header)
 theme_show_current() {
     show_theme_name
+    echo
 }
 
 # Apply flavours theme using base16 scheme
@@ -356,6 +362,49 @@ theme_status() {
 }
 
 
+# Get current GTK theme name
+get_current_gtk_theme() {
+    if command -v gsettings &>/dev/null; then
+        gsettings get org.gnome.desktop.interface gtk-theme 2>/dev/null | tr -d "'"
+    else
+        echo "unknown"
+    fi
+}
+
+# GTK theme submenu
+gtk_theme_menu() {
+    source "$DOTFILES_DIR/lib/menu.sh"
+
+    while true; do
+        clear_screen "GTK Themes"
+        
+        local current_gtk=$(get_current_gtk_theme)
+        show_info "Active" "$current_gtk"
+        echo
+
+        local action=$(choose_option \
+            "Install theme" \
+            "Uninstall current" \
+            "Back")
+
+        [[ -z "$action" ]] && return
+
+        case "$action" in
+            "Install theme")
+                clear_screen "GTK Themes"
+                bash "$DOTFILES_DIR/lib/gtk.sh" install
+                ;;
+            "Uninstall current")
+                clear_screen "GTK Themes"
+                bash "$DOTFILES_DIR/lib/gtk.sh" uninstall
+                ;;
+            "Back")
+                return
+                ;;
+        esac
+    done
+}
+
 # Theme management menu
 theme_menu() {
     source "$DOTFILES_DIR/lib/menu.sh"
@@ -363,11 +412,11 @@ theme_menu() {
     while true; do
         clear_screen "Themes"
         theme_show_current
-        echo
 
         local action=$(choose_option \
             "Select theme" \
             "Show details" \
+            "GTK themes" \
             "Back")
 
         [[ -z "$action" ]] && return
@@ -378,6 +427,9 @@ theme_menu() {
                 ;;
             "Show details")
                 run_operation "" theme_status
+                ;;
+            "GTK themes")
+                gtk_theme_menu
                 ;;
             "Back")
                 return

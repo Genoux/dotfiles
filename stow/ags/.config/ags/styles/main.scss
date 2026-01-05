@@ -51,8 +51,9 @@ popover {
 
     transform: translateY(5px);
     border: 1px solid $alpha-light;
-    border-radius: radius(md);
+    border-radius: radius(sm);
     background-color: color.adjust($base00, $alpha: -0.5);
+    padding: spacing(sm);
   }
 
   arrow {
