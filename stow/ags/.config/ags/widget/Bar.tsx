@@ -64,8 +64,9 @@ export default function Bar(gdkmonitor: Gdk.Monitor) {
               <SystemTemp />
               <TimeDisplay />
               <SystemInfoButton />
-              <SystemDotfilesButton />
               <SystemMenuButton />
+              <SystemDotfilesButton />
+
             </box>
           </box>
         </centerbox>

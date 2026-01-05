@@ -62,7 +62,6 @@ function startCava() {
   }
 
   try {
-    console.log("[Cava] Starting - media player active");
     cavaProcess = subprocess(
       ["cava", "-p", CFG],
       (out) => {

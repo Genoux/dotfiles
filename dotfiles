@@ -63,12 +63,25 @@ show_usage() {
     echo "    setup                  Setup plugins and monitors"
     echo "    status                 Show Hyprland info"
     echo
+    echo "  updates              Dotfiles repository updates"
+    echo "    check                  Check for updates"
+    echo "    apply                  Apply available updates"
+    echo "    status                 Show update status"
+    echo
     echo "  menu                 Show interactive menu"
 }
 
 # Show overall system status
 show_status() {
     clear_screen "System Status"
+    
+    # Dotfiles version
+    local version="unknown"
+    if [[ -f "$DOTFILES_DIR/VERSION" ]]; then
+        version=$(cat "$DOTFILES_DIR/VERSION" 2>/dev/null || echo "unknown")
+    fi
+    show_info "Dotfiles" "v$version"
+    echo
     
     # Hardware info
     show_hardware_info
@@ -143,6 +156,7 @@ show_menu() {
 
         local action=$(choose_option --selected "System Status" \
             "System Status" \
+            "Check for Updates" \
             "Full Install" \
             "Packages" \
             "Configs" \
@@ -159,6 +173,10 @@ show_menu() {
             "System Status")
                 show_status
                 pause
+                ;;
+            "Check for Updates")
+                source "$DOTFILES_DIR/lib/updates.sh"
+                updates_menu
                 ;;
             "Full Install")
                 # Exit menu and run installation with clean screen
@@ -278,6 +296,15 @@ main() {
             case "$subcommand" in
                 setup) hyprland_setup_all ;;
                 status|"") hyprland_status ;;
+                *) log_error "Unknown subcommand: $subcommand"; show_usage; exit 1 ;;
+            esac
+            ;;
+        updates)
+            source "$DOTFILES_DIR/lib/updates.sh"
+            case "$subcommand" in
+                check) updates_check ;;
+                apply) updates_apply ;;
+                status|"") updates_status ;;
                 *) log_error "Unknown subcommand: $subcommand"; show_usage; exit 1 ;;
             esac
             ;;

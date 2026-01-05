@@ -1,0 +1,22 @@
+[Unit]
+Description=Check for dotfiles repository updates
+Documentation=man:git(1)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/system-check-dotfiles-updates --silent
+StandardOutput=journal
+StandardError=journal
+
+# Environment
+Environment=DOTFILES_DIR=%h/dotfiles
+
+# Resource limits (lightweight check)
+Nice=19
+IOSchedulingClass=idle
+
+[Install]
+WantedBy=default.target
+

@@ -1,0 +1,20 @@
+[Unit]
+Description=Check for dotfiles updates hourly
+Documentation=man:systemd.timer(5)
+
+[Timer]
+# Check hourly
+OnCalendar=hourly
+
+# Also check 5 minutes after boot
+OnBootSec=5min
+
+# Run immediately if we missed a check (e.g., system was suspended)
+Persistent=true
+
+# Randomize start time by up to 5 minutes to avoid load spikes
+RandomizedDelaySec=5min
+
+[Install]
+WantedBy=timers.target
+

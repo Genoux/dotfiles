@@ -11,7 +11,7 @@ source "$DOTFILES_DIR/install/helpers/all.sh"
 echo
 log_section "Managing Systemd Services"
 
-# Reload user systemd daemon to pick up new services
+# Reload user systemd daemon to pick up new services and timers
 systemctl --user daemon-reload
 
 # Collect all services
@@ -19,6 +19,14 @@ services=()
 for service_file in "$HOME/.config/systemd/user"/*.service; do
     if [[ -f "$service_file" ]]; then
         services+=("$(basename "$service_file")")
+    fi
+done
+
+# Collect all timers
+timers=()
+for timer_file in "$HOME/.config/systemd/user"/*.timer; do
+    if [[ -f "$timer_file" ]]; then
+        timers+=("$(basename "$timer_file")")
     fi
 done
 
@@ -37,9 +45,23 @@ if [[ ${#services[@]} -gt 0 ]]; then
     ' _ "${services[@]}"
     
     log_success "All services enabled and started"
-    
 else
     log_info "No services found"
+fi
+
+# Process timers with spinner
+if [[ ${#timers[@]} -gt 0 ]]; then
+    echo
+    gum spin --spinner dot --title "Enabling timers..." -- bash -c '
+        for timer in "$@"; do
+            systemctl --user enable "$timer" 2>/dev/null
+            systemctl --user start "$timer" 2>/dev/null
+        done
+    ' _ "${timers[@]}"
+    
+    log_success "All timers enabled and started"
+else
+    log_info "No timers found"
 fi
 
 echo

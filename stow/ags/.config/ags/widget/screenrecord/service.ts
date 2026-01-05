@@ -14,10 +14,13 @@ const MAX_RESTARTS = 3;
 function startMonitoring() {
   if (monitorProcess) return;
 
-  // EVENT-DRIVEN: Wait for process state changes instead of polling every second
-  // Uses tail -f on /proc to detect when screen recording processes start/stop
+  // EVENT-DRIVEN: Watch the Videos directory for new recording files
+  // Much more efficient than polling pgrep every N seconds
   monitorProcess = subprocess(
     ["bash", "-c", `
+      VIDEOS_DIR="\${XDG_VIDEOS_DIR:-$HOME/Videos}"
+      mkdir -p "\${VIDEOS_DIR}"
+      
       # Initial state check
       if pgrep -x wl-screenrec >/dev/null 2>&1 || pgrep -x wf-recorder >/dev/null 2>&1; then
         echo "1"
@@ -27,23 +30,28 @@ function startMonitoring() {
         last_state="0"
       fi
 
-      # EVENT-DRIVEN: Monitor /proc for process creation/termination
-      # Only outputs when state actually changes (no CPU-wasting polling loop!)
-      while inotifywait -qq -e create,delete /proc 2>/dev/null || sleep 2; do
-        if pgrep -x wl-screenrec >/dev/null 2>&1 || pgrep -x wf-recorder >/dev/null 2>&1; then
-          current_state="1"
-        else
-          current_state="0"
-        fi
+      # Watch Videos directory for screenrecording file creation/modification
+      # When recording starts, a file is created; when it stops, file is closed
+      inotifywait -m -e create,delete,close_write "\${VIDEOS_DIR}" 2>/dev/null | while read -r dir event file; do
+        # Only react to screenrecording files
+        if [[ "$file" == screenrecording-* ]]; then
+          # On recording file event, check if recorder is running
+          if pgrep -x wl-screenrec >/dev/null 2>&1 || pgrep -x wf-recorder >/dev/null 2>&1; then
+            current_state="1"
+          else
+            current_state="0"
+          fi
 
-        if [ "$current_state" != "$last_state" ]; then
-          echo "$current_state"
-          last_state="$current_state"
+          if [ "$current_state" != "$last_state" ]; then
+            echo "$current_state"
+            last_state="$current_state"
+          fi
         fi
       done
     `],
     (out) => {
       const recording = out.trim() === "1";
+      console.log(`[ScreenRecord] State changed: ${recording ? "Recording" : "Stopped"}`);
       setIsRecording(recording);
       restartCount = 0;
     },
@@ -93,6 +101,13 @@ export function toggleRecording(scope: RecordScope = "region", withAudio = false
   try {
     const audioParam = withAudio ? " audio" : "";
     GLib.spawn_command_line_async(`${SCRIPT_PATH} ${scope}${audioParam}`);
+    
+    // Check state immediately after 500ms (give process time to start)
+    GLib.timeout_add(GLib.PRIORITY_DEFAULT, 500, () => {
+      const nowRecording = isCurrentlyRecording();
+      setIsRecording(nowRecording);
+      return false;
+    });
   } catch (error) {
     console.error("Failed to toggle recording:", error);
   }
