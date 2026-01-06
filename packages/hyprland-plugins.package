@@ -1,4 +1,16 @@
 # Hyprland Plugins Configuration
-# Format: plugin_name = repository_url
+# Just list plugin names from https://github.com/hyprwm/hyprland-plugins
+# One plugin per line
+#
+# Available plugins:
+#   hyprexpo - workspace overview (expo-like)
+#   hyprbars - title bars on windows
+#   hyprtrails - smooth trails behind windows  
+#   hyprwinwrap - xwinwrap clone for wallpapers
+#   borders-plus-plus - additional borders
+#   csgo-vulkan-fix - CS:GO custom resolution fix
+#   hyprfocus - flashfocus for hyprland
+#   hyprscrolling - scrolling layout
+#   xtra-dispatchers - additional dispatchers
 
-#Hyprspace = https://github.com/KZDKM/Hyprspace
+hyprexpo

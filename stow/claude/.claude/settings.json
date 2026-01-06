@@ -10,6 +10,7 @@
     "javascript-typescript@claude-code-workflows": true,
     "frontend-excellence@dotclaude-plugins": true,
     "ui-designer@claude-code-marketplace": true,
-    "security-guidance@claude-code-plugins": true
+    "security-guidance@claude-code-plugins": true,
+    "clangd-lsp@claude-plugins-official": true
   }
 }

@@ -74,7 +74,7 @@ The installation script will:
 1. Install yay (AUR helper)
 2. Install base system packages
 3. Deploy configuration files via Stow
-4. Install Hyprland plugins
+4. Install Hyprland plugins (auto-installs from official repo)
 5. Apply themes
 6. Configure shell and systemd services
 

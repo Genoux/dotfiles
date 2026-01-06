@@ -1,0 +1,13 @@
+#!/bin/bash
+# Restart AGS after suspend/hibernate resume
+# Ensures AGS is running after Wake-on-LAN
+
+if [ "$1" = "post" ]; then
+    # Get the user running Hyprland
+    HYPR_USER=$(ps aux | grep "Hyprland" | grep -v grep | awk '{print $1}' | head -1)
+
+    if [ -n "$HYPR_USER" ]; then
+        # Restart AGS service for the user
+        sudo -u "$HYPR_USER" XDG_RUNTIME_DIR=/run/user/$(id -u "$HYPR_USER") systemctl --user restart ags.service
+    fi
+fi

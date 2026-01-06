@@ -1,12 +1,14 @@
 #!/bin/bash
 # Hyprland plugin management
 #
+# Simple plugin system: lists plugins from hyprland-plugins repo
 # Configuration format in packages/hyprland-plugins.package:
-#   plugin_name = repository_url
+#   Just list plugin names, one per line
 #
 # Example:
-#   Hyprspace = https://github.com/KZDKM/Hyprspace
-#   split-monitor-workspaces = https://github.com/Duckonaut/split-monitor-workspaces
+#   hyprexpo
+#   hyprbars
+#   hyprtrails
 
 # Get dotfiles directory
 DOTFILES_DIR="$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" && pwd)"
@@ -17,17 +19,18 @@ if [[ -z "${DOTFILES_HELPERS_LOADED:-}" ]]; then
     export DOTFILES_HELPERS_LOADED=true
 fi
 
+# Official Hyprland plugins repository
+HYPRLAND_PLUGINS_REPO="https://github.com/hyprwm/hyprland-plugins"
+
 # Plugin configuration file
 HYPRLAND_PLUGINS_FILE="$DOTFILES_DIR/packages/hyprland-plugins.package"
 
-# Load plugins from configuration file
-# Format: plugin_name = repository_url
-load_plugin_config() {
-    declare -gA HYPRLAND_PLUGINS
+# Load plugin names from configuration file
+load_plugin_names() {
+    local -a plugins=()
 
     if [[ ! -f "$HYPRLAND_PLUGINS_FILE" ]]; then
-        log_warning "Plugin configuration file not found: $HYPRLAND_PLUGINS_FILE"
-        return 1
+        return 0
     fi
 
     while IFS= read -r line || [[ -n "$line" ]]; do
@@ -35,28 +38,15 @@ load_plugin_config() {
         [[ -z "$line" ]] && continue
         [[ "$line" =~ ^[[:space:]]*#.*$ ]] && continue
 
-        # Parse line: plugin_name = repository_url
-        if [[ "$line" =~ ^[[:space:]]*([^=]+)[[:space:]]*=[[:space:]]*(.+)[[:space:]]*$ ]]; then
-            local plugin_name="${BASH_REMATCH[1]}"
-            local plugin_url="${BASH_REMATCH[2]}"
-
-            # Trim whitespace
-            plugin_name="${plugin_name## }"
-            plugin_name="${plugin_name%% }"
-            plugin_url="${plugin_url## }"
-            plugin_url="${plugin_url%% }"
-
-            # Validate both fields are present
-            if [[ -z "$plugin_name" ]] || [[ -z "$plugin_url" ]]; then
-                log_warning "Invalid plugin entry (missing name or URL): $line"
-                continue
-            fi
-
-            HYPRLAND_PLUGINS["$plugin_name"]="$plugin_url"
-        else
-            log_warning "Invalid plugin entry format (expected: name = url): $line"
-        fi
+        # Trim whitespace
+        line="${line## }"
+        line="${line%% }"
+        
+        # Add non-empty plugin names
+        [[ -n "$line" ]] && plugins+=("$line")
     done < "$HYPRLAND_PLUGINS_FILE"
+    
+    printf '%s\n' "${plugins[@]}"
 }
 
 # Ensure hyprpm is available
@@ -66,86 +56,16 @@ ensure_hyprpm() {
     fi
 }
 
-# Get list of enabled plugins
-get_enabled_plugins() {
-    hyprpm list 2>/dev/null | grep "Plugin" | awk '{print $2}' || true
-}
-
-# Get list of all installed plugins (enabled or disabled)
-get_all_installed_plugins() {
-    # Get all plugin names from hyprpm list
-    # Format: "│ Plugin PluginName" or "→ Repository PluginName:"
-    hyprpm list 2>/dev/null | sed 's/\x1b\[[0-9;]*m//g' | grep -E "(^│ Plugin|^→ Repository)" | sed 's/^│ Plugin //; s/^→ Repository //; s/:$//' | sort -u || true
+# Check if repository is already added
+is_repo_added() {
+    local repo_url="$1"
+    hyprpm list 2>/dev/null | grep -q "$repo_url"
 }
 
 # Check if plugin is enabled
 is_plugin_enabled() {
     local plugin_name="$1"
-    # Strip ANSI codes and check if plugin is enabled
     hyprpm list 2>/dev/null | sed 's/\x1b\[[0-9;]*m//g' | grep -A1 "Plugin $plugin_name" | grep -q "enabled.*true"
-}
-
-# Check if plugin is installed (enabled or disabled)
-is_plugin_installed() {
-    local plugin_name="$1"
-    # Check if plugin appears in the list (either as "│ Plugin PluginName" or "→ Repository PluginName:")
-    hyprpm list 2>/dev/null | sed 's/\x1b\[[0-9;]*m//g' | grep -qE "(│ Plugin $plugin_name|→ Repository $plugin_name:)"
-}
-
-# Remove a plugin
-remove_plugin() {
-    local plugin_name="$1"
-    
-    # Disable first if enabled
-    if is_plugin_enabled "$plugin_name"; then
-        hyprpm disable "$plugin_name" 2>/dev/null || true
-    fi
-    
-    # Remove plugin (auto-confirm with 'y' via process substitution)
-    if hyprpm remove "$plugin_name" < <(echo "y") 2>/dev/null; then
-        log_success "Removed: $plugin_name"
-        return 0
-    else
-        log_warning "Failed to remove: $plugin_name"
-        return 1
-    fi
-}
-
-# Install and enable a plugin
-install_plugin() {
-    local plugin_name="$1"
-    local plugin_url="$2"
-
-    log_info "Installing plugin: $plugin_name"
-    echo
-
-    # Check if plugin is already installed and enabled
-    if is_plugin_enabled "$plugin_name"; then
-        log_success "Plugin already installed and enabled: $plugin_name"
-        return 0
-    fi
-
-    # Add plugin if not already added
-    if ! hyprpm list 2>/dev/null | grep -q "$plugin_url"; then
-        log_info "Adding plugin from $plugin_url..."
-        if ! hyprpm add "$plugin_url" < <(echo "y"); then
-            log_error "Failed to add plugin: $plugin_name"
-            log_info "Please run manually: hyprpm add $plugin_url"
-            return 1
-        fi
-    else
-        log_info "Plugin repository already added"
-    fi
-
-    # Enable plugin
-    log_info "Enabling plugin: $plugin_name..."
-    if ! hyprpm enable "$plugin_name"; then
-        log_error "Failed to enable plugin: $plugin_name"
-        return 1
-    fi
-
-    log_success "Plugin installed and enabled: $plugin_name"
-    echo
 }
 
 # Setup all configured plugins
@@ -154,10 +74,24 @@ setup_hyprland_plugins() {
 
     ensure_hyprpm
 
-    # Load plugin configuration
-    load_plugin_config
+    # Load plugin names from config
+    local -a plugin_names=()
+    while IFS= read -r name; do
+        plugin_names+=("$name")
+    done < <(load_plugin_names)
 
-    # Ensure build dependencies are installed first (before any plugin operations)
+    if [[ ${#plugin_names[@]} -eq 0 ]]; then
+        log_info "No plugins configured in $HYPRLAND_PLUGINS_FILE"
+        log_info "Add plugin names (one per line) to enable them"
+        echo
+        log_info "Available plugins: hyprexpo, hyprbars, hyprtrails, hyprwinwrap, etc."
+        return 0
+    fi
+
+    log_info "Configured plugins: ${plugin_names[*]}"
+    echo
+
+    # Ensure build dependencies are installed
     log_info "Checking build dependencies..."
     local deps=(cmake meson cpio git gcc)
     local missing=()
@@ -180,78 +114,62 @@ setup_hyprland_plugins() {
     fi
     echo
 
-    # Cache sudo credentials upfront to avoid multiple password prompts
-    # hyprpm operations may require sudo for loading/unloading plugins
-    sudo -v 2>/dev/null || true
+    # Request sudo access once upfront (hyprpm needs it for loading/unloading plugins)
+    log_info "Requesting elevated privileges for plugin operations..."
+    sudo -v || {
+        log_error "Sudo access required for plugin management"
+        return 1
+    }
+    echo
 
-    # Get list of currently installed plugins and remove orphaned ones
-    local installed_plugins=()
-    while IFS= read -r plugin; do
-        [[ -n "$plugin" ]] && installed_plugins+=("$plugin")
-    done < <(get_all_installed_plugins)
+    # Keep sudo alive in background during plugin operations
+    (while true; do sudo -v; sleep 50; done) 2>/dev/null &
+    local sudo_keepalive_pid=$!
 
-    # Remove plugins that are installed but not in config
-    if [[ ${#installed_plugins[@]} -gt 0 ]]; then
-        local removed_count=0
-        
-        for installed_plugin in "${installed_plugins[@]}"; do
-            # Check if plugin is in config
-            if [[ -z "${HYPRLAND_PLUGINS[$installed_plugin]:-}" ]]; then
-                if remove_plugin "$installed_plugin"; then
-                    ((removed_count++))
-                fi
-            fi
-        done
-        
-        if [[ $removed_count -gt 0 ]]; then
-            log_success "Removed $removed_count orphaned plugin(s)"
-            echo
-        fi
+    # Ensure repository is added (try to add, ignore if already exists)
+    log_info "Ensuring official Hyprland plugins repository..."
+    hyprpm add "$HYPRLAND_PLUGINS_REPO" < <(echo "y") 2>/dev/null || true
+    echo
+
+    # Update plugins (this will work whether repo was just added or already existed)
+    log_info "Updating plugins from repository..."
+    if ! hyprpm update < <(echo "y") 2>&1; then
+        log_warning "Update may have failed, but continuing..."
     fi
+    echo
 
-    # Install/update each plugin from config
-    if [[ ${#HYPRLAND_PLUGINS[@]} -eq 0 ]]; then
-        log_info "No plugins configured in $HYPRLAND_PLUGINS_FILE"
-    else
-        local installed_count=0
-        local updated_count=0
-        local failed_count=0
+    # Stop the sudo keepalive background process
+    kill "$sudo_keepalive_pid" 2>/dev/null || true
 
-        for plugin_name in "${!HYPRLAND_PLUGINS[@]}"; do
-            local plugin_url="${HYPRLAND_PLUGINS[$plugin_name]}"
+    # Enable each configured plugin
+    local enabled_count=0
+    local failed_count=0
 
-            if is_plugin_enabled "$plugin_name"; then
-                log_info "Plugin already enabled: $plugin_name (will update)"
-                ((installed_count++))
-            elif is_plugin_installed "$plugin_name"; then
-                log_info "Plugin installed but disabled: $plugin_name (enabling and updating)"
-                if hyprpm enable "$plugin_name" 2>/dev/null; then
-                    ((installed_count++))
-                else
-                    log_warning "Failed to enable plugin: $plugin_name"
-                    ((failed_count++))
-                fi
-            else
-                if install_plugin "$plugin_name" "$plugin_url"; then
-                    ((installed_count++))
-                else
-                    ((failed_count++))
-                fi
-            fi
-        done
-
-        echo
-        if [[ $failed_count -eq 0 ]]; then
-            log_success "All plugins configured successfully ($installed_count/${#HYPRLAND_PLUGINS[@]})"
+    for plugin_name in "${plugin_names[@]}"; do
+        log_info "Enabling plugin: $plugin_name"
+        
+        if is_plugin_enabled "$plugin_name"; then
+            log_success "Already enabled: $plugin_name"
+            ((enabled_count++))
         else
-            log_warning "$failed_count plugin(s) failed to install"
+            if hyprpm enable "$plugin_name" 2>/dev/null; then
+                log_success "Enabled: $plugin_name"
+                ((enabled_count++))
+            else
+                log_error "Failed to enable: $plugin_name"
+                log_info "Make sure '$plugin_name' is a valid plugin name"
+                ((failed_count++))
+            fi
         fi
+        echo
+    done
 
-        # Update all plugins
-        log_info "Updating plugins..."
-        hyprpm update < <(echo "y")
+    # Summary
+    if [[ $failed_count -eq 0 ]]; then
+        log_success "All plugins enabled successfully ($enabled_count/${#plugin_names[@]})"
+    else
+        log_warning "$failed_count plugin(s) failed to enable"
     fi
-
 }
 
 # Reload plugins
@@ -275,23 +193,26 @@ show_hyprland_plugins_status() {
 
     ensure_hyprpm
 
-    log_info "Enabled plugins:"
-    local enabled=$(get_enabled_plugins)
-    if [[ -n "$enabled" ]]; then
-        while IFS= read -r plugin; do
-            echo "  ✓ $plugin"
-        done <<< "$enabled"
+    # Show configured plugins
+    log_info "Configured plugins:"
+    local -a plugin_names=()
+    while IFS= read -r name; do
+        plugin_names+=("$name")
+    done < <(load_plugin_names)
+
+    if [[ ${#plugin_names[@]} -eq 0 ]]; then
+        echo "  No plugins configured"
     else
-        echo "  No plugins enabled"
+        for plugin_name in "${plugin_names[@]}"; do
+            if is_plugin_enabled "$plugin_name"; then
+                echo "  ✓ $plugin_name (enabled)"
+            else
+                echo "  ✗ $plugin_name (not enabled)"
+            fi
+        done
     fi
 
     echo
-    log_info "Configured plugins:"
-    for plugin_name in "${!HYPRLAND_PLUGINS[@]}"; do
-        if is_plugin_enabled "$plugin_name"; then
-            echo "  ✓ $plugin_name (enabled)"
-        else
-            echo "  ✗ $plugin_name (not enabled)"
-        fi
-    done
+    log_info "All plugins from hyprpm:"
+    hyprpm list 2>/dev/null | head -30 || echo "  No plugins installed"
 }
