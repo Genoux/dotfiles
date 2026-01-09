@@ -286,14 +286,19 @@ hyprland_status() {
     # Show plugin status
     if command -v hyprpm &>/dev/null; then
         source "$DOTFILES_DIR/lib/hyprland-plugins.sh"
-        load_plugin_config
+        
+        # Load plugin names into array
+        local -a plugin_names=()
+        while IFS= read -r name; do
+            plugin_names+=("$name")
+        done < <(load_plugin_names)
 
-        if [[ ${#HYPRLAND_PLUGINS[@]} -gt 0 ]]; then
+        if [[ ${#plugin_names[@]} -gt 0 ]]; then
             log_info "Plugins:"
             local enabled_count=0
             local missing_count=0
 
-            for plugin_name in "${!HYPRLAND_PLUGINS[@]}"; do
+            for plugin_name in "${plugin_names[@]}"; do
                 if is_plugin_enabled "$plugin_name"; then
                     echo "$(status_ok) $plugin_name"
                     ((enabled_count++))

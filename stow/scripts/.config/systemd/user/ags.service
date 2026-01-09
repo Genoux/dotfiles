@@ -6,9 +6,13 @@ PartOf=graphical-session.target
 
 [Service]
 Type=simple
+# Wait for Wayland display to be available
+ExecStartPre=/bin/sh -c 'until [ -n "$WAYLAND_DISPLAY" ]; do sleep 0.1; done'
 ExecStart=/usr/bin/ags run
 Restart=on-failure
 RestartSec=3
+# Limit restart attempts
+StartLimitBurst=5
 KillMode=mixed
 TimeoutStopSec=5
 

@@ -115,12 +115,15 @@ setup_hyprland_plugins() {
     echo
 
     # Request sudo access once upfront (hyprpm needs it for loading/unloading plugins)
-    log_info "Requesting elevated privileges for plugin operations..."
-    sudo -v || {
-        log_error "Sudo access required for plugin management"
-        return 1
-    }
-    echo
+    # Skip prompt if running in full install (sudo already obtained)
+    if [[ "${FULL_INSTALL:-false}" != "true" ]]; then
+        log_info "Requesting elevated privileges for plugin operations..."
+        sudo -v || {
+            log_error "Sudo access required for plugin management"
+            return 1
+        }
+        echo
+    fi
 
     # Keep sudo alive in background during plugin operations
     (while true; do sudo -v; sleep 50; done) 2>/dev/null &

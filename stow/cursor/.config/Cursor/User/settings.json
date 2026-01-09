@@ -13,5 +13,6 @@
   "window.titleBarStyle": "custom",
   "window.customMenuBarAltFocus": false,
   "terminal.integrated.allowMnemonics": false,
-  "disable-hardware-acceleration": false
+  "disable-hardware-acceleration": false,
+  "console-ninja.featureSet": "Community"
 }
