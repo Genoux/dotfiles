@@ -135,12 +135,22 @@ WakeOnLan=magic
 EOF
 
                 log_success "WoL link file created for $ETHERNET_INTERFACE"
+                log_info "Link file: /etc/systemd/network/10-${ETHERNET_INTERFACE}.link"
+
+                # Check if interface is up
+                IFACE_STATE=$(ip link show "$ETHERNET_INTERFACE" 2>/dev/null | grep -o "state [A-Z]*" | awk '{print $2}')
+                if [[ "$IFACE_STATE" == "UP" ]]; then
+                    log_warning "Interface is UP - link file applies on next boot or interface restart"
+                    log_info "For immediate effect: sudo ip link set $ETHERNET_INTERFACE down && sudo ip link set $ETHERNET_INTERFACE up"
+                fi
 
                 # Enable WoL immediately for current session
                 if sudo ethtool -s "$ETHERNET_INTERFACE" wol g 2>/dev/null; then
                     CURRENT_WOL=$(sudo ethtool "$ETHERNET_INTERFACE" 2>/dev/null | grep "Wake-on:" | awk '{print $2}')
                     if [[ "$CURRENT_WOL" == "g" ]]; then
                         log_success "WoL enabled for $ETHERNET_INTERFACE (mode: magic packet)"
+                        log_info "MAC address: $MAC_ADDRESS"
+                        log_info "Test with: wakeonlan $MAC_ADDRESS"
                     else
                         log_info "Current WoL mode: $CURRENT_WOL"
                     fi
@@ -153,6 +163,14 @@ EOF
         else
             log_warning "Interface $ETHERNET_INTERFACE doesn't support Wake-on-LAN"
         fi
+    fi
+
+    # Show WoL verification commands
+    if [[ -n "$ETHERNET_INTERFACE" ]]; then
+        log_info ""
+        log_info "Verify WoL: sudo ethtool $ETHERNET_INTERFACE | grep Wake-on"
+        log_info "Check status: ~/dotfiles/bin/check-wol-status"
+        log_info "Enable now: sudo ethtool $ETHERNET_INTERFACE wol g"
     fi
 fi
 

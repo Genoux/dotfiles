@@ -1,13 +1,13 @@
 {
-  "numStartups": 17,
+  "numStartups": 19,
   "installMethod": "global",
   "autoUpdates": true,
   "tipsHistory": {
     "new-user-warmup": 8,
-    "plan-mode-for-complex-tasks": 13,
+    "plan-mode-for-complex-tasks": 19,
     "terminal-setup": 13,
     "shift-enter-setup": 13,
-    "memory-command": 3,
+    "memory-command": 19,
     "theme-command": 4,
     "status-line": 4,
     "stickers-command": 4,
@@ -59,7 +59,7 @@
     }
   },
   "cachedGrowthBookFeatures": {
-    "tengu_mcp_tool_search": false,
+    "tengu_mcp_tool_search": true,
     "tengu_disable_bypass_permissions_mode": false,
     "strawberry_granite_flag": "N/A",
     "persimmon_marble_flag": "N/A",
@@ -67,11 +67,27 @@
     "tengu_c4w_usage_limit_notifications_enabled": true,
     "tengu_thinkback": false,
     "tengu_sumi": false,
-    "tengu_react_vulnerability_warning": true,
+    "tengu_react_vulnerability_warning": false,
     "tengu_ant_attribution_header_new": true,
-    "tengu_accept_with_feedback": false,
+    "tengu_accept_with_feedback": true,
     "tengu_tool_result_persistence": true,
-    "tengu_tool_search_unsupported_models": null
+    "tengu_tool_search_unsupported_models": null,
+    "tengu_1p_event_batch_config": {
+      "scheduledDelayMillis": 5000,
+      "maxExportBatchSize": 200,
+      "maxQueueSize": 8192
+    },
+    "tengu_scratch": false,
+    "tengu_log_segment_events": false,
+    "tengu_log_datadog_events": true,
+    "tengu_event_sampling_config": {},
+    "tengu-top-of-feed-tip": {
+      "tip": "",
+      "color": ""
+    },
+    "tengu_post_compact_survey": false,
+    "tengu_streaming_tool_execution2": false,
+    "tengu_pid_based_version_locking": true
   },
   "hasCompletedOnboarding": true,
   "mcpServers": {
@@ -91,7 +107,7 @@
       "enabledMcpjsonServers": [],
       "disabledMcpjsonServers": [],
       "hasTrustDialogAccepted": false,
-      "projectOnboardingSeenCount": 1,
+      "projectOnboardingSeenCount": 2,
       "hasClaudeMdExternalIncludesApproved": false,
       "hasClaudeMdExternalIncludesWarningShown": false,
       "exampleFiles": [],
@@ -102,29 +118,20 @@
         "version": null,
         "packageManager": null
       },
-      "lastCost": 0.002804,
-      "lastAPIDuration": 3487,
-      "lastAPIDurationWithoutRetries": 3486,
+      "lastCost": 0,
+      "lastAPIDuration": 0,
+      "lastAPIDurationWithoutRetries": 0,
       "lastToolDuration": 0,
-      "lastDuration": 4489,
+      "lastDuration": 3152,
       "lastLinesAdded": 0,
       "lastLinesRemoved": 0,
-      "lastTotalInputTokens": 2084,
-      "lastTotalOutputTokens": 144,
+      "lastTotalInputTokens": 0,
+      "lastTotalOutputTokens": 0,
       "lastTotalCacheCreationInputTokens": 0,
       "lastTotalCacheReadInputTokens": 0,
       "lastTotalWebSearchRequests": 0,
-      "lastModelUsage": {
-        "claude-haiku-4-5-20251001": {
-          "inputTokens": 2084,
-          "outputTokens": 144,
-          "cacheReadInputTokens": 0,
-          "cacheCreationInputTokens": 0,
-          "webSearchRequests": 0,
-          "costUSD": 0.002804
-        }
-      },
-      "lastSessionId": "69f6e613-44a1-4e2c-8b74-3cecd9720310"
+      "lastModelUsage": {},
+      "lastSessionId": "20e51a6a-a442-4d6c-8962-9f3c1cec4bae"
     },
     "/home/john/dotfiles": {
       "allowedTools": [],
@@ -151,8 +158,8 @@
   "sonnet45MigrationComplete": true,
   "opus45MigrationComplete": true,
   "thinkingMigrationComplete": true,
-  "changelogLastFetched": 1767630002144,
-  "lastReleaseNotesSeen": "2.0.76",
+  "changelogLastFetched": 1768165801464,
+  "lastReleaseNotesSeen": "2.1.4",
   "hasShownOpus45Notice": {
     "10bbc4d6-2d3d-4b54-9ddd-73a69b2feae5": true
   },
@@ -162,7 +169,7 @@
     "10bbc4d6-2d3d-4b54-9ddd-73a69b2feae5": {
       "hasAccess": false,
       "hasAccessNotAsDefault": false,
-      "timestamp": 1767967564563
+      "timestamp": 1768165741006
     }
   },
   "oauthAccount": {
@@ -181,5 +188,11 @@
     "genoux/dotfiles": [
       "/home/john/dotfiles"
     ]
+  },
+  "groveConfigCache": {
+    "1c619a4d-0d2b-4548-86b6-c8cfda0d3e7a": {
+      "grove_enabled": true,
+      "timestamp": 1768165801581
+    }
   }
 }

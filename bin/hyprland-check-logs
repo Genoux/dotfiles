@@ -1,0 +1,19 @@
+#!/bin/bash
+# Check Hyprland logs for plugin-related errors
+
+LOG_DIR="/tmp/hypr/$(ls -t /tmp/hypr 2>/dev/null | head -1)"
+LOG_FILE="$LOG_DIR/hyprland.log"
+
+if [[ ! -f "$LOG_FILE" ]]; then
+    echo "No Hyprland log found at $LOG_FILE"
+    echo "Logs may be disabled in misc.conf"
+    exit 1
+fi
+
+echo "=== Hyprland Log: $LOG_FILE ==="
+echo ""
+echo "=== Plugin Messages ==="
+grep -i "plugin\|hyprexpo\|hyprpm" "$LOG_FILE" | tail -30
+echo ""
+echo "=== Errors/Warnings ==="
+grep -i "error\|fail\|warning" "$LOG_FILE" | tail -20

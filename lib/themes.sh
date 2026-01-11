@@ -44,29 +44,34 @@ install_theme() {
     local variant="standard"
     local dest="$HOME/.themes"
     local install_args=()
-    
-    if command -v gum &>/dev/null; then
-        color=$(printf "dark\nlight\n" | gum choose --no-show-help --header "")
-        [[ -z "$color" ]] && return 0
-        
-        variant=$(printf "standard\nsolid\n" | gum choose --no-show-help --header "")
-        [[ -z "$variant" ]] && return 0
+
+    # Skip prompts during full install
+    if [[ "${FULL_INSTALL:-false}" != "true" ]]; then
+        if command -v gum &>/dev/null; then
+            color=$(printf "dark\nlight\n" | gum choose --no-show-help --header "")
+            [[ -z "$color" ]] && return 0
+
+            variant=$(printf "standard\nsolid\n" | gum choose --no-show-help --header "")
+            [[ -z "$variant" ]] && return 0
+        else
+            echo
+            echo "Color variant:"
+            echo "  1) dark"
+            echo "  2) light"
+            read -p "> " color_choice
+            color_choice="${color_choice:-1}"
+            [[ "$color_choice" == "2" ]] && color="light"
+
+            echo
+            echo "Variant:"
+            echo "  1) standard"
+            echo "  2) solid"
+            read -p "> " variant_choice
+            variant_choice="${variant_choice:-1}"
+            [[ "$variant_choice" == "2" ]] && variant="solid"
+        fi
     else
-        echo
-        echo "Color variant:"
-        echo "  1) dark"
-        echo "  2) light"
-        read -p "> " color_choice
-        color_choice="${color_choice:-1}"
-        [[ "$color_choice" == "2" ]] && color="light"
-        
-        echo
-        echo "Variant:"
-        echo "  1) standard"
-        echo "  2) solid"
-        read -p "> " variant_choice
-        variant_choice="${variant_choice:-1}"
-        [[ "$variant_choice" == "2" ]] && variant="solid"
+        log_info "Using default theme config: dark + standard"
     fi
     
     install_args+=("--dest" "$dest")
@@ -89,21 +94,27 @@ install_theme() {
     if [[ $? -eq 0 ]]; then
         echo
         log_success "Installed: $theme_name"
-        
+
         if command -v gsettings &>/dev/null; then
             local full_theme_name="${theme_name}-${color^}"
             gsettings set org.gnome.desktop.interface gtk-theme "$full_theme_name"
             log_info "Active GTK theme: $full_theme_name"
         fi
-        
+
         echo
-        read -n 1 -s -r -p "Press any key to continue..."
+        # Skip prompt during full install
+        if [[ "${FULL_INSTALL:-false}" != "true" ]]; then
+            read -n 1 -s -r -p "Press any key to continue..."
+        fi
         return 0
     else
         echo
         log_error "Installation failed"
         echo
-        read -n 1 -s -r -p "Press any key to continue..."
+        # Skip prompt during full install
+        if [[ "${FULL_INSTALL:-false}" != "true" ]]; then
+            read -n 1 -s -r -p "Press any key to continue..."
+        fi
         return 1
     fi
 }
@@ -140,11 +151,15 @@ uninstall_current_theme() {
         else
             log_error "No themes found to uninstall"
             echo
-            read -n 1 -s -r -p "Press any key to continue..."
+            if [[ "${FULL_INSTALL:-false}" != "true" ]]; then
+                read -n 1 -s -r -p "Press any key to continue..."
+            fi
             return 1
         fi
         echo
-        read -n 1 -s -r -p "Press any key to continue..."
+        if [[ "${FULL_INSTALL:-false}" != "true" ]]; then
+            read -n 1 -s -r -p "Press any key to continue..."
+        fi
         return 0
     fi
     
@@ -171,7 +186,9 @@ uninstall_current_theme() {
     echo
     log_success "Uninstalled: $current_gtk"
     echo
-    read -n 1 -s -r -p "Press any key to continue..."
+    if [[ "${FULL_INSTALL:-false}" != "true" ]]; then
+        read -n 1 -s -r -p "Press any key to continue..."
+    fi
 }
 
 show_status() {
@@ -209,8 +226,12 @@ main() {
                     log_error "No themes found in: $THEMES_DIR"
                     return 1
                 fi
-                
-                if command -v gum &>/dev/null; then
+
+                # During full install, pick first theme automatically
+                if [[ "${FULL_INSTALL:-false}" == "true" ]]; then
+                    theme_name="${themes[0]}"
+                    log_info "Auto-selecting theme: $theme_name"
+                elif command -v gum &>/dev/null; then
                     theme_name=$(printf '%s\n' "${themes[@]}" | gum choose --no-show-help --header "")
                     [[ -z "$theme_name" ]] && return 0
                 else
@@ -222,11 +243,11 @@ main() {
                     done
                     echo
                     read -p "Choice (1-${#themes[@]}, or Enter to cancel): " choice
-                    
+
                     if [[ -z "$choice" ]]; then
                         return 0
                     fi
-                    
+
                     if [[ "$choice" =~ ^[0-9]+$ ]] && [[ "$choice" -ge 1 ]] && [[ "$choice" -le ${#themes[@]} ]]; then
                         theme_name="${themes[$((choice-1))]}"
                     else

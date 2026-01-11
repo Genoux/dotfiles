@@ -116,6 +116,7 @@ setup_hyprland_plugins() {
 
     # Request sudo access once upfront (hyprpm needs it for loading/unloading plugins)
     # Skip prompt if running in full install (sudo already obtained)
+    local sudo_keepalive_pid=""
     if [[ "${FULL_INSTALL:-false}" != "true" ]]; then
         log_info "Requesting elevated privileges for plugin operations..."
         sudo -v || {
@@ -123,11 +124,11 @@ setup_hyprland_plugins() {
             return 1
         }
         echo
-    fi
 
-    # Keep sudo alive in background during plugin operations
-    (while true; do sudo -v; sleep 50; done) 2>/dev/null &
-    local sudo_keepalive_pid=$!
+        # Keep sudo alive in background during plugin operations
+        (while true; do sudo -v; sleep 50; done) 2>/dev/null &
+        sudo_keepalive_pid=$!
+    fi
 
     # Ensure repository is added (try to add, ignore if already exists)
     log_info "Ensuring official Hyprland plugins repository..."
@@ -141,8 +142,10 @@ setup_hyprland_plugins() {
     fi
     echo
 
-    # Stop the sudo keepalive background process
-    kill "$sudo_keepalive_pid" 2>/dev/null || true
+    # Stop the sudo keepalive background process (if running)
+    if [[ -n "$sudo_keepalive_pid" ]]; then
+        kill "$sudo_keepalive_pid" 2>/dev/null || true
+    fi
 
     # Enable each configured plugin
     local enabled_count=0

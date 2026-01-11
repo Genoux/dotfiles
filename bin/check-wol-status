@@ -1,0 +1,57 @@
+#!/bin/bash
+# Wake-on-LAN Status Checker
+
+echo "=== Wake-on-LAN Diagnostic ==="
+echo ""
+
+# Find ethernet interfaces
+INTERFACES=$(ip -o link show | grep -vE "lo:|docker|veth|br-|virbr|wlan" | grep -E "enp|eth|eno" | awk '{print $2}' | tr -d ':')
+
+if [[ -z "$INTERFACES" ]]; then
+    echo "ERROR: No ethernet interfaces found"
+    exit 1
+fi
+
+for iface in $INTERFACES; do
+    echo "Interface: $iface"
+    STATE=$(ip link show "$iface" | grep -o "state [A-Z]*" | awk '{print $2}')
+    MAC=$(ip link show "$iface" | grep link/ether | awk '{print $2}')
+
+    echo "  State: $STATE"
+    echo "  MAC: $MAC"
+
+    if command -v ethtool &>/dev/null; then
+        echo "  WoL Support:"
+        sudo ethtool "$iface" | grep "Supports Wake-on:"
+        echo "  WoL Current:"
+        sudo ethtool "$iface" | grep "Wake-on:"
+
+        WOL_SETTING=$(sudo ethtool "$iface" 2>/dev/null | grep "Wake-on:" | awk '{print $2}')
+        if [[ "$WOL_SETTING" == "g" ]]; then
+            echo "  Status: ✓ ENABLED (magic packet)"
+        elif [[ "$WOL_SETTING" == "d" ]]; then
+            echo "  Status: ✗ DISABLED"
+        else
+            echo "  Status: ? UNCLEAR ($WOL_SETTING)"
+        fi
+    else
+        echo "  ethtool not installed"
+    fi
+    echo ""
+done
+
+# Check systemd link files
+echo "=== systemd-networkd Link Files ==="
+if [[ -d /etc/systemd/network ]]; then
+    find /etc/systemd/network -name "*.link" -exec sh -c 'echo "File: {}"; cat "{}"' \; 2>/dev/null
+else
+    echo "Directory /etc/systemd/network does not exist"
+fi
+
+echo ""
+echo "=== Troubleshooting Steps ==="
+echo "1. Ensure BIOS/UEFI WoL is enabled"
+echo "2. Verify link file has correct MAC address"
+echo "3. Test from another machine: wakeonlan <MAC>"
+echo "4. Check if interface needs restart for link file to apply"
+echo "5. Some motherboards require ErP Ready disabled in BIOS"
