@@ -114,21 +114,8 @@ setup_hyprland_plugins() {
     fi
     echo
 
-    # Request sudo access once upfront (hyprpm needs it for loading/unloading plugins)
-    # Skip prompt if running in full install (sudo already obtained)
-    local sudo_keepalive_pid=""
-    if [[ "${FULL_INSTALL:-false}" != "true" ]]; then
-        log_info "Requesting elevated privileges for plugin operations..."
-        sudo -v || {
-            log_error "Sudo access required for plugin management"
-            return 1
-        }
-        echo
-
-        # Keep sudo alive in background during plugin operations
-        (while true; do sudo -v; sleep 50; done) 2>/dev/null &
-        sudo_keepalive_pid=$!
-    fi
+    # hyprpm needs sudo for plugin operations
+    # Note: With NOPASSWD configured in sudoers, no password prompt will appear
 
     # Ensure repository is added (try to add, ignore if already exists)
     log_info "Ensuring official Hyprland plugins repository..."
@@ -142,11 +129,6 @@ setup_hyprland_plugins() {
     fi
     echo
 
-    # Stop the sudo keepalive background process (if running)
-    if [[ -n "$sudo_keepalive_pid" ]]; then
-        kill "$sudo_keepalive_pid" 2>/dev/null || true
-    fi
-
     # Enable each configured plugin
     local enabled_count=0
     local failed_count=0
@@ -158,12 +140,17 @@ setup_hyprland_plugins() {
             log_success "Already enabled: $plugin_name"
             ((enabled_count++))
         else
-            if hyprpm enable "$plugin_name" 2>/dev/null; then
+            # Capture error output for debugging
+            local enable_output
+            if enable_output=$(hyprpm enable "$plugin_name" 2>&1); then
                 log_success "Enabled: $plugin_name"
                 ((enabled_count++))
             else
                 log_error "Failed to enable: $plugin_name"
-                log_info "Make sure '$plugin_name' is a valid plugin name"
+                if [[ -n "$enable_output" ]]; then
+                    log_info "Error: $enable_output"
+                fi
+                log_info "Make sure '$plugin_name' is a valid plugin name and hyprpm is working correctly"
                 ((failed_count++))
             fi
         fi
@@ -176,6 +163,87 @@ setup_hyprland_plugins() {
     else
         log_warning "$failed_count plugin(s) failed to enable"
     fi
+    
+    # Rebuild plugins after enabling to ensure they match current Hyprland version
+    # This prevents version mismatch errors when reloading
+    if command -v hyprctl &>/dev/null && hyprctl version &>/dev/null 2>&1; then
+        echo
+        log_info "Rebuilding plugins for current Hyprland version..."
+        if hyprpm update < <(echo "y") 2>&1; then
+            log_success "Plugins rebuilt successfully"
+        else
+            log_warning "Plugin rebuild may have failed, but continuing..."
+        fi
+    fi
+    
+    # Reload plugins if Hyprland is running
+    if command -v hyprctl &>/dev/null && hyprctl version &>/dev/null 2>&1; then
+        echo
+        log_info "Reloading plugins in running Hyprland instance..."
+        
+        # Capture reload output to check for version mismatch
+        local reload_output
+        reload_output=$(hyprpm reload -n 2>&1) || true
+        
+        if echo "$reload_output" | grep -qi "version mismatch\|mismatch\|rebuild"; then
+            log_warning "Version mismatch detected - rebuilding plugins..."
+            # Rebuild plugins to match current Hyprland version
+            if hyprpm update < <(echo "y") 2>&1; then
+                log_success "Plugins rebuilt successfully"
+                # Try reloading again after rebuild
+                if hyprpm reload -n 2>/dev/null; then
+                    log_success "Plugins reloaded after rebuild"
+                else
+                    log_warning "Plugins rebuilt but reload failed. Restart Hyprland to load plugins"
+                fi
+            else
+                log_error "Failed to rebuild plugins"
+                log_info "You may need to restart Hyprland for plugins to work"
+            fi
+        elif echo "$reload_output" | grep -qi "failed to write plugin state"; then
+            log_warning "Plugin state write failed - this may be a permissions issue"
+            log_info "Plugins may still work. Try restarting Hyprland if issues persist"
+        elif [[ -z "$reload_output" ]] || echo "$reload_output" | grep -qi "reloaded\|success\|loaded.*hyprexpo"; then
+            log_success "Plugins reloaded"
+        else
+            log_warning "Reload may have failed: $reload_output"
+            log_info "Trying to rebuild plugins..."
+            if hyprpm update < <(echo "y") 2>&1; then
+                log_success "Plugins rebuilt - restart Hyprland to load them"
+            else
+                log_warning "Failed to rebuild. You may need to restart Hyprland"
+            fi
+        fi
+        
+        # Verify plugins are actually loaded
+        echo
+        log_info "Verifying plugin status..."
+        local plugins_loaded=$(hyprctl plugins list 2>&1)
+        
+        for plugin_name in "${plugin_names[@]}"; do
+            if is_plugin_enabled "$plugin_name"; then
+                # Check if plugin is actually loaded in Hyprland
+                if echo "$plugins_loaded" | grep -qi "$plugin_name\|no plugins loaded"; then
+                    if echo "$plugins_loaded" | grep -qi "no plugins loaded"; then
+                        log_warning "$plugin_name is enabled but NOT loaded (version mismatch?)"
+                        log_info "  Run 'hyprpm reload' or restart Hyprland"
+                    elif echo "$plugins_loaded" | grep -qi "$plugin_name"; then
+                        log_success "$plugin_name is enabled and loaded"
+                    else
+                        log_warning "$plugin_name is enabled but may not be loaded"
+                    fi
+                else
+                    log_success "$plugin_name is enabled"
+                fi
+            else
+                log_warning "$plugin_name is not enabled - check 'hyprpm list' for details"
+            fi
+        done
+    else
+        echo
+        log_info "Hyprland not running. Plugins will be loaded when Hyprland starts"
+        log_info "After starting Hyprland, run: hyprpm reload"
+    fi
 }
 
 # Reload plugins
@@ -185,11 +253,38 @@ reload_hyprland_plugins() {
     ensure_hyprpm
 
     log_info "Reloading all enabled plugins..."
-    if hyprpm reload -n; then
+    
+    # Capture reload output to check for version mismatch
+    local reload_output
+    reload_output=$(hyprpm reload -n 2>&1) || true
+    
+    if echo "$reload_output" | grep -qi "version mismatch\|mismatch\|rebuild"; then
+        log_warning "Version mismatch detected - rebuilding plugins..."
+        # Rebuild plugins to match current Hyprland version
+        if hyprpm update < <(echo "y") 2>&1; then
+            log_success "Plugins rebuilt successfully"
+            # Try reloading again after rebuild
+            if hyprpm reload -n 2>/dev/null; then
+                log_success "Plugins reloaded after rebuild"
+            else
+                log_warning "Plugins rebuilt but reload failed. Restart Hyprland to load plugins"
+                return 1
+            fi
+        else
+            log_error "Failed to rebuild plugins"
+            return 1
+        fi
+    elif [[ -z "$reload_output" ]] || echo "$reload_output" | grep -q "reloaded\|success"; then
         log_success "Plugins reloaded successfully"
     else
-        log_error "Failed to reload plugins"
-        return 1
+        log_error "Failed to reload plugins: $reload_output"
+        log_info "Trying to rebuild plugins..."
+        if hyprpm update < <(echo "y") 2>&1; then
+            log_success "Plugins rebuilt - restart Hyprland to load them"
+        else
+            log_error "Failed to rebuild plugins"
+            return 1
+        fi
     fi
 }
 

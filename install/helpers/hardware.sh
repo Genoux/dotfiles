@@ -78,65 +78,6 @@ is_desktop() {
     [[ "$(detect_device_type)" == "desktop" ]]
 }
 
-# Filter packages based on hardware
-filter_packages_by_hardware() {
-    local package_file="$1"
-    local temp_file
-    
-    # Create temporary file (caller is responsible for cleanup)
-    temp_file=$(mktemp)
-    
-    # Validate input file
-    if [[ ! -f "$package_file" || ! -r "$package_file" ]]; then
-        log_error "Package file not found or not readable: $package_file" >&2
-        rm -f "$temp_file"
-        return 1
-    fi
-    
-    # NVIDIA-specific packages to filter
-    local nvidia_packages=(
-        "nvidia"
-        "nvidia-prime"
-        "nvidia-settings"
-        "nvidia-utils"
-        "python-nvidia-ml-py"
-    )
-    
-    if has_nvidia_gpu; then
-        # Keep all packages if NVIDIA is present
-        cp "$package_file" "$temp_file"
-        log_info "NVIDIA GPU detected - keeping NVIDIA packages" >&2
-    else
-        # Filter out NVIDIA packages if no NVIDIA hardware
-        log_info "No NVIDIA GPU detected - filtering NVIDIA packages" >&2
-        
-        while IFS= read -r line; do
-            # Keep comments and empty lines as-is
-            if [[ "$line" =~ ^#.*$ || -z "$line" ]]; then
-                echo "$line" >> "$temp_file"
-                continue
-            fi
-            
-            # Check if this is a NVIDIA package to filter
-            local should_keep=true
-            for nvidia_pkg in "${nvidia_packages[@]}"; do
-                if [[ "$line" == "$nvidia_pkg" ]]; then
-                    should_keep=false
-                    log_info "  Skipping: $nvidia_pkg (no NVIDIA hardware)" >&2
-                    break
-                fi
-            done
-            
-            if $should_keep; then
-                echo "$line" >> "$temp_file"
-            fi
-        done < "$package_file"
-    fi
-    
-    # Output the filtered file path
-    echo "$temp_file"
-}
-
 # Show hardware summary
 show_hardware_info() {
     log_section "Hardware Information"

@@ -167,7 +167,7 @@ ensure_dir() {
     fi
 }
 
-# Interactive yes/no prompt with gum (custom colors, no help text)
+# Interactive yes/no prompt with gum (monochrome styling, no help text)
 # Usage: if ask_yes_no "Continue?"; then ...
 #        if ask_yes_no "Continue?" "y"; then ...  # default to yes
 #        if confirm "Continue?"; then ...          # alias, default yes
@@ -177,18 +177,11 @@ ask_yes_no() {
     local default="${2:-n}"  # Default to 'no'
 
     if command -v gum &>/dev/null; then
-        # Use custom colors and hide help text
-        local gum_opts=(
-            --no-show-help
-            --selected.foreground="2"        # Green for selected option
-            --selected.bold=true
-            --unselected.foreground="7"      # Light gray for unselected
-        )
-
+        # Use monochrome styling from environment variables
         if [[ "$default" == "y" ]] || [[ "$default" == "true" ]]; then
-            gum confirm "${gum_opts[@]}" --default=true "$question"
+            gum_confirm --default=true "$question"
         else
-            gum confirm "${gum_opts[@]}" --default=false "$question"
+            gum_confirm --default=false "$question"
         fi
     else
         # Fallback to simple prompt

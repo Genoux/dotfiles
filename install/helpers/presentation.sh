@@ -43,13 +43,28 @@ configure_gum_colors() {
     export GUM_INPUT_HELP_BACKGROUND=""
     export GUM_WRITE_HELP_FOREGROUND="$COLOR_INDEX"
     export GUM_WRITE_HELP_BACKGROUND=""
+
+    # Monochrome confirm buttons (black text on white, white text on black)
+    export GUM_CONFIRM_SELECTED_BACKGROUND="255"    # White background
+    export GUM_CONFIRM_SELECTED_FOREGROUND="0"      # Black text
+    export GUM_CONFIRM_UNSELECTED_BACKGROUND="0"    # Black background
+    export GUM_CONFIRM_UNSELECTED_FOREGROUND="255"  # White text
 }
 
 # Initialize gum colors on load
 configure_gum_colors
 
+# Monochrome confirm wrapper - always uses black/white buttons
+# Usage: gum_confirm "Proceed with operation?"
+gum_confirm() {
+    gum confirm "$@"
+}
+
 # Centered box UI helpers
 export BOX_WIDTH=70
+
+# Color for confirmation/warning titles
+export CONFIRM_TITLE_COLOR=180
 
 get_terminal_dimensions() {
     export TERM_WIDTH=$(tput cols 2>/dev/null || echo 80)
@@ -258,10 +273,10 @@ run_with_clean_ui() {
     local title="$1"
     local command="$2"
 
-    # Show header with border (Base16 purple)
+    # Show header with border (white bold)
     gum style \
         --border double \
-        --border-foreground 5 \
+        --border-foreground 255 \
         --padding "0 2" \
         --bold \
         "$title"

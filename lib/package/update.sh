@@ -30,10 +30,20 @@ rebuild_yay_if_broken() {
 
 # Update system packages
 packages_update() {
-    # Validate sudo access upfront
-    if ! sudo -v; then
-        log_error "Failed to obtain sudo privileges"
-        return 1
+    # Confirm before running system update
+    if [[ "${AUTO_YES:-false}" != "true" ]]; then
+        echo
+        gum style --bold --foreground "$CONFIRM_TITLE_COLOR" "⚠ System Update"
+        echo
+        echo "This will update all packages:"
+        echo "  • Official Arch packages (pacman -Syu)"
+        echo "  • AUR packages (yay -Sua)"
+        echo "  • Hyprland plugins (if installed)"
+        echo
+        if ! gum_confirm "Proceed with system update?"; then
+            return 0
+        fi
+        echo
     fi
 
     # Initialize logging and start monitor
@@ -65,6 +75,16 @@ packages_update() {
         stop_log_monitor
         log_error "pacman update failed"
         return 1
+    fi
+
+    # Rebuild Hyprland plugins if Hyprland was updated
+    if command -v hyprpm &>/dev/null && pacman -Q hyprland &>/dev/null; then
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting: Rebuild Hyprland plugins" >> "$DOTFILES_LOG_FILE"
+        if hyprpm update < <(echo "y") &>> "$DOTFILES_LOG_FILE"; then
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] Completed: Rebuild Hyprland plugins" >> "$DOTFILES_LOG_FILE"
+        else
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] Warning: Hyprland plugin rebuild failed" >> "$DOTFILES_LOG_FILE"
+        fi
     fi
 
     # Rebuild yay if broken (e.g., after libalpm/pacman update)

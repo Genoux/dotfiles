@@ -1,19 +1,80 @@
 #!/bin/bash
-# Check Hyprland logs for plugin-related errors
+# Check Hyprland logs and status for plugin-related errors
 
 LOG_DIR="/tmp/hypr/$(ls -t /tmp/hypr 2>/dev/null | head -1)"
 LOG_FILE="$LOG_DIR/hyprland.log"
 
-if [[ ! -f "$LOG_FILE" ]]; then
-    echo "No Hyprland log found at $LOG_FILE"
-    echo "Logs may be disabled in misc.conf"
+# Check if Hyprland is running
+if ! command -v hyprctl &>/dev/null || ! hyprctl version &>/dev/null 2>&1; then
+    echo "Hyprland is not running"
     exit 1
 fi
 
-echo "=== Hyprland Log: $LOG_FILE ==="
+echo "=== Hyprland Status ==="
+hyprctl version
 echo ""
-echo "=== Plugin Messages ==="
-grep -i "plugin\|hyprexpo\|hyprpm" "$LOG_FILE" | tail -30
+
+# Check plugin status via hyprpm
+if command -v hyprpm &>/dev/null; then
+    echo "=== Plugin Status (hyprpm list) ==="
+    hyprpm list 2>&1 | head -50
+    echo ""
+    
+    # Check for hyprexpo specifically
+    if hyprpm list 2>/dev/null | grep -qi "hyprexpo"; then
+        echo "=== Hyprexpo Details ==="
+        hyprpm list 2>/dev/null | grep -A 5 -i "hyprexpo"
+        echo ""
+    fi
+fi
+
+# Check for log file
+if [[ -f "$LOG_FILE" ]]; then
+    echo "=== Hyprland Log: $LOG_FILE ==="
+    echo ""
+    echo "=== Plugin Messages ==="
+    grep -i "plugin\|hyprexpo\|hyprpm" "$LOG_FILE" 2>/dev/null | tail -30 || echo "No plugin messages found"
+    echo ""
+    echo "=== Errors/Warnings ==="
+    grep -i "error\|fail\|warning" "$LOG_FILE" 2>/dev/null | tail -20 || echo "No errors/warnings found"
+    echo ""
+else
+    echo "=== Log File Status ==="
+    echo "No Hyprland log found at $LOG_FILE"
+    echo "Logs are disabled in misc.conf (disable_logs = true)"
+    echo ""
+    echo "To enable logs temporarily, set 'disable_logs = false' in ~/.config/hypr/misc.conf"
+    echo "Then restart Hyprland and check logs again"
+    echo ""
+fi
+
+# Check if plugins are actually loaded
+echo "=== Plugin Load Status ==="
+PLUGINS_LOADED=$(hyprctl plugins list 2>&1)
+if echo "$PLUGINS_LOADED" | grep -qi "no plugins loaded"; then
+    echo "✗ No plugins are currently loaded in Hyprland"
+    echo ""
+    echo "Even though plugins are enabled in hyprpm, they're not loaded."
+    echo "This usually indicates a version mismatch."
+    echo ""
+    echo "Try:"
+    echo "  1. hyprpm update  (rebuild plugins for current Hyprland version)"
+    echo "  2. hyprpm reload  (reload plugins)"
+    echo "  3. If that fails, restart Hyprland"
+else
+    echo "$PLUGINS_LOADED"
+fi
 echo ""
-echo "=== Errors/Warnings ==="
-grep -i "error\|fail\|warning" "$LOG_FILE" | tail -20
+
+# Check for keybinding errors
+echo "=== Checking Keybindings ==="
+if hyprctl getoption "plugin:hyprexpo:columns" &>/dev/null 2>&1; then
+    echo "✓ Hyprexpo plugin is loaded and accessible"
+    hyprctl getoption "plugin:hyprexpo:columns" 2>/dev/null
+else
+    echo "✗ Hyprexpo plugin is NOT loaded or accessible"
+    echo "  This could indicate a version mismatch or plugin not enabled"
+    echo ""
+    echo "Try running: hyprpm reload"
+    echo "Or check: hyprpm list"
+fi

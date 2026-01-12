@@ -36,6 +36,16 @@ packages_status() {
         readarray -t aur_packages < <(grep -vE '^#|^$' "$AUR_PACKAGES_FILE")
     fi
 
+    # Read hardware packages (managed separately)
+    if [[ -d "$DOTFILES_DIR/packages/hardware" ]]; then
+        for hw_file in "$DOTFILES_DIR/packages/hardware"/*.package; do
+            [[ -f "$hw_file" ]] || continue
+            while IFS= read -r pkg; do
+                [[ -n "$pkg" && ! "$pkg" =~ ^# ]] && official_packages+=("$pkg")
+            done < "$hw_file"
+        done
+    fi
+
     # Get all installed packages in one call (much faster than per-package checks)
     local -A installed_packages=()
     while IFS= read -r pkg; do

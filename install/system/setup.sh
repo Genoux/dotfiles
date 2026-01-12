@@ -14,27 +14,8 @@ fi
 
 log_info "Installing system-level configurations..."
 
-# Validate and cache sudo access at the beginning
-if ! sudo -v; then
-    log_error "Failed to authenticate with sudo"
-    exit 1
-fi
-
-# Keep sudo timestamp fresh in the background
-while true; do
-    sudo -n true
-    sleep 60
-    kill -0 $$ 2>/dev/null || exit
-done &
-SUDO_KEEPALIVE_PID=$!
-
-# Cleanup function
-cleanup_sudo() {
-    kill $SUDO_KEEPALIVE_PID 2>/dev/null || true
-}
-trap cleanup_sudo EXIT
-
 # Run individual system configuration scripts
+run_logged "$DOTFILES_DIR/install/system/sudoers.sh"
 run_logged "$DOTFILES_DIR/install/system/systemd-sleep.sh"
 run_logged "$DOTFILES_DIR/install/system/logind.sh"
 run_logged "$DOTFILES_DIR/install/system/makepkg.sh"
@@ -48,8 +29,5 @@ run_logged "$DOTFILES_DIR/install/system/tlp.sh"
 run_logged "$DOTFILES_DIR/install/system/zram.sh"
 run_logged "$DOTFILES_DIR/install/system/cpufreq.sh"
 run_logged "$DOTFILES_DIR/install/system/plymouth.sh"
-
-# Cleanup
-cleanup_sudo
 
 log_success "System configuration complete"

@@ -54,8 +54,11 @@ run_operation() {
     "$command" "$@"
     local exit_code=$?
 
-    # Pause before returning to menu
-    pause
+    # Pause before returning to menu (unless SKIP_PAUSE is set)
+    if [[ -z "$SKIP_PAUSE" ]]; then
+        pause
+    fi
+    unset SKIP_PAUSE
 
     return $exit_code
 }

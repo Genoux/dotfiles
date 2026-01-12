@@ -33,7 +33,6 @@ if [[ -n $(git status --porcelain 2>/dev/null) ]]; then
     echo ""
     
     if ! gum confirm "Continue with update? (local changes will be preserved)"; then
-        echo "Update cancelled"
         exit 0
     fi
 fi
@@ -78,7 +77,6 @@ echo ""
 
 # Confirm update
 if ! gum confirm "Pull these changes?"; then
-    echo "Update cancelled"
     exit 0
 fi
 

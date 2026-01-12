@@ -1,5 +1,4 @@
 ags-hyprpanel-git
-app2unit-git
 apple-fonts
 appmenu-glib-translator-git
 arc-gtk-theme
@@ -7,8 +6,6 @@ arduino-ide-bin
 aylurs-gtk-shell-git
 battop
 blueberry
-caelestia-cli-git
-caelestia-shell-git
 calcure
 caprine-bin
 ch34x-dkms-git
@@ -73,16 +70,13 @@ minigalaxy
 ngrok
 nordvpn-bin
 notion-app-electron
-notion-calendar-electron
 phonon-qt5
 phonon-qt5-vlc
 postman-bin
 protonup-qt
 python310
-python-gpustat
 python-inputs
 python-materialyoucolor
-python-nvidia-ml-py
 python-steam
 python-terminaltexteffects
 python-vdf

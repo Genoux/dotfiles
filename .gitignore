@@ -47,6 +47,9 @@ stow/ags/.config/ags/*.logmonitors.conf
 stow/hypr/.config/hypr/monitors.conf
 stow/hypr/.config/hypr/gpu.conf
 
+# Hardware-specific packages (auto-generated)
+packages/hardware/
+
 # Wallpapers
 stow/hypr/.config/hypr/wallpapers/current/current_wallpaper.jpg
 

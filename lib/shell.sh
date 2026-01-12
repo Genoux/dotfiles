@@ -26,7 +26,6 @@ check_zsh() {
 
     # Ask user if they want to install
     if ! confirm "Install zsh using pacman?"; then
-        log_error "zsh not installed. Install manually or run: dotfiles shell setup"
         return 1
     fi
 

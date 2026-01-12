@@ -109,15 +109,13 @@ ensure_nodejs_installed() {
 
 # Prepare system for package installation
 packages_prepare() {
-    # Validate sudo access upfront
-    if ! sudo -v; then
-        log_error "Failed to obtain sudo privileges"
-        return 1
+    # Initialize logging and start monitor (only if not in full install)
+    local started_monitor=false
+    if [[ "${FULL_INSTALL:-false}" != "true" ]]; then
+        init_logging "package"
+        start_log_monitor
+        started_monitor=true
     fi
-
-    # Initialize logging and start monitor
-    init_logging "package"
-    start_log_monitor
 
     # Ensure yay is installed
     ensure_yay_installed
@@ -125,18 +123,18 @@ packages_prepare() {
     # Ensure Node.js is installed
     ensure_nodejs_installed
 
-    # Check if mirrors need updating (older than 30 days)
+    # Check if mirrors need updating (older than 6 months)
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting: Check mirror list" >> "$DOTFILES_LOG_FILE"
     local mirrorlist="/etc/pacman.d/mirrorlist"
     local needs_update=false
 
     if [[ -f "$mirrorlist" ]]; then
         local mirror_age=$(($(date +%s) - $(stat -c %Y "$mirrorlist")))
-        local update_threshold=$((30 * 24 * 60 * 60))
+        local update_threshold=$((180 * 24 * 60 * 60))  # 6 months
 
         if [[ $mirror_age -gt $update_threshold ]]; then
             needs_update=true
-            echo "[$(date '+%Y-%m-%d %H:%M:%S')] Mirror list is older than 30 days, needs update" >> "$DOTFILES_LOG_FILE"
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] Mirror list is older than 6 months, needs update" >> "$DOTFILES_LOG_FILE"
         else
             echo "[$(date '+%Y-%m-%d %H:%M:%S')] Mirror list is recent (updated $(date -d @$(stat -c %Y "$mirrorlist") '+%Y-%m-%d'))" >> "$DOTFILES_LOG_FILE"
         fi
@@ -182,12 +180,15 @@ packages_prepare() {
         echo "[$(date '+%Y-%m-%d %H:%M:%S')] multilib repository already enabled" >> "$DOTFILES_LOG_FILE"
     fi
 
-    # Sync package databases
-    run_command_logged "Sync package databases" sudo pacman -Sy --noconfirm
+    # Database sync is now handled by the upgrade step in packages_install()
+    # No need to sync here since -Syu will do it
 
-    finish_logging
-    sleep 1
-    stop_log_monitor true
+    # Only stop monitor if we started it
+    if [[ "$started_monitor" == "true" ]]; then
+        finish_logging
+        sleep 1
+        stop_log_monitor true
+    fi
 
     log_success "System preparation complete"
 }

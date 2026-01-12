@@ -12,3 +12,6 @@ source "$DOTFILES_DIR/lib/package.sh"
 
 # Install packages
 packages_install
+
+# Setup hardware-specific packages (GPU drivers, etc.)
+hardware_packages_setup

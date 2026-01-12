@@ -22,6 +22,7 @@ source "$DOTFILES_DIR/lib/package/manage.sh"    # Interactive management
 source "$DOTFILES_DIR/lib/package/update.sh"    # System updates
 source "$DOTFILES_DIR/lib/package/sync.sh"      # Package list sync (deprecated)
 source "$DOTFILES_DIR/lib/package/status.sh"    # Status display
+source "$DOTFILES_DIR/lib/hardware-packages.sh" # Hardware package management
 
 # Public API:
 # - packages_install()        Install all packages from dotfiles
@@ -47,8 +48,8 @@ packages_menu() {
 
         local action=$(choose_option \
             "Manage packages" \
+            "Hardware setup" \
             "Update system" \
-            "Show details" \
             "Back")
 
         [[ -z "$action" ]] && return  # ESC pressed
@@ -56,6 +57,9 @@ packages_menu() {
         case "$action" in
             "Manage packages")
                 run_operation "" packages_manage
+                ;;
+            "Hardware setup")
+                run_operation "" hardware_packages_setup
                 ;;
             "Update system")
                 run_operation "" packages_update || {
@@ -70,9 +74,6 @@ packages_menu() {
                         pause
                     fi
                 }
-                ;;
-            "Show details")
-                run_operation "" packages_status
                 ;;
             "Back")
                 return

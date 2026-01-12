@@ -373,12 +373,6 @@ generate_gpu_config() {
     [[ -z "$dri_card" ]] && dri_card="card0"
     [[ -z "$render_device" ]] && render_device="renderD128"
 
-    # Backup existing gpu.conf
-    if [[ -f "$gpu_conf" ]]; then
-        cp "$gpu_conf" "${gpu_conf}.backup.$(date +%Y%m%d_%H%M%S)"
-        log_info "Backed up existing gpu.conf"
-    fi
-
     # Generate header
     cat > "$gpu_conf" << EOF
 # ================================

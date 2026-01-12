@@ -2,12 +2,6 @@
 # Package installation operations
 # Install packages from lists
 packages_install() {
-    # Get sudo first (will prompt for password)
-    sudo -v || {
-        log_error "Failed to obtain sudo privileges"
-        return 1
-    }
-
     clear
 
     # Always prepare system first
@@ -29,22 +23,15 @@ packages_install() {
     if [[ ! -f "$AUR_PACKAGES_FILE" ]]; then
         fatal_error "packages/aur.package not found in $DOTFILES_DIR"
     fi
-    
-    # Filter packages by hardware
-    log_info "Filtering packages based on hardware..."
-    local filtered_packages=$(filter_packages_by_hardware "$PACKAGES_FILE")
-    
-    # Read filtered official packages
+
+    # Read official packages (hardware-specific packages are managed separately)
     local packages=()
     while IFS= read -r pkg; do
         [[ -z "$pkg" ]] && continue
         [[ "$pkg" =~ ^#.*$ ]] && continue
         packages+=("$pkg")
-    done < "$filtered_packages"
-    
-    # Clean up temp file
-    rm -f "$filtered_packages"
-    
+    done < "$PACKAGES_FILE"
+
     # Read AUR packages
     local aur_packages=()
     while IFS= read -r pkg; do
@@ -52,13 +39,32 @@ packages_install() {
         [[ "$pkg" =~ ^#.*$ ]] && continue
         aur_packages+=("$pkg")
     done < "$AUR_PACKAGES_FILE"
-    
-    # Update package databases (log monitor already started by packages_prepare)
-    if ! run_command_logged "Sync package databases" sudo pacman -Sy --noconfirm; then
-        log_error "Failed to sync package databases"
+
+    # Update all packages to latest versions (show output directly with progress)
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting: Upgrade system packages" >> "$DOTFILES_LOG_FILE"
+    log_info "Upgrading all system packages..."
+    echo
+    if ! yes | sudo pacman -Syu; then
+        log_error "Failed to upgrade system packages"
         return 1
     fi
-    
+    echo
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Completed: Upgrade system packages" >> "$DOTFILES_LOG_FILE"
+
+    # Rebuild Hyprland plugins if Hyprland was updated
+    if command -v hyprpm &>/dev/null && pacman -Q hyprland &>/dev/null; then
+        log_info "Rebuilding Hyprland plugins after system update..."
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting: Rebuild Hyprland plugins" >> "$DOTFILES_LOG_FILE"
+        if hyprpm update < <(echo "y") &>> "$DOTFILES_LOG_FILE"; then
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] Completed: Rebuild Hyprland plugins" >> "$DOTFILES_LOG_FILE"
+            log_success "Hyprland plugins rebuilt successfully"
+        else
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] Warning: Hyprland plugin rebuild failed" >> "$DOTFILES_LOG_FILE"
+            log_warning "Hyprland plugin rebuild failed (non-critical)"
+        fi
+        echo
+    fi
+
     # Just install packages from lists - no checking
     # For auditing system vs dotfiles, use package_audit function instead
 
@@ -85,22 +91,28 @@ packages_install() {
 
     # Ensure yay is installed for AUR packages
     if [[ ${#aur_packages[@]} -gt 0 ]]; then
-        # Refresh sudo session before installing yay (makepkg needs sudo)
-        [[ -n "${DOTFILES_LOG_FILE:-}" ]] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] Refreshing sudo session for yay installation..." >> "$DOTFILES_LOG_FILE"
-        sudo -v || {
-            log_error "Failed to refresh sudo session for yay installation"
-            return 1
-        }
         ensure_yay_installed
 
-        # Find missing AUR packages first
+        # Upgrade all AUR packages first (show output directly with progress)
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting: Upgrade AUR packages" >> "$DOTFILES_LOG_FILE"
+        log_info "Upgrading all AUR packages..."
+        echo
+
+        if ! yes | yay -Sua; then
+            log_warning "Some AUR packages failed to upgrade, but continuing..."
+        fi
+
+        echo
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Completed: Upgrade AUR packages" >> "$DOTFILES_LOG_FILE"
+
+        # Find missing AUR packages
         local missing_aur=()
         for pkg in "${aur_packages[@]}"; do
             if ! pacman -Q "$pkg" &>/dev/null; then
                 missing_aur+=("$pkg")
             fi
         done
-        
+
         # Exit early if nothing to install
         if [[ ${#missing_aur[@]} -eq 0 ]]; then
             return 0
@@ -188,20 +200,14 @@ packages_install() {
                 echo
             fi
         fi
-        
-        # Refresh sudo session before yay (yay calls pacman which needs sudo)
-        [[ -n "${DOTFILES_LOG_FILE:-}" ]] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] Refreshing sudo session..." >> "$DOTFILES_LOG_FILE"
-        sudo -v || {
-            log_error "Failed to refresh sudo session"
-            return 1
-        }
 
         # Install AUR packages directly (yay will handle sudo prompts)
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting: Install ${#missing_aur[@]} AUR packages" >> "$DOTFILES_LOG_FILE"
         [[ -n "${DOTFILES_LOG_FILE:-}" ]] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] Installing packages: ${missing_aur[*]}" >> "$DOTFILES_LOG_FILE"
-        [[ -n "${DOTFILES_LOG_FILE:-}" ]] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] Starting installation..." >> "$DOTFILES_LOG_FILE"
 
         printf '1\nY\n' | yay -S --needed --noconfirm --refresh --answerclean None --answerdiff None --removemake ${missing_aur[*]}
         local yay_exit_code=$?
+
         echo
 
         # Restore ~/.npmrc if we moved it, or remove the temporary empty one
@@ -213,11 +219,13 @@ packages_install() {
         fi
 
         if [[ $yay_exit_code -ne 0 ]]; then
-            [[ -n "${DOTFILES_LOG_FILE:-}" ]] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] Installation completed with some failures (exit code: $yay_exit_code)" >> "$DOTFILES_LOG_FILE"
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] Failed: Install ${#missing_aur[@]} AUR packages (exit code: $yay_exit_code)" >> "$DOTFILES_LOG_FILE"
+            [[ -n "${DOTFILES_LOG_FILE:-}" ]] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] Installation completed with some failures" >> "$DOTFILES_LOG_FILE"
             log_warning "Some AUR packages failed to install, but continuing..."
             echo
             log_info "Check log file for details: $DOTFILES_LOG_FILE"
         else
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] Completed: Install ${#missing_aur[@]} AUR packages" >> "$DOTFILES_LOG_FILE"
             [[ -n "${DOTFILES_LOG_FILE:-}" ]] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] Installation completed successfully" >> "$DOTFILES_LOG_FILE"
         fi
         echo

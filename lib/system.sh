@@ -26,10 +26,21 @@ configure_laptop_settings() {
 
 # Apply system configurations
 system_apply() {
-    # Validate and cache sudo access at the beginning
-    if ! sudo -v; then
-        log_error "Failed to authenticate with sudo"
-        return 1
+    # Confirm before making system-wide changes
+    if [[ "${AUTO_YES:-false}" != "true" ]]; then
+        echo
+        gum style --bold --foreground "$CONFIRM_TITLE_COLOR" "⚠ System Configuration"
+        echo
+        echo "This will modify system-level settings:"
+        echo "  • TLP power management"
+        echo "  • systemd sleep/logind"
+        echo "  • Network/Bluetooth configuration"
+        echo "  • Plymouth boot screen"
+        echo
+        if ! gum_confirm "Apply system configuration?"; then
+            return 0
+        fi
+        echo
     fi
 
     # Initialize logging for system operations
@@ -38,20 +49,11 @@ system_apply() {
     # Start live log monitor (same polished UX as full install)
     start_log_monitor
 
-    # Keep sudo timestamp fresh in the background
-    while true; do
-        sudo -n true
-        sleep 60
-        kill -0 $$ 2>/dev/null || exit
-    done &
-    SUDO_KEEPALIVE_PID=$!
-
     # Cleanup function
-    cleanup_sudo() {
-        kill $SUDO_KEEPALIVE_PID 2>/dev/null || true
+    cleanup() {
         stop_log_monitor
     }
-    trap cleanup_sudo EXIT INT TERM
+    trap cleanup EXIT INT TERM
 
     # Run individual system configuration scripts with logging
     run_logged "$DOTFILES_DIR/install/system/tlp.sh"
@@ -70,7 +72,7 @@ system_apply() {
     configure_laptop_settings
 
     # Cleanup
-    cleanup_sudo
+    cleanup
 
     # Show completion with options
     tput civis 2>/dev/null  # Hide cursor

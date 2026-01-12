@@ -1,0 +1,7 @@
+## Passwordless sudo for primary user
+## Combined with timestamp settings for fallback/other users
+john ALL=(ALL:ALL) NOPASSWD: ALL
+
+## Shared timestamp across all TTYs (lasts until reboot)
+Defaults !tty_tickets
+Defaults timestamp_timeout = -1

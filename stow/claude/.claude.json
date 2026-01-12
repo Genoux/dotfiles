@@ -1,5 +1,5 @@
 {
-  "numStartups": 19,
+  "numStartups": 23,
   "installMethod": "global",
   "autoUpdates": true,
   "tipsHistory": {
@@ -25,10 +25,10 @@
     "config-thinking-mode": 16,
     "ultrathink-keyword": 16,
     "btw-side-question": 7,
-    "custom-agents": 8,
-    "web-app": 8,
+    "custom-agents": 23,
+    "web-app": 23,
     "mobile-app": 8,
-    "permissions": 12,
+    "permissions": 22,
     "rename-conversation": 12,
     "custom-commands": 12
   },
@@ -45,7 +45,8 @@
     "tengu_ant_attribution_header_new": true,
     "tengu_streaming_tool_execution2": false,
     "tengu_vscode_review_upsell": false,
-    "tengu_vscode_onboarding": false
+    "tengu_vscode_onboarding": false,
+    "tengu_session_memory": false
   },
   "cachedDynamicConfigs": {
     "tengu_1p_event_batch_config": {
@@ -87,7 +88,10 @@
     },
     "tengu_post_compact_survey": false,
     "tengu_streaming_tool_execution2": false,
-    "tengu_pid_based_version_locking": true
+    "tengu_pid_based_version_locking": true,
+    "tengu_permission_explainer": false,
+    "tengu_vscode_review_upsell": false,
+    "tengu_vscode_onboarding": false
   },
   "hasCompletedOnboarding": true,
   "mcpServers": {
@@ -107,7 +111,7 @@
       "enabledMcpjsonServers": [],
       "disabledMcpjsonServers": [],
       "hasTrustDialogAccepted": false,
-      "projectOnboardingSeenCount": 2,
+      "projectOnboardingSeenCount": 4,
       "hasClaudeMdExternalIncludesApproved": false,
       "hasClaudeMdExternalIncludesWarningShown": false,
       "exampleFiles": [],
@@ -118,20 +122,37 @@
         "version": null,
         "packageManager": null
       },
-      "lastCost": 0,
-      "lastAPIDuration": 0,
-      "lastAPIDurationWithoutRetries": 0,
+      "lastCost": 0.030063,
+      "lastAPIDuration": 4018,
+      "lastAPIDurationWithoutRetries": 4004,
       "lastToolDuration": 0,
-      "lastDuration": 3152,
+      "lastDuration": 7570,
       "lastLinesAdded": 0,
       "lastLinesRemoved": 0,
-      "lastTotalInputTokens": 0,
-      "lastTotalOutputTokens": 0,
-      "lastTotalCacheCreationInputTokens": 0,
+      "lastTotalInputTokens": 4,
+      "lastTotalOutputTokens": 166,
+      "lastTotalCacheCreationInputTokens": 15122,
       "lastTotalCacheReadInputTokens": 0,
       "lastTotalWebSearchRequests": 0,
-      "lastModelUsage": {},
-      "lastSessionId": "20e51a6a-a442-4d6c-8962-9f3c1cec4bae"
+      "lastModelUsage": {
+        "claude-sonnet-4-5-20250929": {
+          "inputTokens": 2,
+          "outputTokens": 20,
+          "cacheReadInputTokens": 0,
+          "cacheCreationInputTokens": 4049,
+          "webSearchRequests": 0,
+          "costUSD": 0.01548975
+        },
+        "claude-haiku-4-5-20251001": {
+          "inputTokens": 2,
+          "outputTokens": 146,
+          "cacheReadInputTokens": 0,
+          "cacheCreationInputTokens": 11073,
+          "webSearchRequests": 0,
+          "costUSD": 0.01457325
+        }
+      },
+      "lastSessionId": "e7a99eff-f554-4dee-adf8-98225a85d0dc"
     },
     "/home/john/dotfiles": {
       "allowedTools": [],
@@ -158,8 +179,8 @@
   "sonnet45MigrationComplete": true,
   "opus45MigrationComplete": true,
   "thinkingMigrationComplete": true,
-  "changelogLastFetched": 1768165801464,
-  "lastReleaseNotesSeen": "2.1.4",
+  "changelogLastFetched": 1768190759739,
+  "lastReleaseNotesSeen": "2.1.5",
   "hasShownOpus45Notice": {
     "10bbc4d6-2d3d-4b54-9ddd-73a69b2feae5": true
   },
@@ -169,15 +190,15 @@
     "10bbc4d6-2d3d-4b54-9ddd-73a69b2feae5": {
       "hasAccess": false,
       "hasAccessNotAsDefault": false,
-      "timestamp": 1768165741006
+      "timestamp": 1768254635838
     }
   },
   "oauthAccount": {
     "accountUuid": "1c619a4d-0d2b-4548-86b6-c8cfda0d3e7a",
     "emailAddress": "john.olivierb@gmail.com",
     "organizationUuid": "10bbc4d6-2d3d-4b54-9ddd-73a69b2feae5",
-    "hasExtraUsageEnabled": true,
-    "displayName": "John",
+    "hasExtraUsageEnabled": false,
+    "displayName": "inBeat",
     "organizationRole": "admin",
     "workspaceRole": null,
     "organizationName": "john.olivierb@gmail.com's Organization"
