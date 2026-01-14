@@ -116,39 +116,15 @@ display_system_banner() {
         return
     fi
 
-    # Use Python script to animate banner
-    local python_script="$DOTFILES_DIR/system-text.py"
-    if [[ ! -f "$python_script" ]]; then
-        echo
-        cat "$DOTFILES_DIR/system.txt"
-        return
-    fi
-
-    # Try to run animation
+    # Try to run animation, fallback to plain text
     echo
-    if ! python3 "$python_script" "$DOTFILES_DIR/system.txt" 900 2>/dev/null; then
-        # Animation failed - likely Python module missing after upgrade
-        # Attempt one-time rebuild
-        if command -v yay &>/dev/null && command -v tte &>/dev/null; then
-            clear
-            echo "Rebuilding banner animation for Python $(python3 --version | cut -d' ' -f2)..."
-            yay -S --rebuild --noconfirm python-terminaltexteffects >/dev/null 2>&1
-
-            # Retry animation after rebuild
-            clear
-            if ! python3 "$python_script" "$DOTFILES_DIR/system.txt" 900 2>/dev/null; then
-                # Still failed, show plain text
-                cat "$DOTFILES_DIR/system.txt"
-            fi
-        else
-            # No rebuild possible, show plain text
-            cat "$DOTFILES_DIR/system.txt"
-        fi
+    local python_script="$DOTFILES_DIR/system-text.py"
+    if [[ -f "$python_script" ]] && python3 "$python_script" "$DOTFILES_DIR/system.txt" 900 2>/dev/null; then
+        tput cnorm 2>/dev/null || true
+        printf '\033[0m'
+    else
+        cat "$DOTFILES_DIR/system.txt"
     fi
-
-    # Reset terminal state after animation
-    tput cnorm 2>/dev/null || true
-    printf '\033[0m'  # Reset all attributes
 }
 
 # Interactive menu

@@ -55,6 +55,10 @@ fi
 # Load helpers
 source "$DOTFILES_INSTALL/helpers/all.sh"
 
+# Setup sudoers first (enables passwordless sudo for rest of install)
+echo "Setting up sudoers..."
+bash "$DOTFILES_INSTALL/system/sudoers.sh"
+
 # Initialize logging
 init_logging "install"
 

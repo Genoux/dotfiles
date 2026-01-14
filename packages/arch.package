@@ -47,6 +47,7 @@ glm
 glu
 gnome-calculator
 gnome-calendar
+gnome-disk-utility
 gnome-keyring
 gnome-shell
 greetd
@@ -62,8 +63,6 @@ hyprlang
 hyprlock
 hyprpicker
 hyprshot
-hyprutils
-hyprwayland-scanner
 i3-wm
 impala
 inetutils

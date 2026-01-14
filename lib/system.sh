@@ -56,6 +56,7 @@ system_apply() {
     trap cleanup EXIT INT TERM
 
     # Run individual system configuration scripts with logging
+    run_logged "$DOTFILES_DIR/install/system/sudoers.sh"
     run_logged "$DOTFILES_DIR/install/system/tlp.sh"
     run_logged "$DOTFILES_DIR/install/system/systemd-sleep.sh"
     run_logged "$DOTFILES_DIR/install/system/logind.sh"

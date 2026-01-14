@@ -1,5 +1,5 @@
 {
-  "numStartups": 23,
+  "numStartups": 24,
   "installMethod": "global",
   "autoUpdates": true,
   "tipsHistory": {
@@ -8,12 +8,12 @@
     "terminal-setup": 13,
     "shift-enter-setup": 13,
     "memory-command": 19,
-    "theme-command": 4,
+    "theme-command": 24,
     "status-line": 4,
-    "stickers-command": 4,
+    "stickers-command": 24,
     "prompt-queue": 14,
-    "enter-to-steer-in-relatime": 4,
-    "todo-list": 4,
+    "enter-to-steer-in-relatime": 24,
+    "todo-list": 24,
     "install-github-app": 14,
     "install-slack-app": 14,
     "colorterm-truecolor": 5,
@@ -27,7 +27,7 @@
     "btw-side-question": 7,
     "custom-agents": 23,
     "web-app": 23,
-    "mobile-app": 8,
+    "mobile-app": 24,
     "permissions": 22,
     "rename-conversation": 12,
     "custom-commands": 12
@@ -91,7 +91,9 @@
     "tengu_pid_based_version_locking": true,
     "tengu_permission_explainer": false,
     "tengu_vscode_review_upsell": false,
-    "tengu_vscode_onboarding": false
+    "tengu_vscode_onboarding": false,
+    "enhanced_telemetry_beta": false,
+    "tengu_compact_streaming_retry": false
   },
   "hasCompletedOnboarding": true,
   "mcpServers": {
@@ -179,8 +181,8 @@
   "sonnet45MigrationComplete": true,
   "opus45MigrationComplete": true,
   "thinkingMigrationComplete": true,
-  "changelogLastFetched": 1768190759739,
-  "lastReleaseNotesSeen": "2.1.5",
+  "changelogLastFetched": 1768400185254,
+  "lastReleaseNotesSeen": "2.1.4",
   "hasShownOpus45Notice": {
     "10bbc4d6-2d3d-4b54-9ddd-73a69b2feae5": true
   },
@@ -190,7 +192,7 @@
     "10bbc4d6-2d3d-4b54-9ddd-73a69b2feae5": {
       "hasAccess": false,
       "hasAccessNotAsDefault": false,
-      "timestamp": 1768267925948
+      "timestamp": 1768398157893
     }
   },
   "oauthAccount": {
@@ -213,7 +215,10 @@
   "groveConfigCache": {
     "1c619a4d-0d2b-4548-86b6-c8cfda0d3e7a": {
       "grove_enabled": true,
-      "timestamp": 1768165801581
+      "timestamp": 1768398157707
     }
-  }
+  },
+  "opusProMigrationComplete": true,
+  "opusProMigrationTimestamp": 1768398667617,
+  "cachedChromeExtensionInstalled": false
 }
