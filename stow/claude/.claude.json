@@ -1,38 +1,38 @@
 {
-  "numStartups": 24,
+  "numStartups": 41,
   "installMethod": "global",
   "autoUpdates": true,
   "tipsHistory": {
     "new-user-warmup": 8,
-    "plan-mode-for-complex-tasks": 19,
-    "terminal-setup": 13,
+    "plan-mode-for-complex-tasks": 39,
+    "terminal-setup": 35,
     "shift-enter-setup": 13,
-    "memory-command": 19,
+    "memory-command": 34,
     "theme-command": 24,
-    "status-line": 4,
+    "status-line": 29,
     "stickers-command": 24,
     "prompt-queue": 14,
     "enter-to-steer-in-relatime": 24,
     "todo-list": 24,
-    "install-github-app": 14,
-    "install-slack-app": 14,
+    "install-github-app": 35,
+    "install-slack-app": 38,
     "colorterm-truecolor": 5,
-    "drag-and-drop-images": 15,
-    "double-esc-code-restore": 15,
-    "continue": 16,
-    "shift-tab": 16,
-    "image-paste": 6,
+    "drag-and-drop-images": 38,
+    "double-esc-code-restore": 39,
+    "continue": 39,
+    "shift-tab": 39,
+    "image-paste": 26,
     "config-thinking-mode": 16,
-    "ultrathink-keyword": 16,
+    "ultrathink-keyword": 27,
     "btw-side-question": 7,
-    "custom-agents": 23,
-    "web-app": 23,
-    "mobile-app": 24,
-    "permissions": 22,
-    "rename-conversation": 12,
-    "custom-commands": 12
+    "custom-agents": 38,
+    "web-app": 38,
+    "mobile-app": 39,
+    "permissions": 32,
+    "rename-conversation": 27,
+    "custom-commands": 27
   },
-  "promptQueueUseCount": 6,
+  "promptQueueUseCount": 8,
   "cachedStatsigGates": {
     "tengu_prompt_suggestion": true,
     "tengu_year_end_2025_campaign_promo": false,
@@ -67,7 +67,7 @@
     "tengu_tool_pear": false,
     "tengu_c4w_usage_limit_notifications_enabled": true,
     "tengu_thinkback": false,
-    "tengu_sumi": false,
+    "tengu_sumi": true,
     "tengu_react_vulnerability_warning": false,
     "tengu_ant_attribution_header_new": true,
     "tengu_accept_with_feedback": true,
@@ -93,7 +93,10 @@
     "tengu_vscode_review_upsell": false,
     "tengu_vscode_onboarding": false,
     "enhanced_telemetry_beta": false,
-    "tengu_compact_streaming_retry": false
+    "tengu_compact_streaming_retry": false,
+    "tengu_code_diff_cli": true,
+    "tengu_session_memory": false,
+    "tengu_bash_haiku_prefetch": true
   },
   "hasCompletedOnboarding": true,
   "mcpServers": {
@@ -124,37 +127,20 @@
         "version": null,
         "packageManager": null
       },
-      "lastCost": 0.030063,
-      "lastAPIDuration": 4018,
-      "lastAPIDurationWithoutRetries": 4004,
+      "lastCost": 0,
+      "lastAPIDuration": 0,
+      "lastAPIDurationWithoutRetries": 0,
       "lastToolDuration": 0,
-      "lastDuration": 7570,
+      "lastDuration": 5707,
       "lastLinesAdded": 0,
       "lastLinesRemoved": 0,
-      "lastTotalInputTokens": 4,
-      "lastTotalOutputTokens": 166,
-      "lastTotalCacheCreationInputTokens": 15122,
+      "lastTotalInputTokens": 0,
+      "lastTotalOutputTokens": 0,
+      "lastTotalCacheCreationInputTokens": 0,
       "lastTotalCacheReadInputTokens": 0,
       "lastTotalWebSearchRequests": 0,
-      "lastModelUsage": {
-        "claude-sonnet-4-5-20250929": {
-          "inputTokens": 2,
-          "outputTokens": 20,
-          "cacheReadInputTokens": 0,
-          "cacheCreationInputTokens": 4049,
-          "webSearchRequests": 0,
-          "costUSD": 0.01548975
-        },
-        "claude-haiku-4-5-20251001": {
-          "inputTokens": 2,
-          "outputTokens": 146,
-          "cacheReadInputTokens": 0,
-          "cacheCreationInputTokens": 11073,
-          "webSearchRequests": 0,
-          "costUSD": 0.01457325
-        }
-      },
-      "lastSessionId": "e7a99eff-f554-4dee-adf8-98225a85d0dc"
+      "lastModelUsage": {},
+      "lastSessionId": "251c1b44-d4bf-4c94-9040-f219f91d4ca6"
     },
     "/home/john/dotfiles": {
       "allowedTools": [],
@@ -167,13 +153,81 @@
       "hasClaudeMdExternalIncludesApproved": false,
       "hasClaudeMdExternalIncludesWarningShown": false,
       "exampleFiles": [
-        "windowrules.conf",
         "Bar.tsx",
-        "keybindings.conf",
+        "windowrules.conf",
         "main.scss",
+        "keybindings.conf",
         "kitty.conf"
       ],
-      "exampleFilesGeneratedAt": 1767795791690
+      "exampleFilesGeneratedAt": 1768401584236
+    },
+    "/home/john/Desktop/@inbeat/nineam-growth-engine": {
+      "allowedTools": [],
+      "mcpContextUris": [],
+      "mcpServers": {},
+      "enabledMcpjsonServers": [],
+      "disabledMcpjsonServers": [],
+      "hasTrustDialogAccepted": false,
+      "projectOnboardingSeenCount": 0,
+      "hasClaudeMdExternalIncludesApproved": false,
+      "hasClaudeMdExternalIncludesWarningShown": false,
+      "exampleFiles": [
+        "App.tsx",
+        "Navbar.tsx",
+        "LogoGrid.astro",
+        "CardGlow.tsx",
+        "CaseStudyCard.astro"
+      ],
+      "exampleFilesGeneratedAt": 1768495841242
+    },
+    "/home/john/.config/Claude": {
+      "allowedTools": [],
+      "mcpContextUris": [],
+      "mcpServers": {},
+      "enabledMcpjsonServers": [],
+      "disabledMcpjsonServers": [],
+      "hasTrustDialogAccepted": true,
+      "projectOnboardingSeenCount": 0,
+      "hasClaudeMdExternalIncludesApproved": false,
+      "hasClaudeMdExternalIncludesWarningShown": false,
+      "reactVulnerabilityCache": {
+        "detected": false,
+        "package": null,
+        "packageName": null,
+        "version": null,
+        "packageManager": null
+      },
+      "lastCost": 0.041624749999999995,
+      "lastAPIDuration": 7341,
+      "lastAPIDurationWithoutRetries": 7340,
+      "lastToolDuration": 0,
+      "lastDuration": 131484,
+      "lastLinesAdded": 0,
+      "lastLinesRemoved": 0,
+      "lastTotalInputTokens": 248,
+      "lastTotalOutputTokens": 284,
+      "lastTotalCacheCreationInputTokens": 3987,
+      "lastTotalCacheReadInputTokens": 19684,
+      "lastTotalWebSearchRequests": 0,
+      "lastModelUsage": {
+        "claude-haiku-4-5-20251001": {
+          "inputTokens": 239,
+          "outputTokens": 26,
+          "cacheReadInputTokens": 0,
+          "cacheCreationInputTokens": 0,
+          "webSearchRequests": 0,
+          "costUSD": 0.00036899999999999997
+        },
+        "claude-opus-4-5-20251101": {
+          "inputTokens": 9,
+          "outputTokens": 258,
+          "cacheReadInputTokens": 19684,
+          "cacheCreationInputTokens": 3987,
+          "webSearchRequests": 0,
+          "costUSD": 0.041255749999999994
+        }
+      },
+      "lastSessionId": "596a9d6a-70b2-4c8b-93f6-aa9028453c5a"
     }
   },
   "userID": "53ff8994f17c82f3e27cd4648f272fedf96496b402f5c2e0eff38ad0789be784",
@@ -181,8 +235,8 @@
   "sonnet45MigrationComplete": true,
   "opus45MigrationComplete": true,
   "thinkingMigrationComplete": true,
-  "changelogLastFetched": 1768400185254,
-  "lastReleaseNotesSeen": "2.1.4",
+  "changelogLastFetched": 1768755225284,
+  "lastReleaseNotesSeen": "2.1.12",
   "hasShownOpus45Notice": {
     "10bbc4d6-2d3d-4b54-9ddd-73a69b2feae5": true
   },
@@ -192,7 +246,7 @@
     "10bbc4d6-2d3d-4b54-9ddd-73a69b2feae5": {
       "hasAccess": false,
       "hasAccessNotAsDefault": false,
-      "timestamp": 1768398157893
+      "timestamp": 1768773320274
     }
   },
   "oauthAccount": {
@@ -215,7 +269,7 @@
   "groveConfigCache": {
     "1c619a4d-0d2b-4548-86b6-c8cfda0d3e7a": {
       "grove_enabled": true,
-      "timestamp": 1768398157707
+      "timestamp": 1768690198124
     }
   },
   "opusProMigrationComplete": true,

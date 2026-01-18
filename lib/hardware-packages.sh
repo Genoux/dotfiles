@@ -2,8 +2,17 @@
 # Hardware-specific package management
 # Auto-generates hardware package lists based on detected hardware
 
-# Setup hardware packages (detect, generate lists, create config)
+# Setup hardware packages (detect, generate lists, install, create config)
 hardware_packages_setup() {
+    # Setup progress display if not in full install
+    local standalone_mode=false
+    if [[ -z "${FULL_INSTALL:-}" ]]; then
+        standalone_mode=true
+        init_logging "hardware"
+        progress_start "Hardware Setup"
+        trap 'progress_cleanup; finish_logging' EXIT INT TERM
+    fi
+
     log_section "Hardware Package Detection"
 
     # Detect GPU
@@ -33,10 +42,33 @@ hardware_packages_setup() {
         _generate_gpu_packages "intel"
     fi
 
+    # Install GPU packages immediately
+    echo
+    log_section "Installing GPU Drivers"
+
+    [[ "$has_nvidia" == "true" ]] && _install_gpu_packages "nvidia"
+    [[ "$has_amd" == "true" ]] && _install_gpu_packages "amd"
+    [[ "$has_intel" == "true" ]] && _install_gpu_packages "intel"
+
+    # Post-install setup (build DKMS, load modules, etc.)
+    log_section "Post-Install Setup"
+    [[ "$has_nvidia" == "true" ]] && _setup_nvidia_post_install
+    [[ "$has_amd" == "true" ]] && _setup_amd_post_install
+    [[ "$has_intel" == "true" ]] && _setup_intel_post_install
+
     # Create gpu.conf for Hyprland
+    echo
     _create_gpu_conf "$has_nvidia" "$has_amd" "$has_intel"
 
-    log_success "Hardware setup complete"
+    # Complete progress if in standalone mode
+    if [[ "$standalone_mode" == "true" ]]; then
+        trap - EXIT INT TERM
+        finish_logging
+        progress_complete "Hardware Setup"
+        export SKIP_PAUSE=1  # Skip menu pause since progress_complete handled user interaction
+    else
+        log_success "✓ Hardware setup complete"
+    fi
 }
 
 # Internal: Scan and generate package list for GPU type
@@ -166,6 +198,68 @@ _install_gpu_packages() {
         log_info "Installing ${#aur_packages[@]} ${gpu_type^^} AUR packages..."
         yay -S --needed --noconfirm "${aur_packages[@]}"
         echo
+    fi
+
+    log_success "✓ ${gpu_type^^} packages installed"
+}
+
+# Internal: NVIDIA post-install setup
+_setup_nvidia_post_install() {
+    echo
+    echo "Setting up NVIDIA drivers..."
+
+    # Build DKMS modules
+    echo "Building DKMS modules (this may take a few minutes)..."
+    if sudo dkms autoinstall 2>&1 | grep -q "already installed"; then
+        log_success "✓ DKMS modules built"
+    elif sudo dkms autoinstall >/dev/null 2>&1; then
+        log_success "✓ DKMS modules built"
+    else
+        log_warning "DKMS build may have failed, continuing..."
+    fi
+
+    # Load nvidia modules
+    sudo modprobe nvidia 2>/dev/null || true
+    sudo modprobe nvidia_modeset 2>/dev/null || true
+    sudo modprobe nvidia_uvm 2>/dev/null || true
+    sudo modprobe nvidia_drm 2>/dev/null || true
+
+    # Check if nvidia module is loaded
+    if lsmod | grep -q "^nvidia "; then
+        log_success "✓ NVIDIA driver working"
+    else
+        log_warning "⚠ REBOOT REQUIRED for NVIDIA drivers to take effect"
+    fi
+}
+
+# Internal: AMD post-install setup
+_setup_amd_post_install() {
+    echo
+    echo "Setting up AMD drivers..."
+
+    # Load amdgpu module if not already loaded
+    if lsmod | grep -q "^amdgpu "; then
+        log_success "✓ AMD driver already loaded"
+    else
+        sudo modprobe amdgpu 2>/dev/null || true
+        if lsmod | grep -q "^amdgpu "; then
+            log_success "✓ AMD driver loaded"
+        else
+            log_warning "⚠ AMD driver may need a reboot"
+        fi
+    fi
+}
+
+# Internal: Intel post-install setup
+_setup_intel_post_install() {
+    echo
+    echo "Setting up Intel drivers..."
+
+    # Intel drivers are usually built into the kernel
+    if lsmod | grep -q "^i915 "; then
+        log_success "✓ Intel driver already loaded"
+    else
+        log_warning "⚠ Intel driver check skipped (integrated)"
     fi
 }
 

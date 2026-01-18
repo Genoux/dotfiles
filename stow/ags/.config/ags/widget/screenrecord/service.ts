@@ -1,5 +1,5 @@
-import { createState } from "ags";
-import { subprocess } from "ags/process";
+import { createState, onCleanup } from "ags";
+import { subprocess, exec } from "ags/process";
 import GLib from "gi://GLib";
 
 const SCRIPT_PATH = `${GLib.get_home_dir()}/.local/bin/system-screenrecord`;
@@ -11,8 +11,27 @@ let monitorProcess: any = null;
 let restartCount = 0;
 const MAX_RESTARTS = 3;
 
+function stopMonitoring() {
+  if (monitorProcess) {
+    try {
+      monitorProcess.kill();
+    } catch (e) {
+      console.error("[ScreenRecord] Error killing monitor process:", e);
+    }
+    monitorProcess = null;
+  }
+  
+  // Kill any orphaned monitoring processes (safety net)
+  try {
+    exec(["pkill", "-f", "inotifywait.*screenrecording"]);
+  } catch (e) {
+    // Ignore if no process to kill
+  }
+}
+
 function startMonitoring() {
-  if (monitorProcess) return;
+  // Kill any existing process before starting new one
+  stopMonitoring();
 
   // EVENT-DRIVEN: Watch the Videos directory for new recording files
   // Much more efficient than polling pgrep every N seconds
@@ -73,6 +92,11 @@ function startMonitoring() {
 }
 
 startMonitoring();
+
+// Cleanup on AGS restart
+onCleanup(() => {
+  stopMonitoring();
+});
 
 export const isRecording = isRecordingState;
 

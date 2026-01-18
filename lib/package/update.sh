@@ -11,20 +11,14 @@ rebuild_yay_if_broken() {
         return 0
     fi
 
-    log_warning "yay is broken (likely due to library update), rebuilding..."
+    echo "yay is broken (likely due to library update), rebuilding..."
 
-    if ! run_command_logged "Rebuild yay" bash -c '
-        cd /tmp
-        rm -rf yay
-        git clone https://aur.archlinux.org/yay.git
-        cd yay
-        makepkg -si --noconfirm
-    '; then
-        log_error "Failed to rebuild yay"
+    if ! (cd /tmp && rm -rf yay && git clone https://aur.archlinux.org/yay.git && cd yay && makepkg -si --noconfirm); then
+        echo "Failed to rebuild yay"
         return 1
     fi
 
-    log_success "yay rebuilt successfully"
+    echo "yay rebuilt successfully"
     return 0
 }
 
@@ -46,45 +40,36 @@ packages_update() {
         echo
     fi
 
-    # Initialize logging and start monitor
+    # Initialize logging and start progress display
     init_logging "package"
-    start_log_monitor
-    
+    progress_start "System Update"
+
+    # Cleanup on exit/interrupt
+    trap 'progress_cleanup; finish_logging' EXIT INT TERM
+
     # Remove debug packages first (silent if none found)
     local debug_packages=$(pacman -Qq | grep '\-debug$' 2>/dev/null || true)
     if [[ -n "$debug_packages" ]]; then
-        run_command_logged "Remove debug packages" bash -c "echo '$debug_packages' | xargs sudo pacman -Rdd --noconfirm" || true
-    else
-        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting: Remove debug packages" >> "$DOTFILES_LOG_FILE"
-        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Completed: No debug packages to remove" >> "$DOTFILES_LOG_FILE"
+        echo "Removing debug packages..."
+        echo "$debug_packages" | xargs sudo pacman -Rdd --noconfirm 2>&1 || true
     fi
 
-    # Sync package database
-    if ! run_command_logged "Sync package database" sudo pacman -Sy --noconfirm; then
+    # Sync and update official packages
+    echo
+    echo "Updating official packages..."
+    if ! progress_run "Update official packages" sudo pacman -Syu --noconfirm; then
+        progress_stop
+        trap - EXIT INT TERM
         finish_logging
-        sleep 1
-        stop_log_monitor
-        log_error "Failed to sync package database"
-        return 1
-    fi
-
-    # Update official packages
-    if ! run_command_logged "Update official packages" sudo pacman -Su --noconfirm; then
-        finish_logging
-        sleep 1
-        stop_log_monitor
         log_error "pacman update failed"
         return 1
     fi
 
     # Rebuild Hyprland plugins if Hyprland was updated
     if command -v hyprpm &>/dev/null && pacman -Q hyprland &>/dev/null; then
-        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting: Rebuild Hyprland plugins" >> "$DOTFILES_LOG_FILE"
-        if hyprpm update < <(echo "y") &>> "$DOTFILES_LOG_FILE"; then
-            echo "[$(date '+%Y-%m-%d %H:%M:%S')] Completed: Rebuild Hyprland plugins" >> "$DOTFILES_LOG_FILE"
-        else
-            echo "[$(date '+%Y-%m-%d %H:%M:%S')] Warning: Hyprland plugin rebuild failed" >> "$DOTFILES_LOG_FILE"
-        fi
+        echo
+        echo "Rebuilding Hyprland plugins..."
+        hyprpm update < <(echo "y") 2>&1 || echo "Hyprland plugin rebuild failed (non-critical)"
     fi
 
     # Rebuild yay if broken (e.g., after libalpm/pacman update)
@@ -93,7 +78,6 @@ packages_update() {
     # Ensure yay is installed for AUR step
     ensure_yay_installed
 
-    # Update AUR packages
     # Neutralize npm config that breaks some AUR builds
     local npmrc_backup=""
     if [[ -f "$HOME/.npmrc" ]]; then
@@ -103,16 +87,20 @@ packages_update() {
     export NPM_CONFIG_USERCONFIG=/dev/null
     unset NPM_CONFIG_PREFIX npm_config_prefix NPM_CONFIG_GLOBALCONFIG npm_config_globalconfig
 
-    run_command_logged "Update AUR packages" yay -Sua --noconfirm --answerclean N --answerdiff N || true
+    # Update AUR packages
+    echo
+    echo "Updating AUR packages..."
+    progress_run "Update AUR packages" yay -Sua --noconfirm --answerclean N --answerdiff N || true
 
     # Restore ~/.npmrc if we moved it
     if [[ -n "$npmrc_backup" && -f "$npmrc_backup" ]]; then
         mv "$npmrc_backup" "$HOME/.npmrc" 2>/dev/null || true
     fi
 
+    # Complete
+    trap - EXIT INT TERM
     finish_logging
-    sleep 1
-    stop_log_monitor true
 
-    log_success "System update complete"
+    progress_complete "System Update"
+    export SKIP_PAUSE=1
 }

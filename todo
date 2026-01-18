@@ -8,11 +8,21 @@
 ✔ Try Ghostly terminal @done(25-11-27 11:00)
 ✘ Fix TUI installer should use xdg-terminal-exec to be in line with other changes @cancelled(25-11-22 19:33)
 ✔ Make cursor use it's own Dialog theme @done(25-12-12 19:23)
-[] FIx were on login ags ton run and walker takes time to load
-[] FInd a way to make the system more optimized
+✔ FIx were on login ags ton run and walker takes time to load
+✔ FInd a way to make the system more optimized
 [] Setup constant GTK theme
-[] Fix login. AGS walker don't show (cant't reproduce)
-[] Setup Plymouth
+✔ Fix login. AGS walker don't show (cant't reproduce)
+✔ Setup Plymouth
     https://wiki.archlinux.org/title/NVIDIA#Early_loading
     https://www.reddit.com/r/archlinux/comments/1cy1sg3/how_do_i_install_plymouth_with_nvidia_gpu/
     https://www.gnome-look.org/browse?cat=108&ord=latest
+
+✔ Remove AUTH from spotify, chrome, zed @done(25-01-14)
+[] Fix Media player where its not updating when playing a new song or display unknown
+[] Fix pc not going to sleep
+[] Make dofile manager installtion consistant everywhere.
+[] Make sure greedt use my config
+[] Fix warning from hyprland XDG_CURRENT_DESKTOP
+[] Fix start-hyprland
+[] Make walker fixed witdh
+[] fis autolock screen not kepping wallpaper

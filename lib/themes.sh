@@ -166,29 +166,68 @@ uninstall_current_theme() {
     log_info "Current theme: $current_gtk"
     echo
     
-    local base_name=$(echo "$current_gtk" | sed -E 's/-(Dark|Light|dark|light)$//')
-    local theme_path="$THEMES_DIR/${base_name}"
+    # Extract base theme name from installed theme name
+    # Pattern: "Workspace-Dark-Workspace" -> "Workspace"
+    # Try to match known theme directory patterns
+    local theme_path=""
+    local uninstalled=false
     
-    if [[ -x "$theme_path/uninstall.sh" ]]; then
-        (
-            cd "$theme_path" || exit 1
-            ./uninstall.sh
-        )
-    elif [[ -x "$theme_path/install.sh" ]]; then
-        (
-            cd "$theme_path" || exit 1
-            ./install.sh --remove
-        )
+    # Try to find theme directory by matching base name
+    # Remove variant (Dark/Light) and scheme suffixes
+    local base_name=$(echo "$current_gtk" | sed -E 's/-(Dark|Light|dark|light)(-.*)?$//')
+    
+    # Check common theme directory name patterns
+    for pattern in "${base_name}-gtk-theme" "${base_name}-theme" "${base_name}"; do
+        if [[ -d "$THEMES_DIR/${pattern}" ]] && [[ -x "$THEMES_DIR/${pattern}/install.sh" ]]; then
+            theme_path="$THEMES_DIR/${pattern}"
+            break
+        fi
+    done
+    
+    if [[ -n "$theme_path" ]]; then
+        log_info "Found theme source: $(basename "$theme_path")"
+        
+        if [[ -x "$theme_path/uninstall.sh" ]]; then
+            (
+                cd "$theme_path" || exit 1
+                ./uninstall.sh
+            ) && uninstalled=true
+        elif [[ -x "$theme_path/install.sh" ]]; then
+            (
+                cd "$theme_path" || exit 1
+                ./install.sh --remove
+            ) && uninstalled=true
+        fi
     else
-        rm -rf "$HOME/.themes/${current_gtk}" "$HOME/.themes/${base_name}"*
+        # Fallback: try to remove theme directory directly
+        log_warning "Could not find theme source directory, removing installed theme files"
+        if [[ -d "$HOME/.themes/${current_gtk}" ]]; then
+            rm -rf "$HOME/.themes/${current_gtk}" "$HOME/.themes/${base_name}"*
+            uninstalled=true
+        else
+            log_warning "Theme directory not found: $HOME/.themes/${current_gtk}"
+        fi
+    fi
+    
+    # Reset gsettings to default theme
+    if [[ "$uninstalled" == "true" ]] && command -v gsettings &>/dev/null; then
+        gsettings reset org.gnome.desktop.interface gtk-theme 2>/dev/null || \
+        gsettings set org.gnome.desktop.interface gtk-theme "Adwaita" 2>/dev/null
+        log_info "Reset GTK theme to default"
     fi
     
     echo
-    log_success "Uninstalled: $current_gtk"
+    if [[ "$uninstalled" == "true" ]]; then
+        log_success "Uninstalled: $current_gtk"
+    else
+        log_error "Failed to uninstall theme"
+    fi
     echo
     if [[ "${FULL_INSTALL:-false}" != "true" ]]; then
         read -n 1 -s -r -p "Press any key to continue..."
     fi
+    
+    [[ "$uninstalled" == "true" ]] && return 0 || return 1
 }
 
 show_status() {

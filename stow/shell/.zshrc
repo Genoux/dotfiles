@@ -43,6 +43,9 @@ export ZSH="$HOME/.oh-my-zsh"
 # Starship is a cross-shell prompt that's faster and more customizable
 ZSH_THEME=""
 
+export BAT_STYLE=plain
+alias code='cursor'
+
 # Uncomment the following line to use case-sensitive completion.
 # CASE_SENSITIVE="true"
 

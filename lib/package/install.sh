@@ -2,12 +2,21 @@
 # Package installation operations
 # Install packages from lists
 packages_install() {
-    clear
+    # Setup progress display if not in full install
+    local standalone_mode=false
+    if [[ -z "${FULL_INSTALL:-}" ]]; then
+        standalone_mode=true
+        clear  # Only clear in standalone mode (don't mess up full install progress display)
+        init_logging "package"
+        progress_start "Package Installation"
+        trap 'progress_cleanup; finish_logging' EXIT INT TERM
+    fi
 
     # Always prepare system first
     packages_prepare
 
-    log_section "Installing Packages"
+    echo "Installing packages..."
+    echo
 
     # Remove all debug packages first to avoid conflicts (silent if none found)
     local debug_packages=$(pacman -Qq | grep '\-debug$' 2>/dev/null || true)
@@ -24,7 +33,7 @@ packages_install() {
         fatal_error "packages/aur.package not found in $DOTFILES_DIR"
     fi
 
-    # Read official packages (hardware-specific packages are managed separately)
+    # Read official packages
     local packages=()
     while IFS= read -r pkg; do
         [[ -z "$pkg" ]] && continue
@@ -40,27 +49,48 @@ packages_install() {
         aur_packages+=("$pkg")
     done < "$AUR_PACKAGES_FILE"
 
-    # Update all packages to latest versions (show output directly with progress)
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting: Upgrade system packages" >> "$DOTFILES_LOG_FILE"
-    log_info "Upgrading all system packages..."
+    # Read hardware-specific packages (GPU drivers, etc.)
+    if [[ -d "$DOTFILES_DIR/packages/hardware" ]]; then
+        for hw_file in "$DOTFILES_DIR/packages/hardware"/*.package; do
+            [[ -f "$hw_file" ]] || continue
+            # Skip AUR hardware files (will be read separately)
+            [[ "$(basename "$hw_file")" == *"-aur.package" ]] && continue
+
+            while IFS= read -r pkg; do
+                [[ -z "$pkg" ]] && continue
+                [[ "$pkg" =~ ^#.*$ ]] && continue
+                packages+=("$pkg")
+            done < "$hw_file"
+        done
+
+        # Read hardware AUR packages
+        for hw_file in "$DOTFILES_DIR/packages/hardware"/*-aur.package; do
+            [[ -f "$hw_file" ]] || continue
+
+            while IFS= read -r pkg; do
+                [[ -z "$pkg" ]] && continue
+                [[ "$pkg" =~ ^#.*$ ]] && continue
+                aur_packages+=("$pkg")
+            done < "$hw_file"
+        done
+    fi
+
+    # Update all packages to latest versions
     echo
-    if ! yes | sudo pacman -Syu; then
-        log_error "Failed to upgrade system packages"
+    echo "Upgrading all system packages..."
+    if ! yes | sudo pacman -Syu 2>&1; then
+        echo "Failed to upgrade system packages"
         return 1
     fi
     echo
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Completed: Upgrade system packages" >> "$DOTFILES_LOG_FILE"
 
     # Rebuild Hyprland plugins if Hyprland was updated
     if command -v hyprpm &>/dev/null && pacman -Q hyprland &>/dev/null; then
-        log_info "Rebuilding Hyprland plugins after system update..."
-        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting: Rebuild Hyprland plugins" >> "$DOTFILES_LOG_FILE"
-        if hyprpm update < <(echo "y") &>> "$DOTFILES_LOG_FILE"; then
-            echo "[$(date '+%Y-%m-%d %H:%M:%S')] Completed: Rebuild Hyprland plugins" >> "$DOTFILES_LOG_FILE"
-            log_success "Hyprland plugins rebuilt successfully"
+        echo "Rebuilding Hyprland plugins after system update..."
+        if hyprpm update < <(echo "y") 2>&1; then
+            echo "Hyprland plugins rebuilt successfully"
         else
-            echo "[$(date '+%Y-%m-%d %H:%M:%S')] Warning: Hyprland plugin rebuild failed" >> "$DOTFILES_LOG_FILE"
-            log_warning "Hyprland plugin rebuild failed (non-critical)"
+            echo "Hyprland plugin rebuild failed (non-critical)"
         fi
         echo
     fi
@@ -76,16 +106,18 @@ packages_install() {
             if pacman -Ss "^$pkg$" &>/dev/null; then
                 missing_official+=("$pkg")
             else
-                log_warning "Package $pkg not found in official repositories, skipping"
+                echo "Warning: Package $pkg not found in official repositories, skipping"
             fi
         fi
     done
     
     # Install missing official packages
     if [[ ${#missing_official[@]} -gt 0 ]]; then
-        if ! run_command_logged "Install ${#missing_official[@]} official packages" sudo pacman -S --needed --noconfirm "${missing_official[@]}"; then
-            log_warning "Some official packages failed to install, but continuing..."
+        echo "Installing ${#missing_official[@]} official packages..."
+        if ! sudo pacman -S --needed --noconfirm "${missing_official[@]}" 2>&1; then
+            echo "Some official packages failed to install, but continuing..."
         fi
+        echo
     fi
     
 
@@ -93,17 +125,13 @@ packages_install() {
     if [[ ${#aur_packages[@]} -gt 0 ]]; then
         ensure_yay_installed
 
-        # Upgrade all AUR packages first (show output directly with progress)
-        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting: Upgrade AUR packages" >> "$DOTFILES_LOG_FILE"
-        log_info "Upgrading all AUR packages..."
+        # Upgrade all AUR packages first
         echo
-
-        if ! yes | yay -Sua; then
-            log_warning "Some AUR packages failed to upgrade, but continuing..."
+        echo "Upgrading all AUR packages..."
+        if ! yes | yay -Sua 2>&1; then
+            echo "Some AUR packages failed to upgrade, but continuing..."
         fi
-
         echo
-        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Completed: Upgrade AUR packages" >> "$DOTFILES_LOG_FILE"
 
         # Find missing AUR packages
         local missing_aur=()
@@ -189,25 +217,22 @@ packages_install() {
             done
 
             if [[ ${#safe_to_remove[@]} -gt 0 ]]; then
-                log_info "Removing ${#safe_to_remove[@]} conflicting package(s)..."
+                echo "Removing ${#safe_to_remove[@]} conflicting package(s)..."
                 sudo pacman -Rns --noconfirm "${safe_to_remove[@]}" >/dev/null 2>&1 || true
                 echo
             fi
 
             if [[ ${#blocked_conflicts[@]} -gt 0 ]]; then
-                log_warning "Cannot auto-remove these conflicts (dependencies exist):"
+                echo "Warning: Cannot auto-remove these conflicts (dependencies exist):"
                 printf '  - %s\n' "${blocked_conflicts[@]}"
                 echo
             fi
         fi
 
         # Install AUR packages directly (yay will handle sudo prompts)
-        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting: Install ${#missing_aur[@]} AUR packages" >> "$DOTFILES_LOG_FILE"
-        [[ -n "${DOTFILES_LOG_FILE:-}" ]] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] Installing packages: ${missing_aur[*]}" >> "$DOTFILES_LOG_FILE"
-
-        printf '1\nY\n' | yay -S --needed --noconfirm --refresh --answerclean None --answerdiff None --removemake ${missing_aur[*]}
+        echo "Installing ${#missing_aur[@]} AUR packages: ${missing_aur[*]}"
+        printf '1\nY\n' | yay -S --needed --noconfirm --refresh --answerclean None --answerdiff None --removemake ${missing_aur[*]} 2>&1
         local yay_exit_code=$?
-
         echo
 
         # Restore ~/.npmrc if we moved it, or remove the temporary empty one
@@ -219,14 +244,8 @@ packages_install() {
         fi
 
         if [[ $yay_exit_code -ne 0 ]]; then
-            echo "[$(date '+%Y-%m-%d %H:%M:%S')] Failed: Install ${#missing_aur[@]} AUR packages (exit code: $yay_exit_code)" >> "$DOTFILES_LOG_FILE"
-            [[ -n "${DOTFILES_LOG_FILE:-}" ]] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] Installation completed with some failures" >> "$DOTFILES_LOG_FILE"
-            log_warning "Some AUR packages failed to install, but continuing..."
-            echo
-            log_info "Check log file for details: $DOTFILES_LOG_FILE"
-        else
-            echo "[$(date '+%Y-%m-%d %H:%M:%S')] Completed: Install ${#missing_aur[@]} AUR packages" >> "$DOTFILES_LOG_FILE"
-            [[ -n "${DOTFILES_LOG_FILE:-}" ]] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] Installation completed successfully" >> "$DOTFILES_LOG_FILE"
+            echo "Warning: Some AUR packages failed to install, but continuing..."
+            [[ -n "${DOTFILES_LOG_FILE:-}" ]] && echo "Check log file for details: $DOTFILES_LOG_FILE"
         fi
         echo
     fi
@@ -280,7 +299,7 @@ packages_install() {
     
         # Add missing dependencies to dotfiles
         if [[ ${#deps_to_add_official[@]} -gt 0 || ${#deps_to_add_aur[@]} -gt 0 ]]; then
-            log_info "Found dependencies to add to dotfiles:"
+            echo "Found dependencies to add to dotfiles:"
             [[ ${#deps_to_add_official[@]} -gt 0 ]] && printf '  - %s (official)\n' "${deps_to_add_official[@]}"
             [[ ${#deps_to_add_aur[@]} -gt 0 ]] && printf '  - %s (aur)\n' "${deps_to_add_aur[@]}"
             echo
@@ -304,8 +323,15 @@ packages_install() {
 
     if [[ $outdated_official -gt 0 || $outdated_aur -gt 0 ]]; then
         echo
-        log_warning "Found $outdated_official official + $outdated_aur AUR packages with updates available"
-        log_info "Run 'yay -Syu' or use the update menu option to upgrade"
+        echo "Warning: Found $outdated_official official + $outdated_aur AUR packages with updates available"
+        echo "Run 'yay -Syu' or use the update menu option to upgrade"
         echo
+    fi
+
+    # Complete progress if in standalone mode
+    if [[ "$standalone_mode" == "true" ]]; then
+        trap - EXIT INT TERM
+        finish_logging
+        progress_complete "Package Installation"
     fi
 }

@@ -15,7 +15,13 @@ export function Button({
   [key: string]: any;
 }) {
   return (
-    <button halign={Gtk.Align.CENTER} valign={Gtk.Align.CENTER} vexpand={false} {...props}>
+    <button 
+      halign={Gtk.Align.CENTER} 
+      valign={Gtk.Align.CENTER} 
+      vexpand={false} 
+      class={cls}
+      {...props}
+    >
       {children}
     </button>
   );

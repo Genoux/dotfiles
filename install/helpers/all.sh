@@ -8,5 +8,6 @@ source "$HELPERS_DIR/presentation.sh"
 source "$HELPERS_DIR/errors.sh"
 source "$HELPERS_DIR/hardware.sh"
 source "$HELPERS_DIR/logging.sh"
+source "$HELPERS_DIR/progress.sh"
 source "$DOTFILES_DIR/lib/common.sh"
 

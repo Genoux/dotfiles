@@ -1,0 +1,31 @@
+// Polkit rules to allow user applications to run without authentication
+// This prevents password prompts when launching Chrome, Spotify, Zed, etc.
+
+// Allow all actions for the user in active session (most permissive)
+polkit.addRule(function(action, subject) {
+    if (subject.user === "john" && subject.active) {
+        return polkit.Result.YES;
+    }
+});
+
+// Fallback: Allow common desktop actions without authentication
+polkit.addRule(function(action, subject) {
+    if (subject.user === "john") {
+        // Allow network manager actions
+        if (action.id.indexOf("org.freedesktop.NetworkManager") === 0) {
+            return polkit.Result.YES;
+        }
+        // Allow UDisks actions (for mounting drives)
+        if (action.id.indexOf("org.freedesktop.udisks") === 0) {
+            return polkit.Result.YES;
+        }
+        // Allow systemd actions
+        if (action.id.indexOf("org.freedesktop.systemd1") === 0) {
+            return polkit.Result.YES;
+        }
+        // Allow accounts service
+        if (action.id.indexOf("org.freedesktop.accounts") === 0) {
+            return polkit.Result.YES;
+        }
+    }
+});

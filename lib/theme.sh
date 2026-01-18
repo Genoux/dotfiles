@@ -192,13 +192,14 @@ theme_select() {
     local selected=""
     if [[ -n "$current_theme" ]]; then
         # Try to preselect current theme
-        selected=$(printf '%s\n' "${themes[@]}" | filter_search "Select theme (current: $current_theme)" --limit 1)
+        selected=$(printf '%s\n' "${themes[@]}" | filter_search "Select theme (current: $current_theme)" --limit 1 2>/dev/null)
     else
-        selected=$(printf '%s\n' "${themes[@]}" | filter_search "Select theme" --limit 1)
+        selected=$(printf '%s\n' "${themes[@]}" | filter_search "Select theme" --limit 1 2>/dev/null)
     fi
 
-    # Check if user cancelled
+    # Check if user cancelled - skip pause and return silently
     if [[ -z "$selected" ]]; then
+        SKIP_PAUSE=1
         return 0
     fi
 
@@ -381,6 +382,17 @@ gtk_theme_menu() {
         local current_gtk=$(get_current_gtk_theme)
         show_info "Active" "$current_gtk"
         echo
+        
+        # # Show available themes
+        # local available_themes=($(bash "$DOTFILES_DIR/lib/gtk.sh" list 2>/dev/null))
+        # if [[ ${#available_themes[@]} -gt 0 ]]; then
+        #     log_info "Available themes:"
+        #     printf '  - %s\n' "${available_themes[@]}"
+        #     echo
+        # else
+        #     log_warning "No themes found"
+        #     echo
+        # fi
 
         local action=$(choose_option \
             "Install theme" \

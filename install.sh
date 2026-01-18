@@ -84,21 +84,29 @@ if [[ "${AUTO_YES}" != "true" ]]; then
     echo
 fi
 
-# Start live log monitor
-start_log_monitor
+# Mark as full installation (prevents sub-scripts from showing completion screens)
+export FULL_INSTALL=true
+
+# Start progress display
+progress_start "Full Installation"
+
+# Cleanup on exit/interrupt
+trap 'progress_cleanup; finish_logging' EXIT INT TERM
 
 # Run full installation
-source "$DOTFILES_INSTALL/packages/all.sh"
-source "$DOTFILES_INSTALL/config/all.sh"
+progress_run_script "$DOTFILES_INSTALL/packages/base.sh"
+progress_run_script "$DOTFILES_INSTALL/config/stow.sh"
+progress_run_script "$DOTFILES_INSTALL/system/setup.sh"
+progress_run_script "$DOTFILES_INSTALL/config/shell.sh"
+progress_run_script "$DOTFILES_INSTALL/config/theme.sh"
+progress_run_script "$DOTFILES_INSTALL/config/hyprland.sh"
 
-# Stop live log monitor
-stop_log_monitor
-
-# Show finish screen
-source "$DOTFILES_INSTALL/post/all.sh"
-
-# Finish logging
+# Complete
+trap - EXIT INT TERM
 finish_logging
+
+# Show completion screen
+progress_complete "Full Installation"
 
 # Exit successfully
 exit 0

@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "idleon-api": {
+      "command": "/home/john/.bun/bin/bun",
+      "args": ["/home/john/Desktop/@john/idleon-api/apps/server/src/index.ts"],
+      "cwd": "/home/john/Desktop/@john/idleon-api/apps/server",
+      "env": {
+        "FIREBASE_REFRESH_TOKEN": "AMf-vBx7psLV7_fN7TIGxz31UHDcqXoqUu4R4YjEoC6En8pfRn7kL6wRmvRQRC1lksbX8kpmUU23-fHeBe_Nn3YD_nq5mANHvNv_ph37xBoIr0OAUoSQHfJMs3gnsbwrYtD2iIAjKZyL7e_f7Qunz2RHS98KnNjVrhp3wgrOBhDvjTJSxJEAw1Yipay3r0BlTEkIbGt6CsvZkW6QCW567pZiffOrzQ-xQg",
+        "FIREBASE_API_KEY": "AIzaSyAU62kOE6xhSrFqoXQPv6_WHxYilmoUxDk",
+        "FIREBASE_AUTH_DOMAIN": "idlemmo.firebaseapp.com",
+        "FIREBASE_PROJECT_ID": "idlemmo",
+        "FIREBASE_STORAGE_BUCKET": "idlemmo.appspot.com"
+      }
+    }
+  }
+}

@@ -1,4 +1,4 @@
-import { createState } from "ags";
+import { createState, onCleanup } from "ags";
 import { subprocess, exec } from "ags/process";
 import { Gtk } from "ags/gtk4";
 import GLib from "gi://GLib";
@@ -19,8 +19,28 @@ let monitorProcess: any = null;
 let restartCount = 0;
 const MAX_RESTARTS = 3;
 
+function stopMonitoring() {
+  if (monitorProcess) {
+    try {
+      monitorProcess.kill();
+    } catch (e) {
+      console.error("[Privacy] Error killing monitor process:", e);
+    }
+    monitorProcess = null;
+  }
+  
+  // Kill any orphaned monitoring processes (safety net)
+  // Look for bash processes running the privacy check script
+  try {
+    exec(["pkill", "-f", "check_webcam|check_mic|check_screenrecord"]);
+  } catch (e) {
+    // Ignore if no process to kill
+  }
+}
+
 function startMonitoring() {
-  if (monitorProcess) return;
+  // Kill any existing process before starting new one
+  stopMonitoring();
 
   monitorProcess = subprocess(
     ["bash", "-c", `
@@ -127,6 +147,11 @@ function startMonitoring() {
 }
 
 startMonitoring();
+
+// Cleanup on AGS restart
+onCleanup(() => {
+  stopMonitoring();
+});
 
 export const privacy = privacyState;
 

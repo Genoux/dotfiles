@@ -154,9 +154,7 @@ show_menu() {
             "System" \
             "Themes" \
             "Shell" \
-            "Hyprland" \
-            "" \
-            "Exit")
+            "Hyprland")
 
         [[ -z "$action" ]] && exit 0  # ESC pressed
 

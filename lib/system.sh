@@ -43,87 +43,37 @@ system_apply() {
         echo
     fi
 
-    # Initialize logging for system operations
+    # Initialize logging and start progress display
     init_logging "daily"
-
-    # Start live log monitor (same polished UX as full install)
-    start_log_monitor
+    progress_start "System Configuration"
 
     # Cleanup function
-    cleanup() {
-        stop_log_monitor
-    }
-    trap cleanup EXIT INT TERM
+    trap 'progress_cleanup; finish_logging' EXIT INT TERM
 
     # Run individual system configuration scripts with logging
-    run_logged "$DOTFILES_DIR/install/system/sudoers.sh"
-    run_logged "$DOTFILES_DIR/install/system/tlp.sh"
-    run_logged "$DOTFILES_DIR/install/system/systemd-sleep.sh"
-    run_logged "$DOTFILES_DIR/install/system/logind.sh"
-    run_logged "$DOTFILES_DIR/install/system/makepkg.sh"
-    run_logged "$DOTFILES_DIR/install/system/timezone.sh"
-    run_logged "$DOTFILES_DIR/install/system/systemd-resolved.sh"
-    run_logged "$DOTFILES_DIR/install/system/bluetooth.sh"
-    run_logged "$DOTFILES_DIR/install/system/esp32.sh"
-    run_logged "$DOTFILES_DIR/install/system/app-launcher.sh"
-    run_logged "$DOTFILES_DIR/install/system/greeter.sh"
-    run_logged "$DOTFILES_DIR/install/system/plymouth.sh"
+    progress_run_script "$DOTFILES_DIR/install/system/sudoers.sh"
+    progress_run_script "$DOTFILES_DIR/install/system/tlp.sh"
+    progress_run_script "$DOTFILES_DIR/install/system/systemd-sleep.sh"
+    progress_run_script "$DOTFILES_DIR/install/system/logind.sh"
+    progress_run_script "$DOTFILES_DIR/install/system/makepkg.sh"
+    progress_run_script "$DOTFILES_DIR/install/system/timezone.sh"
+    progress_run_script "$DOTFILES_DIR/install/system/systemd-resolved.sh"
+    progress_run_script "$DOTFILES_DIR/install/system/bluetooth.sh"
+    progress_run_script "$DOTFILES_DIR/install/system/esp32.sh"
+    progress_run_script "$DOTFILES_DIR/install/system/app-launcher.sh"
+    progress_run_script "$DOTFILES_DIR/install/system/greeter.sh"
+    progress_run_script "$DOTFILES_DIR/install/system/plymouth.sh"
 
     # Configure laptop-specific settings
+    echo
+    echo "Configuring laptop-specific settings..."
     configure_laptop_settings
 
-    # Cleanup
-    cleanup
+    # Complete
+    trap - EXIT INT TERM
+    finish_logging
 
-    # Show completion with options
-    tput civis 2>/dev/null  # Hide cursor
-    while true; do
-        clear
-        echo
-        printf "\033[92m✓\033[0m \033[94mSystem configuration complete\033[0m\n"
-        echo
-        echo "[L] View log  [R] Reboot now  [Q] Continue"
-        echo
-
-        read -n 1 -s -r key
-        case "${key,,}" in
-            l)
-                if [[ -f "$DOTFILES_LOG_FILE" ]]; then
-                    tput cnorm 2>/dev/null  # Show cursor for less
-                    clear
-                    if command -v less &>/dev/null; then
-                        less "$DOTFILES_LOG_FILE"
-                    else
-                        cat "$DOTFILES_LOG_FILE"
-                        echo
-                        read -n 1 -s -r -p "Press any key to continue..."
-                    fi
-                    tput civis 2>/dev/null  # Hide cursor again
-                else
-                    tput cnorm 2>/dev/null  # Show cursor
-                    clear
-                    echo
-                    echo "Log file not found"
-                    echo
-                    read -n 1 -s -r -p "Press any key to continue..."
-                    tput civis 2>/dev/null  # Hide cursor again
-                fi
-                ;;
-            r)
-                clear
-                echo
-                printf "\033[94mRebooting system...\033[0m\n"
-                echo
-                rm -f "$HOME/.local/state/dotfiles/.reboot_needed"
-                sudo systemctl reboot
-                ;;
-            q|$'\n'|$'\x0a')
-                tput cnorm 2>/dev/null  # Show cursor
-                clear
-                break
-                ;;
-        esac
-    done
+    progress_complete "System Configuration" "system"
 }
 
 # Show quick system status summary

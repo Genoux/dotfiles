@@ -10,8 +10,9 @@ fi
 # Source package library
 source "$DOTFILES_DIR/lib/package.sh"
 
-# Install packages
-packages_install
-
-# Setup hardware-specific packages (GPU drivers, etc.)
+# Setup hardware-specific packages FIRST (GPU drivers, etc.)
+# This detects hardware and generates package lists before installation
 hardware_packages_setup
+
+# Install packages (now includes hardware packages)
+packages_install

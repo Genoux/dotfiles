@@ -16,6 +16,7 @@ log_info "Installing system-level configurations..."
 
 # Run individual system configuration scripts
 run_logged "$DOTFILES_DIR/install/system/sudoers.sh"
+run_logged "$DOTFILES_DIR/install/system/polkit.sh"
 run_logged "$DOTFILES_DIR/install/system/systemd-sleep.sh"
 run_logged "$DOTFILES_DIR/install/system/logind.sh"
 run_logged "$DOTFILES_DIR/install/system/makepkg.sh"
