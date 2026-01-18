@@ -2,6 +2,7 @@ import { Gtk } from "ags/gtk4";
 import { createPoll } from "ags/time";
 import {
   getActivePlayer,
+  setInteractedPlayer,
   currentPlayerInfo,
   currentPlayerPlayIcon,
   toggleMediaPanel,
@@ -62,6 +63,7 @@ export function MediaPlayerButton() {
           onClicked={() => {
             const player = getActivePlayer();
             if (player) {
+              setInteractedPlayer(player);
               player.previous();
             }
           }}
@@ -73,6 +75,7 @@ export function MediaPlayerButton() {
           onClicked={() => {
             const player = getActivePlayer();
             if (player) {
+              setInteractedPlayer(player);
               player.play_pause();
             }
           }}
@@ -89,6 +92,7 @@ export function MediaPlayerButton() {
           onClicked={() => {
             const player = getActivePlayer();
             if (player) {
+              setInteractedPlayer(player);
               player.next();
             }
           }}

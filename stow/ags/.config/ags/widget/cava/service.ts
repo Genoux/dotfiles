@@ -18,37 +18,28 @@ try {
   print(`Could not read cava config, using default BAR_COUNT: ${e}`);
 }
 
-export const [barsAccessor, setBars] = createState<number[]>(Array(BAR_COUNT).fill(0));
+// Initialize with minimum bar height (2) instead of 0 to prevent frozen appearance
+export const [barsAccessor, setBars] = createState<number[]>(Array(BAR_COUNT).fill(2));
 
-const norm = (v: number) => Math.round(2 + (Math.min(v, 1000) / 1000) * 10);
+// Normalize bar values: ensure minimum of 2 (low bars) even when silent
+// This prevents freezing and keeps bars visible at minimum height
+const norm = (v: number) => {
+  const normalized = Math.round(2 + (Math.min(v, 1000) / 1000) * 10);
+  // Ensure minimum of 2 even when input is 0 (silence)
+  return Math.max(2, normalized);
+};
 
 let updateTimeout: number | null = null;
 let cavaProcess: any = null;
 let isRestarting = false;
 let isCavaRunning = false;
 
+// Don't stop cava - keep it running to show low bars during silence
+// This prevents freezing and keeps the visualizer responsive
 function stopCava() {
-  if (isCavaRunning) {
-    console.log("[Cava] Stopping - no active media players");
-    isCavaRunning = false;
-
-    // The subprocess will check isCavaRunning and exit on next output
-    // Reset visual state immediately
-    setBars(Array(BAR_COUNT).fill(0));
-
-    // Clear the process reference after a delay to allow cleanup
-    if (cavaProcess) {
-      const oldProcess = cavaProcess;
-      cavaProcess = null;
-
-      // Kill the process using pkill
-      try {
-        subprocess(["pkill", "-f", "cava -p widget/cava/config/config"], () => {}, () => {});
-      } catch (e) {
-        console.error("[Cava] Error killing process:", e);
-      }
-    }
-  }
+  // Keep cava running - just let it show low bars when there's no sound
+  // The visualizer will naturally show low values during silence
+  // No need to kill the process or reset bars to 0
 }
 
 function startCava() {
@@ -74,11 +65,17 @@ function startCava() {
           .filter((n) => !isNaN(n));
 
         if (nums.length >= BAR_COUNT) {
-          setBars(nums.slice(0, BAR_COUNT).map(norm));
+          // Normalize bars - ensures minimum of 2 even during silence
+          const normalizedBars = nums.slice(0, BAR_COUNT).map(norm);
+          setBars(normalizedBars);
 
           updateTimeout = setTimeout(() => {
             updateTimeout = null;
           }, 16) as any;
+        } else if (nums.length > 0) {
+          // If we get partial data, pad with minimum values
+          const padded = [...nums.map(norm), ...Array(BAR_COUNT - nums.length).fill(2)];
+          setBars(padded);
         }
       },
       (err) => {
@@ -89,8 +86,8 @@ function startCava() {
           isRestarting = true;
           console.log("[Cava] Restarting in 2 seconds...");
           
-          // Reset bars to zero
-          setBars(Array(BAR_COUNT).fill(0));
+          // Set bars to minimum height (not 0) to prevent freezing
+          setBars(Array(BAR_COUNT).fill(2));
           
           timeout(2000, () => {
             isRestarting = false;
@@ -113,41 +110,9 @@ function startCava() {
   }
 }
 
-// Helper to check if there's an active media player
-const mpris = Mpris.get_default();
-
-function hasActivePlayer(): boolean {
-  return mpris.players.some((p) => {
-    // Only run cava when media is actively PLAYING (not paused)
-    return p.playbackStatus === Mpris.PlaybackStatus.PLAYING && p.canControl;
-  });
+// Start cava once and keep it running
+// It will naturally show low bars during silence instead of freezing
+// This keeps the visualizer responsive and prevents the "frozen" appearance
+if (!isCavaRunning) {
+  startCava();
 }
-
-// Start/stop cava based on media player state
-function updateCavaState() {
-  if (hasActivePlayer()) {
-    if (!isCavaRunning) {
-      startCava();
-    }
-  } else {
-    if (isCavaRunning) {
-      stopCava();
-    }
-  }
-}
-
-// Watch for player changes
-mpris.connect("notify::players", updateCavaState);
-
-// Watch for player state changes on existing players
-const setupPlayerWatchers = () => {
-  mpris.players.forEach((player) => {
-    player.connect("notify::playback-status", updateCavaState);
-  });
-};
-
-setupPlayerWatchers();
-mpris.connect("notify::players", setupPlayerWatchers);
-
-// Initial state check
-updateCavaState();
