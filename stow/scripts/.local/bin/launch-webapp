@@ -1,5 +1,12 @@
 #!/bin/bash
 
+url="$1"
+shift
+
+# Extract domain from URL for window matching
+# e.g., https://www.legendsofidleon.com/ytGl5oc/ -> legendsofidleon.com
+domain=$(echo "$url" | sed -E 's|https?://(www\.)?([^/]+).*|\2|')
+
 browser=$(xdg-settings get default-web-browser)
 
 # For --app= mode, we need a Chromium-based browser
@@ -23,4 +30,16 @@ if [ -z "$browser_exec" ]; then
     exit 1
 fi
 
-exec setsid uwsm app -- "$browser_exec" --enable-features=UseOzonePlatform --ozone-platform=wayland --app="$1" "${@:2}"
+# Check if window already exists (by domain in initial_title or class)
+if command -v hyprctl &>/dev/null && command -v jq &>/dev/null; then
+    # Try to find existing window by domain in class or initialTitle
+    existing_window=$(hyprctl clients -j 2>/dev/null | jq -r --arg domain "$domain" '.[] | select((.class | contains($domain)) or (.initialTitle | contains($domain))) | .address' | head -1)
+    
+    if [ -n "$existing_window" ]; then
+        # Focus existing window by address (most reliable)
+        hyprctl dispatch focuswindow "address:${existing_window}" 2>/dev/null
+        exit 0
+    fi
+fi
+
+exec setsid uwsm app -- "$browser_exec" --enable-features=UseOzonePlatform --ozone-platform=wayland --app="$url" "$@"

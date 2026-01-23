@@ -117,5 +117,5 @@ export function getAppIcon(className: string): string {
   }
 
   // Final fallback
-  return "application-x-executable";
+  return "";
 }

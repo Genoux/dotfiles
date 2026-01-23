@@ -1,38 +1,39 @@
 {
-  "numStartups": 44,
+  "numStartups": 54,
   "installMethod": "global",
   "autoUpdates": true,
   "tipsHistory": {
     "new-user-warmup": 8,
-    "plan-mode-for-complex-tasks": 39,
-    "terminal-setup": 35,
+    "plan-mode-for-complex-tasks": 49,
+    "terminal-setup": 46,
     "shift-enter-setup": 13,
-    "memory-command": 34,
+    "memory-command": 49,
     "theme-command": 44,
-    "status-line": 29,
+    "status-line": 54,
     "stickers-command": 44,
     "prompt-queue": 14,
-    "enter-to-steer-in-relatime": 24,
-    "todo-list": 24,
-    "install-github-app": 35,
-    "install-slack-app": 38,
+    "enter-to-steer-in-relatime": 46,
+    "todo-list": 46,
+    "install-github-app": 46,
+    "install-slack-app": 48,
     "colorterm-truecolor": 5,
-    "drag-and-drop-images": 38,
-    "double-esc-code-restore": 39,
-    "continue": 39,
-    "shift-tab": 39,
-    "image-paste": 26,
+    "drag-and-drop-images": 48,
+    "double-esc-code-restore": 49,
+    "continue": 49,
+    "shift-tab": 49,
+    "image-paste": 46,
     "config-thinking-mode": 16,
     "ultrathink-keyword": 27,
     "btw-side-question": 7,
-    "custom-agents": 38,
-    "web-app": 38,
+    "custom-agents": 53,
+    "web-app": 53,
     "mobile-app": 39,
-    "permissions": 32,
+    "permissions": 46,
     "rename-conversation": 43,
-    "custom-commands": 43
+    "custom-commands": 43,
+    "git-worktrees": 51
   },
-  "promptQueueUseCount": 8,
+  "promptQueueUseCount": 10,
   "cachedStatsigGates": {
     "tengu_prompt_suggestion": true,
     "tengu_year_end_2025_campaign_promo": false,
@@ -72,7 +73,9 @@
     "tengu_ant_attribution_header_new": true,
     "tengu_accept_with_feedback": true,
     "tengu_tool_result_persistence": true,
-    "tengu_tool_search_unsupported_models": null,
+    "tengu_tool_search_unsupported_models": [
+      "haiku"
+    ],
     "tengu_1p_event_batch_config": {
       "scheduledDelayMillis": 5000,
       "maxExportBatchSize": 200,
@@ -96,7 +99,11 @@
     "tengu_compact_streaming_retry": false,
     "tengu_code_diff_cli": true,
     "tengu_session_memory": false,
-    "tengu_bash_haiku_prefetch": true
+    "tengu_bash_haiku_prefetch": true,
+    "tengu_keybinding_customization": false,
+    "tengu_claudeai_mcp_connectors": false,
+    "tengu_plank_river_frost": "user_intent",
+    "tengu_attribution_header": true
   },
   "hasCompletedOnboarding": true,
   "mcpServers": {
@@ -127,20 +134,29 @@
         "version": null,
         "packageManager": null
       },
-      "lastCost": 0,
-      "lastAPIDuration": 0,
-      "lastAPIDurationWithoutRetries": 0,
+      "lastCost": 0.006082,
+      "lastAPIDuration": 3398,
+      "lastAPIDurationWithoutRetries": 3397,
       "lastToolDuration": 0,
-      "lastDuration": 5820,
+      "lastDuration": 6676,
       "lastLinesAdded": 0,
       "lastLinesRemoved": 0,
-      "lastTotalInputTokens": 0,
-      "lastTotalOutputTokens": 0,
+      "lastTotalInputTokens": 5862,
+      "lastTotalOutputTokens": 44,
       "lastTotalCacheCreationInputTokens": 0,
       "lastTotalCacheReadInputTokens": 0,
       "lastTotalWebSearchRequests": 0,
-      "lastModelUsage": {},
-      "lastSessionId": "158600f4-672f-4cbc-ae7b-058a9393b482"
+      "lastModelUsage": {
+        "claude-haiku-4-5-20251001": {
+          "inputTokens": 5862,
+          "outputTokens": 44,
+          "cacheReadInputTokens": 0,
+          "cacheCreationInputTokens": 0,
+          "webSearchRequests": 0,
+          "costUSD": 0.006082
+        }
+      },
+      "lastSessionId": "dc15feed-1ff2-41d6-bd2d-0ac882a0476c"
     },
     "/home/john/dotfiles": {
       "allowedTools": [],
@@ -228,6 +244,25 @@
         }
       },
       "lastSessionId": "596a9d6a-70b2-4c8b-93f6-aa9028453c5a"
+    },
+    "/home/john/Desktop/@inbeat/fifth-times-the-charm": {
+      "allowedTools": [],
+      "mcpContextUris": [],
+      "mcpServers": {},
+      "enabledMcpjsonServers": [],
+      "disabledMcpjsonServers": [],
+      "hasTrustDialogAccepted": false,
+      "projectOnboardingSeenCount": 0,
+      "hasClaudeMdExternalIncludesApproved": false,
+      "hasClaudeMdExternalIncludesWarningShown": false,
+      "exampleFiles": [
+        "app.ts",
+        "game-input.ts",
+        "word-commands.ts",
+        "games.ts",
+        "scheduler.ts"
+      ],
+      "exampleFilesGeneratedAt": 1768840970989
     }
   },
   "userID": "53ff8994f17c82f3e27cd4648f272fedf96496b402f5c2e0eff38ad0789be784",
@@ -235,8 +270,8 @@
   "sonnet45MigrationComplete": true,
   "opus45MigrationComplete": true,
   "thinkingMigrationComplete": true,
-  "changelogLastFetched": 1768755225284,
-  "lastReleaseNotesSeen": "2.1.12",
+  "changelogLastFetched": 1769092811057,
+  "lastReleaseNotesSeen": "2.1.15",
   "hasShownOpus45Notice": {
     "10bbc4d6-2d3d-4b54-9ddd-73a69b2feae5": true
   },
@@ -246,7 +281,7 @@
     "10bbc4d6-2d3d-4b54-9ddd-73a69b2feae5": {
       "hasAccess": false,
       "hasAccessNotAsDefault": false,
-      "timestamp": 1768773320274
+      "timestamp": 1769203432563
     }
   },
   "oauthAccount": {
@@ -269,7 +304,7 @@
   "groveConfigCache": {
     "1c619a4d-0d2b-4548-86b6-c8cfda0d3e7a": {
       "grove_enabled": true,
-      "timestamp": 1768690198124
+      "timestamp": 1769188964161
     }
   },
   "opusProMigrationComplete": true,

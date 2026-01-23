@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Webflow
+Comment=Design and build websites visually
+Exec=launch-webapp https://webflow.com/dashboard
+Icon=/home/john/.local/share/icons/webflow.png
+Terminal=false
+Categories=Development;WebDevelopment;
+StartupNotify=true
+StartupWMClass=chrome-webflow.com__dashboard-Default

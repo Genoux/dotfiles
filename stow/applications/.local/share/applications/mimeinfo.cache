@@ -1,4 +1,5 @@
 [MIME Cache]
+application/figma=figma-linux.desktop;
 application/pdf=google-chrome.desktop;
 application/rdf+xml=google-chrome.desktop;
 application/rss+xml=google-chrome.desktop;
@@ -12,6 +13,7 @@ image/webp=google-chrome.desktop;
 text/html=google-chrome.desktop;
 text/xml=google-chrome.desktop;
 x-scheme-handler/discord-409416265891971072=discord-409416265891971072.desktop;
+x-scheme-handler/figma=figma-linux.desktop;
 x-scheme-handler/http=google-chrome.desktop;
 x-scheme-handler/https=google-chrome.desktop;
 x-scheme-handler/steam=steam.desktop;

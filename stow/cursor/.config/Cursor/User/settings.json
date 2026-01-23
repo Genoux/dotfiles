@@ -7,12 +7,15 @@
   "files.simpleDialog.enable": false,
   "workbench.iconTheme": "material-icon-theme",
   "window.commandCenter": true,
-  "workbench.colorTheme": "Catppuccin Mocha",
+  "workbench.colorTheme": "Catppuccin Macchiato",
   "editor.fontFamily": "JetBrainsMono Nerd Font Prono, JetBrainsMono Nerd Font",
   "editor.largeFileOptimizations": false,
   "window.titleBarStyle": "custom",
   "window.customMenuBarAltFocus": false,
   "terminal.integrated.allowMnemonics": false,
   "disable-hardware-acceleration": false,
-  "console-ninja.featureSet": "Community"
+  "console-ninja.featureSet": "Community",
+  "[html]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  }
 }
