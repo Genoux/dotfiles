@@ -48,8 +48,8 @@ start_log_monitor() {
     local log_lines=$((term_height - 4))  # More space for logs
 
     # Use alternate screen and hide cursor
-    tput smcup 2>/dev/null
-    tput civis 2>/dev/null  # Hide cursor
+    tput smcup 2>/dev/null || true
+    tput civis 2>/dev/null || true  # Hide cursor
     clear
 
     (
@@ -136,8 +136,8 @@ stop_log_monitor() {
     fi
 
     # Restore terminal
-    tput cnorm 2>/dev/null  # Show cursor
-    tput rmcup 2>/dev/null  # Exit alternate screen
+    tput cnorm 2>/dev/null || true  # Show cursor
+    tput rmcup 2>/dev/null || true  # Exit alternate screen
 
     # If keep_visible, show the full log with colors (scrollable)
     if [[ "$keep_visible" == "true" ]] && [[ -f "$DOTFILES_LOG_FILE" ]]; then
