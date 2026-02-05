@@ -40,6 +40,17 @@ if ! sudo -v; then
     exit 1
 fi
 
+# Start sudo keep-alive in background
+while true; do
+    sudo -n true
+    sleep 50
+    kill -0 "$$" 2>/dev/null || exit
+done &
+SUDO_KEEPALIVE_PID=$!
+
+# Ensure keep-alive is killed on exit
+trap 'kill "$SUDO_KEEPALIVE_PID" 2>/dev/null || true' EXIT
+
 # Check and install bootstrap dependencies (git assumed to be installed already)
 echo "Checking bootstrap dependencies..."
 MISSING_DEPS=()
@@ -92,6 +103,9 @@ source "$DOTFILES_INSTALL/post/all.sh"
 
 # Finish logging
 finish_logging
+
+# Stop sudo keep-alive
+kill "$SUDO_KEEPALIVE_PID" 2>/dev/null || true
 
 # Exit successfully
 exit 0
