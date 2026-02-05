@@ -55,6 +55,7 @@ start_log_monitor() {
     (
         # Disable error handling in monitor subprocess
         set +eEo pipefail
+        trap - ERR  # Clear inherited ERR trap
 
         local spinners=("⠋" "⠙" "⠹" "⠸" "⠼" "⠴" "⠦" "⠧" "⠇" "⠏")
         local spinner_index=0
