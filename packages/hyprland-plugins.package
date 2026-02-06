@@ -2,3 +2,6 @@
 # Format: plugin_name = repository_url
 
 #Hyprspace = https://github.com/KZDKM/Hyprspace
+
+# Official hyprland-plugins repo (contains multiple plugins)
+hyprexpo = https://github.com/hyprwm/hyprland-plugins

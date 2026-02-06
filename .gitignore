@@ -53,3 +53,6 @@ stow/hypr/.config/hypr/wallpapers/current/current_wallpaper.jpg
 TODO
 
 .cursor
+
+# Theme build dependencies
+themes/*/

@@ -48,6 +48,7 @@ run_logged "$DOTFILES_DIR/install/system/tlp.sh"
 run_logged "$DOTFILES_DIR/install/system/zram.sh"
 run_logged "$DOTFILES_DIR/install/system/cpufreq.sh"
 run_logged "$DOTFILES_DIR/install/system/plymouth.sh"
+run_logged "$DOTFILES_DIR/install/system/greeter.sh"
 
 # Cleanup
 cleanup_sudo
