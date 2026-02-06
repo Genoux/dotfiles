@@ -1,26 +1,26 @@
 {
-  "numStartups": 59,
+  "numStartups": 63,
   "installMethod": "global",
   "autoUpdates": true,
   "tipsHistory": {
     "new-user-warmup": 8,
-    "plan-mode-for-complex-tasks": 55,
+    "plan-mode-for-complex-tasks": 62,
     "terminal-setup": 56,
     "shift-enter-setup": 13,
     "memory-command": 49,
     "theme-command": 44,
     "status-line": 54,
     "stickers-command": 44,
-    "prompt-queue": 58,
+    "prompt-queue": 63,
     "enter-to-steer-in-relatime": 46,
     "todo-list": 46,
     "install-github-app": 57,
     "install-slack-app": 59,
     "colorterm-truecolor": 5,
-    "drag-and-drop-images": 48,
-    "double-esc-code-restore": 49,
-    "continue": 49,
-    "shift-tab": 49,
+    "drag-and-drop-images": 60,
+    "double-esc-code-restore": 60,
+    "continue": 60,
+    "shift-tab": 60,
     "image-paste": 46,
     "config-thinking-mode": 16,
     "ultrathink-keyword": 27,
@@ -31,7 +31,7 @@
     "permissions": 57,
     "rename-conversation": 59,
     "custom-commands": 59,
-    "git-worktrees": 51,
+    "git-worktrees": 61,
     "agent-flag": 56
   },
   "cachedStatsigGates": {
@@ -113,7 +113,10 @@
     "tengu_copper_lantern": false,
     "tengu_plan_mode_interview_phase": false,
     "tengu_tst_names_in_messages": false,
-    "tengu_workout2": true
+    "tengu_workout2": true,
+    "tengu_marble_lantern_disabled": false,
+    "tengu_quiet_fern": true,
+    "tengu_file_write_optimization": false
   },
   "hasCompletedOnboarding": true,
   "mcpServers": {
@@ -144,47 +147,22 @@
         "version": null,
         "packageManager": null
       },
-      "lastCost": 0.73453825,
-      "lastAPIDuration": 46471,
-      "lastAPIDurationWithoutRetries": 45523,
-      "lastToolDuration": 145712,
-      "lastDuration": 445459,
+      "lastCost": 0,
+      "lastAPIDuration": 0,
+      "lastAPIDurationWithoutRetries": 0,
+      "lastToolDuration": 0,
+      "lastDuration": 78403,
       "lastLinesAdded": 0,
       "lastLinesRemoved": 0,
-      "lastTotalInputTokens": 3409,
-      "lastTotalOutputTokens": 1045,
-      "lastTotalCacheCreationInputTokens": 229513,
-      "lastTotalCacheReadInputTokens": 234552,
+      "lastTotalInputTokens": 0,
+      "lastTotalOutputTokens": 0,
+      "lastTotalCacheCreationInputTokens": 0,
+      "lastTotalCacheReadInputTokens": 0,
       "lastTotalWebSearchRequests": 0,
-      "lastModelUsage": {
-        "claude-haiku-4-5-20251001": {
-          "inputTokens": 3366,
-          "outputTokens": 209,
-          "cacheReadInputTokens": 0,
-          "cacheCreationInputTokens": 168544,
-          "webSearchRequests": 0,
-          "costUSD": 0.215091
-        },
-        "claude-opus-4-5-20251101": {
-          "inputTokens": 28,
-          "outputTokens": 433,
-          "cacheReadInputTokens": 51505,
-          "cacheCreationInputTokens": 29512,
-          "webSearchRequests": 0,
-          "costUSD": 0.22116750000000002
-        },
-        "claude-opus-4-6": {
-          "inputTokens": 15,
-          "outputTokens": 403,
-          "cacheReadInputTokens": 183047,
-          "cacheCreationInputTokens": 31457,
-          "webSearchRequests": 0,
-          "costUSD": 0.29827975
-        }
-      },
-      "lastSessionId": "b029b203-92a9-4dd0-98de-f873dd5eb456",
-      "lastFpsAverage": 10.86,
-      "lastFpsLow1Pct": 796.92
+      "lastModelUsage": {},
+      "lastSessionId": "f4ba1d5c-5138-4e7d-9414-621a2103d3bb",
+      "lastFpsAverage": 5.36,
+      "lastFpsLow1Pct": 88.15
     },
     "/home/john/dotfiles": {
       "allowedTools": [],
@@ -192,7 +170,7 @@
       "mcpServers": {},
       "enabledMcpjsonServers": [],
       "disabledMcpjsonServers": [],
-      "hasTrustDialogAccepted": false,
+      "hasTrustDialogAccepted": true,
       "projectOnboardingSeenCount": 0,
       "hasClaudeMdExternalIncludesApproved": false,
       "hasClaudeMdExternalIncludesWarningShown": false,
@@ -200,10 +178,50 @@
         "Bar.tsx",
         "windowrules.conf",
         "main.scss",
-        "keybindings.conf",
-        "kitty.conf"
+        "kitty.conf",
+        "keybindings.conf"
       ],
-      "exampleFilesGeneratedAt": 1768401584236
+      "exampleFilesGeneratedAt": 1770396284100,
+      "reactVulnerabilityCache": {
+        "detected": false,
+        "package": null,
+        "packageName": null,
+        "version": null,
+        "packageManager": null
+      },
+      "lastCost": 0.32717549999999995,
+      "lastAPIDuration": 58840,
+      "lastAPIDurationWithoutRetries": 58828,
+      "lastToolDuration": 441,
+      "lastDuration": 337052,
+      "lastLinesAdded": 0,
+      "lastLinesRemoved": 0,
+      "lastTotalInputTokens": 4754,
+      "lastTotalOutputTokens": 1978,
+      "lastTotalCacheCreationInputTokens": 26818,
+      "lastTotalCacheReadInputTokens": 224374,
+      "lastTotalWebSearchRequests": 0,
+      "lastFpsAverage": 11.23,
+      "lastFpsLow1Pct": 491.22,
+      "lastModelUsage": {
+        "claude-haiku-4-5-20251001": {
+          "inputTokens": 4691,
+          "outputTokens": 354,
+          "cacheReadInputTokens": 0,
+          "cacheCreationInputTokens": 0,
+          "webSearchRequests": 0,
+          "costUSD": 0.006461000000000001
+        },
+        "claude-opus-4-6": {
+          "inputTokens": 63,
+          "outputTokens": 1624,
+          "cacheReadInputTokens": 224374,
+          "cacheCreationInputTokens": 26818,
+          "webSearchRequests": 0,
+          "costUSD": 0.32071449999999996
+        }
+      },
+      "lastSessionId": "dfe595b8-45a9-4f85-93d1-d86727150a5e"
     },
     "/home/john/Desktop/@inbeat/nineam-growth-engine": {
       "allowedTools": [],
@@ -358,18 +376,8 @@
     "10bbc4d6-2d3d-4b54-9ddd-73a69b2feae5": {
       "hasAccess": false,
       "hasAccessNotAsDefault": false,
-      "timestamp": 1770392088204
+      "timestamp": 1770405770136
     }
-  },
-  "oauthAccount": {
-    "accountUuid": "1c619a4d-0d2b-4548-86b6-c8cfda0d3e7a",
-    "emailAddress": "john.olivierb@gmail.com",
-    "organizationUuid": "10bbc4d6-2d3d-4b54-9ddd-73a69b2feae5",
-    "hasExtraUsageEnabled": false,
-    "billingType": "stripe_subscription",
-    "accountCreatedAt": "2024-06-23T13:36:12.331324Z",
-    "subscriptionCreatedAt": "2024-06-23T21:23:55.334489Z",
-    "displayName": "John"
   },
   "claudeCodeFirstTokenDate": "2025-06-20T23:58:52.833498Z",
   "anonymousId": "claudecode.v1.a9cba5c5-60e7-4462-af1f-768b7069ab40",
@@ -393,5 +401,15 @@
   },
   "hasShownOpus46Notice": {
     "10bbc4d6-2d3d-4b54-9ddd-73a69b2feae5": true
+  },
+  "oauthAccount": {
+    "accountUuid": "b0b09a47-3898-445c-9838-48777f89f6b8",
+    "emailAddress": "dev@inbeat.agency",
+    "organizationUuid": "94234e60-2c9d-4a18-81f5-a48f9e523070",
+    "hasExtraUsageEnabled": false,
+    "billingType": "stripe_subscription",
+    "accountCreatedAt": "2025-06-25T20:55:40.198199Z",
+    "subscriptionCreatedAt": "2025-06-25T20:56:37.143250Z",
+    "displayName": "inBeat"
   }
 }

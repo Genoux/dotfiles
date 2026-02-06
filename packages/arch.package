@@ -11,21 +11,17 @@ base-devel
 bat
 bc
 bind
-blueberry
 bluetui
 brightnessctl
 btop
 cava
 ccache
-cmatrix
 cpio
 cpupower
 ddcutil
-dfu-util
 dhcpcd
 dialog
 discord
-dmenu
 docker
 earlyoom
 efibootmgr
@@ -56,8 +52,6 @@ gnome-shell
 greetd
 greetd-tuigreet
 gst-plugin-pipewire
-gtk3-demos
-gtk4-demos
 gum
 hugo
 hypridle
@@ -68,7 +62,6 @@ hyprpicker
 hyprshot
 hyprutils
 hyprwayland-scanner
-i3-wm
 impala
 inetutils
 inotify-tools
@@ -119,8 +112,6 @@ linux
 linux-firmware
 linux-headers
 lutris
-lxappearance
-lxsession
 mako
 mesa-utils
 mpv
@@ -159,7 +150,6 @@ qt5ct
 qt6ct
 reflector
 ripgrep
-rpi-imager
 rsync
 sassc
 satty
@@ -187,7 +177,6 @@ uwsm
 vala
 vulkan-headers
 waybar
-wayvnc
 wf-recorder
 wget
 wine
@@ -197,7 +186,6 @@ wireless_tools
 wireplumber
 woff2-font-awesome
 wol
-x11vnc
 xclip
 xcursor-vanilla-dmz
 xdg-desktop-portal
@@ -206,9 +194,7 @@ xdg-desktop-portal-hyprland
 xdg-desktop-portal-wlr
 xorg-server
 xorg-server-xvfb
-xorg-xclock
 xorg-xinit
-xterm
 yad
 yazi
 zed

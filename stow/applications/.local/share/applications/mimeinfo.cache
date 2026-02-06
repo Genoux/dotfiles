@@ -1,7 +1,6 @@
 [MIME Cache]
-application/x-zerosize=dev.zed.Zed.desktop;
-text/plain=dev.zed.Zed.desktop;
+application/figma=figma-linux.desktop;
 x-scheme-handler/discord-409416265891971072=discord-409416265891971072.desktop;
+x-scheme-handler/figma=figma-linux.desktop;
 x-scheme-handler/steam=steam.desktop;
 x-scheme-handler/steamlink=steam.desktop;
-x-scheme-handler/zed=dev.zed.Zed.desktop;

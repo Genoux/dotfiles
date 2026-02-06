@@ -6,9 +6,6 @@ arc-gtk-theme
 arduino-ide-bin
 aylurs-gtk-shell-git
 battop
-blueberry
-caelestia-cli-git
-caelestia-shell-git
 calcure
 caprine-bin
 ch34x-dkms-git
@@ -18,8 +15,6 @@ clipse
 cursor-bin
 downgrade
 dragon-drop
-electron25-bin
-electron29-bin
 elephant
 elephant-archlinuxpkgs
 elephant-bluetooth
@@ -46,7 +41,6 @@ heroic-games-launcher-bin
 http-parser
 hyprfloat
 hyprshotgun
-i3lock-color
 lazyjournal
 libastal-4-git
 libastal-apps-git
@@ -89,7 +83,6 @@ python-vdf
 sherlock-launcher-bin
 slack-desktop
 spotify
-swaylock-effects
 sysc-greet-hyprland
 tinty-git
 ttf-material-design-icons-git
@@ -97,10 +90,8 @@ ttf-rubik-vf
 tzupdate
 walker-bin
 warp-terminal-bin
-wego
 wiremix-git
 wl-screenrec
-xrdp
 yay
 zen-browser-bin
 zscroll-git

@@ -348,7 +348,7 @@ set_default_shell() {
         # Restart monitor
         start_log_monitor
 
-        if run_command_logged "Change default shell to zsh" chsh -s "$zsh_path"; then
+        if run_command_logged "Change default shell to zsh" sudo chsh -s "$zsh_path" "$USER"; then
             echo "[$(date '+%Y-%m-%d %H:%M:%S')] Completed: Default shell changed to zsh (restart required)" >> "$DOTFILES_LOG_FILE"
             return 0
         else

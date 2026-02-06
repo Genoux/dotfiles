@@ -176,6 +176,11 @@ ask_yes_no() {
     local question="$1"
     local default="${2:-n}"  # Default to 'no'
 
+    # Auto-answer yes in non-interactive mode
+    if [[ "${AUTO_YES:-false}" == "true" ]]; then
+        return 0
+    fi
+
     if command -v gum &>/dev/null; then
         # Use custom colors and hide help text
         local gum_opts=(

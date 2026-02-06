@@ -84,19 +84,10 @@ case "$MODE" in
         ;;
 
     region)
-        # Freeze screen for region selection
-        if command -v hyprpicker &>/dev/null; then
-            hyprpicker -r -z &
-            HYPRPICKER_PID=$!
-            sleep 0.3
-        fi
-
         geometry=$(slurp)
 
-        # Clean up hyprpicker
-        [[ -n "$HYPRPICKER_PID" ]] && kill "$HYPRPICKER_PID" 2>/dev/null || true
-
         if [[ -n "$geometry" ]]; then
+            sleep 0.1
             grim -g "$geometry" - | satty --filename - --output-filename "$FILENAME"
         else
             exit 1
