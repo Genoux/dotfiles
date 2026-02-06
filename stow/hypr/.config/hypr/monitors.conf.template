@@ -1,0 +1,7 @@
+# Monitor Configuration Template
+# This file will be replaced by hardware detection during installation
+# Run: dotfiles hyprland setup
+
+# Fallback: Auto-detect all monitors
+monitor = ,preferred,auto,1
+

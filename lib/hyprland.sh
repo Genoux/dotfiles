@@ -199,9 +199,29 @@ hyprland_setup() {
     
     local monitors=($(detect_monitors))
     
+    # Ensure directory exists
+    ensure_directory "$(dirname "$MONITORS_CONF")"
+    
     if [[ ${#monitors[@]} -eq 0 ]]; then
-        graceful_error "No monitors detected" "Make sure Hyprland is running"
-        return 1
+        log_warning "No monitors detected (Hyprland not running?)"
+        
+        # Use template as fallback
+        local template_file="$DOTFILES_DIR/stow/hypr/.config/hypr/monitors.conf.template"
+        if [[ -f "$template_file" ]]; then
+            log_info "Using template fallback..."
+            cp "$template_file" "$MONITORS_CONF"
+            log_success "Monitor configuration created from template"
+        else
+            # Create basic fallback
+            {
+                echo "# Fallback monitor configuration"
+                echo "# Run 'dotfiles hyprland setup' after starting Hyprland"
+                echo ""
+                echo "monitor = ,preferred,auto,1"
+            } > "$MONITORS_CONF"
+            log_success "Created fallback monitor configuration"
+        fi
+        return 0
     fi
     
     log_info "Detected monitors:"
@@ -212,9 +232,6 @@ hyprland_setup() {
     done
     
     echo
-
-    # Ensure directory exists
-    ensure_directory "$(dirname "$MONITORS_CONF")"
 
     # Generate and write config
     log_info "Generating monitor configuration..."

@@ -1,0 +1,7 @@
+# GPU Configuration Template
+# This file will be replaced by hardware detection during installation
+# Run: dotfiles packages hardware setup
+
+# Fallback: No GPU-specific configuration
+# Hardware detection will populate this automatically
+

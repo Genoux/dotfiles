@@ -156,8 +156,16 @@ packages_prepare() {
         sudo cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.backup 2>> "$DOTFILES_LOG_FILE" || true
         echo "[$(date '+%Y-%m-%d %H:%M:%S')] Completed: Backup mirrorlist" >> "$DOTFILES_LOG_FILE"
 
-        # Rank mirrors by speed
-        if run_command_logged "Rank mirrors by speed" sudo reflector --country US --age 6 --protocol https --sort rate --fastest 10 --connection-timeout 3 --download-timeout 5 --save /etc/pacman.d/mirrorlist.new; then
+        # Detect country from locale (fallback to worldwide)
+        local mirror_country="US"
+        if command -v locale &>/dev/null; then
+            local locale_country=$(locale | grep -oP 'LANG=\w+_\K[A-Z]{2}' | head -1)
+            [[ -n "$locale_country" ]] && mirror_country="$locale_country"
+        fi
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Using mirror country: $mirror_country" >> "$DOTFILES_LOG_FILE"
+
+        # Rank mirrors by speed (try country-specific, fallback to worldwide)
+        if run_command_logged "Rank mirrors by speed" sudo reflector --country "$mirror_country" --age 6 --protocol https --sort rate --fastest 10 --connection-timeout 3 --download-timeout 5 --save /etc/pacman.d/mirrorlist.new; then
             if [[ -s /etc/pacman.d/mirrorlist.new ]]; then
                 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting: Apply new mirrorlist" >> "$DOTFILES_LOG_FILE"
                 sudo mv /etc/pacman.d/mirrorlist.new /etc/pacman.d/mirrorlist

@@ -22,6 +22,7 @@ source "$DOTFILES_DIR/lib/package/manage.sh"    # Interactive management
 source "$DOTFILES_DIR/lib/package/update.sh"    # System updates
 source "$DOTFILES_DIR/lib/package/sync.sh"      # Package list sync (deprecated)
 source "$DOTFILES_DIR/lib/package/status.sh"    # Status display
+source "$DOTFILES_DIR/lib/hardware-packages.sh" # Hardware package management
 
 # Public API:
 # - packages_install()        Install all packages from dotfiles

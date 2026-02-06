@@ -1,5 +1,10 @@
+# Official Arch Linux packages
+# ===========================
+# Hardware-specific packages (GPU drivers, CPU microcode) are auto-detected
+# and managed separately in packages/hardware/ (gitignored)
+# Run: dotfiles packages hardware setup
+
 alsa-utils
-amd-ucode
 aubio
 base
 base-devel
@@ -106,7 +111,6 @@ lib32-libxrandr
 lib32-libxss
 lib32-libxtst
 lib32-mesa
-lib32-nvidia-utils
 lib32-openal
 lib32-vulkan-icd-loader
 libnotify
@@ -130,10 +134,6 @@ noto-fonts-cjk
 noto-fonts-emoji
 noto-fonts-extra
 npm
-nvidia-dkms
-nvidia-prime
-nvidia-settings
-nvidia-utils
 nwg-look
 obsidian
 otf-fira-sans
@@ -186,7 +186,6 @@ unzip
 uwsm
 vala
 vulkan-headers
-vulkan-radeon
 waybar
 wayvnc
 wf-recorder
