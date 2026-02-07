@@ -164,9 +164,7 @@ show_menu() {
             "System" \
             "Themes" \
             "Shell" \
-            "Hyprland" \
-            "" \
-            "Exit")
+            "Hyprland")
 
         [[ -z "$action" ]] && exit 0  # ESC pressed
 
@@ -207,12 +205,6 @@ show_menu() {
             "Hyprland")
                 source "$DOTFILES_DIR/lib/hyprland.sh"
                 hyprland_menu
-                ;;
-            "Exit")
-                clear
-                log_success "Goodbye!"
-                tput cnorm 2>/dev/null
-                exit 0
                 ;;
             "")
                 continue
