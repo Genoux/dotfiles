@@ -21,6 +21,7 @@ fi
 DOTFILES_DIR="/home/$DOTFILES_USER/dotfiles"
 PACKAGES_FILE="$DOTFILES_DIR/packages/arch.package"
 AUR_PACKAGES_FILE="$DOTFILES_DIR/packages/aur.package"
+HARDWARE_DIR="$DOTFILES_DIR/packages/hardware"
 
 # Validate dotfiles directory exists
 if [[ ! -d "$DOTFILES_DIR" ]]; then
@@ -64,6 +65,11 @@ case "$MODE" in
                 continue
             fi
 
+            # Skip hardware-managed packages (managed by hardware detection, not main lists)
+            if [[ -d "$HARDWARE_DIR" ]] && grep -rFxq "$pkg" "$HARDWARE_DIR"/*.package 2>/dev/null; then
+                continue
+            fi
+
             # Determine if AUR or official package
             if pacman -Qm "$pkg" &>/dev/null 2>&1; then
                 # AUR package
@@ -97,6 +103,11 @@ case "$MODE" in
         REMOVED_COUNT=0
 
         for pkg in "${PACKAGES[@]}"; do
+            # Skip hardware-managed packages
+            if [[ -d "$HARDWARE_DIR" ]] && grep -rFxq "$pkg" "$HARDWARE_DIR"/*.package 2>/dev/null; then
+                continue
+            fi
+
             # Remove from official packages
             if grep -Fxq "$pkg" "$PACKAGES_FILE" 2>/dev/null; then
                 sed -i "/^$(printf '%s\n' "$pkg" | sed 's/[.[\*^$/]/\\&/g')$/d" "$PACKAGES_FILE"

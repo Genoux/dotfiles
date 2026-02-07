@@ -45,6 +45,7 @@ stow/ags/.config/ags/*.logmonitors.conf
 # Hyprland specific
 *.backup.*
 stow/hypr/.config/hypr/monitors.conf
+stow/hypr/.config/hypr/gpu.conf
 
 # Wallpapers
 stow/hypr/.config/hypr/wallpapers/current/current_wallpaper.jpg
@@ -53,6 +54,15 @@ stow/hypr/.config/hypr/wallpapers/current/current_wallpaper.jpg
 TODO
 
 .cursor
+
+# MIME cache
+stow/applications/.local/share/applications/mimeinfo.cache
+
+# Claude session state
+stow/claude/.claude.json
+
+# Hardware-specific packages (auto-generated per machine)
+packages/hardware/
 
 # Theme build dependencies
 themes/*/

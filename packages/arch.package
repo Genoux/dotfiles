@@ -1,8 +1,8 @@
 
 # ===========================
 alsa-utils
-# and managed separately in packages/hardware/ (gitignored)
 aubio
+autoconf-archive
 base
 base-devel
 bat
@@ -44,6 +44,7 @@ glm
 glu
 gnome-calculator
 gnome-calendar
+gnome-keyring
 gnome-shell
 gpu-screen-recorder
 greetd
@@ -100,10 +101,8 @@ lib32-libxrandr
 lib32-libxss
 lib32-libxtst
 lib32-mesa
-lib32-nvidia-utils
 lib32-openal
 lib32-vulkan-icd-loader
-lib32-vulkan-radeon
 libnotify
 libpulse
 linux
@@ -122,7 +121,6 @@ noto-fonts-cjk
 noto-fonts-emoji
 noto-fonts-extra
 npm
-nvidia-utils
 nwg-look
 obsidian
 # Official Arch Linux packages
@@ -177,7 +175,6 @@ unzip
 uwsm
 vala
 vulkan-headers
-vulkan-radeon
 waybar
 wf-recorder
 wget
@@ -203,5 +200,3 @@ zed
 zenity
 zram-generator
 zsh
-amd-ucode
-autoconf-archive
