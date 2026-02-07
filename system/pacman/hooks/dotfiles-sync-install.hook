@@ -1,0 +1,11 @@
+[Trigger]
+Operation = Install
+Type = Package
+Target = *
+
+[Action]
+Description = Syncing installed packages to dotfiles...
+When = PostTransaction
+Depends = coreutils
+NeedsTargets
+Exec = /usr/local/bin/dotfiles-package-sync --add

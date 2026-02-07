@@ -49,6 +49,7 @@ run_logged "$DOTFILES_DIR/install/system/zram.sh"
 run_logged "$DOTFILES_DIR/install/system/cpufreq.sh"
 run_logged "$DOTFILES_DIR/install/system/plymouth.sh"
 run_logged "$DOTFILES_DIR/install/system/greeter.sh"
+run_logged "$DOTFILES_DIR/install/system/pacman-hooks.sh"
 
 # Cleanup
 cleanup_sudo

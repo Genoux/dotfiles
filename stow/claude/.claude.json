@@ -116,7 +116,9 @@
     "tengu_workout2": true,
     "tengu_marble_lantern_disabled": false,
     "tengu_quiet_fern": true,
-    "tengu_file_write_optimization": false
+    "tengu_file_write_optimization": false,
+    "tengu_sm_compact": false,
+    "tengu_compact_cache_prefix": true
   },
   "hasCompletedOnboarding": true,
   "mcpServers": {

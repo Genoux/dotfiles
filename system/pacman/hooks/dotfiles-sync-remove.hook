@@ -1,0 +1,11 @@
+[Trigger]
+Operation = Remove
+Type = Package
+Target = *
+
+[Action]
+Description = Syncing removed packages from dotfiles...
+When = PostTransaction
+Depends = coreutils
+NeedsTargets
+Exec = /usr/local/bin/dotfiles-package-sync --remove

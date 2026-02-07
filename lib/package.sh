@@ -16,6 +16,7 @@ PACKAGES_FILE="$DOTFILES_DIR/packages/arch.package"
 AUR_PACKAGES_FILE="$DOTFILES_DIR/packages/aur.package"
 
 # Source all package management modules
+source "$DOTFILES_DIR/lib/package/common.sh"    # Common utilities
 source "$DOTFILES_DIR/lib/package/core.sh"      # yay, Node.js, system prep
 source "$DOTFILES_DIR/lib/package/install.sh"   # Package installation
 source "$DOTFILES_DIR/lib/package/manage.sh"    # Interactive management

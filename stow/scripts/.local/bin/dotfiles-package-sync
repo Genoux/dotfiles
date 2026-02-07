@@ -1,0 +1,129 @@
+#!/bin/bash
+# Dotfiles package synchronization script
+# Called by pacman hooks to keep package lists in sync with system
+
+set -euo pipefail
+
+# Detect actual user (hooks run as root via sudo)
+DOTFILES_USER="${SUDO_USER:-$USER}"
+if [[ "$DOTFILES_USER" == "root" ]]; then
+    # Fallback: detect user from dotfiles directory ownership
+    DOTFILES_DIR="/home"
+    for user_home in "$DOTFILES_DIR"/*; do
+        if [[ -d "$user_home/dotfiles" ]]; then
+            DOTFILES_USER=$(basename "$user_home")
+            break
+        fi
+    done
+fi
+
+# Set dotfiles paths
+DOTFILES_DIR="/home/$DOTFILES_USER/dotfiles"
+PACKAGES_FILE="$DOTFILES_DIR/packages/arch.package"
+AUR_PACKAGES_FILE="$DOTFILES_DIR/packages/aur.package"
+
+# Validate dotfiles directory exists
+if [[ ! -d "$DOTFILES_DIR" ]]; then
+    logger -t dotfiles-sync "ERROR: Dotfiles directory not found: $DOTFILES_DIR"
+    exit 1
+fi
+
+# Validate package files exist
+if [[ ! -f "$PACKAGES_FILE" ]] || [[ ! -f "$AUR_PACKAGES_FILE" ]]; then
+    logger -t dotfiles-sync "ERROR: Package files not found"
+    exit 1
+fi
+
+# Mode: --add or --remove
+MODE="$1"
+
+# Read package names from stdin (provided by NeedsTargets)
+PACKAGES=()
+while IFS= read -r pkg; do
+    [[ -n "$pkg" ]] && PACKAGES+=("$pkg")
+done
+
+# Exit if no packages to process
+[[ ${#PACKAGES[@]} -eq 0 ]] && exit 0
+
+# Process packages based on mode
+case "$MODE" in
+    --add)
+        # Add packages to appropriate lists
+        ADDED_COUNT=0
+
+        for pkg in "${PACKAGES[@]}"; do
+            # Safety check: ensure package is installed
+            if ! pacman -Qq "$pkg" &>/dev/null; then
+                continue
+            fi
+
+            # Check if explicitly installed (skip dependencies)
+            INSTALL_REASON=$(pacman -Qi "$pkg" 2>/dev/null | grep "^Install Reason" | cut -d: -f2 | xargs)
+            if [[ "$INSTALL_REASON" != "Explicitly installed" ]]; then
+                continue
+            fi
+
+            # Determine if AUR or official package
+            if pacman -Qm "$pkg" &>/dev/null 2>&1; then
+                # AUR package
+                TARGET_FILE="$AUR_PACKAGES_FILE"
+            else
+                # Official package
+                TARGET_FILE="$PACKAGES_FILE"
+            fi
+
+            # Check if already in file
+            if grep -Fxq "$pkg" "$TARGET_FILE" 2>/dev/null; then
+                continue
+            fi
+
+            # Append to file
+            echo "$pkg" >> "$TARGET_FILE"
+            ((ADDED_COUNT++))
+            logger -t dotfiles-sync "Added $pkg to $(basename "$TARGET_FILE")"
+        done
+
+        # Sort and deduplicate both files
+        if [[ $ADDED_COUNT -gt 0 ]]; then
+            sort -u "$PACKAGES_FILE" -o "$PACKAGES_FILE"
+            sort -u "$AUR_PACKAGES_FILE" -o "$AUR_PACKAGES_FILE"
+            logger -t dotfiles-sync "Synced $ADDED_COUNT package(s) to dotfiles"
+        fi
+        ;;
+
+    --remove)
+        # Remove packages from both lists
+        REMOVED_COUNT=0
+
+        for pkg in "${PACKAGES[@]}"; do
+            # Remove from official packages
+            if grep -Fxq "$pkg" "$PACKAGES_FILE" 2>/dev/null; then
+                sed -i "/^$(printf '%s\n' "$pkg" | sed 's/[.[\*^$/]/\\&/g')$/d" "$PACKAGES_FILE"
+                ((REMOVED_COUNT++))
+                logger -t dotfiles-sync "Removed $pkg from arch.package"
+            fi
+
+            # Remove from AUR packages
+            if grep -Fxq "$pkg" "$AUR_PACKAGES_FILE" 2>/dev/null; then
+                sed -i "/^$(printf '%s\n' "$pkg" | sed 's/[.[\*^$/]/\\&/g')$/d" "$AUR_PACKAGES_FILE"
+                ((REMOVED_COUNT++))
+                logger -t dotfiles-sync "Removed $pkg from aur.package"
+            fi
+        done
+
+        # Sort and deduplicate both files (cleanup)
+        if [[ $REMOVED_COUNT -gt 0 ]]; then
+            sort -u "$PACKAGES_FILE" -o "$PACKAGES_FILE"
+            sort -u "$AUR_PACKAGES_FILE" -o "$AUR_PACKAGES_FILE"
+            logger -t dotfiles-sync "Removed $REMOVED_COUNT package(s) from dotfiles"
+        fi
+        ;;
+
+    *)
+        logger -t dotfiles-sync "ERROR: Invalid mode: $MODE (expected --add or --remove)"
+        exit 1
+        ;;
+esac
+
+exit 0

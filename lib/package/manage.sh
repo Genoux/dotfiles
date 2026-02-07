@@ -6,89 +6,18 @@
 packages_manage() {
     log_section "Package Management"
 
-    # Get all installed packages in one call for O(1) lookups
-    local -A all_installed=()
-    while IFS= read -r pkg; do
-        all_installed["$pkg"]=1
-    done < <(pacman -Qq 2>/dev/null)
+    # Read package lists using common functions
+    local -A dotfiles_official_map dotfiles_aur_map
+    local -A installed_official_map installed_aur_map
+    local dotfiles_official dotfiles_aur
+    local installed_official installed_aur
+    local missing_official missing_aur
+    local extra_official extra_aur
 
-    # Get AUR package list for categorization
-    local -A aur_packages_set=()
-    while IFS= read -r pkg; do
-        aur_packages_set["$pkg"]=1
-    done < <(pacman -Qmq 2>/dev/null)
-
-    # Build arrays and hash maps for installed packages
-    local installed_official=()
-    local installed_aur=()
-    local -A installed_official_map=()
-    local -A installed_aur_map=()
-
-    while IFS= read -r pkg; do
-        if [[ -v aur_packages_set["$pkg"] ]]; then
-            installed_aur+=("$pkg")
-            installed_aur_map["$pkg"]=1
-        else
-            installed_official+=("$pkg")
-            installed_official_map["$pkg"]=1
-        fi
-    done < <(pacman -Qeq 2>/dev/null)
-
-    # Read dotfiles packages (with hardware filtering)
-    local dotfiles_official=()
-    local dotfiles_aur=()
-    local -A dotfiles_official_map=()
-    local -A dotfiles_aur_map=()
-
-    if [[ -f "$PACKAGES_FILE" ]]; then
-        local filtered_packages=$(filter_packages_by_hardware "$PACKAGES_FILE")
-        while IFS= read -r pkg; do
-            if [[ -n "$pkg" && ! "$pkg" =~ ^# ]]; then
-                dotfiles_official+=("$pkg")
-                dotfiles_official_map["$pkg"]=1
-            fi
-        done < "$filtered_packages"
-        rm -f "$filtered_packages"
-    fi
-
-    if [[ -f "$AUR_PACKAGES_FILE" ]]; then
-        while IFS= read -r pkg; do
-            if [[ -n "$pkg" && ! "$pkg" =~ ^# ]]; then
-                dotfiles_aur+=("$pkg")
-                dotfiles_aur_map["$pkg"]=1
-            fi
-        done < "$AUR_PACKAGES_FILE"
-    fi
-
-    # Find differences using hash maps for O(1) lookups
-    local missing_official=()
-    local missing_aur=()
-    local extra_official=()
-    local extra_aur=()
-
-    for pkg in "${dotfiles_official[@]}"; do
-        if [[ ! -v all_installed["$pkg"] ]]; then
-            missing_official+=("$pkg")
-        fi
-    done
-
-    for pkg in "${dotfiles_aur[@]}"; do
-        if [[ ! -v all_installed["$pkg"] ]]; then
-            missing_aur+=("$pkg")
-        fi
-    done
-
-    for pkg in "${installed_official[@]}"; do
-        if [[ ! -v dotfiles_official_map["$pkg"] ]]; then
-            extra_official+=("$pkg")
-        fi
-    done
-
-    for pkg in "${installed_aur[@]}"; do
-        if [[ ! -v dotfiles_aur_map["$pkg"] ]]; then
-            extra_aur+=("$pkg")
-        fi
-    done
+    read_dotfiles_packages
+    read_installed_packages
+    find_missing_packages
+    find_extra_packages
 
     local total_missing=$((${#missing_official[@]} + ${#missing_aur[@]}))
     local total_extra=$((${#extra_official[@]} + ${#extra_aur[@]}))
@@ -117,50 +46,12 @@ packages_manage() {
         echo
     fi
 
-    # Check if any "extra" packages are actually dependencies of dotfiles packages
+    # Categorize extra packages (dependencies vs truly extra)
     local extra_as_deps_official=()
     local extra_as_deps_aur=()
     local extra_not_deps=()
-    
-    # Build dotfiles map for dependency checking
-    declare -A dotfiles_map
-    for pkg in "${dotfiles_official[@]}" "${dotfiles_aur[@]}"; do
-        dotfiles_map[$pkg]=1
-    done
 
-    # Get all dependency info in one batch call instead of per-package
-    local -A package_dependencies=()
-    if [[ ${#extra_official[@]} -gt 0 || ${#extra_aur[@]} -gt 0 ]]; then
-        while IFS='|' read -r pkg required_by; do
-            package_dependencies["$pkg"]="$required_by"
-        done < <(pacman -Qi "${extra_official[@]}" "${extra_aur[@]}" 2>/dev/null | \
-                 awk '/^Name/ {name=$3} /^Required By/ {gsub(/^Required By *: */, ""); print name"|"$0}')
-    fi
-
-    # Check each extra package to see if it's a dependency
-    for pkg in "${extra_official[@]}" "${extra_aur[@]}"; do
-        local required_by="${package_dependencies[$pkg]}"
-        local is_dependency=false
-
-        if [[ -n "$required_by" && "$required_by" != "None" ]]; then
-            for req in $required_by; do
-                if [[ -n "${dotfiles_map[$req]}" ]]; then
-                    is_dependency=true
-                    break
-                fi
-            done
-        fi
-
-        if $is_dependency; then
-            if [[ -v aur_packages_set["$pkg"] ]]; then
-                extra_as_deps_aur+=("$pkg")
-            else
-                extra_as_deps_official+=("$pkg")
-            fi
-        else
-            extra_not_deps+=("$pkg")
-        fi
-    done
+    categorize_extra_packages
     
     # Show extra packages, separating dependencies from truly extra
     if [[ $total_extra -gt 0 ]]; then
@@ -311,30 +202,13 @@ packages_manage() {
             log_info "Removing $total_missing packages from dotfiles..."
             echo
 
-            # Remove from packages/arch.package
-            for pkg in "${missing_official[@]}"; do
-                sed -i "/^${pkg}$/d" "$PACKAGES_FILE"
-            done
-
-            # Remove from packages/aur.package
-            for pkg in "${missing_aur[@]}"; do
-                sed -i "/^${pkg}$/d" "$AUR_PACKAGES_FILE"
-            done
+            remove_packages_from_dotfiles "${missing_official[@]}" "${missing_aur[@]}"
 
             log_success "Removed $total_missing packages from dotfiles"
             ;;
 
         "Add extra to dotfiles"*)
-            for pkg in "${extra_not_deps[@]}"; do
-                # Determine if it's AUR or official
-                if pacman -Qm "$pkg" &>/dev/null; then
-                    echo "$pkg" >> "$AUR_PACKAGES_FILE"
-                else
-                    echo "$pkg" >> "$PACKAGES_FILE"
-                fi
-            done
-            sort -u "$PACKAGES_FILE" -o "$PACKAGES_FILE"
-            sort -u "$AUR_PACKAGES_FILE" -o "$AUR_PACKAGES_FILE"
+            add_packages_to_dotfiles "${extra_not_deps[@]}"
             log_success "Added ${#extra_not_deps[@]} packages to dotfiles"
             ;;
 
@@ -342,33 +216,17 @@ packages_manage() {
             log_info "Checking which of ${#extra_not_deps[@]} packages can be safely removed..."
             echo
             local all_extra=("${extra_not_deps[@]}")
-            
-            # Filter out packages that are dependencies
+
+            # Get safe packages using common function
             local safe_to_remove=()
-            local blocked_packages=()
-            
-            for pkg in "${all_extra[@]}"; do
-                local required_by=$(pacman -Qi "$pkg" 2>/dev/null | grep "Required By" | cut -d: -f2 | xargs)
-                
-                if [[ -z "$required_by" || "$required_by" == "None" ]]; then
-                    safe_to_remove+=("$pkg")
-                else
-                    blocked_packages+=("$pkg (required by: $required_by)")
-                fi
-            done
-            
-            if [[ ${#blocked_packages[@]} -gt 0 ]]; then
-                log_info "Packages blocked (required by other packages):"
-                printf '  - %s\n' "${blocked_packages[@]}"
-                echo
-            fi
-            
+            mapfile -t safe_to_remove < <(get_safe_to_remove all_extra)
+
             if [[ ${#safe_to_remove[@]} -gt 0 ]]; then
                 log_info "Removing ${#safe_to_remove[@]} packages:"
                 printf '  - %s\n' "${safe_to_remove[@]}"
                 echo
-                
-                sudo pacman -Rns "${safe_to_remove[@]}"
+
+                sudo pacman -Rns --noconfirm "${safe_to_remove[@]}"
                 log_success "Removed ${#safe_to_remove[@]} packages"
             else
                 log_info "No packages can be safely removed (all are dependencies)"
@@ -432,52 +290,16 @@ packages_clean_unlisted() {
 
     log_info "Finding packages not in dotfiles..."
 
-    # Read dotfiles packages
-    local dotfiles_official=()
-    local dotfiles_aur=()
-    local -A dotfiles_official_map=()
-    local -A dotfiles_aur_map=()
+    # Read package lists using common functions
+    local -A dotfiles_official_map dotfiles_aur_map
+    local dotfiles_official dotfiles_aur
+    local installed_official installed_aur
+    local unlisted_official unlisted_aur
 
-    if [[ -f "$PACKAGES_FILE" ]]; then
-        while IFS= read -r pkg; do
-            if [[ -n "$pkg" && ! "$pkg" =~ ^# ]]; then
-                dotfiles_official+=("$pkg")
-                dotfiles_official_map["$pkg"]=1
-            fi
-        done < "$PACKAGES_FILE"
-    fi
+    read_dotfiles_packages
+    read_installed_packages
 
-    if [[ -f "$AUR_PACKAGES_FILE" ]]; then
-        while IFS= read -r pkg; do
-            if [[ -n "$pkg" && ! "$pkg" =~ ^# ]]; then
-                dotfiles_aur+=("$pkg")
-                dotfiles_aur_map["$pkg"]=1
-            fi
-        done < "$AUR_PACKAGES_FILE"
-    fi
-
-    # Get AUR package set for categorization
-    local -A aur_packages_set=()
-    while IFS= read -r pkg; do
-        aur_packages_set["$pkg"]=1
-    done < <(pacman -Qmq 2>/dev/null)
-
-    # Get installed packages and categorize
-    local installed_official=()
-    local installed_aur=()
-
-    while IFS= read -r pkg; do
-        if [[ -v aur_packages_set["$pkg"] ]]; then
-            installed_aur+=("$pkg")
-        else
-            installed_official+=("$pkg")
-        fi
-    done < <(pacman -Qeq 2>/dev/null)
-
-    # Find unlisted packages using hash maps
-    local unlisted_official=()
-    local unlisted_aur=()
-
+    # Find unlisted packages (installed but not in dotfiles)
     for pkg in "${installed_official[@]}"; do
         if [[ ! -v dotfiles_official_map["$pkg"] ]]; then
             unlisted_official+=("$pkg")
@@ -552,10 +374,15 @@ packages_clean_unlisted() {
                     [[ -n "$line" ]] && keep_packages+=("${line% (*}")
                 done <<< "$selected"
 
-                # Build remove list
+                # Build remove list using associative array for O(1) lookups
+                local -A keep_map=()
+                for pkg in "${keep_packages[@]}"; do
+                    keep_map["$pkg"]=1
+                done
+
                 local to_remove=()
                 for pkg in "${unlisted_official[@]}" "${unlisted_aur[@]}"; do
-                    if [[ ! " ${keep_packages[@]} " =~ " ${pkg} " ]]; then
+                    if [[ ! -v keep_map["$pkg"] ]]; then
                         to_remove+=("$pkg")
                     fi
                 done
@@ -565,28 +392,11 @@ packages_clean_unlisted() {
                     return 0
                 fi
 
-                # Filter out packages that are dependencies
-                local safe_to_remove=()
-                local blocked_packages=()
-                
-                for pkg in "${to_remove[@]}"; do
-                    local required_by=$(pacman -Qi "$pkg" 2>/dev/null | grep "Required By" | cut -d: -f2 | xargs)
-                    
-                    if [[ -z "$required_by" || "$required_by" == "None" ]]; then
-                        safe_to_remove+=("$pkg")
-                    else
-                        blocked_packages+=("$pkg (required by: $required_by)")
-                    fi
-                done
-                
+                # Get safe packages using common function
                 echo
-                
-                if [[ ${#blocked_packages[@]} -gt 0 ]]; then
-                    log_info "Packages blocked (required by other packages):"
-                    printf '  - %s\n' "${blocked_packages[@]}"
-                    echo
-                fi
-                
+                local safe_to_remove=()
+                mapfile -t safe_to_remove < <(get_safe_to_remove to_remove)
+
                 if [[ ${#safe_to_remove[@]} -gt 0 ]]; then
                     log_warning "Will remove ${#safe_to_remove[@]} packages:"
                     printf '  - %s\n' "${safe_to_remove[@]}"
@@ -600,17 +410,7 @@ packages_clean_unlisted() {
                 ;;
 
             "Add all to dotfiles")
-                for pkg in "${unlisted_official[@]}"; do
-                    echo "$pkg" >> "$PACKAGES_FILE"
-                done
-                for pkg in "${unlisted_aur[@]}"; do
-                    echo "$pkg" >> "$AUR_PACKAGES_FILE"
-                done
-
-                # Sort files
-                sort -u "$PACKAGES_FILE" -o "$PACKAGES_FILE"
-                sort -u "$AUR_PACKAGES_FILE" -o "$AUR_PACKAGES_FILE"
-
+                add_packages_to_dotfiles "${unlisted_official[@]}" "${unlisted_aur[@]}"
                 log_success "Added $total_unlisted packages to dotfiles"
                 ;;
 
@@ -620,32 +420,16 @@ packages_clean_unlisted() {
                 echo
 
                 local all_to_remove=("${unlisted_official[@]}" "${unlisted_aur[@]}")
-                
-                # Filter out packages that are dependencies
+
+                # Get safe packages using common function
                 local safe_to_remove=()
-                local blocked_packages=()
-                
-                for pkg in "${all_to_remove[@]}"; do
-                    local required_by=$(pacman -Qi "$pkg" 2>/dev/null | grep "Required By" | cut -d: -f2 | xargs)
-                    
-                    if [[ -z "$required_by" || "$required_by" == "None" ]]; then
-                        safe_to_remove+=("$pkg")
-                    else
-                        blocked_packages+=("$pkg (required by: $required_by)")
-                    fi
-                done
-                
-                if [[ ${#blocked_packages[@]} -gt 0 ]]; then
-                    log_info "Packages blocked (required by other packages):"
-                    printf '  - %s\n' "${blocked_packages[@]}"
-                    echo
-                fi
-                
+                mapfile -t safe_to_remove < <(get_safe_to_remove all_to_remove)
+
                 if [[ ${#safe_to_remove[@]} -gt 0 ]]; then
                     log_info "Removing ${#safe_to_remove[@]} packages:"
                     printf '  - %s\n' "${safe_to_remove[@]}"
                     echo
-                    
+
                     sudo pacman -Rns --noconfirm "${safe_to_remove[@]}"
                     log_success "Removed ${#safe_to_remove[@]} packages"
                 else
