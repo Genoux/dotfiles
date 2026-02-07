@@ -38,6 +38,7 @@ show_usage() {
     echo
     echo "  packages             Manage packages"
     echo "    manage                 Interactive package management (default)"
+    echo "    updates                Check available updates"
     echo "    update                 System update (yay -Syu)"
     echo "    status                 Show package info"
     echo
@@ -239,6 +240,7 @@ main() {
             source "$DOTFILES_DIR/lib/package.sh"
             case "$subcommand" in
                 manage|"") packages_manage ;;
+                updates) packages_updates ;;
                 update) packages_update || exit $? ;;
                 status) packages_status ;;
                 *) log_error "Unknown subcommand: $subcommand"; show_usage; exit 1 ;;

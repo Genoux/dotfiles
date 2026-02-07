@@ -4,15 +4,29 @@
 packages_status() {
     local updates_only="${1:-}"
     
-    # If called from System Status, only show updates count
+    # If called from System Status, show brief updates summary
     if [[ "$updates_only" == "--updates-only" ]]; then
-        
+
         # Check for outdated packages
         if command -v yay &>/dev/null; then
             local outdated_packages=$(yay -Qu 2>/dev/null)
             if [[ -n "$outdated_packages" ]]; then
                 local outdated_count=$(echo "$outdated_packages" | wc -l)
-                log_info "Packages with available updates ($outdated_count)"
+
+                # Count official vs AUR
+                local official_count=0
+                local aur_count=0
+                while IFS= read -r line; do
+                    [[ -z "$line" ]] && continue
+                    local pkg_name=$(echo "$line" | awk '{print $1}')
+                    if pacman -Qm "$pkg_name" &>/dev/null; then
+                        ((aur_count++))
+                    else
+                        ((official_count++))
+                    fi
+                done <<< "$outdated_packages"
+
+                log_info "Packages with available updates ($outdated_count: $official_count official, $aur_count AUR)"
                 echo
             else
                 log_info "All packages are up to date"
@@ -36,83 +50,88 @@ packages_status() {
         readarray -t aur_packages < <(grep -vE '^#|^$' "$AUR_PACKAGES_FILE")
     fi
 
-    # Get all installed packages in one call (much faster than per-package checks)
+    # Get all installed packages in one call
     local -A installed_packages=()
     while IFS= read -r pkg; do
         installed_packages["$pkg"]=1
     done < <(pacman -Qq 2>/dev/null)
 
-    # Find missing packages (in lists but not installed)
-    local -a missing_official=()
-    local -a missing_aur=()
-
+    # Count installed packages
+    local installed_official=0
+    local installed_aur=0
     for pkg in "${official_packages[@]}"; do
         [[ -z "$pkg" ]] && continue
-        if [[ ! -v installed_packages["$pkg"] ]]; then
-            missing_official+=("$pkg")
-        fi
+        [[ -v installed_packages["$pkg"] ]] && ((installed_official++))
     done
-
     for pkg in "${aur_packages[@]}"; do
         [[ -z "$pkg" ]] && continue
-        if [[ ! -v installed_packages["$pkg"] ]]; then
-            missing_aur+=("$pkg")
-        fi
+        [[ -v installed_packages["$pkg"] ]] && ((installed_aur++))
     done
 
-    # Show missing packages
-    if [[ ${#missing_official[@]} -gt 0 ]] || [[ ${#missing_aur[@]} -gt 0 ]]; then
-        log_info "Missing packages (in dotfiles but not installed):"
-        if [[ ${#missing_official[@]} -gt 0 ]]; then
-            for pkg in "${missing_official[@]}"; do
-                echo "  $(status_warning) $pkg (official)"
-            done
-        fi
-        if [[ ${#missing_aur[@]} -gt 0 ]]; then
-            for pkg in "${missing_aur[@]}"; do
-                echo "  $(status_warning) $pkg (AUR)"
-            done
-        fi
-    fi
-    echo
-    # Check for outdated packages
+    # Find missing packages (in dotfiles but not installed)
+    local missing_official=0
+    local missing_aur=0
+    for pkg in "${official_packages[@]}"; do
+        [[ -z "$pkg" ]] && continue
+        [[ ! -v installed_packages["$pkg"] ]] && ((missing_official++))
+    done
+    for pkg in "${aur_packages[@]}"; do
+        [[ -z "$pkg" ]] && continue
+        [[ ! -v installed_packages["$pkg"] ]] && ((missing_aur++))
+    done
+
+    # Count updates available
+    local updates_official=0
+    local updates_aur=0
     if command -v yay &>/dev/null; then
         local outdated_packages=$(yay -Qu 2>/dev/null)
         if [[ -n "$outdated_packages" ]]; then
-            local outdated_count=$(echo "$outdated_packages" | wc -l)
-            log_info "Packages with available updates ($outdated_count)"
-            echo
+            while IFS= read -r line; do
+                [[ -z "$line" ]] && continue
+                local pkg_name=$(echo "$line" | awk '{print $1}')
+                if pacman -Qm "$pkg_name" &>/dev/null; then
+                    ((updates_aur++))
+                else
+                    ((updates_official++))
+                fi
+            done <<< "$outdated_packages"
         fi
     fi
 
-    # Find orphaned packages (installed but not in dotfiles lists)
-    # Use associative array for O(1) lookup instead of nested loops
+    # Find orphaned packages (installed but not in dotfiles)
     local -A tracked_packages=()
     for pkg in "${official_packages[@]}" "${aur_packages[@]}"; do
         [[ -n "$pkg" ]] && tracked_packages["$pkg"]=1
     done
 
-    local -a orphaned=()
+    local orphaned_count=0
     while IFS= read -r pkg_name; do
         [[ -z "$pkg_name" ]] && continue
-        if [[ ! -v tracked_packages["$pkg_name"] ]]; then
-            orphaned+=("$pkg_name")
-        fi
+        [[ ! -v tracked_packages["$pkg_name"] ]] && ((orphaned_count++))
     done < <(pacman -Qeq 2>/dev/null)
 
-    # Show orphaned packages (limit to first 20 to avoid overwhelming output)
-    if [[ ${#orphaned[@]} -gt 0 ]]; then
-        log_warning "Orphaned packages (installed but not in dotfiles):"
-        local display_count=${#orphaned[@]}
-        [[ $display_count -gt 20 ]] && display_count=20
+    # Display summary
+    log_info "Tracked Packages:"
+    echo "  Official: $installed_official packages"
+    echo "  AUR:      $installed_aur packages"
+    echo
 
-        for ((i=0; i<display_count; i++)); do
-            echo "  $(status_neutral) ${orphaned[$i]}"
-        done
+    if [[ $missing_official -gt 0 ]] || [[ $missing_aur -gt 0 ]]; then
+        log_warning "Missing (in dotfiles but not installed):"
+        [[ $missing_official -gt 0 ]] && echo "  Official: $missing_official packages"
+        [[ $missing_aur -gt 0 ]] && echo "  AUR:      $missing_aur packages"
+        echo
+    fi
 
-        if [[ ${#orphaned[@]} -gt 20 ]]; then
-            echo "  $(gum style --foreground 8 "... and $(( ${#orphaned[@]} - 20 )) more")"
-        fi
+    if [[ $updates_official -gt 0 ]] || [[ $updates_aur -gt 0 ]]; then
+        log_info "Updates Available:"
+        [[ $updates_official -gt 0 ]] && echo "  Official: $updates_official packages"
+        [[ $updates_aur -gt 0 ]] && echo "  AUR:      $updates_aur packages"
+        echo
+    fi
+
+    if [[ $orphaned_count -gt 0 ]]; then
+        log_warning "Orphaned (installed but not in dotfiles): $orphaned_count packages"
         echo
     fi
 }
