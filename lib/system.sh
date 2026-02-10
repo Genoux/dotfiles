@@ -72,55 +72,8 @@ system_apply() {
     # Cleanup
     cleanup_sudo
 
-    # Show completion with options
-    tput civis 2>/dev/null  # Hide cursor
-    while true; do
-        clear
-        echo
-        printf "\033[92m✓\033[0m \033[94mSystem configuration complete\033[0m\n"
-        echo
-        echo "[L] View log  [R] Reboot now  [Q] Continue"
-        echo
-
-        read -n 1 -s -r key
-        case "${key,,}" in
-            l)
-                if [[ -f "$DOTFILES_LOG_FILE" ]]; then
-                    tput cnorm 2>/dev/null  # Show cursor for less
-                    clear
-                    if command -v less &>/dev/null; then
-                        less "$DOTFILES_LOG_FILE"
-                    else
-                        cat "$DOTFILES_LOG_FILE"
-                        echo
-                        read -n 1 -s -r -p "Press any key to continue..."
-                    fi
-                    tput civis 2>/dev/null  # Hide cursor again
-                else
-                    tput cnorm 2>/dev/null  # Show cursor
-                    clear
-                    echo
-                    echo "Log file not found"
-                    echo
-                    read -n 1 -s -r -p "Press any key to continue..."
-                    tput civis 2>/dev/null  # Hide cursor again
-                fi
-                ;;
-            r)
-                clear
-                echo
-                printf "\033[94mRebooting system...\033[0m\n"
-                echo
-                rm -f "$HOME/.local/state/dotfiles/.reboot_needed"
-                sudo systemctl reboot
-                ;;
-            q|$'\n'|$'\x0a')
-                tput cnorm 2>/dev/null  # Show cursor
-                clear
-                break
-                ;;
-        esac
-    done
+    source "$DOTFILES_DIR/lib/menu.sh"
+    show_completion_menu "System configuration complete"
 }
 
 # Show quick system status summary
@@ -194,7 +147,7 @@ system_menu() {
     source "$DOTFILES_DIR/lib/menu.sh"
 
     while true; do
-        clear_screen "System"
+        clear_screen "System Config"
         system_show_summary
 
         local action=$(choose_option \

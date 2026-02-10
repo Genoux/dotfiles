@@ -96,6 +96,7 @@ filter_packages_by_hardware() {
     # NVIDIA-specific packages to filter
     local nvidia_packages=(
         "nvidia"
+        "nvidia-open-dkms"
         "nvidia-prime"
         "nvidia-settings"
         "nvidia-utils"

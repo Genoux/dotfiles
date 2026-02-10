@@ -47,6 +47,10 @@ show_usage() {
     echo "    unlink [name]          Unlink configs"
     echo "    status                 Show link status"
     echo
+    echo "  hardware             Hardware setup (GPU drivers, gpu.conf)"
+    echo "    setup                  Detect hardware and install drivers"
+    echo "    status                 Show hardware info"
+    echo
     echo "  system               System-level configurations"
     echo "    apply                  Apply system configs"
     echo "    status                 Show system info"
@@ -161,7 +165,8 @@ show_menu() {
             "Full Install" \
             "Packages" \
             "Configs" \
-            "System" \
+            "Hardware" \
+            "System Config" \
             "Themes" \
             "Shell" \
             "Hyprland")
@@ -190,7 +195,11 @@ show_menu() {
                 source "$DOTFILES_DIR/lib/config.sh"
                 config_menu
                 ;;
-            "System")
+            "Hardware")
+                source "$DOTFILES_DIR/lib/hardware-packages.sh"
+                hardware_menu
+                ;;
+            "System Config")
                 source "$DOTFILES_DIR/lib/system.sh"
                 system_menu
                 ;;
@@ -256,6 +265,14 @@ main() {
                     fi
                     ;;
                 status|"") config_status ;;
+                *) log_error "Unknown subcommand: $subcommand"; show_usage; exit 1 ;;
+            esac
+            ;;
+        hardware|hw)
+            source "$DOTFILES_DIR/lib/hardware-packages.sh"
+            case "$subcommand" in
+                setup) hardware_packages_setup ;;
+                status|"") hardware_packages_status ;;
                 *) log_error "Unknown subcommand: $subcommand"; show_usage; exit 1 ;;
             esac
             ;;

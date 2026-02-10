@@ -16,7 +16,7 @@
         <property name="orientation">horizontal</property>
         <property name="valign">center</property>
         <property name="halign">center</property>
-        <property name="width-request">500</property>
+        <property name="width-request">600</property>
         <child>
           <object class="GtkBox" id="Box">
             <style>

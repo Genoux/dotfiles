@@ -52,6 +52,7 @@ greetd-tuigreet
 gst-plugin-pipewire
 gum
 # Hardware-specific packages (GPU drivers, CPU microcode) are auto-detected
+nvidia-open-dkms
 hugo
 hypridle
 hyprland
@@ -200,3 +201,4 @@ zed
 zenity
 zram-generator
 zsh
+cmatrix

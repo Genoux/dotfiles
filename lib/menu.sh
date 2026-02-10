@@ -2,6 +2,39 @@
 # Reusable menu patterns for dotfiles management
 # Requires: gum (charmbracelet/gum)
 
+# Show post-operation completion prompt with log/reboot/continue options
+# Usage: show_completion_menu "Operation complete message"
+show_completion_menu() {
+    local message="${1:-Operation complete}"
+
+    tput civis 2>/dev/null
+    while true; do
+        clear
+        echo
+        printf "\033[92m✓\033[0m \033[94m%s\033[0m\n" "$message"
+        echo
+        echo "[R] Reboot now  [Q] Continue"
+        echo
+
+        read -n 1 -s -r key
+        case "${key,,}" in
+            r)
+                clear
+                echo
+                printf "\033[94mRebooting system...\033[0m\n"
+                echo
+                rm -f "$HOME/.local/state/dotfiles/.reboot_needed"
+                sudo systemctl reboot
+                ;;
+            q|$'\n'|$'\x0a')
+                tput cnorm 2>/dev/null
+                clear
+                break
+                ;;
+        esac
+    done
+}
+
 # Generic submenu handler
 # Usage: show_submenu "Title" callback_function
 show_submenu() {

@@ -111,28 +111,29 @@ vertical_center() {
 
 # Logging functions using gum log for consistent structured logging
 log_info() {
-    # Show info message without INFO prefix for cleaner status displays
     echo "$*"
+    log_to_file "INFO" "$*"
 }
 
 log_success() {
-    # Show success message in green without INFO prefix
-    # Messages can include their own checkmarks if needed
     gum style --foreground 2 "$*"  # base0B green
+    log_to_file "OK" "$*"
 }
 
 log_warning() {
     gum log --level warn "$@"
+    log_to_file "WARN" "$*"
 }
 
 log_error() {
     gum log --level error "$@"
+    log_to_file "ERROR" "$*"
 }
 
 log_section() {
-    # Keep bold styling for sections for visual distinction
     gum style --bold "$@"
     echo
+    log_to_file "----" "$*"
 }
 
 # Status indicator helpers (for inline use in status displays)
