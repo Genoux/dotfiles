@@ -418,7 +418,8 @@ env = __GL_THREADED_OPTIMIZATIONS,0
 
 # WLR settings for NVIDIA
 env = WLR_NO_HARDWARE_CURSORS,1
-env = WLR_RENDERER,vulkan
+# NOTE: Vulkan renderer disabled - causes OOPSI crashes during DPMS off/on (idle)
+# env = WLR_RENDERER,vulkan
 env = WLR_DRM_DEVICES,/dev/dri/${dri_card}
 env = WLR_RENDER_DRM_DEVICE,/dev/dri/${render_device}
 EOF
@@ -432,13 +433,14 @@ env = LIBVA_DRIVER_NAME,radeonsi
 env = VDPAU_DRIVER,radeonsi
 
 # WLR settings for AMD
-env = WLR_RENDERER,vulkan
+# NOTE: Vulkan renderer disabled - causes OOPSI crashes during DPMS off/on (idle)
+# Using default OpenGL renderer for stability
+# env = WLR_RENDERER,vulkan
 env = WLR_DRM_DEVICES,/dev/dri/${dri_card}
 env = WLR_RENDER_DRM_DEVICE,/dev/dri/${render_device}
 
 # Mesa/AMD optimizations
 env = MESA_SHADER_CACHE_DISABLE,false
-env = RADV_PERFTEST,gpl,nggc,sam
 env = AMD_VULKAN_ICD,RADV
 EOF
     elif [[ "$gpu_type" == "Intel" ]]; then
@@ -451,7 +453,8 @@ env = LIBVA_DRIVER_NAME,iHD
 env = VDPAU_DRIVER,va_gl
 
 # WLR settings for Intel
-env = WLR_RENDERER,vulkan
+# NOTE: Vulkan renderer disabled - causes OOPSI crashes during DPMS off/on (idle)
+# env = WLR_RENDERER,vulkan
 env = WLR_DRM_DEVICES,/dev/dri/${dri_card}
 env = WLR_RENDER_DRM_DEVICE,/dev/dri/${render_device}
 EOF
@@ -460,7 +463,8 @@ EOF
 # ================================
 # GENERIC GPU SETTINGS
 # ================================
-env = WLR_RENDERER,vulkan
+# NOTE: Vulkan renderer disabled - causes OOPSI crashes during DPMS off/on (idle)
+# env = WLR_RENDERER,vulkan
 EOF
     fi
 
