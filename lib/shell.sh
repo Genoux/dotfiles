@@ -144,6 +144,44 @@ install_plugins() {
     return 0
 }
 
+# Install kitty terminfo so TERM=xterm-kitty is recognized
+install_kitty_terminfo() {
+    if infocmp xterm-kitty &>/dev/null; then
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] kitty terminfo already installed" >> "$DOTFILES_LOG_FILE"
+        return 0
+    fi
+
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting: Install kitty terminfo" >> "$DOTFILES_LOG_FILE"
+
+    local terminfo_dir="$HOME/.terminfo"
+
+    if command -v kitty &>/dev/null; then
+        if run_command_logged "Install kitty terminfo" kitty +kitten ssh --copy-terminfo localhost 2>/dev/null; then
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] Completed: kitty terminfo installed via kitten" >> "$DOTFILES_LOG_FILE"
+            return 0
+        fi
+
+        # Fallback: extract directly from kitty binary
+        if run_command_logged "Install kitty terminfo (fallback)" sh -c "infocmp -x xterm-kitty 2>/dev/null | tic -x - 2>/dev/null || kitty +sh -c 'tic -x - <<< \"\$(infocmp -x xterm-kitty)\"' 2>/dev/null"; then
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] Completed: kitty terminfo installed" >> "$DOTFILES_LOG_FILE"
+            return 0
+        fi
+    fi
+
+    # Most reliable: use kitty's own terminfo file
+    local kitty_term_src="/usr/lib/kitty/terminfo/x/xterm-kitty"
+    if [[ -f "$kitty_term_src" ]]; then
+        mkdir -p "$terminfo_dir/x"
+        if run_command_logged "Install kitty terminfo from package" cp "$kitty_term_src" "$terminfo_dir/x/xterm-kitty"; then
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] Completed: kitty terminfo installed from package" >> "$DOTFILES_LOG_FILE"
+            return 0
+        fi
+    fi
+
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Warning: Could not install kitty terminfo" >> "$DOTFILES_LOG_FILE"
+    return 0
+}
+
 # Check if Starship is installed
 check_starship() {
     if command -v starship &>/dev/null; then
@@ -389,6 +427,9 @@ shell_setup() {
 
     # Update plugins array in .zshrc
     update_zshrc_plugins
+
+    # Install kitty terminfo
+    install_kitty_terminfo
 
     # Check/install Starship
     check_starship

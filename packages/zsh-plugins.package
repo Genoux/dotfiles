@@ -1,18 +1,19 @@
 # ZSH Plugin List
 # Format: plugin-name:repository-url
-# 
-# Core functionality plugins
-zsh-autosuggestions:https://github.com/zsh-users/zsh-autosuggestions.git
-zsh-syntax-highlighting:https://github.com/zsh-users/zsh-syntax-highlighting.git
+# Load order matters:
+#   - zsh-completions must be first
+#   - zsh-syntax-highlighting must be last
 
-# Additional useful plugins
+# Must be first — extends completion definitions before compinit
 zsh-completions:https://github.com/zsh-users/zsh-completions.git
+
+# Core functionality
+zsh-autosuggestions:https://github.com/zsh-users/zsh-autosuggestions.git
 zsh-history-substring-search:https://github.com/zsh-users/zsh-history-substring-search.git
 
-# Plugin recommendations from catalins.tech article
+# Additional useful plugins
 you-should-use:https://github.com/MichaelAquilina/zsh-you-should-use.git
 zsh-bat:https://github.com/fdellwing/zsh-bat.git
 
-# Note: fast-syntax-highlighting conflicts with zsh-syntax-highlighting
-# (both provide syntax highlighting - choose one)
-# fast-syntax-highlighting:https://github.com/zdharma-continuum/fast-syntax-highlighting.git
+# Must be last — breaks other plugins if loaded earlier
+zsh-syntax-highlighting:https://github.com/zsh-users/zsh-syntax-highlighting.git
