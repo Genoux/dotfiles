@@ -2,7 +2,33 @@
   "permissions": {
     "allow": [
       "WebFetch",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Read(//home/john/dotfiles/stow/claude/.claude/**)",
+      "Bash(/home/john/.bun/bin/bun run build:*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/john/.claude/plugins/cache/everything-claude-code/everything-claude-code/1.4.1/skills/continuous-learning-v2/hooks/observe.sh pre"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/john/.claude/plugins/cache/everything-claude-code/everything-claude-code/1.4.1/skills/continuous-learning-v2/hooks/observe.sh post"
+          }
+        ]
+      }
     ]
   },
   "enabledPlugins": {

@@ -1,11 +1,26 @@
 #!/bin/bash
-# Restart Hyprland after hibernate resume to avoid compositor crash
-# Only targets hibernate - regular suspend/resume works fine with S3
+# Manage Hyprland/hyprlock state across sleep/resume cycles
+#
+# Fix: Kills hyprlock BEFORE sleep to prevent "OOPS" GPU context error on wake.
+# Root cause: hyprlock wakes with a dead EGL/GPU context after suspend → shows "OOPS".
+# Solution: kill it cleanly before sleep; hypridle's after_sleep_cmd restarts it on resume.
 
-if [ "$1" = "post" ] && [ "$2" = "hibernate" ]; then
-    HYPR_USER=$(ps aux | grep "Hyprland" | grep -v grep | awk '{print $1}' | head -1)
+HYPR_USER=$(ps aux | grep "[H]yprland" | grep -v grep | awk '{print $1}' | head -1)
 
-    if [ -n "$HYPR_USER" ]; then
-        pkill -u "$HYPR_USER" Hyprland
-    fi
-fi
+case "$1" in
+    pre)
+        # Kill hyprlock before any sleep type to prevent GPU context corruption.
+        if [ -n "$HYPR_USER" ]; then
+            pkill -u "$HYPR_USER" -x hyprlock 2>/dev/null || true
+        fi
+        ;;
+    post)
+        if [ "$2" = "hibernate" ]; then
+            # After hibernate: GPU state is too corrupted, restart Hyprland compositor.
+            if [ -n "$HYPR_USER" ]; then
+                pkill -u "$HYPR_USER" Hyprland
+            fi
+        fi
+        # Regular suspend: hypridle's after_sleep_cmd handles hyprlock restart.
+        ;;
+esac

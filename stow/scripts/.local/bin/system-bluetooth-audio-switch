@@ -1,0 +1,35 @@
+#!/bin/bash
+# Switch audio to a Bluetooth device when it connects.
+# Listens to BlueZ D-Bus property changes instead of PipeWire sink events,
+# because BT devices are pre-registered PipeWire nodes — connecting them fires
+# 'change', not 'new', so pactl-subscribe-based approaches miss the event.
+
+dbus-monitor --system \
+  "type=signal,interface=org.freedesktop.DBus.Properties,member=PropertiesChanged,path_namespace=/org/bluez" \
+  2>/dev/null | awk '
+  /path=.*\/dev_[0-9A-Fa-f_]+/ {
+    if (match($0, /\/dev_([0-9A-Fa-f_]+)/, a)) current_mac = a[1]
+    in_device = 0; check = 0
+  }
+  /string "org.bluez.Device1"/ { in_device = 1 }
+  in_device && /string "Connected"/ { check = 1; next }
+  check && /boolean true/  { print current_mac; fflush(); check = 0 }
+  check                    { check = 0 }
+' | while read -r MAC_UNDER; do
+  sleep 2
+
+  MAC_COLON=$(echo "$MAC_UNDER" | tr '_' ':' | tr '[:lower:]' '[:upper:]')
+  SINK=$(pactl list sinks short | awk '{print $2}' | grep -i "bluez" | \
+    grep -i "${MAC_UNDER}\|${MAC_COLON}" | head -1)
+
+  if [ -z "$SINK" ]; then
+    echo "bluetooth-audio-switch: no sink found for $MAC_UNDER" >&2
+    continue
+  fi
+
+  echo "bluetooth-audio-switch: switching to $SINK" >&2
+  pactl set-default-sink "$SINK"
+  pactl list sink-inputs short | awk '{print $1}' | while read -r id; do
+    [ -n "$id" ] && pactl move-sink-input "$id" "$SINK" 2>/dev/null || true
+  done
+done
