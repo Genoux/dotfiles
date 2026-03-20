@@ -18,12 +18,12 @@ disabled = true
 
 [character]
 success_symbol = "[](fg:#686868)"
-error_symbol = "[](fg:#7c7c7c)"
+error_symbol = "[](fg:#7a7a7a)"
 
 [cmd_duration]
 show_notifications = true
 min_time_to_notify = 60_000
-style = "fg:#b9b9b9"
+style = "fg:#c0c0c0"
 
 [git_branch]
 format = "\\[[$symbol$branch]($style)\\]"
@@ -32,19 +32,19 @@ style = "fg:#ffffff"
 
 [git_state]
 format = '\(:[$state( $progress_current/$progress_total)]($style)\)'
-style = "fg:#b9b9b9"
+style = "fg:#c0c0c0"
 
 [git_commit]
-style = "fg:#b9b9b9"
+style = "fg:#c0c0c0"
 
 [directory]
 truncation_length = 1
-format = "[󰉋](fg:#999999) [$path](fg:#999999)[$read_only]($read_only_style)"
+format = "[󰉋](fg:#c0c0c0) [$path](fg:#c0c0c0)[$read_only]($read_only_style)"
 read_only = " "
 truncation_symbol = ""
 fish_style_pwd_dir_length = 0
 style = "fg:#ffffff"
-read_only_style = "fg:#b9b9b9"
+read_only_style = "fg:#c0c0c0"
 
 [directory.substitutions]
 "Documents" = "󰈙"
@@ -56,7 +56,7 @@ read_only_style = "fg:#b9b9b9"
 [username]
 show_always = true
 style_user = "fg:#ffffff"
-style_root = "fg:#7c7c7c"
+style_root = "fg:#7a7a7a"
 format = '[$user ]($style)'
 
 [custom.git_host]
@@ -124,7 +124,7 @@ printf "%s%s" "$ICON" "$URL"
 directories = [".git"]
 when = 'git rev-parse --is-inside-work-tree 2> /dev/null'
 shell = ["bash","--norc","--noprofile"]
-style = "fg:#a0a0a0"
+style = "fg:#bababa"
 format = " at [$output]($style) "
 
 [hostname]

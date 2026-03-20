@@ -1,8 +1,50 @@
 #!/bin/bash
-# Switch audio to a Bluetooth device when it connects.
+# Switch audio to a Bluetooth device when it connects, and fall back to the
+# next best sink when it disconnects.
 # Listens to BlueZ D-Bus property changes instead of PipeWire sink events,
 # because BT devices are pre-registered PipeWire nodes — connecting them fires
 # 'change', not 'new', so pactl-subscribe-based approaches miss the event.
+
+find_sink_for_mac() {
+  local mac_under="$1"
+  local mac_colon
+  mac_colon=$(echo "$mac_under" | tr '_' ':' | tr '[:lower:]' '[:upper:]')
+  pactl list sinks short | awk '{print $2}' | grep -i "bluez" | \
+    grep -i "${mac_under}\|${mac_colon}" | head -1
+}
+
+get_default_sink() {
+  pactl get-default-sink
+}
+
+move_all_inputs_to_sink() {
+  local sink="$1"
+  pactl list sink-inputs short | awk '{print $1}' | while read -r id; do
+    [ -n "$id" ] && pactl move-sink-input "$id" "$sink" 2>/dev/null || true
+  done
+}
+
+# Priority: other BT sinks first, then USB, then anything else.
+find_fallback_sink() {
+  local exclude_mac="$1"
+  local mac_colon
+  mac_colon=$(echo "$exclude_mac" | tr '_' ':' | tr '[:lower:]' '[:upper:]')
+
+  # Another BT sink that isn't the one that disconnected
+  local bt_sink
+  bt_sink=$(pactl list sinks short | awk '{print $2}' | grep -i "bluez" | \
+    grep -iv "${exclude_mac}\|${mac_colon}" | head -1)
+  [ -n "$bt_sink" ] && echo "$bt_sink" && return
+
+  # USB audio sink
+  local usb_sink
+  usb_sink=$(pactl list sinks short | awk '{print $2}' | grep "usb" | head -1)
+  [ -n "$usb_sink" ] && echo "$usb_sink" && return
+
+  # Anything remaining
+  pactl list sinks short | awk '{print $2}' | \
+    grep -iv "${exclude_mac}\|${mac_colon}" | grep -v "bluez" | head -1
+}
 
 dbus-monitor --system \
   "type=signal,interface=org.freedesktop.DBus.Properties,member=PropertiesChanged,path_namespace=/org/bluez" \
@@ -13,23 +55,48 @@ dbus-monitor --system \
   }
   /string "org.bluez.Device1"/ { in_device = 1 }
   in_device && /string "Connected"/ { check = 1; next }
-  check && /boolean true/  { print current_mac; fflush(); check = 0 }
+  check && /boolean true/  { print "connect " current_mac; fflush(); check = 0 }
+  check && /boolean false/ { print "disconnect " current_mac; fflush(); check = 0 }
   check                    { check = 0 }
-' | while read -r MAC_UNDER; do
-  sleep 2
+' | while read -r EVENT MAC_UNDER; do
 
-  MAC_COLON=$(echo "$MAC_UNDER" | tr '_' ':' | tr '[:lower:]' '[:upper:]')
-  SINK=$(pactl list sinks short | awk '{print $2}' | grep -i "bluez" | \
-    grep -i "${MAC_UNDER}\|${MAC_COLON}" | head -1)
+  if [ "$EVENT" = "connect" ]; then
+    # Poll until WirePlumber registers the A2DP sink (can take several seconds)
+    SINK=""
+    for _ in $(seq 1 10); do
+      sleep 1
+      SINK=$(find_sink_for_mac "$MAC_UNDER")
+      [ -n "$SINK" ] && break
+    done
 
-  if [ -z "$SINK" ]; then
-    echo "bluetooth-audio-switch: no sink found for $MAC_UNDER" >&2
-    continue
+    if [ -z "$SINK" ]; then
+      echo "bluetooth-audio-switch: no sink found for $MAC_UNDER after 10s" >&2
+      continue
+    fi
+
+    echo "bluetooth-audio-switch: connect → switching to $SINK" >&2
+    pactl set-default-sink "$SINK"
+    move_all_inputs_to_sink "$SINK"
+
+  elif [ "$EVENT" = "disconnect" ]; then
+    sleep 1
+    SINK=$(find_sink_for_mac "$MAC_UNDER")
+    DEFAULT=$(get_default_sink)
+
+    # Only fall back if the disconnected device was the active sink
+    if [ -n "$SINK" ] && [ "$DEFAULT" != "$SINK" ]; then
+      echo "bluetooth-audio-switch: disconnect of non-active $MAC_UNDER, skipping" >&2
+      continue
+    fi
+
+    FALLBACK=$(find_fallback_sink "$MAC_UNDER")
+    if [ -z "$FALLBACK" ]; then
+      echo "bluetooth-audio-switch: no fallback sink available after $MAC_UNDER disconnect" >&2
+      continue
+    fi
+
+    echo "bluetooth-audio-switch: disconnect → falling back to $FALLBACK" >&2
+    pactl set-default-sink "$FALLBACK"
+    move_all_inputs_to_sink "$FALLBACK"
   fi
-
-  echo "bluetooth-audio-switch: switching to $SINK" >&2
-  pactl set-default-sink "$SINK"
-  pactl list sink-inputs short | awk '{print $1}' | while read -r id; do
-    [ -n "$id" ] && pactl move-sink-input "$id" "$SINK" 2>/dev/null || true
-  done
 done

@@ -3,8 +3,21 @@ import { subprocess } from "ags/process";
 import { timeout } from "ags/time";
 import GLib from "gi://GLib";
 import Mpris from "gi://AstalMpris";
+import { getActivePlayer } from "../mediaplayer/service";
 
 const CFG = "widget/cava/config/config";
+
+// ─── Edit these to tune the visualization ─────────────────────
+const CAVA_SETTINGS = {
+  silenceThreshold: 2, // raw value 0-1000; below this = flat. Lower = more sensitive to quiet sound
+  sensitivityMultiplier: 1.25, // boost bar heights (1 = normal, >1 = more responsive)
+  lerpFactor: 0.35, // how fast bars chase audio (1=instant, lower=smoother)
+  barMin: 2, // min bar height when sound detected
+  barMax: 10, // max bar height at peak (cava outputs 0-1000)
+  lerpIntervalMs: 17, // animation frame rate (~60fps)
+} as const;
+// ──────────────────────────────────────────────────────────────
+
 let BAR_COUNT = 4;
 
 try {
@@ -20,9 +33,28 @@ try {
 
 export const [barsAccessor, setBars] = createState<number[]>(Array(BAR_COUNT).fill(0));
 
-const norm = (v: number) => Math.round(2 + (Math.min(v, 1000) / 1000) * 10);
+const norm = (v: number) => {
+  if (v < CAVA_SETTINGS.silenceThreshold) return 0;
+  const raw = CAVA_SETTINGS.barMin + (Math.min(v, 1000) / 1000) * CAVA_SETTINGS.barMax;
+  return Math.round(Math.min(12, raw * CAVA_SETTINGS.sensitivityMultiplier));
+};
+let targetBars = Array(BAR_COUNT).fill(0);
+let currentBars = Array(BAR_COUNT).fill(0);
 
-let updateTimeout: number | null = null;
+function lerpTick(): boolean {
+  const next = currentBars.map((c, i) => {
+    const t = targetBars[i] ?? 0;
+    return Math.round(c + (t - c) * CAVA_SETTINGS.lerpFactor);
+  });
+  if (next.some((v, i) => v !== currentBars[i])) {
+    currentBars = next;
+    setBars([...next]);
+  }
+  return true; // keep running
+}
+
+GLib.timeout_add(GLib.PRIORITY_DEFAULT, CAVA_SETTINGS.lerpIntervalMs, () => lerpTick());
+
 let cavaProcess: any = null;
 let isRestarting = false;
 let isCavaRunning = false;
@@ -32,9 +64,7 @@ function stopCava() {
     console.log("[Cava] Stopping - no active media players");
     isCavaRunning = false;
 
-    // The subprocess will check isCavaRunning and exit on next output
-    // Reset visual state immediately
-    setBars(Array(BAR_COUNT).fill(0));
+    targetBars = Array(BAR_COUNT).fill(0);
 
     // Clear the process reference after a delay to allow cleanup
     if (cavaProcess) {
@@ -54,18 +84,12 @@ function stopCava() {
 function startCava() {
   if (isRestarting || isCavaRunning) return;
 
-  // Kill any orphaned cava processes before starting
-  try {
-    subprocess(["pkill", "-f", "cava -p widget/cava/config/config"], () => {}, () => {});
-  } catch (e) {
-    // Ignore error if no process to kill
-  }
-
   try {
     cavaProcess = subprocess(
       ["cava", "-p", CFG],
       (out) => {
-        if (updateTimeout) return;
+        if (!isCavaRunning) return;
+        if (!hasDisplayedPlayerPlaying()) return; // ignore output when paused, decay runs separately
 
         const nums = out
           .trim()
@@ -74,11 +98,7 @@ function startCava() {
           .filter((n) => !isNaN(n));
 
         if (nums.length >= BAR_COUNT) {
-          setBars(nums.slice(0, BAR_COUNT).map(norm));
-
-          updateTimeout = setTimeout(() => {
-            updateTimeout = null;
-          }, 16) as any;
+          targetBars = nums.slice(0, BAR_COUNT).map(norm);
         }
       },
       (err) => {
@@ -89,9 +109,10 @@ function startCava() {
           isRestarting = true;
           console.log("[Cava] Restarting in 2 seconds...");
           
-          // Reset bars to zero
+          targetBars = Array(BAR_COUNT).fill(0);
+          currentBars = Array(BAR_COUNT).fill(0);
           setBars(Array(BAR_COUNT).fill(0));
-          
+
           timeout(2000, () => {
             isRestarting = false;
             startCava();
@@ -113,21 +134,26 @@ function startCava() {
   }
 }
 
-// Helper to check if there's an active media player
+// Keep cava running whenever we have a displayed player - only stop when no players at all.
+// This avoids the 1.5s Pulse connection delay when resuming playback.
 const mpris = Mpris.get_default();
 
-function hasActivePlayer(): boolean {
-  return mpris.players.some((p) => {
-    // Only run cava when media is actively PLAYING (not paused)
-    return p.playbackStatus === Mpris.PlaybackStatus.PLAYING && p.canControl;
-  });
+function hasDisplayedPlayer(): boolean {
+  return !!getActivePlayer();
 }
 
-// Start/stop cava based on media player state
+function hasDisplayedPlayerPlaying(): boolean {
+  const player = getActivePlayer();
+  return !!player && player.playbackStatus === Mpris.PlaybackStatus.PLAYING;
+}
+
+// Start cava when we have a player; stop only when no players exist
 function updateCavaState() {
-  if (hasActivePlayer()) {
+  if (hasDisplayedPlayer()) {
     if (!isCavaRunning) {
       startCava();
+    } else if (!hasDisplayedPlayerPlaying()) {
+      targetBars = Array(BAR_COUNT).fill(0);
     }
   } else {
     if (isCavaRunning) {

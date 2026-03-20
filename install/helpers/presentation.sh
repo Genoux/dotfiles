@@ -30,9 +30,10 @@ configure_gum_colors() {
     # Use base04 (mid-gray) for monochrome theme consistency
     # ANSI color 8 maps to base04 in base16 schemes
     # Gum only accepts ANSI color codes (0-15), not hex colors
-    export COLOR_INDEX="6"
+    export COLOR_INDEX="10"
     export GUM_CHOOSE_CURSOR_FOREGROUND="$COLOR_INDEX"
     export GUM_CHOOSE_CURSOR_BACKGROUND=""
+    export GUM_CHOOSE_SELECTED_FOREGROUND="15"
     export GUM_CHOOSE_HELP_FOREGROUND="$COLOR_INDEX"
     export GUM_CHOOSE_HELP_BACKGROUND=""
     export GUM_FILTER_HELP_FOREGROUND="$COLOR_INDEX"

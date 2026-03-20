@@ -2,6 +2,7 @@ import { Gtk } from "ags/gtk4";
 import { createPoll } from "ags/time";
 import {
   getActivePlayer,
+  markPlayerAsInteracted,
   currentPlayerInfo,
   currentPlayerPlayIcon,
   toggleMediaPanel,
@@ -62,6 +63,7 @@ export function MediaPlayerButton() {
           onClicked={() => {
             const player = getActivePlayer();
             if (player) {
+              markPlayerAsInteracted(player);
               player.previous();
             }
           }}
@@ -73,6 +75,7 @@ export function MediaPlayerButton() {
           onClicked={() => {
             const player = getActivePlayer();
             if (player) {
+              markPlayerAsInteracted(player);
               player.play_pause();
             }
           }}
@@ -89,10 +92,10 @@ export function MediaPlayerButton() {
           onClicked={() => {
             const player = getActivePlayer();
             if (player) {
+              markPlayerAsInteracted(player);
               player.next();
             }
           }}
-
         >
           <Icon icon="media-skip-forward-symbolic" pixelSize={13} />
         </Button>

@@ -1,51 +1,25 @@
 {
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  },
   "permissions": {
     "allow": [
       "WebFetch",
       "Bash(ls:*)",
-      "Read(//home/john/dotfiles/stow/claude/.claude/**)",
-      "Bash(/home/john/.bun/bin/bun run build:*)"
+      "Bash(python3:*)",
+      "Bash(curl:*)"
     ]
   },
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/home/john/.claude/plugins/cache/everything-claude-code/everything-claude-code/1.4.1/skills/continuous-learning-v2/hooks/observe.sh pre"
-          }
-        ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/home/john/.claude/plugins/cache/everything-claude-code/everything-claude-code/1.4.1/skills/continuous-learning-v2/hooks/observe.sh post"
-          }
-        ]
-      }
-    ]
-  },
+  "enableAllProjectMcpServers": true,
   "enabledPlugins": {
-    "backend-development@claude-code-workflows": true,
-    "javascript-typescript@claude-code-workflows": true,
-    "frontend-excellence@dotclaude-plugins": true,
-    "ui-designer@claude-code-marketplace": true,
-    "security-guidance@claude-code-plugins": true,
-    "everything-claude-code@everything-claude-code": true,
-    "adaptive-learning@dotclaude-plugins": true,
-    "project-delivery@dotclaude-plugins": true,
-    "feature-dev@claude-plugins-official": true,
-    "context7@claude-plugins-official": true,
-    "frontend-design@claude-plugins-official": true,
-    "serena@claude-plugins-official": true,
-    "claude-md-management@claude-plugins-official": true,
-    "hookify@claude-plugins-official": true,
-    "linear@claude-plugins-official": true
+    "context7@claude-plugins-official": true
+  },
+  "extraKnownMarketplaces": {
+    "knowledge-work-plugins": {
+      "source": {
+        "source": "github",
+        "repo": "anthropics/knowledge-work-plugins"
+      }
+    }
   }
 }

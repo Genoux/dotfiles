@@ -8,8 +8,27 @@ const mpris = Mpris.get_default();
 const [updateId, setUpdateId] = createState(0);
 const forceUpdate = () => setUpdateId((id) => id + 1);
 
-// Listen to player changes
-mpris.connect("notify::players", forceUpdate);
+let lastInteractedIdentity: string | null = null;
+
+function getPlayerIdentity(player: Mpris.Player): string {
+  return (player as any).identity ?? (player as any).bus_name ?? "";
+}
+
+export function markPlayerAsInteracted(player: Mpris.Player) {
+  const identity = getPlayerIdentity(player);
+  if (identity) {
+    lastInteractedIdentity = identity;
+    forceUpdate();
+  }
+}
+
+// Listen to player changes - clear lastInteracted if that player is gone
+mpris.connect("notify::players", () => {
+  if (lastInteractedIdentity && !mpris.players.some((p) => getPlayerIdentity(p) === lastInteractedIdentity)) {
+    lastInteractedIdentity = null;
+  }
+  forceUpdate();
+});
 
 // Track player handlers to prevent duplicate connections
 const playerHandlers = new Map<Mpris.Player, number[]>();
@@ -21,10 +40,16 @@ const setupPlayerWatchers = () => {
   });
   playerHandlers.clear();
 
-  // Connect new handlers
+  // Connect new handlers - mark as interacted when a player starts playing (user switched source)
   mpris.players.forEach((player) => {
+    const onStatusChange = () => {
+      if (player.playbackStatus === Mpris.PlaybackStatus.PLAYING) {
+        markPlayerAsInteracted(player);
+      }
+      forceUpdate();
+    };
     const handlers = [
-      player.connect("notify::playback-status", forceUpdate),
+      player.connect("notify::playback-status", onStatusChange),
       player.connect("notify::title", forceUpdate),
       player.connect("notify::artist", forceUpdate),
     ];
@@ -35,15 +60,25 @@ const setupPlayerWatchers = () => {
 setupPlayerWatchers();
 mpris.connect("notify::players", setupPlayerWatchers);
 
-// Get the active player (playing or paused with valid controls)
-export function getActivePlayer() {
-  const playerList = mpris.players;
-  return playerList.find((p) => {
-    const isActive = p.playbackStatus === Mpris.PlaybackStatus.PLAYING || 
+function getActivePlayers(): Mpris.Player[] {
+  return mpris.players.filter((p) => {
+    const isActive = p.playbackStatus === Mpris.PlaybackStatus.PLAYING ||
                      p.playbackStatus === Mpris.PlaybackStatus.PAUSED;
-    // Only show if player has control capabilities (indicates active media source)
     return isActive && p.canControl;
   });
+}
+
+// Get the active player - prefer last-interacted, else first playing then first paused
+export function getActivePlayer(): Mpris.Player | undefined {
+  const active = getActivePlayers();
+  if (active.length === 0) return undefined;
+
+  if (lastInteractedIdentity) {
+    const lastInteracted = active.find((p) => getPlayerIdentity(p) === lastInteractedIdentity);
+    if (lastInteracted) return lastInteracted;
+  }
+
+  return active.find((p) => p.playbackStatus === Mpris.PlaybackStatus.PLAYING) ?? active[0];
 }
 
 // Reactive player info
@@ -74,8 +109,8 @@ export function hideMediaPanel() {
 }
 
 export function toggleMediaPanel() {
-  const player = mpris.players.find((p) => p.playbackStatus === Mpris.PlaybackStatus.PLAYING);
-  if (player && hypr) {
-    hypr.dispatch("focuswindow", `class:${player.entry}`);
+  const player = getActivePlayer();
+  if (player && hypr && (player as any).entry) {
+    hypr.dispatch("focuswindow", `class:${(player as any).entry}`);
   }
 }

@@ -21,17 +21,19 @@ anchor=bottom-right
 
 group-by=app-name
 
+on-button-right=dismiss
+
 icons=1
 max-icon-size=24
 
 [urgency=low]
 default-timeout=5000
-border-color=#ffffff40
+border-color=#ffffff08
 
 [urgency=normal]
 default-timeout=5000
-border-color=#ffffff40
+border-color=#ffffff08
 
 [urgency=critical]
 default-timeout=0
-border-color=#ffffff40
+border-color=#ffffff08
