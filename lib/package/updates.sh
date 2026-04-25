@@ -5,7 +5,8 @@ packages_updates() {
     log_section "Package Updates"
 
     # Check for updates with spinner
-    gum spin --spinner dot --title "Checking for package updates..." -- yay -Qu > /tmp/package-updates.tmp 2>/dev/null
+    gum spin --spinner dot --title "Checking for package updates..." -- \
+        bash -c 'yay -Qu > /tmp/package-updates.tmp 2>/dev/null'
 
     if [[ ! -s /tmp/package-updates.tmp ]]; then
         log_success "All packages are up to date!"
@@ -63,7 +64,6 @@ packages_updates() {
 
     # Ask if user wants to update
     if gum confirm "Update all packages now?"; then
-        log_info "Updating packages..."
-        yay -Syu --noconfirm
+        packages_update
     fi
 }

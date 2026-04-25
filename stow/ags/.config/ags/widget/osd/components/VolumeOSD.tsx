@@ -1,9 +1,10 @@
 import app from "ags/gtk4/app";
 import { Astal, Gtk } from "ags/gtk4";
+import Gtk4LayerShell from "gi://Gtk4LayerShell";
 import { osd, volumeState, volumeIcon } from "../services/volumeosd.service";
 import Icon from "../../../components/Icon";
 
-const TOTAL_STEPS = 10; // 10 steps for 10% increments (0%, 10%, 20%, ..., 100%)
+const TOTAL_STEPS = 10;
 
 function VolumeStepBar() {
     const stepIndices = Array.from({ length: TOTAL_STEPS }, (_, i) => i);
@@ -16,15 +17,10 @@ function VolumeStepBar() {
             cssName="volume-step-bar"
         >
             {stepIndices.map((index: number) => {
-                // Each step represents 10%: step 0 = 0-10%, step 1 = 10-20%, ..., step 9 = 90-100%
-                // Use a small epsilon to handle floating point precision when comparing
                 const stepThreshold = ((index + 1) / TOTAL_STEPS) - 0.001;
 
                 const stepClass = volumeState((state) => {
                     if (state.muted) return "volume-step";
-
-                    // Fill step if volume is above the threshold (with small epsilon for precision)
-                    // This ensures accurate 10% step display: 0.9 shows 9 bars, 1.0 shows 10 bars
                     const filled = state.volume > stepThreshold;
                     return filled ? "volume-step volume-step-filled" : "volume-step";
                 });
@@ -54,9 +50,10 @@ export function VolumeOSD() {
             valign={Gtk.Align.END}
             visible={osd.isVisible}
             application={app}
+            $={(self) => Gtk4LayerShell.set_namespace(self, "osd")}
         >
             <box
-                class='osd volume-osd'
+                class="osd volume-osd"
                 orientation={Gtk.Orientation.VERTICAL}
                 heightRequest={150}
                 widthRequest={150}

@@ -204,10 +204,12 @@ run_command_logged() {
     # Use stdbuf for unbuffered output and sed to strip ANSI escape codes
     # Redirect stdin from /dev/null to ensure commands run non-interactively
     if command -v stdbuf &>/dev/null; then
-        stdbuf -oL -eL "${command[@]}" < /dev/null 2>&1 | sed -u 's/\x1b\[[0-9;]*[a-zA-Z]//g' >> "$DOTFILES_LOG_FILE" || exit_code=$?
+        stdbuf -oL -eL "${command[@]}" < /dev/null 2>&1 | sed -u 's/\x1b\[[0-9;]*[a-zA-Z]//g' >> "$DOTFILES_LOG_FILE"
+        exit_code=${PIPESTATUS[0]}
     else
         # Fallback: use script with col to strip control characters
-        script -q -e -c "${command[*]}" /dev/null < /dev/null 2>&1 | col -b >> "$DOTFILES_LOG_FILE" || exit_code=$?
+        script -q -e -c "${command[*]}" /dev/null < /dev/null 2>&1 | col -b >> "$DOTFILES_LOG_FILE"
+        exit_code=${PIPESTATUS[0]}
     fi
 
     if [ $exit_code -eq 0 ]; then

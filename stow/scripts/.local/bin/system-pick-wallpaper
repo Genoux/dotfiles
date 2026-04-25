@@ -45,14 +45,14 @@ echo -e "${GREEN}✨ Selected: $wallpaper_name${NC}"
 if cp "$selected_wallpaper" "$CURRENT_WALLPAPER"; then
     echo -e "${GREEN}📋 Copied to current wallpaper${NC}"
     
-    # Set the wallpaper using swww
-    if command -v swww &> /dev/null; then
+    # Set the wallpaper using awww (provides swww compatibility)
+    if command -v awww &> /dev/null; then
         echo -e "${GREEN}🖼️  Setting wallpaper...${NC}"
-        swww img "$CURRENT_WALLPAPER" --transition-type grow --transition-pos 0.2,0.2 --transition-step 90
+        awww img "$CURRENT_WALLPAPER" --transition-type grow --transition-pos 0.2,0.2 --transition-step 90
         echo -e "${GREEN}✅ Wallpaper set successfully!${NC}"
     else
-        echo -e "${YELLOW}⚠️  swww not found, wallpaper copied but not set${NC}"
-        echo -e "${YELLOW}💡 Install swww or manually set the wallpaper${NC}"
+        echo -e "${YELLOW}⚠️  awww not found, wallpaper copied but not set${NC}"
+        echo -e "${YELLOW}💡 Install awww or manually set the wallpaper${NC}"
     fi
 else
     echo -e "${RED}❌ Failed to copy wallpaper${NC}"

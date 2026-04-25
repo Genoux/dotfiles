@@ -1,12 +1,14 @@
 
 [Default Applications]
-text/html=firefox.desktop
-x-scheme-handler/http=firefox.desktop
-x-scheme-handler/https=firefox.desktop
-x-scheme-handler/about=firefox.desktop
-x-scheme-handler/unknown=firefox.desktop
+text/html=zen.desktop
+x-scheme-handler/http=zen.desktop
+x-scheme-handler/https=zen.desktop
+x-scheme-handler/about=zen.desktop
+x-scheme-handler/unknown=zen.desktop
 x-scheme-handler/gitkraken=GitKraken.desktop
 x-scheme-handler/figma=figma-linux.desktop
 inode/directory=org.gnome.Nautilus.desktop
 x-scheme-handler/clickup=ClickUp.desktop
 x-scheme-handler/ftp=zen.desktop
+x-scheme-handler/claude-cli=claude-code-url-handler.desktop
+x-scheme-handler/claude=com.anthropic.claude-desktop.desktop

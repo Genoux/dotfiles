@@ -1,5 +1,6 @@
 import app from "ags/gtk4/app";
 import { Astal, Gtk } from "ags/gtk4";
+import Gtk4LayerShell from "gi://Gtk4LayerShell";
 import { osd, brightnessState, brightnessIcon } from "../services/brightnessosd.service";
 import Icon from "../../../components/Icon";
 
@@ -48,6 +49,7 @@ export function BrightnessOSD() {
       valign={Gtk.Align.END}
       visible={osd.isVisible}
       application={app}
+      $={(self) => Gtk4LayerShell.set_namespace(self, "brightness-osd")}
     >
       <box
         class="osd brightness-osd"
@@ -70,4 +72,3 @@ export function BrightnessOSD() {
     </window>
   );
 }
-

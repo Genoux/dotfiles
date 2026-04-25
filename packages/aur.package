@@ -91,7 +91,6 @@ ttf-rubik-vf
 tzupdate
 walker
 warp-terminal-bin
-wiremix-git
 witr-bin
 wl-screenrec
 yay
@@ -103,3 +102,4 @@ wego
 hypruler-bin
 wl-vapi-gen
 libastal-wl-git
+python-gevent-eventemitter

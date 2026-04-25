@@ -2,7 +2,6 @@
 # ===========================
 alsa-utils
 aubio
-autoconf-archive
 base
 base-devel
 bat
@@ -27,7 +26,6 @@ extra-cmake-modules
 eza
 fastfetch
 fd
-firefox
 firefoxpwa
 fish
 flatpak
@@ -159,7 +157,6 @@ steam
 stow
 swaync
 swayosd
-swww
 tailscale
 tcpdump
 tlp
@@ -183,6 +180,7 @@ wine-gecko
 wine-mono
 wireless_tools
 wireplumber
+wiremix
 woff2-font-awesome
 wol
 xclip
@@ -195,15 +193,22 @@ xorg-server
 xorg-server-xvfb
 xorg-xinit
 yad
-yazi
 zed
 zenity
 zram-generator
 zsh
 cmatrix
-asar
 obs-studio
 wayvnc
 postgresql
 chrpath
 rclone
+xdotool
+pybind11
+fail2ban
+awww
+python-protobuf
+ydotool
+libappindicator
+openai-codex
+blender

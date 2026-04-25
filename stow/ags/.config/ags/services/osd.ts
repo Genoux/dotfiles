@@ -21,13 +21,6 @@ const globalOSDManager = {
   },
 };
 
-/**
- * Generic OSD (On-Screen Display) service
- * Provides common functionality for managing OSD visibility and auto-hide behavior
- *
- * @param hideDelay - Time in milliseconds before auto-hiding (default: 2000)
- * @returns Object containing visibility state, show/hide functions, and initialization helpers
- */
 export function createOSDService(hideDelay: number = 2000) {
   const [isVisible, setIsVisible] = createState(false);
   let hideTimeoutId = 0;
@@ -36,8 +29,8 @@ export function createOSDService(hideDelay: number = 2000) {
 
   function hide() {
     if (isDestroyed) return;
-    setIsVisible(false);
     hideTimeoutId++;
+    setIsVisible(false);
   }
 
   globalOSDManager.register(hide);
@@ -49,10 +42,9 @@ export function createOSDService(hideDelay: number = 2000) {
     setIsVisible(true);
 
     const currentTimeoutId = ++hideTimeoutId;
-
     timeout(hideDelay, () => {
       if (!isDestroyed && currentTimeoutId === hideTimeoutId) {
-        setIsVisible(false);
+        hide();
       }
     });
   }

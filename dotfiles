@@ -73,6 +73,17 @@ show_usage() {
     echo "    apply                  Apply available updates"
     echo "    status                 Show update status"
     echo
+    echo "  cleanup              System disk cleanup"
+    echo "    all                    Run all cleanup tasks (default)"
+    echo "    trash                  Empty trash"
+    echo "    npm                    Clear npm cache"
+    echo "    apps                   Clear app caches (Spotify, Chrome, etc.)"
+    echo "    orphans                Remove orphaned packages"
+    echo "    cache                  Clean pacman package cache"
+    echo "    aur                    Clean AUR build cache"
+    echo "    journal                Vacuum journal logs"
+    echo "    status                 Show cleanup opportunities"
+    echo
     echo "  menu                 Show interactive menu"
 }
 
@@ -164,6 +175,7 @@ show_menu() {
             "Check for Updates" \
             "Full Install" \
             "Packages" \
+            "Cleanup" \
             "Configs" \
             "Hardware" \
             "System Config" \
@@ -190,6 +202,10 @@ show_menu() {
             "Packages")
                 source "$DOTFILES_DIR/lib/package.sh"
                 packages_menu
+                ;;
+            "Cleanup")
+                source "$DOTFILES_DIR/lib/cleanup.sh"
+                cleanup_menu
                 ;;
             "Configs")
                 source "$DOTFILES_DIR/lib/config.sh"
@@ -316,6 +332,21 @@ main() {
                 check) updates_check ;;
                 apply) updates_apply ;;
                 status|"") updates_status ;;
+                *) log_error "Unknown subcommand: $subcommand"; show_usage; exit 1 ;;
+            esac
+            ;;
+        cleanup|clean)
+            source "$DOTFILES_DIR/lib/cleanup.sh"
+            case "$subcommand" in
+                all|"") cleanup_all ;;
+                trash) cleanup_trash ;;
+                npm) cleanup_npm_cache ;;
+                apps) cleanup_app_caches ;;
+                orphans) cleanup_orphans ;;
+                cache) cleanup_pacman_cache ;;
+                aur) cleanup_aur_cache ;;
+                journal) cleanup_journal ;;
+                status) cleanup_status ;;
                 *) log_error "Unknown subcommand: $subcommand"; show_usage; exit 1 ;;
             esac
             ;;
