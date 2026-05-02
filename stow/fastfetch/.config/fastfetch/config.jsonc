@@ -117,10 +117,10 @@
       "text": "bash -c '~/.cargo/bin/flavours current 2>/dev/null || echo none'"
     },
     {
-      "type": "custom",
+      "type": "colors",
       "key": "└ 󰏘",
       "keyColor": "blue",
-      "format": "\u001b[90m\u25cf {#keys}\u25cf {#}\u001b[32m\u25cf \u001b[33m\u25cf \u001b[34m\u25cf \u001b[35m\u25cf \u001b[36m\u25cf \u001b[37m\u25cf"
+      "symbol": "circle"
     },
     {
       "type": "custom",

@@ -30,3 +30,12 @@ ZSH_HIGHLIGHT_STYLES[assign]='fg={{colors.on_surface_variant.default.hex}}'
 ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg={{colors.outline.default.hex}}"
 
 zstyle ':completion:*:default' list-colors "=*=fg={{colors.on_surface.default.hex}};bg={{colors.surface_container_high.default.hex}}"
+
+# EZA_COLORS — accent color for directories/executables/symlinks; tertiary for media
+_h={{colors.primary.default.hex}}; _h=${_h#'#'}
+_rgb="38;2;$((16#${_h:0:2}));$((16#${_h:2:2}));$((16#${_h:4:2}))"
+_t={{colors.tertiary.default.hex}}; _t=${_t#'#'}
+_trgb="38;2;$((16#${_t:0:2}));$((16#${_t:2:2}));$((16#${_t:4:2}))"
+_media="*.mp4=${_trgb}:*.mkv=${_trgb}:*.avi=${_trgb}:*.mov=${_trgb}:*.webm=${_trgb}:*.flv=${_trgb}:*.wmv=${_trgb}:*.m4v=${_trgb}"
+export EZA_COLORS="di=${_rgb}:ex=${_rgb}:ln=${_rgb}:${_media}"
+unset _h _rgb _t _trgb _media

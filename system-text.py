@@ -10,7 +10,6 @@ from __future__ import annotations
 import re
 import sys
 import os
-from typing import Optional
 import subprocess
 import shutil
 import termios
@@ -39,24 +38,25 @@ def _restore_terminal_input(old_settings):
         pass
 
 
-def get_matugen_colors_from_scss(
-    theme_path: Optional[str] = None,
-) -> Optional[dict[str, str]]:
-    """Read $baseXX: #rrggbb from the matugen-generated AGS theme."""
-    path = theme_path or os.path.expanduser(
-        "~/.config/ags/styles/abstracts/_theme.scss"
-    )
-    if not os.path.isfile(path):
-        return None
-    colors: dict[str, str] = {}
-    pat = re.compile(r"^\$base([0-9A-Fa-f]+):\s*#([0-9a-fA-F]{6})")
-    with open(path, encoding="utf-8") as f:
-        for line in f:
-            m = pat.match(line.strip())
-            if m:
-                key = "base" + m.group(1)
-                colors[key] = "#" + m.group(2)
-    return colors or None
+def get_beam_colors() -> tuple[str, str]:
+    """Read accent colors from dotfiles-gum.env (updated by matugen on every wallpaper switch)."""
+    env_path = os.path.expanduser("~/.config/matugen/dotfiles-gum.env")
+    primary = "#80d5d2"
+    secondary = primary
+    if os.path.isfile(env_path):
+        pat = re.compile(r"^export\s+MATUGEN_GUM_(\w+)=['\"]?(#[0-9a-fA-F]{6})['\"]?")
+        with open(env_path, encoding="utf-8") as f:
+            for line in f:
+                m = pat.match(line.strip())
+                if m:
+                    key, val = m.group(1), m.group(2)
+                    if key == "ACCENT":
+                        primary = val
+                    elif key == "BORDER":
+                        secondary = val
+        if secondary == "#80d5d2":
+            secondary = primary
+    return primary, secondary
 
 
 def animate_beams(banner_file: str, frame_rate: int = 100) -> bool:
@@ -67,7 +67,7 @@ def animate_beams(banner_file: str, frame_rate: int = 100) -> bool:
     if not tte_cmd:
         return False
 
-    theme_colors = get_matugen_colors_from_scss()
+    beam_color, beam_color2 = get_beam_colors()
     old_settings = _disable_terminal_input()
 
     try:
@@ -82,11 +82,8 @@ def animate_beams(banner_file: str, frame_rate: int = 100) -> bool:
             "--final-wipe-speed", "2",
         ]
 
-        if theme_colors:
-            b = theme_colors.get("base0B", "#80d5d2")
-            a = theme_colors.get("base0A", b)
-            cmd.extend(["--beam-gradient-stops", b, a])
-            cmd.extend(["--final-gradient-stops", b])
+        cmd.extend(["--beam-gradient-stops", beam_color, beam_color2])
+        cmd.extend(["--final-gradient-stops", beam_color])
 
         with open(os.devnull, "r") as devnull:
             subprocess.run(cmd, stdin=devnull, check=True)

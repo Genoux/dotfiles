@@ -2,24 +2,24 @@
 // Material You palette mapped onto base16 slots so existing widget styles work unchanged.
 
 // Background / surface ramp (darkest -> lightest)
-$base00: #131313;         // Background
-$base01: #131313;             // Surface
-$base02: #2a2a2a; // Selection
-$base03: #353535; // Lines / comments
-$base04: #c6c6c6;  // Muted text
-$base05: #e2e2e2;          // Text
-$base06: #e2e2e2;          // Light text
-$base07: #e2e2e2;       // Primary text
+$base00: #0e1415;         // Background
+$base01: #0e1415;             // Surface
+$base02: #252b2b; // Selection
+$base03: #303636; // Lines / comments
+$base04: #bec8c9;  // Muted text
+$base05: #dde4e3;          // Text
+$base06: #dde4e3;          // Light text
+$base07: #dde4e3;       // Primary text
 
 // Accent colors (Material You roles mapped to base16 hue slots)
 $base08: #ffb4ab;               // Red    -> error
-$base09: #c6c6c6;           // Orange -> secondary
-$base0A: #e2e2e2;            // Yellow -> tertiary
-$base0B: #ffffff;             // Green  -> primary
-$base0C: #919191;  // Cyan   -> tertiary container
-$base0D: #ffffff;             // Blue   -> primary
-$base0E: #474747; // Purple -> secondary container
-$base0F: #e2e2e2;            // Mauve  -> tertiary
+$base09: #b1cccd;           // Orange -> secondary
+$base0A: #b5c7e9;            // Yellow -> tertiary
+$base0B: #80d4d8;             // Green  -> primary
+$base0C: #364764;  // Cyan   -> tertiary container
+$base0D: #80d4d8;             // Blue   -> primary
+$base0E: #324b4c; // Purple -> secondary container
+$base0F: #b5c7e9;            // Mauve  -> tertiary
 
 // Alpha overlays (design tokens - not theme colors)
 $alpha-subtle: rgba(255, 255, 255, 0.02);

@@ -42,7 +42,7 @@ style = "fg:{{colors.on_surface.default.hex}}"
 
 [directory]
 truncation_length = 1
-format = "[󰉋](fg:{{colors.on_surface.default.hex}}) [$path](fg:{{colors.on_surface.default.hex}})[$read_only]($read_only_style)"
+format = "[󰉋](fg:{{colors.primary.default.hex}}) [$path](fg:{{colors.on_surface.default.hex}})[$read_only]($read_only_style)"
 read_only = " "
 truncation_symbol = ""
 fish_style_pwd_dir_length = 0

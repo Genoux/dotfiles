@@ -45,8 +45,9 @@ echo -e "${GREEN}🎲 Picking random wallpaper from saves...${NC}"
 echo -e "${YELLOW}📁 Found ${#wallpapers[@]} wallpapers in saves folder${NC}"
 echo -e "${GREEN}✨ Selected: $wallpaper_name${NC}"
 
-# Copy the selected wallpaper to current directory
-if cp "$selected_wallpaper" "$CURRENT_WALLPAPER"; then
+# Copy the selected wallpaper to current directory, converting to JPEG if needed
+# so that matugen (which uses the .jpg extension to determine format) can parse it.
+if magick "$selected_wallpaper" -quality 95 "$CURRENT_WALLPAPER" 2>/dev/null || cp "$selected_wallpaper" "$CURRENT_WALLPAPER"; then
     echo -e "${GREEN}📋 Copied to current wallpaper${NC}"
     
     # awww-daemon must be up for awww img (system-awww-wallpaper starts it if needed)

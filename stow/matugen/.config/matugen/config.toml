@@ -11,14 +11,6 @@ custom_colors = {}
 # When multiple source colors are extracted, pick the most saturated (e.g. grass vs grey sky).
 prefer = "saturation"
 
-# AGS — overwrites stow-tracked _theme.scss (same pattern flavours used).
-# Theme changes will show as a diff in the dotfiles repo; commit when you want
-# to pin the new palette, or add the path to .gitignore to suppress it.
-[templates.ags]
-input_path = "~/.config/matugen/templates/ags-theme.scss"
-output_path = "~/.config/ags/styles/abstracts/_theme.scss"
-post_hook = "systemctl --user restart ags.service"
-
 # Kitty - included by stow/kitty/.config/kitty/kitty.conf
 [templates.kitty]
 input_path = "~/.config/matugen/templates/kitty.conf"
