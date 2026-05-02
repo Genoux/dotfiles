@@ -3,6 +3,42 @@ import { subprocess, exec } from "ags/process";
 import { Gtk } from "ags/gtk4";
 import GLib from "gi://GLib";
 
+const PRIVACY_CSS_DEBUG_FLAG_NAME = "privacy-css-debug";
+
+/**
+ * Force-visible privacy icons for CSS work (no real mic/cam/recording).
+ *
+ * Enable any of:
+ * - `AGS_PRIVACY_DEBUG=1` (also true/yes/on), e.g. `pnpm run dev:privacy`
+ * - `touch ~/.config/ags/privacy-css-debug` (system ags / systemd)
+ * - `touch .privacy-css-debug` in this package dir (`pnpm run dev` cwd — gitignored)
+ */
+export function isPrivacyCssDebug(): boolean {
+  const raw = GLib.getenv("AGS_PRIVACY_DEBUG");
+  if (raw !== null && raw !== "") {
+    const lower = raw.toLowerCase();
+    if (raw === "1" || lower === "true" || lower === "yes" || lower === "on") {
+      return true;
+    }
+  }
+  const xdgFlag = GLib.build_filenamev([
+    GLib.get_user_config_dir(),
+    "ags",
+    PRIVACY_CSS_DEBUG_FLAG_NAME,
+  ]);
+  if (GLib.file_test(xdgFlag, GLib.FileTest.EXISTS)) {
+    return true;
+  }
+  const cwd = GLib.get_current_dir();
+  if (cwd) {
+    const localFlag = GLib.build_filenamev([cwd, `.${PRIVACY_CSS_DEBUG_FLAG_NAME}`]);
+    if (GLib.file_test(localFlag, GLib.FileTest.EXISTS)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 type PrivacyState = {
   webcam: boolean;
   mic: boolean;

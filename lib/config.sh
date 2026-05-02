@@ -28,6 +28,58 @@ check_stow() {
     return 0
 }
 
+# AGS does not hot-reload TS/SCSS; restart so disk config is picked up.
+# Ensures user session bus (menus often lack DBUS vars that gum subshells inherit unevenly).
+restart_ags_if_running() {
+    [[ -n "${XDG_RUNTIME_DIR:-}" ]] || export XDG_RUNTIME_DIR="/run/user/$(id -u)"
+    if [[ -z "${DBUS_SESSION_BUS_ADDRESS:-}" && -S "${XDG_RUNTIME_DIR}/bus" ]]; then
+        export DBUS_SESSION_BUS_ADDRESS="unix:path=${XDG_RUNTIME_DIR}/bus"
+    fi
+
+    local load_state
+    load_state=$(systemctl --user show ags.service --property=LoadState --value 2>/dev/null || true)
+    if [[ "$load_state" == "loaded" ]] && systemctl --user is-active --quiet ags.service 2>/dev/null; then
+        if systemctl --user restart ags.service; then
+            log_success "AGS user service restarted"
+            return 0
+        fi
+        log_warning "systemctl restart ags.service failed; trying process restart"
+    fi
+
+    # Current AGS often runs as gjs -m /run/user/UID/ags.js (no "ags" process name; service may be inactive).
+    local has_ags=false
+    if pgrep -f 'gjs -m /run/user/[0-9]+/ags\.js' >/dev/null 2>&1; then
+        has_ags=true
+    elif pgrep -x ags >/dev/null 2>&1 || pgrep -f '/usr/bin/ags run' >/dev/null 2>&1 || pgrep -f 'ags run --gtk' >/dev/null 2>&1; then
+        has_ags=true
+    fi
+
+    if ! $has_ags; then
+        log_info "AGS not running; skip restart"
+        return 0
+    fi
+
+    if ! command -v ags >/dev/null 2>&1; then
+        log_warning "AGS runtime found but ags is not in PATH; cannot restart"
+        return 1
+    fi
+
+    log_info "Restarting AGS..."
+    pkill -f 'gjs -m /run/user/[0-9]+/ags\.js' 2>/dev/null || true
+    pkill -x ags 2>/dev/null || true
+    pkill -f '/usr/bin/ags run' 2>/dev/null || true
+    sleep 0.5
+
+    if [[ "$load_state" == "loaded" ]] && systemctl --user start ags.service 2>/dev/null; then
+        log_success "AGS started via user service"
+        return 0
+    fi
+
+    ags run --gtk 4 --directory "$HOME/.config/ags" >/dev/null 2>&1 &
+    log_success "AGS restarted"
+    return 0
+}
+
 # Interactive config management with checkboxes
 config_manage_interactive() {
     check_stow || return 1
@@ -179,6 +231,8 @@ config_manage_interactive() {
         log_success "No changes needed"
     else
         log_success "Applied $changes changes"
+        echo
+        restart_ags_if_running
     fi
 }
 
@@ -268,7 +322,7 @@ config_link() {
     local stow_output
     local stow_success=false
 
-    if stow_output=$(stow -R --adopt -t "$HOME" "$config" 2>&1); then
+    if stow_output=$(stow -R --no-folding --adopt -t "$HOME" "$config" 2>&1); then
         if $already_linked; then
             log_success "$config re-stowed successfully"
         else
@@ -288,7 +342,7 @@ config_link() {
                 rm "$full_path"
                 
                 # Try stow again
-                if stow_output=$(stow -R --adopt -t "$HOME" "$config" 2>&1); then
+                if stow_output=$(stow -R --no-folding --adopt -t "$HOME" "$config" 2>&1); then
                     log_success "$config linked successfully"
                     stow_success=true
                 else
@@ -491,6 +545,9 @@ config_link_all() {
     if [[ -f "$DOTFILES_INSTALL/config/services.sh" ]]; then
         bash "$DOTFILES_INSTALL/config/services.sh"
     fi
+
+    echo
+    restart_ags_if_running
 }
 
 # Unlink all configs

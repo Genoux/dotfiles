@@ -212,3 +212,5 @@ ydotool
 libappindicator
 openai-codex
 blender
+python-build
+rust

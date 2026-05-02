@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+# Apply current (or given) wallpaper via awww, using ~/.config/hypr/wallpaper-awww.conf
+# Usage: system-awww-wallpaper [image-path]
+# Starts awww-daemon (user service or direct) if nothing is listening — awww img needs the socket.
+
+img="${1:-$HOME/.config/hypr/wallpapers/current/current_wallpaper.jpg}"
+conf="${XDG_CONFIG_HOME:-$HOME/.config}/hypr/wallpaper-awww.conf"
+
+[[ -n "${XDG_RUNTIME_DIR:-}" ]] || export XDG_RUNTIME_DIR="/run/user/$(id -u)"
+if [[ -z "${DBUS_SESSION_BUS_ADDRESS:-}" && -S "${XDG_RUNTIME_DIR}/bus" ]]; then
+    export DBUS_SESSION_BUS_ADDRESS="unix:path=${XDG_RUNTIME_DIR}/bus"
+fi
+
+if [[ -f "$conf" ]]; then
+    set -a
+    # shellcheck source=/dev/null
+    source "$conf"
+    set +a
+fi
+
+awww_bin="$(command -v awww)"
+daemon_bin="$(command -v awww-daemon)"
+if [[ -z "$awww_bin" ]]; then
+    echo "awww not found in PATH" >&2
+    exit 1
+fi
+
+_ensure_awww_daemon() {
+    if awww query &>/dev/null; then
+        return 0
+    fi
+    if systemctl --user show awww-daemon.service --property=LoadState --value 2>/dev/null | grep -qx loaded; then
+        systemctl --user start awww-daemon.service 2>/dev/null || true
+    elif [[ -n "$daemon_bin" ]]; then
+        "$daemon_bin" &>/dev/null &
+        disown 2>/dev/null || true
+    fi
+    local _
+    for _ in $(seq 1 20); do
+        sleep 0.05
+        awww query &>/dev/null && return 0
+    done
+    return 1
+}
+
+_ensure_awww_daemon || {
+    echo "awww-daemon did not become ready (socket missing); wallpaper not applied" >&2
+    exit 1
+}
+
+exec "$awww_bin" img "$img"

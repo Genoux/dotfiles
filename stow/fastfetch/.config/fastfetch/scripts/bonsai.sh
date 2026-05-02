@@ -221,8 +221,9 @@ IFS=$'\n'	# delimit by newline
 BOLD="$(tput bold)"
 RESET="$(tput sgr0)"
 if ((termColors)); then
-	BROWN="$BOLD$(tput setaf 11)"    # bright yellow (stem highlight)
-	DARK_BROWN="$BOLD$(tput setaf 3)" # yellow (stem)
+	# ANSI blue (4) / bright blue (12) — matches matugen Kitty primary on color4/color12 (accent)
+	BROWN="$BOLD$(tput setaf 12)"
+	DARK_BROWN="$BOLD$(tput setaf 4)"
 	DARK_GREEN="$BOLD$(tput setaf 10)" # bright green (dying)
 	GREEN="$BOLD$(tput setaf 2)"     # green (leaves)
 	GRAY="$BOLD$(tput setaf 14)"     # bright cyan

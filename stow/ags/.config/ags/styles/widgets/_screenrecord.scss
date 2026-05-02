@@ -4,10 +4,7 @@
 @use 'sass:color';
 
 .recording-indicator button {
-  animation: pulse duration(slowest) easing(ease-in-out) infinite;
-  color: $base07;
-  background-color: #ff1c1cc7;
-  border-radius: radius(xl);
+  animation: pulse 2s easing(ease-in-out) infinite;
 
   &:hover {
     animation: none;
@@ -18,10 +15,10 @@
 @keyframes pulse {
   0%,
   100% {
-    opacity: opacity(100);
+    background-color: #ff1c1c47;
   }
 
   50% {
-    opacity: opacity(60);
+    background-color: #ff1c1ca5;
   }
 }

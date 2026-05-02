@@ -1,3 +1,0 @@
-default:
-  extension: .json
-  output: base16-default-dark.json

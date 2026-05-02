@@ -1,0 +1,21 @@
+#!/bin/bash
+flags_file="${XDG_CONFIG_HOME:-$HOME/.config}/cursor-flags.conf"
+
+flags=()
+if [[ -f "$flags_file" ]]; then
+    while IFS= read -r line; do
+        [[ "$line" =~ ^[[:space:]]*# ]] || [[ -z "$line" ]] && continue
+        flags+=("$line")
+    done < "$flags_file"
+fi
+
+# Force NVIDIA GPU on hybrid AMD+NVIDIA system
+export __NV_PRIME_RENDER_OFFLOAD=1
+export __NV_PRIME_RENDER_OFFLOAD_PROVIDER=NVIDIA-G0
+export __GLX_VENDOR_LIBRARY_NAME=nvidia
+export __EGL_VENDOR_LIBRARY_FILENAMES=/usr/share/glvnd/egl_vendor.d/10_nvidia.json
+
+# Prevent VAAPI crash (no libva-mesa-driver installed)
+export LIBVA_DRIVER_NAME=dummy
+
+exec /opt/cursor/AppRun "${flags[@]}" "$@"

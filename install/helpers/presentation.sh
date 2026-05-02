@@ -2,47 +2,55 @@
 # Presentation helpers - gum-powered UI components
 # Requires: gum (charmbracelet/gum)
 
-# Configure gum to use base16 colors for navigation hints and logging
-# Uses base03 (muted/comments) for help text to match theme
+# Parse a $baseXX: #rrggbb line from the matugen AGS theme (SCSS) on stdout.
+# Usage: _matugen_hex_from_scss base0B [path]
+_matugen_hex_from_scss() {
+    local var="$1"
+    local f="${2:-$HOME/.config/ags/styles/abstracts/_theme.scss}"
+    [[ -f "$f" ]] || return 1
+    local line
+    line=$(grep -m1 "^\$${var}:" "$f" 2>/dev/null) || return 1
+    if [[ "$line" =~ \#([0-9a-fA-F]{6}) ]]; then
+        echo "#${BASH_REMATCH[1]}"
+        return 0
+    fi
+    return 1
+}
+
+# Configure gum from matugen (same pipeline as AGS/kitty).
+# 1) Source ~/.config/matugen/dotfiles-gum.env (written by matugen)
+# 2) Else read hexes from AGS _theme.scss (stale env / first run)
+# 3) Else 256-color fallbacks
 configure_gum_colors() {
-    local dotfiles_dir="$(cd "$(dirname "$(dirname "$(dirname "${BASH_SOURCE[0]}")")")" && pwd)"
-    local schemes_dir="$dotfiles_dir/stow/flavours/.config/flavours/schemes"
-    
-    # Get current scheme from flavours
-    local current_scheme="none"
-    if command -v flavours &>/dev/null || [[ -x "$HOME/.cargo/bin/flavours" ]]; then
-        local flavours_cmd="flavours"
-        [[ ! -x "$(command -v flavours)" ]] && flavours_cmd="$HOME/.cargo/bin/flavours"
-        current_scheme=$("$flavours_cmd" current 2>/dev/null || echo "none")
+    local gum_env="${HOME}/.config/matugen/dotfiles-gum.env"
+    if [[ -f "$gum_env" ]]; then
+        # shellcheck disable=SC1090
+        source "$gum_env"
+    else
+        local p
+        p=$(_matugen_hex_from_scss base0B) && export MATUGEN_GUM_CURSOR="$p" MATUGEN_GUM_ACCENT="$p" MATUGEN_GUM_SELECTED="$p" || true
+        p=$(_matugen_hex_from_scss base05) && export MATUGEN_GUM_ITEM="$p" || true
+        p=$(_matugen_hex_from_scss base04) && export MATUGEN_GUM_MUTED="$p" || true
+        p=$(_matugen_hex_from_scss base0A) && export MATUGEN_GUM_BORDER="$p" || true
     fi
-    
-    # Find scheme file
-    local scheme_file=""
-    if [[ "$current_scheme" != "none" ]] && [[ -n "$current_scheme" ]]; then
-        [[ -f "$schemes_dir/$current_scheme/$current_scheme.yaml" ]] && scheme_file="$schemes_dir/$current_scheme/$current_scheme.yaml"
-    fi
-    [[ -z "$scheme_file" ]] && [[ -f "$schemes_dir/default/default.yaml" ]] && scheme_file="$schemes_dir/default/default.yaml"
-    [[ -z "$scheme_file" ]] && scheme_file=$(find "$schemes_dir" -name "*.yaml" -type f 2>/dev/null | head -1)
-    
-    # Note: gum log handles level colors automatically (INFO=blue, WARN=yellow, ERROR=red)
-    # We let gum log use its defaults for consistent, readable output
-    
-    # Use base04 (mid-gray) for monochrome theme consistency
-    # ANSI color 8 maps to base04 in base16 schemes
-    # Gum only accepts ANSI color codes (0-15), not hex colors
-    export COLOR_INDEX="10"
-    export GUM_CHOOSE_CURSOR_FOREGROUND="$COLOR_INDEX"
+
+    export GUM_CHOOSE_CURSOR_FOREGROUND="${MATUGEN_GUM_CURSOR:-10}"
     export GUM_CHOOSE_CURSOR_BACKGROUND=""
-    export GUM_CHOOSE_SELECTED_FOREGROUND="15"
-    export GUM_CHOOSE_HELP_FOREGROUND="$COLOR_INDEX"
+    export GUM_CHOOSE_SELECTED_FOREGROUND="${MATUGEN_GUM_SELECTED:-10}"
+    export GUM_CHOOSE_SELECTED_BACKGROUND="${MATUGEN_GUM_SELECTED_BG:-}"
+    export GUM_CHOOSE_ITEM_FOREGROUND="${MATUGEN_GUM_ITEM:-8}"
+    export GUM_CHOOSE_HEADER_FOREGROUND="${MATUGEN_GUM_MUTED:-8}"
+    export GUM_FILTER_MATCH_FOREGROUND="${MATUGEN_GUM_CURSOR:-212}"
+    export GUM_FILTER_TEXT_FOREGROUND="${MATUGEN_GUM_ITEM:-}"
+    export GUM_CHOOSE_HELP_FOREGROUND="${MATUGEN_GUM_MUTED:-8}"
     export GUM_CHOOSE_HELP_BACKGROUND=""
-    export GUM_FILTER_HELP_FOREGROUND="$COLOR_INDEX"
+    export GUM_FILTER_HELP_FOREGROUND="${MATUGEN_GUM_MUTED:-8}"
     export GUM_FILTER_HELP_BACKGROUND=""
-    export GUM_CONFIRM_HELP_FOREGROUND="$COLOR_INDEX"
+    export GUM_CONFIRM_HELP_FOREGROUND="${MATUGEN_GUM_MUTED:-8}"
     export GUM_CONFIRM_HELP_BACKGROUND=""
-    export GUM_INPUT_HELP_FOREGROUND="$COLOR_INDEX"
+    export GUM_INPUT_HELP_FOREGROUND="${MATUGEN_GUM_MUTED:-8}"
     export GUM_INPUT_HELP_BACKGROUND=""
-    export GUM_WRITE_HELP_FOREGROUND="$COLOR_INDEX"
+    export GUM_WRITE_HELP_FOREGROUND="${MATUGEN_GUM_MUTED:-8}"
     export GUM_WRITE_HELP_BACKGROUND=""
 }
 
@@ -117,7 +125,7 @@ log_info() {
 }
 
 log_success() {
-    gum style --foreground 2 "$*"  # base0B green
+    gum style --foreground "${MATUGEN_GUM_ACCENT:-2}" "$*"
     log_to_file "OK" "$*"
 }
 
@@ -139,7 +147,7 @@ log_section() {
 
 # Status indicator helpers (for inline use in status displays)
 status_ok() {
-    gum style --foreground 2 "✓"  # base0B green
+    gum style --foreground "${MATUGEN_GUM_ACCENT:-2}" "✓"
 }
 
 status_error() {
@@ -151,11 +159,11 @@ status_warning() {
 }
 
 status_neutral() {
-    gum style --foreground 8 "○"  # base03 muted
+    gum style --foreground "${MATUGEN_GUM_MUTED:-8}" "○"
 }
 
 status_info() {
-    gum style --foreground 4 "ℹ"  # base0D blue
+    gum style --foreground "${MATUGEN_GUM_CURSOR:-4}" "ℹ"
 }
 
 # Progress spinner
@@ -252,7 +260,7 @@ clear_screen() {
 show_info() {
     local key="$1"
     local value="$2"
-    echo "$(gum style --bold --foreground 7 "$key:") $(gum style "$value")"  # base03 muted for key
+    echo "$(gum style --bold --foreground "${MATUGEN_GUM_MUTED:-7}" "$key:") $(gum style "$value")"
 }
 
 # Run command with clean UI: header + muted boxed output
@@ -260,17 +268,15 @@ run_with_clean_ui() {
     local title="$1"
     local command="$2"
 
-    # Show header with border (Base16 purple)
     gum style \
         --border double \
-        --border-foreground 5 \
+        --border-foreground "${MATUGEN_GUM_BORDER:-5}" \
         --padding "0 2" \
         --bold \
         "$title"
     echo
 
-    # Show muted "Output:" label
-    gum style --foreground 8 "Output:"  # base03
+    gum style --foreground "${MATUGEN_GUM_MUTED:-8}" "Output:"
     echo
 
     # Run command and show output as faint/muted

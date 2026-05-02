@@ -1,5 +1,8 @@
 import app from "ags/gtk4/app";
 import { Astal, Gtk, Gdk } from "ags/gtk4";
+import Gtk4LayerShell from "gi://Gtk4LayerShell";
+import { createState } from "ags";
+import { timeout } from "ags/time";
 import { Workspaces } from "./workspaces";
 import { SystemTray } from "./systemtray";
 import { WindowTitle } from "./windowtitle";
@@ -19,17 +22,25 @@ import { SystemDotfilesButton } from "./systemdotfiles";
 import { PrivacyIndicator } from "./privacy";
 
 export default function Bar(gdkmonitor: Gdk.Monitor) {
-  const { TOP, LEFT, RIGHT, BOTTOM } = Astal.WindowAnchor;
+  const { LEFT, RIGHT, BOTTOM } = Astal.WindowAnchor;
+  const [introDone, setIntroDone] = createState(false);
+  const barClass = introDone((done) =>
+    done ? "bar bar-intro bar-intro--visible" : "bar bar-intro",
+  );
 
   return (
     <window
       visible
       name="bar"
-      class="bar"
+      class={barClass}
       gdkmonitor={gdkmonitor}
       exclusivity={Astal.Exclusivity.EXCLUSIVE}
       anchor={BOTTOM | LEFT | RIGHT}
       application={app}
+      $={(self) => {
+        Gtk4LayerShell.set_namespace(self, "ags-bar");
+        timeout(150, () => setIntroDone(true));
+      }}
     >
       <Gtk.Revealer
         revealChild={true}

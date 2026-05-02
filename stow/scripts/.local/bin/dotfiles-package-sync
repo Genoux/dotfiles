@@ -86,7 +86,7 @@ case "$MODE" in
 
             # Append to file
             echo "$pkg" >> "$TARGET_FILE"
-            ((ADDED_COUNT++))
+            ADDED_COUNT=$(( ADDED_COUNT + 1 ))
             logger -t dotfiles-sync "Added $pkg to $(basename "$TARGET_FILE")"
         done
 
@@ -111,14 +111,14 @@ case "$MODE" in
             # Remove from official packages
             if grep -Fxq "$pkg" "$PACKAGES_FILE" 2>/dev/null; then
                 sed -i "/^$(printf '%s\n' "$pkg" | sed 's/[.[\*^$/]/\\&/g')$/d" "$PACKAGES_FILE"
-                ((REMOVED_COUNT++))
+                REMOVED_COUNT=$(( REMOVED_COUNT + 1 ))
                 logger -t dotfiles-sync "Removed $pkg from arch.package"
             fi
 
             # Remove from AUR packages
             if grep -Fxq "$pkg" "$AUR_PACKAGES_FILE" 2>/dev/null; then
                 sed -i "/^$(printf '%s\n' "$pkg" | sed 's/[.[\*^$/]/\\&/g')$/d" "$AUR_PACKAGES_FILE"
-                ((REMOVED_COUNT++))
+                REMOVED_COUNT=$(( REMOVED_COUNT + 1 ))
                 logger -t dotfiles-sync "Removed $pkg from aur.package"
             fi
         done

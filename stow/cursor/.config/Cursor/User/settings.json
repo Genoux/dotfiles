@@ -8,15 +8,11 @@
   "workbench.iconTheme": "material-icon-theme",
   "window.commandCenter": true,
   "editor.fontFamily": "JetBrainsMono Nerd Font Prono, JetBrainsMono Nerd Font",
-  "editor.largeFileOptimizations": false,
   "window.titleBarStyle": "custom",
   "window.customMenuBarAltFocus": false,
+  "window.menuBarVisibility": "hidden",
   "terminal.integrated.allowMnemonics": false,
-  "disable-hardware-acceleration": false,
   "console-ninja.featureSet": "Community",
-  "[html]": {
-    "editor.defaultFormatter": "vscode.html-language-features"
-  },
   "cursor.cpp.disabledLanguages": [
     "markdown",
     "plaintext"
@@ -45,5 +41,33 @@
   },
   "[json]": {
     "editor.defaultFormatter": "biomejs.biome"
+  },
+  "workbench.colorTheme": "Tokyo Night",
+
+  "editor.smoothScrolling": true,
+  "editor.cursorSmoothCaretAnimation": "on",
+  "workbench.list.smoothScrolling": true,
+
+  "editor.minimap.enabled": false,
+  "editor.largeFileOptimizations": true,
+
+  "telemetry.telemetryLevel": "off",
+  "update.mode": "manual",
+  "extensions.autoCheckUpdates": false,
+  "extensions.autoUpdate": false,
+
+  "git.autoRepositoryDetection": "subFolders",
+  "search.followSymlinks": false,
+  "files.watcherExclude": {
+    "**/.git/objects/**": true,
+    "**/node_modules/**": true,
+    "**/dist/**": true,
+    "**/.next/**": true,
+    "**/build/**": true
+  },
+
+  "typescript.tsserver.maxTsServerMemory": 4096,
+  "[scss]": {
+    "editor.defaultFormatter": "vscode.css-language-features"
   }
 }

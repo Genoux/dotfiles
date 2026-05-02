@@ -17,15 +17,19 @@ NC='\033[0m'
 # Create directories if they don't exist
 mkdir -p "$SAVES_DIR" "$CURRENT_DIR"
 
-# Check if saves directory has any images
-if [ ! -d "$SAVES_DIR" ] || [ -z "$(find "$SAVES_DIR" -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.webp" \) 2>/dev/null)" ]; then
+# Stow turns each file in saves/ into a symlink; `find -type f` misses those. Use -xtype f (GNU find).
+_saves_images() {
+    find "$SAVES_DIR" -maxdepth 1 -xtype f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.webp" \) 2>/dev/null
+}
+
+# Random pick from saves only (wallhaven/current is managed by system-wallhaven-download)
+if [ ! -d "$SAVES_DIR" ] || [ -z "$(_saves_images)" ]; then
     echo -e "${RED}❌ No wallpapers found in saves folder: $SAVES_DIR${NC}"
-    echo -e "${YELLOW}💡 Add some wallpapers to the saves folder first${NC}"
+    echo -e "${YELLOW}💡 Add images to saves (or copy from wallhaven after download)${NC}"
     exit 1
 fi
 
-# Get all image files from saves directory
-mapfile -t wallpapers < <(find "$SAVES_DIR" -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.webp" \) 2>/dev/null)
+mapfile -t wallpapers < <(_saves_images)
 
 if [ ${#wallpapers[@]} -eq 0 ]; then
     echo -e "${RED}❌ No valid image files found in saves folder${NC}"
@@ -45,14 +49,49 @@ echo -e "${GREEN}✨ Selected: $wallpaper_name${NC}"
 if cp "$selected_wallpaper" "$CURRENT_WALLPAPER"; then
     echo -e "${GREEN}📋 Copied to current wallpaper${NC}"
     
-    # Set the wallpaper using awww (provides swww compatibility)
-    if command -v awww &> /dev/null; then
+    # awww-daemon must be up for awww img (system-awww-wallpaper starts it if needed)
+    if [[ -f "$HOME/.local/bin/system-awww-wallpaper" ]]; then
         echo -e "${GREEN}🖼️  Setting wallpaper...${NC}"
-        awww img "$CURRENT_WALLPAPER" --transition-type grow --transition-pos 0.2,0.2 --transition-step 90
+        bash "$HOME/.local/bin/system-awww-wallpaper" "$CURRENT_WALLPAPER"
+        echo -e "${GREEN}✅ Wallpaper set successfully!${NC}"
+    elif command -v awww &> /dev/null; then
+        echo -e "${GREEN}🖼️  Setting wallpaper...${NC}"
+        awww query &>/dev/null || systemctl --user start awww-daemon.service 2>/dev/null || true
+        sleep 0.4
+        awww img "$CURRENT_WALLPAPER"
         echo -e "${GREEN}✅ Wallpaper set successfully!${NC}"
     else
         echo -e "${YELLOW}⚠️  awww not found, wallpaper copied but not set${NC}"
-        echo -e "${YELLOW}💡 Install awww or manually set the wallpaper${NC}"
+        echo -e "${YELLOW}💡 Install awww (pacman) and stow scripts + hypr for system-awww-wallpaper${NC}"
+    fi
+
+    # Regenerate Material You theme from the new wallpaper.
+    # Auto-detect monochrome wallpapers and switch matugen to scheme-monochrome
+    # so a B&W image doesn't get a Material 3 fallback (violet-blue) palette.
+    if command -v matugen &> /dev/null; then
+        scheme="scheme-tonal-spot"
+
+        if command -v magick &> /dev/null; then
+            saturation=$(magick "$CURRENT_WALLPAPER" -colorspace HSL -channel g \
+                -separate -format "%[fx:mean]" info: 2>/dev/null || echo "1")
+            # awk for portable float compare (bash can't < 0.05 directly)
+            if awk -v s="$saturation" 'BEGIN { exit !(s < 0.05) }'; then
+                scheme="scheme-monochrome"
+                echo -e "${YELLOW}🌑 Wallpaper is monochrome (sat=${saturation}) — using ${scheme}${NC}"
+            else
+                echo -e "${GREEN}🎨 Wallpaper has color (sat=${saturation}) — using ${scheme}${NC}"
+            fi
+        fi
+
+        echo -e "${GREEN}🎨 Generating theme with matugen (${scheme})...${NC}"
+        # --prefer saturation: bias toward vivid regions; --source-color-index 0 = no TTY prompt
+        if matugen image -t "$scheme" --prefer saturation --source-color-index 0 "$CURRENT_WALLPAPER"; then
+            echo -e "${GREEN}✅ Theme generated and applied${NC}"
+        else
+            echo -e "${YELLOW}⚠️  matugen failed; keeping previous theme${NC}"
+        fi
+    else
+        echo -e "${YELLOW}⚠️  matugen not installed — skipping theme generation${NC}"
     fi
 else
     echo -e "${RED}❌ Failed to copy wallpaper${NC}"

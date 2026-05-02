@@ -66,18 +66,16 @@ packages_menu() {
                 run_operation "" packages_updates
                 ;;
             "Update system")
-                run_operation "" packages_update || {
-                    echo
-                    log_error "Update failed. Showing recent log output:"
+                clear_screen
+                packages_update
+                local update_exit=$?
+                if [[ $update_exit -ne 0 ]]; then
                     echo
                     if [[ -n "${DOTFILES_LOG_FILE:-}" && -f "$DOTFILES_LOG_FILE" ]]; then
-                        # Use gum pager for better log viewing
                         tail -n 120 "$DOTFILES_LOG_FILE" | gum pager
-                    else
-                        echo "No log file available. Rerun: dotfiles packages update 2>&1 | tee /tmp/dotfiles-update.log"
-                        pause
                     fi
-                }
+                fi
+                pause
                 ;;
             "Show details")
                 run_operation "" packages_status

@@ -15,14 +15,12 @@ export function Workspaces() {
 
           return (
             <Button
+              class={isFocused((focused) => (focused ? "focused" : ""))}
               onClicked={() =>
                 execAsync(["system-workspace-switch", String(wsId)])
               }
-
             >
               <label
-
-                class={isFocused((focused) => (focused ? "focused" : ""))}
                 label={isFocused((focused) => (focused ? "●" : String(wsId)))}
               />
             </Button>

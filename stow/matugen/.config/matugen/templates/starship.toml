@@ -1,0 +1,126 @@
+# Matugen-generated starship config — colors are interpolated from the active palette.
+# Static structure lives in this template (stow/matugen/templates/starship.toml).
+# Output: ~/.config/starship.toml
+
+"$schema" = 'https://starship.rs/config-schema.json'
+
+format = """
+$username\
+$directory\
+${custom.git_host}\
+$git_branch\
+$git_commit\
+$line_break\
+$character"""
+
+scan_timeout = 10
+add_newline = true
+
+[battery]
+disabled = true
+
+[character]
+success_symbol = "[](fg:{{colors.primary.default.hex}})"
+error_symbol = "[](fg:{{colors.error.default.hex}})"
+
+[cmd_duration]
+show_notifications = true
+min_time_to_notify = 60_000
+style = "fg:{{colors.on_surface.default.hex}}"
+
+[git_branch]
+format = '\[[$symbol$branch]($style)\]'
+symbol = "󰊢 "
+style = "fg:{{colors.on_background.default.hex}}"
+
+[git_state]
+format = '\(:[$state( $progress_current/$progress_total)]($style)\)'
+style = "fg:{{colors.on_surface.default.hex}}"
+
+[git_commit]
+style = "fg:{{colors.on_surface.default.hex}}"
+
+[directory]
+truncation_length = 1
+format = "[󰉋](fg:{{colors.on_surface.default.hex}}) [$path](fg:{{colors.on_surface.default.hex}})[$read_only]($read_only_style)"
+read_only = " "
+truncation_symbol = ""
+fish_style_pwd_dir_length = 0
+style = "fg:{{colors.on_background.default.hex}}"
+read_only_style = "fg:{{colors.on_surface.default.hex}}"
+
+[directory.substitutions]
+"Documents" = "󰈙"
+"Downloads" = ""
+"Music" = "󰝚"
+"Pictures" = ""
+"Developer" = "󰲋"
+
+[username]
+show_always = true
+style_user = "fg:{{colors.on_background.default.hex}}"
+style_root = "fg:{{colors.error.default.hex}}"
+format = '[$user ]($style)'
+
+[custom.git_host]
+command = """
+URL=$(command git ls-remote --get-url 2> /dev/null)
+
+if [[ "$URL" =~ "github" ]]; then
+    ICON=" "
+elif [[ "$URL" =~ "gitlab" ]]; then
+    ICON=" "
+elif [[ "$URL" =~ "bitbucket" ]];then
+    ICON=" "
+elif [[ "$URL" =~ "kernel" ]];then
+    ICON=" "
+elif [[ "$URL" =~ "archlinux" ]];then
+    ICON=" "
+elif [[ "$URL" =~ "gnu" ]];then
+    ICON=" "
+elif [[ "$URL" =~ "git" ]];then
+    ICON=" "
+else
+    ICON=" "
+    URL="localhost"
+fi
+
+for PATTERN in "https://" "http://" "git://" "git@" "ssh://git@"; do
+    [[ "$URL" == "$PATTERN"* ]] && URL="${URL##$PATTERN}"
+done
+
+case "$URL" in
+    *:[0-9]*/*)
+        BEFORE_PORT="${URL%%:[0-9]*}"
+        AFTER_PORT="${URL#*:[0-9]*/}"
+        URL="${BEFORE_PORT}/${AFTER_PORT}"
+        ;;
+esac
+
+if [[ "$URL" =~ @ ]]; then
+    URL="${URL#*@}"
+    URL="${URL/://}"
+elif [[ "$URL" =~ :// ]]; then
+    URL="${URL#*://}"
+fi
+
+if [[ "$URL" =~ / ]]; then
+    URL="${URL#*/}"
+fi
+
+URL="${URL%.git}"
+URL="${URL%/}"
+
+printf "%s%s" "$ICON" "$URL"
+"""
+directories = [".git"]
+when = 'git rev-parse --is-inside-work-tree 2> /dev/null'
+shell = ["bash","--norc","--noprofile"]
+style = "fg:{{colors.tertiary.default.hex}}"
+format = " at [$output]($style) "
+
+[hostname]
+disabled = true
+
+[line_break]
+disabled = false

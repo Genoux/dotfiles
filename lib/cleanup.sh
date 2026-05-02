@@ -93,7 +93,8 @@ cleanup_trash() {
     fi
 
     log_info "Trash size: $size"
-    rm -rf "$HOME/.local/share/Trash/files/"* "$HOME/.local/share/Trash/info/"* 2>/dev/null || true
+    find "$HOME/.local/share/Trash/files" -mindepth 1 -maxdepth 1 -exec rm -rf {} + 2>/dev/null || true
+    find "$HOME/.local/share/Trash/info" -mindepth 1 -maxdepth 1 -exec rm -rf {} + 2>/dev/null || true
     log_success "Trash emptied ($size freed)"
 }
 
@@ -159,7 +160,8 @@ cleanup_all() {
 
     run_command_logged "Empty trash" bash -c '
         size=$(du -sh "$HOME/.local/share/Trash/" 2>/dev/null | cut -f1 || echo "0")
-        rm -rf "$HOME/.local/share/Trash/files/"* "$HOME/.local/share/Trash/info/"* 2>/dev/null || true
+        find "$HOME/.local/share/Trash/files" -mindepth 1 -maxdepth 1 -exec rm -rf {} + 2>/dev/null || true
+        find "$HOME/.local/share/Trash/info" -mindepth 1 -maxdepth 1 -exec rm -rf {} + 2>/dev/null || true
         echo "Freed $size"
     '
 

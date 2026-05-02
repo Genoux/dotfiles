@@ -224,7 +224,7 @@ apply_rounded_corners() {
     echo "DEBUG: Image area: ${image_width}x${image_height} at position ${auto_margin_left},${auto_margin_top}"
     echo "DEBUG: Image bounds: ${auto_margin_left},${auto_margin_top} to ${image_right},${image_bottom}"
     
-    # Create FULL SIZE wallpaper (swww expects this) with rounded image area
+    # Create FULL SIZE wallpaper (tiled to monitor) with rounded image area
     # Step 1: Extract dominant dark color from the image for background
     echo "DEBUG: Extracting dominant dark color from image..."
     
@@ -446,10 +446,22 @@ download_random_wallpaper() {
     fi
 }
 
-
+# awww client → awww-daemon (systemctl --user awww-daemon.service); swww CLI is a fallback
+set_wallpaper_with_transition() {
+    local img="$1"
+    local -a args=(img "$img" --transition-type grow --transition-pos 0.2,0.2 --transition-step 90)
+    if command -v awww &>/dev/null; then
+        awww "${args[@]}"
+    elif command -v swww &>/dev/null; then
+        swww "${args[@]}"
+    else
+        echo "Error: neither awww nor swww found — install awww (recommended) or swww to set the wallpaper" >&2
+        return 1
+    fi
+}
 
 # Main logic
-# Give swww-daemon a moment to start if it just launched
+# Give awww-daemon a moment if it just launched
 sleep 1
 
 echo "=== Wallpaper Downloader ==="
@@ -471,7 +483,9 @@ echo "=============================="
 if download_random_wallpaper; then
     if [ -f "$FIXED_WALLPAPER" ]; then
         echo "Setting wallpaper..."
-        swww img "$FIXED_WALLPAPER" --transition-type grow --transition-pos 0.2,0.2 --transition-step 90
+        if ! set_wallpaper_with_transition "$FIXED_WALLPAPER"; then
+            exit 1
+        fi
         echo "Done!"
     else
         echo "Error: Wallpaper file not found"

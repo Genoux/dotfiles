@@ -87,7 +87,7 @@ case "$MODE" in
         geometry=$(slurp)
 
         if [[ -n "$geometry" ]]; then
-            sleep 0.1
+            sleep 0.4
             grim -g "$geometry" - | satty --filename - --output-filename "$FILENAME"
         else
             exit 1

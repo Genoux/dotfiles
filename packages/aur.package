@@ -12,7 +12,6 @@ ch34x-dkms-git
 claude-desktop-bin
 clickup
 clipse
-cursor-bin
 downgrade
 dragon-drop
 electron29-bin
@@ -103,3 +102,5 @@ hypruler-bin
 wl-vapi-gen
 libastal-wl-git
 python-gevent-eventemitter
+electron40-bin
+cursor-appimage

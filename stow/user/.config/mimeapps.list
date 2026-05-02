@@ -12,3 +12,4 @@ x-scheme-handler/clickup=ClickUp.desktop
 x-scheme-handler/ftp=zen.desktop
 x-scheme-handler/claude-cli=claude-code-url-handler.desktop
 x-scheme-handler/claude=com.anthropic.claude-desktop.desktop
+x-scheme-handler/slack=slack.desktop

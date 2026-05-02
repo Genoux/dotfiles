@@ -1,0 +1,66 @@
+# Matugen configuration for dotfiles theme management
+# Managed via stow - changes here will be synced to ~/.config/matugen/config.toml
+#
+# Outputs are written to NON-stow paths so the dotfiles repo stays clean.
+# The stow-tracked configs reference the matugen-generated files via include/import.
+
+[config]
+reload_apps = false
+set_wallpaper = false
+custom_colors = {}
+# When multiple source colors are extracted, pick the most saturated (e.g. grass vs grey sky).
+prefer = "saturation"
+
+# AGS — overwrites stow-tracked _theme.scss (same pattern flavours used).
+# Theme changes will show as a diff in the dotfiles repo; commit when you want
+# to pin the new palette, or add the path to .gitignore to suppress it.
+[templates.ags]
+input_path = "~/.config/matugen/templates/ags-theme.scss"
+output_path = "~/.config/ags/styles/abstracts/_theme.scss"
+post_hook = "systemctl --user restart ags.service"
+
+# Kitty - included by stow/kitty/.config/kitty/kitty.conf
+[templates.kitty]
+input_path = "~/.config/matugen/templates/kitty.conf"
+output_path = "~/.config/kitty/matugen-theme.conf"
+post_hook = "kill -SIGUSR1 $(pgrep kitty) 2>/dev/null || true"
+
+# Btop - selected via color_theme = "matugen" in btop.conf
+[templates.btop]
+input_path = "~/.config/matugen/templates/btop.theme"
+output_path = "~/.config/btop/themes/matugen.theme"
+post_hook = "pkill -USR2 btop 2>/dev/null || true"
+
+# Starship - matugen renders the full config (replaces the previous static stow copy)
+[templates.starship]
+input_path = "~/.config/matugen/templates/starship.toml"
+output_path = "~/.config/starship.toml"
+
+# ZSH syntax highlighting + autosuggestions colors
+[templates.zsh_highlight]
+input_path = "~/.config/matugen/templates/zsh-highlight.zsh"
+output_path = "~/.config/zsh/highlight-colors.zsh"
+
+# Dotfiles TUI: gum menu + `dotfiles` / install helpers
+[templates.dotfiles_gum]
+input_path = "~/.config/matugen/templates/dotfiles-gum.env"
+output_path = "~/.config/matugen/dotfiles-gum.env"
+
+# Cursor — installs a local color theme extension. After matugen has run once,
+# select "Matugen Material You" via the Cursor command palette
+# (Ctrl+Shift+P -> "Color Theme") to activate it. Theme JSON updates
+# hot-reload while Cursor is running.
+[templates.cursor_manifest]
+input_path = "~/.config/matugen/templates/cursor-package.json"
+output_path = "~/.cursor/extensions/matugen.material-you-1.0.0/package.json"
+
+[templates.cursor]
+input_path = "~/.config/matugen/templates/cursor-theme.json"
+output_path = "~/.cursor/extensions/matugen.material-you-1.0.0/themes/matugen-color-theme.json"
+
+# Hyprland borders + (optional) hyprlock — sourced by hyprland.conf
+# Uncomment to enable
+# [templates.hyprland]
+# input_path = "~/.config/matugen/templates/hyprland-colors.conf"
+# output_path = "~/.config/hypr/matugen-colors.conf"
+# post_hook = "hyprctl reload"
