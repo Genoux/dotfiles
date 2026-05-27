@@ -5,7 +5,7 @@ export const time = createPoll("", 1000, ["date", "+%a %d %b %H:%M"]);
 
 export function openCalendar() {
   try {
-    GLib.spawn_command_line_async('launch-or-focus "calcure" "calcure"');
+    GLib.spawn_command_line_async('launch-or-focus "calcurse" "calcurse"');
   } catch (error) {
     console.error("Failed to launch calendar:", error);
   }

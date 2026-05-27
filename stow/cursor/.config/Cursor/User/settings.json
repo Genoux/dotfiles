@@ -42,7 +42,6 @@
   "[json]": {
     "editor.defaultFormatter": "biomejs.biome"
   },
-  "workbench.colorTheme": "Tokyo Night",
 
   "editor.smoothScrolling": true,
   "editor.cursorSmoothCaretAnimation": "on",
@@ -69,5 +68,16 @@
   "typescript.tsserver.maxTsServerMemory": 4096,
   "[scss]": {
     "editor.defaultFormatter": "vscode.css-language-features"
-  }
+  },
+  "workbench.editorAssociations": {
+    "{git,gitlens,chat-editing-snapshot-text-model,copilot,git-graph,git-graph-3}:/**/*.qrc": "default",
+    "{git,gitlens,chat-editing-snapshot-text-model,copilot,git-graph,git-graph-3}:/**/*.ui": "default",
+    "*.qrc": "qt-core.qrcEditor"
+  },
+  "qt-core.additionalQtPaths": [
+    {
+      "name": "Qt-5.15.18-linux-g++_from_PATH",
+      "path": "/usr/bin/qtpaths"
+    }
+  ]
 }

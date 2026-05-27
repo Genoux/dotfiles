@@ -2,6 +2,7 @@ import { Gtk } from "ags/gtk4";
 import { createPoll } from "ags/time";
 import {
   getActivePlayer,
+  getPlayerStableId,
   markPlayerAsInteracted,
   currentPlayerInfo,
   currentPlayerPlayIcon,
@@ -15,12 +16,21 @@ const MAX_LENGTH = 15;
 const SCROLL_SPEED = 500;
 
 let scrollOffset = 0;
+let lastScrollSourceKey = "";
 
 const scrollingText = createPoll("", SCROLL_SPEED, () => {
   // Scroll animation runs whenever media player is visible (playing or paused)
-  if (!getActivePlayer()) {
+  const player = getActivePlayer();
+  if (!player) {
     scrollOffset = 0;
+    lastScrollSourceKey = "";
     return "";
+  }
+
+  const sourceKey = `${getPlayerStableId(player)}|${player.title}|${player.artist}`;
+  if (sourceKey !== lastScrollSourceKey) {
+    scrollOffset = 0;
+    lastScrollSourceKey = sourceKey;
   }
 
   const text = currentPlayerInfo.get();
@@ -40,7 +50,7 @@ const scrollingText = createPoll("", SCROLL_SPEED, () => {
 export function MediaPlayerButton() {
 
   return (
-    <box spacing={3} class='mediaplayer group' visible={currentPlayerInfo((info) => !!getActivePlayer() && info !== "No media" && info !== "Unknown")}>
+    <box spacing={3} class='mediaplayer group' visible={currentPlayerInfo((info) => info !== "No media")}>
       <Button onClicked={toggleMediaPanel}>
         <box
           spacing={6}

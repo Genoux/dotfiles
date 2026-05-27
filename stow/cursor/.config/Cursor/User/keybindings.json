@@ -21,10 +21,5 @@
         "key": "ctrl+shift+c",
         "command": "-workbench.action.terminal.openNativeConsole",
         "when": "!terminalFocus"
-    },
-    {
-        "key": "ctrl+alt+s",
-        "command": "workbench.action.toggleUnifiedSidebarFromKeyboard",
-        "when": "!isAuxiliaryWindowFocusedContext"
     }
 ]

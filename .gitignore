@@ -58,6 +58,9 @@ TODO
 # MIME cache
 stow/applications/.local/share/applications/mimeinfo.cache
 
+# Private calendar feed URLs
+stow/calcurse/.config/calcurse/ics-feeds
+
 # Claude session state
 stow/claude/.claude.json
 

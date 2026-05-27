@@ -540,14 +540,16 @@ config_link_all() {
         log_warning "$failed config(s) failed to link"
     fi
 
-    # Restart systemd services after config changes
+    # Restart systemd services after config changes (includes ags.service when active)
     echo
-    if [[ -f "$DOTFILES_INSTALL/config/services.sh" ]]; then
-        bash "$DOTFILES_INSTALL/config/services.sh"
+    local install_root="${DOTFILES_INSTALL:-$DOTFILES_DIR/install}"
+    if [[ -f "$install_root/config/services.sh" ]]; then
+        bash "$install_root/config/services.sh"
+    else
+        restart_ags_if_running
     fi
 
     echo
-    restart_ags_if_running
 }
 
 # Unlink all configs

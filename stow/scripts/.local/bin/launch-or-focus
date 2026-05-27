@@ -4,8 +4,13 @@
 
 TITLE="${1:?Usage: launch-or-focus TITLE COMMAND [CLASS] [ARGS...]}"
 COMMAND="${2:?Usage: launch-or-focus TITLE COMMAND [CLASS] [ARGS...]}"
-CLASS="${3:-$TITLE}"
-shift 3
+shift 2
+if [ $# -gt 0 ]; then
+    CLASS="$1"
+    shift 1
+else
+    CLASS="$TITLE"
+fi
 EXTRA_ARGS="$@"
 
 # If we're in display mode, run the TUI cleanly

@@ -4,52 +4,127 @@ import { hypr } from "../../services/hyprland";
 
 const mpris = Mpris.get_default();
 
-// Use counter to force reactive updates when player state changes
 const [updateId, setUpdateId] = createState(0);
 const forceUpdate = () => setUpdateId((id) => id + 1);
 
-let lastInteractedIdentity: string | null = null;
+/** Bar / tray only — window focus does not set this. */
+const [lastExplicitId, setLastExplicitId] = createState<string | null>(null);
 
-function getPlayerIdentity(player: Mpris.Player): string {
-  return (player as any).identity ?? (player as any).bus_name ?? "";
+/**
+ * Most-recent-first list of sources that have entered PLAYING (and explicit bar/tray picks).
+ * Used to choose which session to show when several exist or after something stops.
+ */
+const RECENT_PLAYING_MAX = 12;
+const recentPlayingOrder: string[] = [];
+
+function mprisBusSuffix(busName: string): string {
+  return busName.replace(/^org\.mpris\.MediaPlayer2\./i, "").toLowerCase();
 }
 
-export function markPlayerAsInteracted(player: Mpris.Player) {
-  const identity = getPlayerIdentity(player);
-  if (identity) {
-    lastInteractedIdentity = identity;
-    forceUpdate();
+/** Stable per-session id; prefer D-Bus bus name over identity (identity can be empty or duplicate). */
+export function getPlayerStableId(player: Mpris.Player): string {
+  const p = player as Mpris.Player & { get_bus_name?: () => string };
+  const bus = (player.bus_name || p.get_bus_name?.() || "").trim();
+  if (bus) return bus;
+  const ident = (player.identity || "").trim();
+  if (ident) return ident;
+  return (player.entry || "").replace(/\.desktop$/i, "").trim();
+}
+
+function stableIdsMatch(stored: string | null, player: Mpris.Player): boolean {
+  if (!stored) return false;
+  const id = getPlayerStableId(player);
+  if (id === stored) return true;
+  const a = stored.toLowerCase();
+  const b = id.toLowerCase();
+  if (a === b) return true;
+  const sa = mprisBusSuffix(a);
+  const sb = mprisBusSuffix(b);
+  return sa.length > 0 && sb.length > 0 && (sa === sb || a.endsWith(sb) || b.endsWith(sa));
+}
+
+function pushRecentPlaying(player: Mpris.Player) {
+  const id = getPlayerStableId(player);
+  if (!id) return;
+  const rest = recentPlayingOrder.filter((sid) => !stableIdsMatch(sid, player));
+  recentPlayingOrder.length = 0;
+  recentPlayingOrder.push(id, ...rest);
+  if (recentPlayingOrder.length > RECENT_PLAYING_MAX) {
+    recentPlayingOrder.length = RECENT_PLAYING_MAX;
   }
 }
 
-// Listen to player changes - clear lastInteracted if that player is gone
+function stackRank(player: Mpris.Player): number {
+  const id = getPlayerStableId(player);
+  for (let i = 0; i < recentPlayingOrder.length; i++) {
+    if (stableIdsMatch(recentPlayingOrder[i], player)) return i;
+  }
+  return RECENT_PLAYING_MAX + 1;
+}
+
+function pickByStackOrder(candidates: Mpris.Player[]): Mpris.Player | undefined {
+  if (candidates.length === 0) return undefined;
+  return [...candidates].sort((a, b) => stackRank(a) - stackRank(b))[0];
+}
+
+/** Tray / media bar controls only — not window focus, not automatic playback alone. */
+export function markPlayerAsInteracted(player: Mpris.Player) {
+  const id = getPlayerStableId(player);
+  if (!id) {
+    return;
+  }
+  pushRecentPlaying(player);
+  setLastExplicitId(id);
+  forceUpdate();
+}
+
+function pruneRecentPlayingOrder() {
+  const next = recentPlayingOrder.filter((sid) =>
+    mpris.players.some((p) => stableIdsMatch(sid, p)),
+  );
+  recentPlayingOrder.length = 0;
+  recentPlayingOrder.push(...next);
+}
+
 mpris.connect("notify::players", () => {
-  if (lastInteractedIdentity && !mpris.players.some((p) => getPlayerIdentity(p) === lastInteractedIdentity)) {
-    lastInteractedIdentity = null;
+  pruneRecentPlayingOrder();
+  const stored = lastExplicitId.peek();
+  if (stored && !mpris.players.some((p) => stableIdsMatch(stored, p))) {
+    setLastExplicitId(null);
   }
   forceUpdate();
 });
 
-// Track player handlers to prevent duplicate connections
 const playerHandlers = new Map<Mpris.Player, number[]>();
 
 const setupPlayerWatchers = () => {
-  // Disconnect old handlers
   playerHandlers.forEach((handlers, player) => {
     handlers.forEach((handlerId) => player.disconnect(handlerId));
   });
   playerHandlers.clear();
 
-  // Connect new handlers - mark as interacted when a player starts playing (user switched source)
   mpris.players.forEach((player) => {
-    const onStatusChange = () => {
-      if (player.playbackStatus === Mpris.PlaybackStatus.PLAYING) {
-        markPlayerAsInteracted(player);
+    const onPlaybackChange = () => {
+      const status = getPlaybackStatus(player);
+      if (status === Mpris.PlaybackStatus.PLAYING) {
+        pushRecentPlaying(player);
+      }
+      const notPlaying =
+        status === Mpris.PlaybackStatus.PAUSED || status === Mpris.PlaybackStatus.STOPPED;
+      if (notPlaying) {
+        const anotherIsPlaying = mpris.players.some(
+          (p) => p !== player && getPlaybackStatus(p) === Mpris.PlaybackStatus.PLAYING,
+        );
+        if (anotherIsPlaying) {
+          forceUpdate();
+          return;
+        }
       }
       forceUpdate();
     };
     const handlers = [
-      player.connect("notify::playback-status", onStatusChange),
+      player.connect("notify::playback-status", onPlaybackChange),
+      player.connect("notify::metadata", forceUpdate),
       player.connect("notify::title", forceUpdate),
       player.connect("notify::artist", forceUpdate),
     ];
@@ -60,44 +135,75 @@ const setupPlayerWatchers = () => {
 setupPlayerWatchers();
 mpris.connect("notify::players", setupPlayerWatchers);
 
-function getActivePlayers(): Mpris.Player[] {
-  return mpris.players.filter((p) => {
-    const isActive = p.playbackStatus === Mpris.PlaybackStatus.PLAYING ||
-                     p.playbackStatus === Mpris.PlaybackStatus.PAUSED;
-    return isActive && p.canControl;
-  });
+function getPlaybackStatus(p: Mpris.Player): Mpris.PlaybackStatus | undefined {
+  const ext = p as Mpris.Player & { playback_status?: Mpris.PlaybackStatus };
+  const raw = ext.playback_status ?? p.playbackStatus;
+  return raw as Mpris.PlaybackStatus | undefined;
 }
 
-// Get the active player - prefer last-interacted, else first playing then first paused
-export function getActivePlayer(): Mpris.Player | undefined {
+function getActivePlayers(): Mpris.Player[] {
+  const playing = Mpris.PlaybackStatus.PLAYING;
+  const paused = Mpris.PlaybackStatus.PAUSED;
+  const stopped = Mpris.PlaybackStatus.STOPPED;
+
+  const primary = mpris.players.filter((p) => {
+    const st = getPlaybackStatus(p);
+    return st === playing || st === paused;
+  });
+  if (primary.length > 0) {
+    return primary;
+  }
+
+  const fallback = mpris.players.filter((p) => getPlaybackStatus(p) !== stopped);
+  if (fallback.length > 0) {
+    return fallback;
+  }
+
+  return mpris.players;
+}
+
+function pickActivePlayer(explicitId: string | null): Mpris.Player | undefined {
   const active = getActivePlayers();
   if (active.length === 0) return undefined;
 
-  if (lastInteractedIdentity) {
-    const lastInteracted = active.find((p) => getPlayerIdentity(p) === lastInteractedIdentity);
-    if (lastInteracted) return lastInteracted;
+  const playing = active.filter((p) => getPlaybackStatus(p) === Mpris.PlaybackStatus.PLAYING);
+
+  if (playing.length > 0) {
+    if (explicitId) {
+      const hit = playing.find((p) => stableIdsMatch(explicitId, p));
+      if (hit) return hit;
+    }
+    return pickByStackOrder(playing);
   }
 
-  return active.find((p) => p.playbackStatus === Mpris.PlaybackStatus.PLAYING) ?? active[0];
+  if (explicitId) {
+    const hit = active.find((p) => stableIdsMatch(explicitId, p));
+    if (hit) return hit;
+  }
+
+  return pickByStackOrder(active);
 }
 
-// Reactive player info
+export function getActivePlayer(): Mpris.Player | undefined {
+  return pickActivePlayer(lastExplicitId.peek());
+}
+
 export const currentPlayerInfo = updateId(() => {
-  const player = getActivePlayer();
+  const explicit = lastExplicitId();
+  const player = pickActivePlayer(explicit);
   if (!player) return "No media";
   const title = player.title || "Unknown";
   const artist = player.artist || "Unknown Artist";
   return `${title} - ${artist}`;
 });
 
-// Reactive play icon
 export const currentPlayerPlayIcon = updateId(() => {
-  const player = getActivePlayer();
+  const explicit = lastExplicitId();
+  const player = pickActivePlayer(explicit);
   if (!player) return "⏸";
-  return player.playbackStatus === Mpris.PlaybackStatus.PLAYING ? "⏸" : "▶";
+  return getPlaybackStatus(player) === Mpris.PlaybackStatus.PLAYING ? "⏸" : "▶";
 });
 
-// Media panel visibility
 export const [mediaPanelVisible, setMediaPanelVisible] = createState(false);
 
 export function showMediaPanel() {
@@ -110,7 +216,15 @@ export function hideMediaPanel() {
 
 export function toggleMediaPanel() {
   const player = getActivePlayer();
-  if (player && hypr && (player as any).entry) {
-    hypr.dispatch("focuswindow", `class:${(player as any).entry}`);
+  if (!player) {
+    return;
+  }
+  if (player.can_raise) {
+    player.raise();
+    return;
+  }
+  if (hypr && player.entry) {
+    const cls = player.entry.replace(/\.desktop$/i, "");
+    hypr.dispatch("focuswindow", `class:${cls}`);
   }
 }

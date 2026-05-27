@@ -1,0 +1,32 @@
+# Calendar-first calcurse setup (see https://calcurse.org/files/manual.html)
+appearance.calendarview=monthly
+appearance.compactpanels=yes
+appearance.defaultpanel=calendar
+appearance.layout=1
+appearance.headerline=yes
+appearance.eventseparator=yes
+appearance.dayseparator=yes
+appearance.emptyline=yes
+appearance.emptyday=--
+appearance.notifybar=yes
+appearance.sidebarwidth=45
+appearance.todoview=hide-completed
+appearance.headingpos=right-justified
+daemon.enable=no
+daemon.log=no
+format.inputdate=4
+format.notifydate=%a %F
+format.notifytime=%T
+format.outputdate=%F
+format.dayheading=%B %-d, %Y
+general.autogc=yes
+general.autosave=yes
+general.confirmdelete=yes
+general.confirmquit=yes
+general.firstdayofweek=monday
+general.periodicsave=0
+general.systemdialogs=yes
+notification.command=printf '\a'
+notification.notifyall=flagged-only
+notification.warning=300
+ 
