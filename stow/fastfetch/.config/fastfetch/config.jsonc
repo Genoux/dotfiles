@@ -114,7 +114,7 @@
       "type": "command",
       "key": "├ 󰎔",
       "keyColor": "blue",
-      "text": "bash -c '~/.cargo/bin/flavours current 2>/dev/null || echo none'"
+      "text": "bash -c 'test -f ~/.config/matugen/dotfiles-gum.env && echo matugen || echo none'"
     },
     {
       "type": "colors",

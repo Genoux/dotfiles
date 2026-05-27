@@ -111,28 +111,23 @@ cleanup_npm_cache() {
     log_success "npm cache cleared ($before freed)"
 }
 
-# Clear large known application caches under ~/.cache
+# Clear saved user cache under ~/.cache while preserving the directory itself
 cleanup_app_caches() {
-    local total_freed=0
+    local cache_dir="$HOME/.cache"
 
-    # Map of cache dirs to human-readable names
-    local -A app_caches=(
-        ["$HOME/.cache/spotify/Data"]="Spotify"
-        ["$HOME/.cache/google-chrome"]="Chrome"
-        ["$HOME/.cache/chromium"]="Chromium"
-        ["$HOME/.cache/mozilla"]="Firefox"
-        ["$HOME/.cache/pip"]="pip"
-        ["$HOME/.cache/go"]="Go"
-        ["$HOME/.cache/thumbnails"]="Thumbnails"
-    )
+    if [[ ! -d "$cache_dir" ]]; then
+        log_success "User cache is empty"
+        return 0
+    fi
 
-    for cache_dir in "${!app_caches[@]}"; do
-        [[ ! -d "$cache_dir" ]] && continue
-        local size
-        size=$(du -sh "$cache_dir" 2>/dev/null | cut -f1 || echo "0")
-        rm -rf "$cache_dir" 2>/dev/null || true
-        log_success "${app_caches[$cache_dir]} cache cleared ($size)"
-    done
+    local before
+    before=$(du -sh "$cache_dir" 2>/dev/null | cut -f1 || echo "0")
+
+    find "$cache_dir" -mindepth 1 -maxdepth 1 -exec rm -rf {} + 2>/dev/null || true
+
+    local after
+    after=$(du -sh "$cache_dir" 2>/dev/null | cut -f1 || echo "0")
+    log_success "User cache: $before → $after"
 }
 
 # Vacuum systemd journal logs
@@ -175,20 +170,15 @@ cleanup_all() {
         fi
     '
 
-    run_command_logged "Clear app caches" bash -c '
-        for dir in \
-            "$HOME/.cache/spotify/Data" \
-            "$HOME/.cache/google-chrome" \
-            "$HOME/.cache/chromium" \
-            "$HOME/.cache/mozilla" \
-            "$HOME/.cache/pip" \
-            "$HOME/.cache/go" \
-            "$HOME/.cache/thumbnails"; do
-            [[ -d "$dir" ]] || continue
-            size=$(du -sh "$dir" 2>/dev/null | cut -f1 || echo "0")
-            rm -rf "$dir" 2>/dev/null || true
-            echo "Cleared $(basename $dir): $size"
-        done
+    run_command_logged "Clear user cache" bash -c '
+        cache_dir="$HOME/.cache"
+        if [[ -d "$cache_dir" ]]; then
+            size=$(du -sh "$cache_dir" 2>/dev/null | cut -f1 || echo "0")
+            find "$cache_dir" -mindepth 1 -maxdepth 1 -exec rm -rf {} + 2>/dev/null || true
+            echo "Freed $size"
+        else
+            echo "User cache is empty"
+        fi
     '
 
     run_command_logged "Remove temp downloads" bash -c '
@@ -326,7 +316,7 @@ cleanup_menu() {
         action=$(choose_option \
             "Clean All" \
             "Empty Trash" \
-            "Clear App Caches" \
+            "Clear User Cache" \
             "Clear npm Cache" \
             "Remove Orphans" \
             "Clean Package Cache" \
@@ -345,7 +335,7 @@ cleanup_menu() {
             "Empty Trash")
                 run_operation "" cleanup_trash
                 ;;
-            "Clear App Caches")
+            "Clear User Cache")
                 run_operation "" cleanup_app_caches
                 ;;
             "Clear npm Cache")

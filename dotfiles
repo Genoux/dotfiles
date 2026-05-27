@@ -38,7 +38,6 @@ show_usage() {
     echo
     echo "  packages             Manage packages"
     echo "    manage                 Interactive package management (default)"
-    echo "    updates                Check available updates"
     echo "    update                 System update (yay -Syu)"
     echo "    status                 Show package info"
     echo
@@ -55,10 +54,9 @@ show_usage() {
     echo "    apply                  Apply system configs"
     echo "    status                 Show system info"
     echo
-    echo "  theme                Manage theme"
-    echo "    select                 Select and apply theme"
+    echo "  theme                Theme status and GTK tools"
+    echo "    status                 Show matugen and GTK theme info"
     echo "    install-gtk            Install GTK theme"
-    echo "    status                 Show theme info"
     echo
     echo "  shell                Shell management"
     echo "    setup                  Setup zsh + omz + plugins"
@@ -67,11 +65,6 @@ show_usage() {
     echo "  hyprland             Hyprland configuration"
     echo "    setup                  Setup plugins and monitors"
     echo "    status                 Show Hyprland info"
-    echo
-    echo "  updates              Dotfiles repository updates"
-    echo "    check                  Check for updates"
-    echo "    apply                  Apply available updates"
-    echo "    status                 Show update status"
     echo
     echo "  cleanup              System disk cleanup"
     echo "    all                    Run all cleanup tasks (default)"
@@ -101,11 +94,6 @@ show_status() {
     
     # Hardware info
     show_hardware_info
-    
-    # Package status (only show updates in System Status)
-    source "$DOTFILES_DIR/lib/package.sh"
-    packages_status --updates-only
-    echo
     
     # Config status
     source "$DOTFILES_DIR/lib/config.sh"
@@ -172,7 +160,6 @@ show_menu() {
 
         local action=$(choose_option --selected "System Status" \
             "System Status" \
-            "Check for Updates" \
             "Full Install" \
             "Packages" \
             "Cleanup" \
@@ -189,10 +176,6 @@ show_menu() {
             "System Status")
                 show_status
                 pause
-                ;;
-            "Check for Updates")
-                source "$DOTFILES_DIR/lib/updates.sh"
-                updates_menu
                 ;;
             "Full Install")
                 # Exit menu and run installation with clean screen
@@ -257,7 +240,6 @@ main() {
             source "$DOTFILES_DIR/lib/package.sh"
             case "$subcommand" in
                 manage|"") packages_manage ;;
-                updates) packages_updates ;;
                 update) packages_update || exit $? ;;
                 status) packages_status ;;
                 *) log_error "Unknown subcommand: $subcommand"; show_usage; exit 1 ;;
@@ -303,8 +285,6 @@ main() {
         theme)
             source "$DOTFILES_DIR/lib/theme.sh"
             case "$subcommand" in
-                select) theme_select ;;
-                apply) theme_apply ;;
                 install-gtk) theme_install_gtk ;;
                 status|"") theme_status ;;
                 *) log_error "Unknown subcommand: $subcommand"; show_usage; exit 1 ;;
@@ -323,15 +303,6 @@ main() {
             case "$subcommand" in
                 setup) hyprland_setup_all ;;
                 status|"") hyprland_status ;;
-                *) log_error "Unknown subcommand: $subcommand"; show_usage; exit 1 ;;
-            esac
-            ;;
-        updates)
-            source "$DOTFILES_DIR/lib/updates.sh"
-            case "$subcommand" in
-                check) updates_check ;;
-                apply) updates_apply ;;
-                status|"") updates_status ;;
                 *) log_error "Unknown subcommand: $subcommand"; show_usage; exit 1 ;;
             esac
             ;;

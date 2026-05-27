@@ -1,7 +1,6 @@
 #!/bin/bash
 
-# Pick random wallpaper from saves folder and copy to current
-# This replaces the old SUPER+ALT+W functionality
+# Pick a random image from ~/.config/hypr/wallpapers/saves, set via awww, run matugen.
 
 WALLPAPER_DIR="$HOME/.config/hypr/wallpapers"
 SAVES_DIR="$WALLPAPER_DIR/saves"
@@ -22,10 +21,9 @@ _saves_images() {
     find "$SAVES_DIR" -maxdepth 1 -xtype f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.webp" \) 2>/dev/null
 }
 
-# Random pick from saves only (wallhaven/current is managed by system-wallhaven-download)
 if [ ! -d "$SAVES_DIR" ] || [ -z "$(_saves_images)" ]; then
     echo -e "${RED}❌ No wallpapers found in saves folder: $SAVES_DIR${NC}"
-    echo -e "${YELLOW}💡 Add images to saves (or copy from wallhaven after download)${NC}"
+    echo -e "${YELLOW}💡 Add images to saves/${NC}"
     exit 1
 fi
 

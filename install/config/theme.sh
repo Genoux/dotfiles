@@ -7,9 +7,6 @@ if [[ -z "${DOTFILES_HELPERS_LOADED:-}" ]]; then
     export DOTFILES_HELPERS_LOADED=true
 fi
 
-# Source theme library
-source "$DOTFILES_DIR/lib/theme.sh"
-
 log_info "Setting up themes..."
 
 # Install GTK theme (non-interactive default)
@@ -19,5 +16,5 @@ if [[ -x "$DOTFILES_DIR/lib/gtk.sh" ]]; then
     echo
 fi
 
-# Apply flavours color scheme
-theme_apply
+log_info "Matugen theme colors are generated from wallpaper changes."
+log_info "Run system-pick-wallpaper to refresh generated app themes."

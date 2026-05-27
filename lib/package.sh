@@ -18,10 +18,12 @@ AUR_PACKAGES_FILE="$DOTFILES_DIR/packages/aur.package"
 # Source all package management modules
 source "$DOTFILES_DIR/lib/package/common.sh"    # Common utilities
 source "$DOTFILES_DIR/lib/package/core.sh"      # yay, Node.js, system prep
-source "$DOTFILES_DIR/lib/package/install.sh"   # Package installation
+source "$DOTFILES_DIR/lib/package/install-official.sh" # Official package installation
+source "$DOTFILES_DIR/lib/package/install-aur.sh"      # AUR package installation
+source "$DOTFILES_DIR/lib/package/install-audit.sh"    # Post-install package audit
+source "$DOTFILES_DIR/lib/package/install.sh"          # Package installation orchestration
 source "$DOTFILES_DIR/lib/package/manage.sh"    # Interactive management
 source "$DOTFILES_DIR/lib/package/update.sh"    # System updates
-source "$DOTFILES_DIR/lib/package/updates.sh"   # Check available updates
 source "$DOTFILES_DIR/lib/package/sync.sh"      # Package list sync (deprecated)
 source "$DOTFILES_DIR/lib/package/status.sh"    # Status display
 source "$DOTFILES_DIR/lib/hardware-packages.sh" # Hardware package management
@@ -30,7 +32,6 @@ source "$DOTFILES_DIR/lib/hardware-packages.sh" # Hardware package management
 # - packages_install()        Install all packages from dotfiles
 # - packages_manage()         Interactive package management (recommended)
 # - packages_update()         Update system packages
-# - packages_updates()        Check and show available updates
 # - packages_status()         Show package status
 # - packages_sync()           Sync package lists (deprecated - use manage)
 # - packages_prepare()        Prepare system (internal, but callable)
@@ -51,7 +52,6 @@ packages_menu() {
 
         local action=$(choose_option \
             "Manage packages" \
-            "Check updates" \
             "Update system" \
             "Show details" \
             "Back")
@@ -61,9 +61,6 @@ packages_menu() {
         case "$action" in
             "Manage packages")
                 run_operation "" packages_manage
-                ;;
-            "Check updates")
-                run_operation "" packages_updates
                 ;;
             "Update system")
                 clear_screen

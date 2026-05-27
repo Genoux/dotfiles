@@ -20,6 +20,7 @@ import { ScreenRecordButton } from "./screenrecord";
 import { SystemInfoButton } from "./systeminfo";
 import { SystemDotfilesButton } from "./systemdotfiles";
 import { PrivacyIndicator } from "./privacy";
+import { startNotificationWatchers } from "./notifications";
 
 export default function Bar(gdkmonitor: Gdk.Monitor) {
   const { LEFT, RIGHT, BOTTOM } = Astal.WindowAnchor;
@@ -39,6 +40,7 @@ export default function Bar(gdkmonitor: Gdk.Monitor) {
       application={app}
       $={(self) => {
         Gtk4LayerShell.set_namespace(self, "ags-bar");
+        startNotificationWatchers();
         timeout(150, () => setIntroDone(true));
       }}
     >

@@ -1,0 +1,1 @@
+export { startNotificationWatchers } from "./service";

@@ -1,368 +1,26 @@
 #!/bin/bash
-# Single-theme management with flexible mappings
+# Matugen-era theme status and GTK theme tools
 
 DOTFILES_DIR="$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" && pwd)"
-THEME_DIR="$DOTFILES_DIR/theme"
 
-# Source helpers if not already loaded
 if [[ -z "${DOTFILES_HELPERS_LOADED:-}" ]]; then
     source "$DOTFILES_DIR/install/helpers/all.sh"
     export DOTFILES_HELPERS_LOADED=true
 fi
 
-get_current_theme_name() {
-    local current_scheme="none"
-    if command -v flavours &>/dev/null || [[ -x "$HOME/.cargo/bin/flavours" ]]; then
-        local flavours_cmd="flavours"
-        [[ ! -x "$(command -v flavours)" ]] && flavours_cmd="$HOME/.cargo/bin/flavours"
-        current_scheme=$("$flavours_cmd" current 2>/dev/null || echo "none")
-    fi
-    echo "$current_scheme"
-}
+MATUGEN_CONFIG="$HOME/.config/matugen/config.toml"
+CURRENT_WALLPAPER="$HOME/.config/hypr/wallpapers/current/current_wallpaper.jpg"
 
-# Show just the active theme name
-show_theme_name() {
-    local current_scheme=$(get_current_theme_name)
+declare -a MATUGEN_OUTPUTS=(
+    "$HOME/.config/kitty/matugen-theme.conf"
+    "$HOME/.config/btop/themes/matugen.theme"
+    "$HOME/.config/starship.toml"
+    "$HOME/.config/zsh/highlight-colors.zsh"
+    "$HOME/.config/matugen/dotfiles-gum.env"
+    "$HOME/.cursor/extensions/matugen.material-you-1.0.0/package.json"
+    "$HOME/.cursor/extensions/matugen.material-you-1.0.0/themes/matugen-color-theme.json"
+)
 
-    local scheme_file=""
-    if ! scheme_file=$(get_scheme_file); then
-        # No scheme file found
-        if [[ "$current_scheme" != "none" ]]; then
-            show_info "Active theme" "$current_scheme (no file in dotfiles)"
-        else
-            show_info "Active theme" "none"
-        fi
-    else
-        if [[ -f "$scheme_file" ]]; then
-            local scheme_name=$(grep "^scheme:" "$scheme_file" | cut -d'"' -f2)
-            local scheme_author=$(grep "^author:" "$scheme_file" | cut -d'"' -f2)
-            show_info "Active theme" "$scheme_name by $scheme_author"
-        else
-            show_info "Active theme" "Scheme file not found"
-        fi
-    fi
-    
-    # Show GTK theme
-    local current_gtk=$(get_current_gtk_theme)
-    if [[ -n "$current_gtk" ]] && [[ "$current_gtk" != "unknown" ]]; then
-        show_info "GTK theme" "$current_gtk"
-    fi
-}
-
-# Show Base16 color palette
-show_theme_colors() {
-    local scheme_file=""
-    if ! scheme_file=$(get_scheme_file); then
-        return 1
-    fi
-
-    if [[ ! -f "$scheme_file" ]]; then
-        return 1
-    fi
-
-    # Read colors from scheme
-    local base00=$(grep "^base00:" "$scheme_file" | awk '{print $2}' | tr -d '"')
-    local base01=$(grep "^base01:" "$scheme_file" | awk '{print $2}' | tr -d '"')
-    local base02=$(grep "^base02:" "$scheme_file" | awk '{print $2}' | tr -d '"')
-    local base03=$(grep "^base03:" "$scheme_file" | awk '{print $2}' | tr -d '"')
-    local base04=$(grep "^base04:" "$scheme_file" | awk '{print $2}' | tr -d '"')
-    local base05=$(grep "^base05:" "$scheme_file" | awk '{print $2}' | tr -d '"')
-    local base06=$(grep "^base06:" "$scheme_file" | awk '{print $2}' | tr -d '"')
-    local base07=$(grep "^base07:" "$scheme_file" | awk '{print $2}' | tr -d '"')
-    local base08=$(grep "^base08:" "$scheme_file" | awk '{print $2}' | tr -d '"')
-    local base09=$(grep "^base09:" "$scheme_file" | awk '{print $2}' | tr -d '"')
-    local base0A=$(grep "^base0A:" "$scheme_file" | awk '{print $2}' | tr -d '"')
-    local base0B=$(grep "^base0B:" "$scheme_file" | awk '{print $2}' | tr -d '"')
-    local base0C=$(grep "^base0C:" "$scheme_file" | awk '{print $2}' | tr -d '"')
-    local base0D=$(grep "^base0D:" "$scheme_file" | awk '{print $2}' | tr -d '"')
-    local base0E=$(grep "^base0E:" "$scheme_file" | awk '{print $2}' | tr -d '"')
-    local base0F=$(grep "^base0F:" "$scheme_file" | awk '{print $2}' | tr -d '"')
-
-    echo -e "${BOLD}Base16 Colors:${RESET}"
-
-    # Background shades
-    printf "  \033[38;2;$((16#${base00:0:2}));$((16#${base00:2:2}));$((16#${base00:4:2}))m●\033[0m base00 (#%s)         " "$base00"
-    printf "\033[38;2;$((16#${base01:0:2}));$((16#${base01:2:2}));$((16#${base01:4:2}))m●\033[0m base01 (#%s)\n" "$base01"
-
-    printf "  \033[38;2;$((16#${base02:0:2}));$((16#${base02:2:2}));$((16#${base02:4:2}))m●\033[0m base02 (#%s)         " "$base02"
-    printf "\033[38;2;$((16#${base03:0:2}));$((16#${base03:2:2}));$((16#${base03:4:2}))m●\033[0m base03 (#%s)\n" "$base03"
-
-    # Foreground shades
-    printf "  \033[38;2;$((16#${base04:0:2}));$((16#${base04:2:2}));$((16#${base04:4:2}))m●\033[0m base04 (#%s)         " "$base04"
-    printf "\033[38;2;$((16#${base05:0:2}));$((16#${base05:2:2}));$((16#${base05:4:2}))m●\033[0m base05 (#%s)\n" "$base05"
-
-    printf "  \033[38;2;$((16#${base06:0:2}));$((16#${base06:2:2}));$((16#${base06:4:2}))m●\033[0m base06 (#%s)         " "$base06"
-    printf "\033[38;2;$((16#${base07:0:2}));$((16#${base07:2:2}));$((16#${base07:4:2}))m●\033[0m base07 (#%s)\n" "$base07"
-
-    # Accent colors
-    printf "  \033[38;2;$((16#${base08:0:2}));$((16#${base08:2:2}));$((16#${base08:4:2}))m●\033[0m base08 (#%s)         " "$base08"
-    printf "\033[38;2;$((16#${base09:0:2}));$((16#${base09:2:2}));$((16#${base09:4:2}))m●\033[0m base09 (#%s)\n" "$base09"
-
-    printf "  \033[38;2;$((16#${base0A:0:2}));$((16#${base0A:2:2}));$((16#${base0A:4:2}))m●\033[0m base0A (#%s)         " "$base0A"
-    printf "\033[38;2;$((16#${base0B:0:2}));$((16#${base0B:2:2}));$((16#${base0B:4:2}))m●\033[0m base0B (#%s)\n" "$base0B"
-
-    printf "  \033[38;2;$((16#${base0C:0:2}));$((16#${base0C:2:2}));$((16#${base0C:4:2}))m●\033[0m base0C (#%s)         " "$base0C"
-    printf "\033[38;2;$((16#${base0D:0:2}));$((16#${base0D:2:2}));$((16#${base0D:4:2}))m●\033[0m base0D (#%s)\n" "$base0D"
-
-    printf "  \033[38;2;$((16#${base0E:0:2}));$((16#${base0E:2:2}));$((16#${base0E:4:2}))m●\033[0m base0E (#%s)         " "$base0E"
-    printf "\033[38;2;$((16#${base0F:0:2}));$((16#${base0F:2:2}));$((16#${base0F:4:2}))m●\033[0m base0F (#%s)\n" "$base0F"
-}
-
-# Show current theme information (for menu header)
-theme_show_current() {
-    show_theme_name
-    echo
-}
-
-# Apply flavours theme using base16 scheme
-apply_flavours_theme() {
-    # Ensure flavours is installed and templates are downloaded
-    if ! command -v flavours &>/dev/null && [[ ! -x "$HOME/.cargo/bin/flavours" ]]; then
-        log_info "Setting up flavours for the first time..."
-        source "$DOTFILES_DIR/lib/flavours-setup.sh"
-        if ! flavours_setup; then
-            log_warning "Flavours setup failed - skipping auto-generated themes"
-            return 0
-        fi
-        echo
-    fi
-
-    # Use flavours from PATH or cargo bin
-    local flavours_cmd="flavours"
-    if ! command -v flavours &>/dev/null; then
-        flavours_cmd="$HOME/.cargo/bin/flavours"
-    fi
-
-    log_info "Applying theme with flavours..."
-
-    # Flavours config is managed via stow (stow/flavours/.config/flavours/config.toml)
-    # Scheme files are managed via stow (stow/flavours/.config/flavours/schemes/)
-    # Just apply the scheme
-    if "$flavours_cmd" apply default 2>&1 | while IFS= read -r line; do
-        log_info "  $line"
-    done; then
-        log_success "Flavours theme applied!"
-        return 0
-    else
-        log_error "Failed to apply flavours theme"
-        log_info "Some apps may need custom templates - check stow/flavours/.config/flavours/templates/"
-        return 1
-    fi
-}
-
-
-# Select and apply theme interactively
-theme_select() {
-    # Ensure flavours is available
-    local flavours_cmd="flavours"
-    if ! command -v flavours &>/dev/null; then
-        if [[ -x "$HOME/.cargo/bin/flavours" ]]; then
-            flavours_cmd="$HOME/.cargo/bin/flavours"
-        else
-            log_error "Flavours not found"
-            log_info "Run: dotfiles install"
-            return 1
-        fi
-    fi
-
-    log_section "Select Theme"
-
-    # Get list of available themes
-    local themes_output=$("$flavours_cmd" list 2>&1)
-    if [[ $? -ne 0 ]]; then
-        log_error "Failed to get theme list"
-        echo "$themes_output"
-        return 1
-    fi
-
-    # Convert space-separated output to array (one theme per line for gum)
-    local themes=()
-    read -ra themes <<< "$themes_output"
-
-    if [[ ${#themes[@]} -eq 0 ]]; then
-        log_error "No themes found"
-        log_info "Run: flavours update schemes"
-        return 1
-    fi
-
-    # Get current theme
-    local current_theme=$("$flavours_cmd" current 2>/dev/null || echo "")
-
-    # Show theme selection
-    local selected=""
-    if [[ -n "$current_theme" ]]; then
-        # Try to preselect current theme
-        selected=$(printf '%s\n' "${themes[@]}" | filter_search "Select theme (current: $current_theme)" --limit 1)
-    else
-        selected=$(printf '%s\n' "${themes[@]}" | filter_search "Select theme" --limit 1)
-    fi
-
-    # Check if user cancelled
-    if [[ -z "$selected" ]]; then
-        return 0
-    fi
-
-    # Apply the selected theme and capture errors
-    local apply_output
-    apply_output=$("$flavours_cmd" apply "$selected" 2>&1)
-    local apply_exit=$?
-
-    if [[ $apply_exit -eq 0 ]]; then
-        # Update the default scheme to the selected one
-        # Find the scheme file using flavours info to get the exact path
-        local scheme_info=$("$flavours_cmd" info "$selected" 2>&1 | head -1)
-        local source_scheme=""
-
-        # Extract path from output like: "Ashes (ashes) @ /path/to/ashes.yaml"
-        if [[ "$scheme_info" =~ @[[:space:]](.+\.ya?ml) ]]; then
-            source_scheme="${BASH_REMATCH[1]}"
-        fi
-
-        if [[ -n "$source_scheme" && -f "$source_scheme" ]]; then
-            # Copy to stow directory using scheme name (not hardcoded "default")
-            local schemes_dir="$DOTFILES_DIR/stow/flavours/.config/flavours/schemes"
-            local stow_scheme_dir="$schemes_dir/$selected"
-            local stow_scheme="$stow_scheme_dir/$selected.yaml"
-            mkdir -p "$stow_scheme_dir"
-
-            # Only copy if source and destination are different
-            if [[ "$(realpath "$source_scheme")" != "$(realpath "$stow_scheme" 2>/dev/null || echo "$stow_scheme")" ]]; then
-                cp "$source_scheme" "$stow_scheme"
-            fi
-
-            # Also copy to default location (convention for active scheme)
-            local default_scheme="$schemes_dir/default/default.yaml"
-            mkdir -p "$(dirname "$default_scheme")"
-            if [[ "$(realpath "$source_scheme")" != "$(realpath "$default_scheme" 2>/dev/null || echo "$default_scheme")" ]]; then
-                cp "$source_scheme" "$default_scheme"
-            fi
-
-            # Also copy to active config (if stowed) - use scheme name
-            local config_scheme_dir="$HOME/.config/flavours/schemes/$selected"
-            local config_scheme_file="$config_scheme_dir/$selected.yaml"
-            if [[ -d "$HOME/.config/flavours/schemes" ]]; then
-                mkdir -p "$config_scheme_dir"
-                if [[ "$(realpath "$source_scheme")" != "$(realpath "$config_scheme_file" 2>/dev/null || echo "$config_scheme_file")" ]]; then
-                    cp "$source_scheme" "$config_scheme_file"
-                fi
-            fi
-        fi
-
-        log_success "Theme '$selected' applied!"
-        return 0
-    else
-        log_error "Failed to apply theme '$selected'"
-        echo
-        log_warning "Some templates may have applied successfully, others failed"
-        echo
-        # Show the error output (indented)
-        if [[ -n "$apply_output" ]]; then
-            echo "$apply_output" | sed 's/^/  /'
-            echo
-        fi
-        # run_operation will handle the pause
-        return 1
-    fi
-}
-
-# Apply theme (main entry point)
-theme_apply() {
-    log_section "Applying Theme"
-
-    # Apply flavours theme (all files are auto-generated)
-    apply_flavours_theme
-    echo
-
-    log_success "Theme applied!"
-    echo
-    log_info "Restart applications to see changes"
-
-    return 0
-}
-
-# Find scheme file in dotfiles (checks current scheme name first, then default location)
-get_scheme_file() {
-    local schemes_dir="$DOTFILES_DIR/stow/flavours/.config/flavours/schemes"
-    
-    # Get current scheme from flavours
-    local current_scheme="none"
-    if command -v flavours &>/dev/null || [[ -x "$HOME/.cargo/bin/flavours" ]]; then
-        local flavours_cmd="flavours"
-        [[ ! -x "$(command -v flavours)" ]] && flavours_cmd="$HOME/.cargo/bin/flavours"
-        current_scheme=$("$flavours_cmd" current 2>/dev/null || echo "none")
-    fi
-    
-    # Return scheme file path if it exists
-    if [[ "$current_scheme" != "none" ]] && [[ -n "$current_scheme" ]]; then
-        local scheme_path="$schemes_dir/$current_scheme/$current_scheme.yaml"
-        if [[ -f "$scheme_path" ]]; then
-            echo "$scheme_path"
-            return 0
-        fi
-    fi
-    
-    return 1
-}
-
-# Show theme status
-theme_status() {
-    local skip_title="${1:-}"
-    [[ -z "$skip_title" ]] && log_section "Theme Status"
-
-    local current_scheme="none"
-    if command -v flavours &>/dev/null || [[ -x "$HOME/.cargo/bin/flavours" ]]; then
-        local flavours_cmd="flavours"
-        [[ ! -x "$(command -v flavours)" ]] && flavours_cmd="$HOME/.cargo/bin/flavours"
-        current_scheme=$("$flavours_cmd" current 2>/dev/null || echo "none")
-    fi
-
-    # Get scheme file from flavours
-    local scheme_file=""
-    if scheme_file=$(get_scheme_file); then
-        # File exists - check if it's valid
-        if grep -q "^base00:" "$scheme_file"; then
-            show_theme_name
-            echo
-            show_theme_colors
-        else
-            show_info "Flavours scheme" "$current_scheme"
-            log_warning "Scheme file found but invalid: $scheme_file"
-        fi
-    else
-        if [[ "$current_scheme" != "none" ]]; then
-            show_info "Flavours scheme" "$current_scheme"
-            log_info "No scheme file in dotfiles"
-        else
-            show_info "Flavours scheme" "not applied"
-        fi
-    fi
-    echo
-    # Show GTK theme info if available
-    if command -v gsettings &>/dev/null; then
-        local gtk_theme=$(gsettings get org.gnome.desktop.interface gtk-theme 2>/dev/null | tr -d "'")
-        local icon_theme=$(gsettings get org.gnome.desktop.interface icon-theme 2>/dev/null | tr -d "'")
-        local cursor_theme=$(gsettings get org.gnome.desktop.interface cursor-theme 2>/dev/null | tr -d "'")
-        local cursor_size=$(gsettings get org.gnome.desktop.interface cursor-size 2>/dev/null)
-
-        if [[ -n "$gtk_theme" ]]; then
-            show_info "GTK theme" "$gtk_theme"
-        fi
-        if [[ -n "$icon_theme" ]]; then
-            show_info "Icon theme" "$icon_theme"
-        fi
-        if [[ -n "$cursor_theme" ]]; then
-            show_info "Cursor theme" "$cursor_theme (size: $cursor_size)"
-        fi
-    fi
-
-    # Show actionable info
-    if [[ "$current_scheme_lower" != "$dotfiles_scheme_lower" ]] && [[ "$current_scheme" != "none" ]] && [[ "$dotfiles_scheme" != "none" ]]; then
-        log_warning "Theme needs sync"
-    fi
-}
-
-
-# Get current GTK theme name
 get_current_gtk_theme() {
     if command -v gsettings &>/dev/null; then
         gsettings get org.gnome.desktop.interface gtk-theme 2>/dev/null | tr -d "'"
@@ -371,18 +29,98 @@ get_current_gtk_theme() {
     fi
 }
 
-# GTK theme submenu
+show_theme_name() {
+    if [[ -f "$CURRENT_WALLPAPER" ]]; then
+        show_info "Theme source" "$(basename "$CURRENT_WALLPAPER")"
+    else
+        show_info "Theme source" "no current wallpaper"
+    fi
+
+    local gtk_theme
+    gtk_theme=$(get_current_gtk_theme)
+    if [[ -n "$gtk_theme" && "$gtk_theme" != "unknown" ]]; then
+        show_info "GTK theme" "$gtk_theme"
+    fi
+}
+
+theme_show_current() {
+    show_theme_name
+    echo
+}
+
+_show_file_status() {
+    local label="$1"
+    local file_path="$2"
+
+    if [[ -f "$file_path" ]]; then
+        show_info "$label" "present"
+    else
+        show_info "$label" "missing"
+    fi
+}
+
+theme_status() {
+    local skip_title="${1:-}"
+    [[ "$skip_title" != "--skip-title" ]] && log_section "Theme Status"
+
+    if command -v matugen &>/dev/null; then
+        show_info "Matugen" "installed"
+    else
+        show_info "Matugen" "not installed"
+    fi
+
+    _show_file_status "Matugen config" "$MATUGEN_CONFIG"
+    _show_file_status "Current wallpaper" "$CURRENT_WALLPAPER"
+    echo
+
+    log_info "Generated outputs"
+    for output_path in "${MATUGEN_OUTPUTS[@]}"; do
+        if [[ -f "$output_path" ]]; then
+            printf "  %s %s\n" "$(status_ok)" "${output_path/#$HOME/~}"
+        else
+            printf "  %s %s\n" "$(status_warning)" "${output_path/#$HOME/~}"
+        fi
+    done
+
+    echo
+    if command -v gsettings &>/dev/null; then
+        local gtk_theme
+        local icon_theme
+        local cursor_theme
+        local cursor_size
+
+        gtk_theme=$(gsettings get org.gnome.desktop.interface gtk-theme 2>/dev/null | tr -d "'")
+        icon_theme=$(gsettings get org.gnome.desktop.interface icon-theme 2>/dev/null | tr -d "'")
+        cursor_theme=$(gsettings get org.gnome.desktop.interface cursor-theme 2>/dev/null | tr -d "'")
+        cursor_size=$(gsettings get org.gnome.desktop.interface cursor-size 2>/dev/null)
+
+        [[ -n "$gtk_theme" ]] && show_info "GTK theme" "$gtk_theme"
+        [[ -n "$icon_theme" ]] && show_info "Icon theme" "$icon_theme"
+        [[ -n "$cursor_theme" ]] && show_info "Cursor theme" "$cursor_theme (size: $cursor_size)"
+    fi
+}
+
+theme_install_gtk() {
+    bash "$DOTFILES_DIR/lib/gtk.sh" install
+}
+
+theme_uninstall_gtk() {
+    bash "$DOTFILES_DIR/lib/gtk.sh" uninstall
+}
+
 gtk_theme_menu() {
     source "$DOTFILES_DIR/lib/menu.sh"
 
     while true; do
         clear_screen "GTK Themes"
-        
-        local current_gtk=$(get_current_gtk_theme)
+
+        local current_gtk
+        current_gtk=$(get_current_gtk_theme)
         show_info "Active" "$current_gtk"
         echo
 
-        local action=$(choose_option \
+        local action
+        action=$(choose_option \
             "Install theme" \
             "Uninstall current" \
             "Back")
@@ -392,11 +130,11 @@ gtk_theme_menu() {
         case "$action" in
             "Install theme")
                 clear_screen "GTK Themes"
-                bash "$DOTFILES_DIR/lib/gtk.sh" install
+                theme_install_gtk
                 ;;
             "Uninstall current")
                 clear_screen "GTK Themes"
-                bash "$DOTFILES_DIR/lib/gtk.sh" uninstall
+                theme_uninstall_gtk
                 ;;
             "Back")
                 return
@@ -405,7 +143,6 @@ gtk_theme_menu() {
     done
 }
 
-# Theme management menu
 theme_menu() {
     source "$DOTFILES_DIR/lib/menu.sh"
 
@@ -413,19 +150,16 @@ theme_menu() {
         clear_screen "Themes"
         theme_show_current
 
-        local action=$(choose_option \
-            "Select theme" \
-            "Show details" \
+        local action
+        action=$(choose_option \
+            "Show status" \
             "GTK themes" \
             "Back")
 
         [[ -z "$action" ]] && return
 
         case "$action" in
-            "Select theme")
-                run_operation "" theme_select
-                ;;
-            "Show details")
+            "Show status")
                 run_operation "" theme_status
                 ;;
             "GTK themes")
