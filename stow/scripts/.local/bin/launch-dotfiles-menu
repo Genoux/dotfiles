@@ -4,6 +4,10 @@
 
 TERMINAL_TITLE="Dotfiles Manager"
 
+lua_string() {
+    jq -Rn --arg value "$1" '$value'
+}
+
 # Get dotfiles directory
 DOTFILES_DIR="$HOME/dotfiles"
 
@@ -18,7 +22,7 @@ fi
 # Check if Dotfiles Manager window is already running
 if hyprctl clients 2>/dev/null | grep -q "^[[:space:]]*title: $TERMINAL_TITLE$"; then
     # Focus the existing window
-    hyprctl dispatch focuswindow title:"$TERMINAL_TITLE" 2>/dev/null
+    hyprctl dispatch "hl.dsp.focus({ window = $(lua_string "title:$TERMINAL_TITLE") })" 2>/dev/null
 else
     # Launch new instance with specific size
     kitty --class=dotfiles-manager --title "$TERMINAL_TITLE" \

@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# Start the lock screen only after Hyprland is responsive again after resume.
+set -euo pipefail
+
+[[ -n "${XDG_RUNTIME_DIR:-}" ]] || export XDG_RUNTIME_DIR="/run/user/$(id -u)"
+if [[ -z "${DBUS_SESSION_BUS_ADDRESS:-}" && -S "${XDG_RUNTIME_DIR}/bus" ]]; then
+    export DBUS_SESSION_BUS_ADDRESS="unix:path=${XDG_RUNTIME_DIR}/bus"
+fi
+
+wait_for_hyprland() {
+    local _
+
+    for _ in $(seq 1 80); do
+        if hyprctl monitors -j >/dev/null 2>&1; then
+            return 0
+        fi
+        sleep 0.1
+    done
+
+    return 1
+}
+
+wait_for_hyprland || sleep 2
+hyprctl dispatch 'hl.dsp.dpms("on")' >/dev/null 2>&1 || true
+
+pkill -x hyprlock >/dev/null 2>&1 || true
+sleep 0.5
+wait_for_hyprland || true
+
+if ! pgrep -x hyprlock >/dev/null 2>&1; then
+    hyprlock >/dev/null 2>&1 &
+fi
+
+sleep 1
+bash "$HOME/.local/bin/system-awww-wallpaper" >/dev/null 2>&1 || true
+systemctl --user restart ags.service >/dev/null 2>&1 || true

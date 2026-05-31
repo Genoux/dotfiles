@@ -13,6 +13,10 @@ else
 fi
 EXTRA_ARGS="$@"
 
+lua_string() {
+    jq -Rn --arg value "$1" '$value'
+}
+
 # If we're in display mode, run the TUI cleanly
 if [ "$LAUNCH_OR_FOCUS_DISPLAY" = "1" ]; then
     tput clear
@@ -31,7 +35,7 @@ fi
 # Check if window already exists (by title)
 if hyprctl clients | grep -q "^[[:space:]]*title: $TITLE$"; then
     # Focus existing window
-    hyprctl dispatch focuswindow title:"$TITLE"
+    hyprctl dispatch "hl.dsp.focus({ window = $(lua_string "title:$TITLE") })"
 else
     # Launch new instance in kitty with TUI wrapper
     kitty --class="$CLASS" --title "$TITLE" \

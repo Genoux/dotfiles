@@ -1,9 +1,12 @@
 [Unit]
 Description=AGS (Aylur's GTK Shell)
 Documentation=https://github.com/aylur/ags
+After=graphical-session.target
+PartOf=graphical-session.target
 
 [Service]
 Type=simple
+Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
 ExecStart=/usr/bin/ags run --gtk 4
 ExecStop=/bin/sh -c 'pkill -x ags; pkill -f "gjs -m /run/user/[0-9]+/ags.js" || true'
 Restart=on-failure

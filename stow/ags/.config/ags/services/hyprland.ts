@@ -1,5 +1,6 @@
 import Hyprland from "gi://AstalHyprland";
 import { createBinding, createState } from "ags";
+import { execAsync } from "ags/process";
 
 // Shared Hyprland service instance with proper guard
 let hypr: Hyprland.Hyprland | null = null;
@@ -11,6 +12,25 @@ try {
 }
 
 export { hypr };
+
+function luaString(value: string): string {
+  return JSON.stringify(value);
+}
+
+export async function dispatchLua(expression: string): Promise<void> {
+  if (!hypr) return;
+  await execAsync(["hyprctl", "dispatch", expression]);
+}
+
+export function focusWindow(selector: string): Promise<void> {
+  return dispatchLua(`hl.dsp.focus({ window = ${luaString(selector)} })`);
+}
+
+export function switchWorkspace(workspaceId: number): Promise<void> {
+  return dispatchLua(
+    `function() require("actions.workspaces").switch(${workspaceId}) end`,
+  );
+}
 
 // Common reactive bindings with fallback to empty state when hypr is unavailable
 export const focusedWorkspace = hypr

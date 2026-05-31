@@ -2,8 +2,7 @@ import { createState } from "ags";
 import { subprocess } from "ags/process";
 import { timeout } from "ags/time";
 import GLib from "gi://GLib";
-import Mpris from "gi://AstalMpris";
-import { getActivePlayer } from "../mediaplayer/service";
+import { getActivePlayer, isActivePlayerPlaying, onMediaUpdate } from "../mediaplayer/service";
 
 const CFG = "widget/cava/config/config";
 
@@ -73,7 +72,11 @@ function stopCava() {
 
       // Kill the process using pkill
       try {
-        subprocess(["pkill", "-f", "cava -p widget/cava/config/config"], () => {}, () => {});
+        subprocess(
+          ["pkill", "-f", "cava -p widget/cava/config/config"],
+          () => {},
+          () => {}
+        );
       } catch (e) {
         console.error("[Cava] Error killing process:", e);
       }
@@ -103,12 +106,12 @@ function startCava() {
       },
       (err) => {
         console.error("[Cava] Process error:", err);
-        
+
         // Restart cava after it crashes
         if (!isRestarting) {
           isRestarting = true;
           console.log("[Cava] Restarting in 2 seconds...");
-          
+
           targetBars = Array(BAR_COUNT).fill(0);
           currentBars = Array(BAR_COUNT).fill(0);
           setBars(Array(BAR_COUNT).fill(0));
@@ -123,7 +126,7 @@ function startCava() {
     isCavaRunning = true;
   } catch (error) {
     console.error("[Cava] Failed to start:", error);
-    
+
     if (!isRestarting) {
       isRestarting = true;
       timeout(5000, () => {
@@ -136,15 +139,12 @@ function startCava() {
 
 // Keep cava running whenever we have a displayed player - only stop when no players at all.
 // This avoids the 1.5s Pulse connection delay when resuming playback.
-const mpris = Mpris.get_default();
-
 function hasDisplayedPlayer(): boolean {
   return !!getActivePlayer();
 }
 
 function hasDisplayedPlayerPlaying(): boolean {
-  const player = getActivePlayer();
-  return !!player && player.playbackStatus === Mpris.PlaybackStatus.PLAYING;
+  return isActivePlayerPlaying();
 }
 
 // Start cava when we have a player; stop only when no players exist
@@ -162,18 +162,17 @@ function updateCavaState() {
   }
 }
 
-// Watch for player changes
-mpris.connect("notify::players", updateCavaState);
-
-// Watch for player state changes on existing players
-const setupPlayerWatchers = () => {
-  mpris.players.forEach((player) => {
-    player.connect("notify::playback-status", updateCavaState);
+function scheduleStartupStateChecks() {
+  let remaining = 8;
+  GLib.timeout_add(GLib.PRIORITY_DEFAULT, 500, () => {
+    updateCavaState();
+    remaining -= 1;
+    return remaining > 0;
   });
-};
+}
 
-setupPlayerWatchers();
-mpris.connect("notify::players", setupPlayerWatchers);
+onMediaUpdate(updateCavaState);
 
 // Initial state check
 updateCavaState();
+scheduleStartupStateChecks();

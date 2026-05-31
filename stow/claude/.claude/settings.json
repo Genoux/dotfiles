@@ -1,36 +1,36 @@
 {
-	"env": {
-		"CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
-	},
-	"permissions": {
-		"allow": [
-			"WebFetch",
-			"Bash(ls:*)",
-			"Bash(python3:*)",
-			"Bash(curl:*)"
-		]
-	},
-	"enableAllProjectMcpServers": true,
-	"enabledPlugins": {
-		"context7@claude-plugins-official":        true,
-		"feature-dev@claude-plugins-official":     true,
-		"frontend-design@claude-plugins-official": true,
-		"gitkraken-hooks@gitkraken":               true,
-		"linear@claude-plugins-official":          true
-	},
-	"extraKnownMarketplaces": {
-		"gitkraken": {
-			"source": {
-				"path":   "/home/john/.claude/plugins/marketplaces/gitkraken",
-				"source": "directory"
-			}
-		},
-		"knowledge-work-plugins": {
-			"source": {
-				"repo":   "anthropics/knowledge-work-plugins",
-				"source": "github"
-			}
-		}
-	},
-	"effortLevel": "medium"
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  },
+  "permissions": {
+    "allow": [
+      "WebFetch",
+      "Bash(ls:*)",
+      "Bash(python3:*)",
+      "Bash(curl:*)"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledPlugins": {
+    "context7@claude-plugins-official": true,
+    "feature-dev@claude-plugins-official": true,
+    "frontend-design@claude-plugins-official": true,
+    "gitkraken-hooks@gitkraken": true,
+    "linear@claude-plugins-official": true
+  },
+  "extraKnownMarketplaces": {
+    "gitkraken": {
+      "source": {
+        "path": "/home/john/.claude/plugins/marketplaces/gitkraken",
+        "source": "directory"
+      }
+    },
+    "knowledge-work-plugins": {
+      "source": {
+        "repo": "anthropics/knowledge-work-plugins",
+        "source": "github"
+      }
+    }
+  },
+  "effortLevel": "medium"
 }

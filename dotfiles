@@ -46,7 +46,7 @@ show_usage() {
     echo "    unlink [name]          Unlink configs"
     echo "    status                 Show link status"
     echo
-    echo "  hardware             Hardware setup (GPU drivers, gpu.conf)"
+    echo "  hardware             Hardware setup (GPU drivers, gpu.lua)"
     echo "    setup                  Detect hardware and install drivers"
     echo "    status                 Show hardware info"
     echo
@@ -138,6 +138,7 @@ display_system_banner() {
     # Reset terminal state after animation
     tput cnorm 2>/dev/null || true
     printf '\033[0m'  # Reset all attributes
+    echo
 }
 
 # Interactive menu
@@ -340,4 +341,3 @@ main() {
 
 # Run main
 main "$@"
-

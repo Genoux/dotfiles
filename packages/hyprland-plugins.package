@@ -3,5 +3,5 @@
 
 #Hyprspace = https://github.com/KZDKM/Hyprspace
 
-# Official hyprland-plugins repo (contains multiple plugins)
-hyprexpo = https://github.com/hyprwm/hyprland-plugins
+# Hyprexpo is no longer advertised by the official hyprland-plugins hyprpm metadata.
+hyprexpo = https://github.com/sandwichfarm/hyprexpo-plus

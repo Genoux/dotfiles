@@ -50,9 +50,9 @@ output_path = "~/.cursor/extensions/matugen.material-you-1.0.0/package.json"
 input_path = "~/.config/matugen/templates/cursor-theme.json"
 output_path = "~/.cursor/extensions/matugen.material-you-1.0.0/themes/matugen-color-theme.json"
 
-# Hyprland borders + (optional) hyprlock — sourced by hyprland.conf
+# Hyprland borders + (optional) hyprlock — require from hyprland.lua if enabled
 # Uncomment to enable
 # [templates.hyprland]
-# input_path = "~/.config/matugen/templates/hyprland-colors.conf"
-# output_path = "~/.config/hypr/matugen-colors.conf"
+# input_path = "~/.config/matugen/templates/hyprland-colors.lua"
+# output_path = "~/.config/hypr/matugen-colors.lua"
 # post_hook = "hyprctl reload"

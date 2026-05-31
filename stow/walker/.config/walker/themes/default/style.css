@@ -33,13 +33,6 @@
   font-size: 13px;
 }
 
-/* Text selection highlighting */
-*::selection,
-*:selected {
-  background-color: alpha(@base0D, 0.4);
-  color: white;
-}
-
 .normal-icons {
   -gtk-icon-size: 16px;
 }
@@ -104,7 +97,12 @@
   border-radius: 8px;
   padding: 7px 8px;
   border: 1px solid transparent;
-  transition: all 0.12s ease-out;
+  transition: background-color 0.12s ease-out, border-color 0.12s ease-out;
+}
+
+child:hover:not(:selected) .item-box {
+  background: transparent;
+  border-color: transparent;
 }
 
 .item-quick-activation {

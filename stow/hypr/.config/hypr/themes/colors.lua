@@ -1,0 +1,8 @@
+hl.config({
+  general = {
+    col = {
+      active_border = "rgba(113,113,113,0.05)",
+      inactive_border = "rgba(185,185,185,0.02)",
+    },
+  },
+})

@@ -54,50 +54,49 @@ Important subcommands:
 
 ## Hyprland Architecture
 
-`stow/hypr/.config/hypr/hyprland.conf` is intentionally small. It sources modules
+`stow/hypr/.config/hypr/hyprland.lua` is intentionally small. It requires modules
 in Hyprdots-like order (hardware → session → behavior → theme stack → startup →
 overrides):
 
-1. `gpu.conf`
-2. `monitors.conf`
-3. `env.conf`
-4. `input.conf`
-5. `misc.conf`
-6. `plugins.conf`
-7. `animations.conf`
-8. `keybindings.conf`
-9. `windowrules.conf`
-10. `themes/common.conf`
-11. `themes/theme.conf`
-12. `themes/colors.conf`
-13. `autostart.conf`
-14. `userprefs.conf` (last — personal overrides)
+1. `gpu.lua`
+2. `monitors.lua`
+3. `env.lua`
+4. `input.lua`
+5. `misc.lua`
+6. `plugins.lua`
+7. `animations.lua`
+8. `keybindings.lua`
+9. `windowrules.lua`
+10. `themes/common.lua`
+11. `themes/theme.lua`
+12. `themes/colors.lua`
+13. `autostart.lua`
+14. `userprefs.lua` (last — personal overrides)
 
 Keep new Hyprland settings in the narrowest matching file. Only edit
-`hyprland.conf` when changing source order or root-level permissions.
+`hyprland.lua` when changing require order or root-level permissions.
 
 Hyprland ownership guide:
 
-- Environment and session variables: `env.conf`.
-- Monitors and generated display config: `monitors.conf` or templates.
-- GPU-specific output from detection: `gpu.conf` or `gpu.conf.template`.
-- Animations and layer animation rules: `animations.conf`.
-- Input devices, gestures, touchpad, keyboard: `input.conf`.
-- Misc desktop behavior (xwayland, binds, dwindle, debug): `misc.conf`.
-- Keybindings and app variables: `keybindings.conf`.
-- Window and workspace rules: `windowrules.conf`.
-- Shared cursor/group visuals: `themes/common.conf` (sources `cursor.conf`).
-- Layout, blur, shadows, gaps: `themes/theme.conf`.
-- Border colors static fallback: `themes/colors.conf`.
-- Personal overrides: `userprefs.conf`.
-- Startup services and session bootstrap: `autostart.conf`.
+- Environment and session variables: `env.lua`.
+- Monitors and generated display config: `monitors.lua`.
+- GPU-specific output from detection: `gpu.lua`.
+- Animations and layer animation rules: `animations.lua`.
+- Input devices, gestures, touchpad, keyboard: `input.lua`.
+- Misc desktop behavior (xwayland, binds, dwindle, debug): `misc.lua`.
+- Keybindings and app variables: `keybindings.lua`.
+- Window and workspace rules: `windowrules.lua`.
+- Shared cursor/group visuals: `themes/common.lua` (requires `cursor.lua`).
+- Layout, blur, shadows, gaps: `themes/theme.lua`.
+- Border colors static fallback: `themes/colors.lua`.
+- Personal overrides: `userprefs.lua`.
+- Startup services and session bootstrap: `autostart.lua`.
 - Wallpaper rotation: `system-pick-wallpaper` reads `~/.config/hypr/wallpapers/saves/`.
 - awww transitions: `wallpaper-awww.conf`.
 - Lock and idle behavior: `hyprlock.conf` and `hypridle.conf`.
 
-Use current Hyprland syntax. This repo already uses modern `windowrule { ... }`
-blocks and sourced modules; do not collapse it back into legacy one-line rule
-sprawl unless the user asks.
+Use current Hyprland Lua syntax. Do not collapse the modular Lua files back into
+legacy hyprlang one-line rule sprawl unless the user asks.
 
 ## Desktop Components
 
@@ -129,17 +128,43 @@ sprawl unless the user asks.
   only; no `wallpaper.conf`, rounded-corner post-processing, or similar hacks.
 - The user is comfortable being challenged directly if an approach is wrong or
   likely to make the setup harder to maintain.
+- Keep `keybindings.lua` thin: bind keys only; put reusable Hypr logic in `actions/*`
+  modules (also callable from AGS via `require("actions.*")`).
+- Anything that drives Hyprland (keybinds, widgets, scripts) should use the 0.55
+  Lua dispatcher API (`hl.dsp`, `hl.bind`), not legacy `hyprctl dispatch` strings.
+- Cursor theme should follow GTK/matugen theme install/switch, not stay hardcoded
+  in `cursor.lua`.
+- Session restore (`hyprsession`) should stay enabled by default when possible.
 
 ## Learned Workspace Facts
 
-- `gpu.conf` and `monitors.conf` must stay at the Hypr config root; dotfiles
+- `gpu.lua` and `monitors.lua` must stay at the Hypr config root; dotfiles
   detection and setup scripts expect those exact paths.
-- Hypr `layerrule` for layer animation uses block syntax with `no_anim = on`,
+- Hypr `layerrule` for layer animation uses `hl.layer_rule({ no_anim = true })`,
   not legacy one-line `layerrule = noanim, ...`.
 - Calcurse Google/iCal feed URLs live in gitignored
   `stow/calcurse/.config/calcurse/ics-feeds`; imports run via `hooks/pre-load`.
 - Hypr `animations/` is kept with `.gitkeep` for Hyprdots layout parity; animation
-  presets still live in `animations.conf` until split into that folder.
+  presets still live in `animations.lua` until split into that folder.
+- Hyprland 0.55+ Lua configs use `hl.bind("MOD + key", hl.dsp.*)`; use lowercase
+  letter keysyms for plain letter binds (uppercase often fails to match).
+- On `hyprctl reload`, Lua `require()` is cached — clear affected `package.loaded`
+  entries in `hyprland.lua` (especially `keybindings`) or binds can disappear.
+- `hyprsession` 0.2.0 restore is incompatible with `hyprland.lua` (upstream issue
+  #18); dotfiles use `system-hyprsession` to wrap restore as `hl.dsp.exec_cmd(...)`
+  and re-detect live `HYPRLAND_INSTANCE_SIGNATURE`.
+- `hyprsession.service` / `ags.service` start only from Hyprland `autostart.lua`
+  (not `WantedBy=graphical-session.target`); start `hyprsession` before AGS/Walker/Mako;
+  no long `ExecStartPre` wait on AGS.
+- Cursor theme: `lib/gtk.sh` writes only `theme` to
+  `~/.config/hypr/generated/cursor.lua` on GTK install; cursor size stays in
+  `cursor.lua`. Set `XCURSOR_THEME` with expanded `XCURSOR_PATH` (not literal
+  `$HOME`).
+- Hypr capability modules live under `stow/hypr/.config/hypr/actions/` (`launchers`,
+  `paths`, `screenshots`, `windows`, `workspaces`); trigger via
+  `hyprctl dispatch 'require("actions.*").fn()'`.
+- AGS Hyprland integration: `ags.service` needs `PATH` including `~/.local/bin`;
+  use the Lua dispatch helper instead of legacy `focuswindow` dispatches.
 
 ## Shell And Script Style
 

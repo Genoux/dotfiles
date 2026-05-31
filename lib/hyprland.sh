@@ -3,7 +3,7 @@
 
 # Get dotfiles directory
 DOTFILES_DIR="$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" && pwd)"
-MONITORS_CONF="$HOME/.config/hypr/monitors.conf"
+MONITORS_LUA="$HOME/.config/hypr/monitors.lua"
 
 # Source helpers if not already loaded
 if [[ -z "${DOTFILES_HELPERS_LOADED:-}" ]]; then
@@ -128,9 +128,9 @@ generate_monitor_config() {
     local device_type=$(detect_device_type)
     local x_offset=0
     
-    echo "# Auto-generated monitor configuration"
-    echo "# Generated on $(date)"
-    echo "# Device type: $device_type"
+    echo "-- Auto-generated monitor configuration"
+    echo "-- Generated on $(date)"
+    echo "-- Device type: $device_type"
     echo ""
     
     # Device-specific scaling
@@ -157,7 +157,15 @@ generate_monitor_config() {
         local resolution=$(echo "$mode_info" | cut -d'@' -f1)
         local refresh_rate=$(echo "$mode_info" | cut -d'@' -f2)
         
-        echo "monitor = $monitor_name,$resolution@$refresh_rate,${x_offset}x0,$laptop_scale"
+        cat << EOF
+hl.monitor({
+  output = "$monitor_name",
+  mode = "$resolution@$refresh_rate",
+  position = "${x_offset}x0",
+  scale = $laptop_scale,
+})
+
+EOF
         
         local width=$(echo "$resolution" | cut -d'x' -f1)
         x_offset=$((x_offset + width))
@@ -173,16 +181,30 @@ generate_monitor_config() {
         local resolution=$(echo "$mode_info" | cut -d'@' -f1)
         local refresh_rate=$(echo "$mode_info" | cut -d'@' -f2)
         
-        echo "monitor = $monitor_name,$resolution@$refresh_rate,${x_offset}x0,$ext_scale"
+        cat << EOF
+hl.monitor({
+  output = "$monitor_name",
+  mode = "$resolution@$refresh_rate",
+  position = "${x_offset}x0",
+  scale = $ext_scale,
+})
+
+EOF
         
         local width=$(echo "$resolution" | cut -d'x' -f1)
         x_offset=$((x_offset + width))
     done
     
     # Fallback
-    echo ""
-    echo "# Fallback for unrecognized monitors"
-    echo "monitor = ,preferred,auto,$desktop_scale"
+    echo "-- Fallback for unrecognized monitors"
+    cat << EOF
+hl.monitor({
+  output = "",
+  mode = "preferred",
+  position = "auto",
+  scale = $desktop_scale,
+})
+EOF
 }
 
 # Setup Hyprland monitors
@@ -200,27 +222,23 @@ hyprland_setup() {
     local monitors=($(detect_monitors))
     
     # Ensure directory exists
-    ensure_directory "$(dirname "$MONITORS_CONF")"
+    ensure_directory "$(dirname "$MONITORS_LUA")"
     
     if [[ ${#monitors[@]} -eq 0 ]]; then
         log_warning "No monitors detected (Hyprland not running?)"
         
-        # Use template as fallback
-        local template_file="$DOTFILES_DIR/stow/hypr/.config/hypr/monitors.conf.template"
-        if [[ -f "$template_file" ]]; then
-            log_info "Using template fallback..."
-            cp "$template_file" "$MONITORS_CONF"
-            log_success "Monitor configuration created from template"
-        else
-            # Create basic fallback
-            {
-                echo "# Fallback monitor configuration"
-                echo "# Run 'dotfiles hyprland setup' after starting Hyprland"
-                echo ""
-                echo "monitor = ,preferred,auto,1"
-            } > "$MONITORS_CONF"
-            log_success "Created fallback monitor configuration"
-        fi
+        {
+            echo "-- Fallback monitor configuration"
+            echo "-- Run 'dotfiles hyprland setup' after starting Hyprland"
+            echo ""
+            echo "hl.monitor({"
+            echo "  output = \"\","
+            echo "  mode = \"preferred\","
+            echo "  position = \"auto\","
+            echo "  scale = 1,"
+            echo "})"
+        } > "$MONITORS_LUA"
+        log_success "Created fallback monitor configuration"
         return 0
     fi
     
@@ -235,15 +253,8 @@ hyprland_setup() {
 
     # Generate and write config
     log_info "Generating monitor configuration..."
-    generate_monitor_config "${monitors[@]}" > "$MONITORS_CONF"
-    log_success "Monitor configuration written to monitors.conf"
-
-    # Update main config to source monitors.conf
-    local main_config="$HOME/.config/hypr/hyprland.conf"
-    if [[ -f "$main_config" ]] && ! grep -q "source.*monitors\.conf" "$main_config"; then
-        echo -e "\n# Device-specific monitor configuration\nsource = ~/.config/hypr/monitors.conf" >> "$main_config"
-        log_info "Added monitors.conf to hyprland.conf"
-    fi
+    generate_monitor_config "${monitors[@]}" > "$MONITORS_LUA"
+    log_success "Monitor configuration written to monitors.lua"
 
     # Reload if Hyprland is running
     if hyprctl version &>/dev/null; then
@@ -332,7 +343,7 @@ hyprland_status() {
 
     # Show configuration status
     log_info "Configuration:"
-    local hypr_config="$HOME/.config/hypr/hyprland.conf"
+    local hypr_config="$HOME/.config/hypr/hyprland.lua"
     if [[ -f "$hypr_config" ]]; then
         echo "$(status_ok) Main config: $hypr_config"
     else
@@ -342,7 +353,7 @@ hyprland_status() {
     # Check for config includes
     local config_dir="$HOME/.config/hypr"
     if [[ -d "$config_dir" ]]; then
-        local config_files=$(find "$config_dir" -name "*.conf" -type f 2>/dev/null | wc -l)
+        local config_files=$(find "$config_dir" -name "*.lua" -type f 2>/dev/null | wc -l)
         if [[ $config_files -gt 1 ]]; then
             echo "$(gum style --foreground 8 "$config_files config files found")"
         fi
@@ -361,7 +372,7 @@ hyprland_show_version() {
 
 # Generate GPU-specific configuration
 generate_gpu_config() {
-    local gpu_conf="$HOME/.config/hypr/gpu.conf"
+    local gpu_lua="$HOME/.config/hypr/gpu.lua"
     local gpu_type=""
 
     # Detect GPU
@@ -386,89 +397,67 @@ generate_gpu_config() {
     [[ -z "$render_device" ]] && render_device="renderD128"
 
     # Generate header
-    cat > "$gpu_conf" << EOF
-# ================================
-# GPU-SPECIFIC CONFIGURATION
-# ================================
-# Auto-generated on $(date)
-# Detected GPU: $gpu_type
-# DRI card: /dev/dri/$dri_card
-# Render device: /dev/dri/$render_device
+    cat > "$gpu_lua" << EOF
+-- Auto-generated GPU configuration
+-- Generated on $(date)
+-- Detected GPU: $gpu_type
+-- DRI card: /dev/dri/$dri_card
+-- Render device: /dev/dri/$render_device
 
 EOF
 
     # Add GPU-specific settings
     if [[ "$gpu_type" == "NVIDIA" ]]; then
-        cat >> "$gpu_conf" << EOF
-# ================================
-# NVIDIA GPU SETTINGS
-# ================================
-env = GBM_BACKEND,nvidia-drm
-env = __GLX_VENDOR_LIBRARY_NAME,nvidia
-env = LIBVA_DRIVER_NAME,nvidia
-env = NVIDIA_WAYLAND_ENABLE_DRM_KMS,1
-env = __GL_GSYNC_ALLOWED,0
-env = __GL_VRR_ALLOWED,0
+        cat >> "$gpu_lua" << EOF
+hl.env("GBM_BACKEND", "nvidia-drm")
+hl.env("__GLX_VENDOR_LIBRARY_NAME", "nvidia")
+hl.env("LIBVA_DRIVER_NAME", "nvidia")
+hl.env("NVIDIA_WAYLAND_ENABLE_DRM_KMS", "1")
+hl.env("__GL_GSYNC_ALLOWED", "0")
+hl.env("__GL_VRR_ALLOWED", "0")
 
-# NVIDIA suspend/resume fixes
-env = __GL_MaxFramesAllowed,1
-env = __GL_SYNC_TO_VBLANK,0
-env = NVIDIA_FORCE_COMPOSITION_PIPELINE,1
-env = __GL_THREADED_OPTIMIZATIONS,0
+hl.env("__GL_MaxFramesAllowed", "1")
+hl.env("__GL_SYNC_TO_VBLANK", "0")
+hl.env("NVIDIA_FORCE_COMPOSITION_PIPELINE", "1")
+hl.env("__GL_THREADED_OPTIMIZATIONS", "0")
 
-# WLR settings for NVIDIA
-env = WLR_NO_HARDWARE_CURSORS,1
-# NOTE: Vulkan renderer disabled - causes OOPSI crashes during DPMS off/on (idle)
-# env = WLR_RENDERER,vulkan
-env = WLR_DRM_DEVICES,/dev/dri/${dri_card}
-env = WLR_RENDER_DRM_DEVICE,/dev/dri/${render_device}
+hl.env("WLR_NO_HARDWARE_CURSORS", "1")
+-- Vulkan renderer remains disabled because it causes DPMS off/on crashes on this setup.
+-- hl.env("WLR_RENDERER", "vulkan")
+hl.env("WLR_DRM_DEVICES", "/dev/dri/${dri_card}")
+hl.env("WLR_RENDER_DRM_DEVICE", "/dev/dri/${render_device}")
 EOF
     elif [[ "$gpu_type" == "AMD" ]]; then
-        cat >> "$gpu_conf" << EOF
-# ================================
-# AMD GPU SETTINGS
-# ================================
-# Hardware video acceleration
-env = LIBVA_DRIVER_NAME,radeonsi
-env = VDPAU_DRIVER,radeonsi
+        cat >> "$gpu_lua" << EOF
+hl.env("LIBVA_DRIVER_NAME", "radeonsi")
+hl.env("VDPAU_DRIVER", "radeonsi")
 
-# WLR settings for AMD
-# NOTE: Vulkan renderer disabled - causes OOPSI crashes during DPMS off/on (idle)
-# Using default OpenGL renderer for stability
-# env = WLR_RENDERER,vulkan
-env = WLR_DRM_DEVICES,/dev/dri/${dri_card}
-env = WLR_RENDER_DRM_DEVICE,/dev/dri/${render_device}
+-- Vulkan renderer remains disabled because it causes DPMS off/on crashes on this setup.
+-- hl.env("WLR_RENDERER", "vulkan")
+hl.env("WLR_DRM_DEVICES", "/dev/dri/${dri_card}")
+hl.env("WLR_RENDER_DRM_DEVICE", "/dev/dri/${render_device}")
 
-# Mesa/AMD optimizations
-env = MESA_SHADER_CACHE_DISABLE,false
-env = AMD_VULKAN_ICD,RADV
+hl.env("MESA_SHADER_CACHE_DISABLE", "false")
+hl.env("AMD_VULKAN_ICD", "RADV")
 EOF
     elif [[ "$gpu_type" == "Intel" ]]; then
-        cat >> "$gpu_conf" << EOF
-# ================================
-# INTEL GPU SETTINGS
-# ================================
-# Hardware video acceleration
-env = LIBVA_DRIVER_NAME,iHD
-env = VDPAU_DRIVER,va_gl
+        cat >> "$gpu_lua" << EOF
+hl.env("LIBVA_DRIVER_NAME", "iHD")
+hl.env("VDPAU_DRIVER", "va_gl")
 
-# WLR settings for Intel
-# NOTE: Vulkan renderer disabled - causes OOPSI crashes during DPMS off/on (idle)
-# env = WLR_RENDERER,vulkan
-env = WLR_DRM_DEVICES,/dev/dri/${dri_card}
-env = WLR_RENDER_DRM_DEVICE,/dev/dri/${render_device}
+-- Vulkan renderer remains disabled because it causes DPMS off/on crashes on this setup.
+-- hl.env("WLR_RENDERER", "vulkan")
+hl.env("WLR_DRM_DEVICES", "/dev/dri/${dri_card}")
+hl.env("WLR_RENDER_DRM_DEVICE", "/dev/dri/${render_device}")
 EOF
     else
-        cat >> "$gpu_conf" << EOF
-# ================================
-# GENERIC GPU SETTINGS
-# ================================
-# NOTE: Vulkan renderer disabled - causes OOPSI crashes during DPMS off/on (idle)
-# env = WLR_RENDERER,vulkan
+        cat >> "$gpu_lua" << EOF
+-- Vulkan renderer remains disabled because it causes DPMS off/on crashes on this setup.
+-- hl.env("WLR_RENDERER", "vulkan")
 EOF
     fi
 
-    log_success "Generated gpu.conf for $gpu_type"
+    log_success "Generated gpu.lua for $gpu_type"
     log_info "DRI card: /dev/dri/$dri_card"
     log_info "Render device: /dev/dri/$render_device"
 }
@@ -481,22 +470,6 @@ hyprland_setup_gpu() {
     ensure_directory "$HOME/.config/hypr"
 
     generate_gpu_config
-
-    # Update hyprland.conf to source gpu.conf if not already there
-    local main_config="$HOME/.config/hypr/hyprland.conf"
-    if [[ -f "$main_config" ]] && ! grep -q "source.*gpu\.conf" "$main_config"; then
-        # Add before other sources to ensure GPU settings load first
-        if grep -q "^source = " "$main_config"; then
-            # Insert before the first source line
-            sed -i '0,/^source = /{s/^source = /source = ~\/.config\/hypr\/gpu.conf\n&/}' "$main_config"
-        else
-            # Add at the beginning of the file after comments
-            sed -i '1a source = ~/.config/hypr/gpu.conf' "$main_config"
-        fi
-        log_success "Added gpu.conf to hyprland.conf"
-    elif [[ -f "$main_config" ]]; then
-        log_info "gpu.conf already sourced in hyprland.conf"
-    fi
 
     echo
     log_warning "You need to restart Hyprland for GPU changes to take effect"

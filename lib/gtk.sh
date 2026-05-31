@@ -24,6 +24,113 @@ list_themes() {
     printf '%s\n' "${themes[@]}"
 }
 
+cursor_theme_has_cursors() {
+    local cursor_theme="$1"
+    local cursor_dir
+
+    for cursor_dir in \
+        "$HOME/.local/share/icons/$cursor_theme/cursors" \
+        "$HOME/.icons/$cursor_theme/cursors" \
+        "/usr/share/icons/$cursor_theme/cursors"; do
+        [[ -d "$cursor_dir" ]] && return 0
+    done
+
+    return 1
+}
+
+select_cursor_theme() {
+    local base_theme_name="$1"
+    local color="$2"
+    local current_cursor=""
+    local candidate
+
+    if command -v gsettings &>/dev/null; then
+        current_cursor=$(gsettings get org.gnome.desktop.interface cursor-theme 2>/dev/null | tr -d "'")
+    fi
+
+    for candidate in \
+        "${base_theme_name}-${color}" \
+        "${base_theme_name}-${color^}" \
+        "$base_theme_name" \
+        "$current_cursor" \
+        "default"; do
+        [[ -n "$candidate" ]] || continue
+        if cursor_theme_has_cursors "$candidate"; then
+            printf '%s\n' "$candidate"
+            return 0
+        fi
+    done
+
+    printf '%s\n' "default"
+}
+
+read_hypr_cursor_size() {
+    local cursor_lua="$HOME/.config/hypr/cursor.lua"
+    local size
+
+    if [[ -f "$cursor_lua" ]]; then
+        size=$(rg -o 'size\s*=\s*"([0-9]+)"' "$cursor_lua" -r '$1' --no-line-number 2>/dev/null | head -1)
+    fi
+
+    if [[ "$size" =~ ^[0-9]+$ ]]; then
+        printf '%s\n' "$size"
+        return 0
+    fi
+
+    printf '%s\n' "24"
+}
+
+write_hypr_cursor_config() {
+    local cursor_theme="$1"
+    local generated_dir="$HOME/.config/hypr/generated"
+    local generated_file="$generated_dir/cursor.lua"
+
+    mkdir -p "$generated_dir"
+    printf 'return {\n  theme = "%s",\n}\n' "$cursor_theme" > "$generated_file"
+}
+
+find_live_hyprland_signature() {
+    local runtime_dir="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+    local instance_dir
+    local signature
+
+    for instance_dir in "$runtime_dir"/hypr/*; do
+        [[ -S "$instance_dir/.socket.sock" ]] || continue
+        signature="$(basename "$instance_dir")"
+
+        if HYPRLAND_INSTANCE_SIGNATURE="$signature" hyprctl version >/dev/null 2>&1; then
+            printf '%s\n' "$signature"
+            return 0
+        fi
+    done
+
+    return 1
+}
+
+apply_cursor_theme() {
+    local cursor_theme="$1"
+    local cursor_size
+    cursor_size=$(read_hypr_cursor_size)
+    local cursor_path="$HOME/.local/share/icons:$HOME/.icons:/usr/share/icons:/usr/share/pixmaps"
+
+    write_hypr_cursor_config "$cursor_theme"
+
+    if command -v gsettings &>/dev/null; then
+        gsettings set org.gnome.desktop.interface cursor-theme "$cursor_theme"
+    fi
+
+    if command -v systemctl &>/dev/null; then
+        systemctl --user set-environment \
+            XCURSOR_THEME="$cursor_theme" \
+            XCURSOR_PATH="$cursor_path" 2>/dev/null || true
+    fi
+
+    local signature
+    if signature=$(find_live_hyprland_signature); then
+        HYPRLAND_INSTANCE_SIGNATURE="$signature" hyprctl setcursor "$cursor_theme" "$cursor_size" >/dev/null 2>&1 || true
+    fi
+}
+
 install_theme() {
     local theme_name="$1"
     local theme_path="$THEMES_DIR/${theme_name}"
@@ -109,6 +216,11 @@ install_theme() {
             
             gsettings set org.gnome.desktop.interface gtk-theme "$full_theme_name"
             log_info "Active GTK theme: $full_theme_name"
+
+            local cursor_theme
+            cursor_theme=$(select_cursor_theme "$base_theme_name" "$color")
+            apply_cursor_theme "$cursor_theme"
+            log_info "Active cursor theme: $cursor_theme (size from hypr: $(read_hypr_cursor_size))"
         fi
         
         echo

@@ -68,14 +68,17 @@ ensure_hyprpm() {
 
 # Get list of enabled plugins
 get_enabled_plugins() {
-    hyprpm list 2>/dev/null | grep "Plugin" | awk '{print $2}' || true
+    hyprpm list 2>/dev/null \
+        | sed 's/\x1b\[[0-9;]*m//g' \
+        | sed -nE 's/^[[:space:]]*│ Plugin[[:space:]]+(.+)$/\1/p' || true
 }
 
 # Get list of all installed plugins (enabled or disabled)
 get_all_installed_plugins() {
-    # Get all plugin names from hyprpm list
-    # Format: "│ Plugin PluginName" or "→ Repository PluginName:"
-    hyprpm list 2>/dev/null | sed 's/\x1b\[[0-9;]*m//g' | grep -E "(^│ Plugin|^→ Repository)" | sed 's/^│ Plugin //; s/^→ Repository //; s/:$//' | sort -u || true
+    hyprpm list 2>/dev/null \
+        | sed 's/\x1b\[[0-9;]*m//g' \
+        | sed -nE 's/^[[:space:]]*│ Plugin[[:space:]]+(.+)$/\1/p' \
+        | sort -u || true
 }
 
 # Check if plugin is enabled
@@ -88,8 +91,9 @@ is_plugin_enabled() {
 # Check if plugin is installed (enabled or disabled)
 is_plugin_installed() {
     local plugin_name="$1"
-    # Check if plugin appears in the list (either as "│ Plugin PluginName" or "→ Repository PluginName:")
-    hyprpm list 2>/dev/null | sed 's/\x1b\[[0-9;]*m//g' | grep -qE "(│ Plugin $plugin_name|→ Repository $plugin_name:)"
+    hyprpm list 2>/dev/null \
+        | sed 's/\x1b\[[0-9;]*m//g' \
+        | grep -qE "^[[:space:]]*│ Plugin[[:space:]]+$plugin_name$"
 }
 
 # Remove a plugin
@@ -184,27 +188,29 @@ setup_hyprland_plugins() {
     # hyprpm operations may require sudo for loading/unloading plugins
     sudo -v 2>/dev/null || true
 
-    # Get list of currently installed plugins and remove orphaned ones
+    # Get list of currently installed plugins and disable orphaned ones
     local installed_plugins=()
     while IFS= read -r plugin; do
         [[ -n "$plugin" ]] && installed_plugins+=("$plugin")
     done < <(get_all_installed_plugins)
 
-    # Remove plugins that are installed but not in config
+    # Disable plugins that are enabled but not in config. Disabled entries from
+    # old repositories are harmless, and trying to remove them makes setup noisy.
     if [[ ${#installed_plugins[@]} -gt 0 ]]; then
-        local removed_count=0
+        local disabled_count=0
         
         for installed_plugin in "${installed_plugins[@]}"; do
-            # Check if plugin is in config
-            if [[ -z "${HYPRLAND_PLUGINS[$installed_plugin]:-}" ]]; then
-                if remove_plugin "$installed_plugin"; then
-                    ((removed_count++))
+            if [[ -z "${HYPRLAND_PLUGINS[$installed_plugin]:-}" ]] && is_plugin_enabled "$installed_plugin"; then
+                if hyprpm disable "$installed_plugin" 2>/dev/null; then
+                    ((disabled_count++))
+                else
+                    log_warning "Failed to disable orphaned plugin: $installed_plugin"
                 fi
             fi
         done
         
-        if [[ $removed_count -gt 0 ]]; then
-            log_success "Removed $removed_count orphaned plugin(s)"
+        if [[ $disabled_count -gt 0 ]]; then
+            log_success "Disabled $disabled_count orphaned plugin(s)"
             echo
         fi
     fi

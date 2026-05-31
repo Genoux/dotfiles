@@ -2,11 +2,11 @@ import { Gtk } from "ags/gtk4";
 import { createPoll } from "ags/time";
 import {
   getActivePlayer,
-  getPlayerStableId,
   markPlayerAsInteracted,
   currentPlayerInfo,
   currentPlayerPlayIcon,
-  toggleMediaPanel,
+  hasDisplayableMedia,
+  focusActivePlayerWindow,
 } from "../service";
 import { CavaVisualizer } from "../../cava";
 import { Button } from "../../../lib/components";
@@ -27,13 +27,13 @@ const scrollingText = createPoll("", SCROLL_SPEED, () => {
     return "";
   }
 
-  const sourceKey = `${getPlayerStableId(player)}|${player.title}|${player.artist}`;
+  const sourceKey = currentPlayerInfo();
   if (sourceKey !== lastScrollSourceKey) {
     scrollOffset = 0;
     lastScrollSourceKey = sourceKey;
   }
 
-  const text = currentPlayerInfo.get();
+  const text = currentPlayerInfo();
 
   if (text.length <= MAX_LENGTH) {
     scrollOffset = 0;
@@ -48,16 +48,10 @@ const scrollingText = createPoll("", SCROLL_SPEED, () => {
 });
 
 export function MediaPlayerButton() {
-
   return (
-    <box spacing={3} class='mediaplayer group' visible={currentPlayerInfo((info) => info !== "No media")}>
-      <Button onClicked={toggleMediaPanel}>
-        <box
-          spacing={6}
-          class="media-content"
-          vexpand={false}
-          valign={Gtk.Align.CENTER}
-        >
+    <box spacing={3} class="mediaplayer group" visible={hasDisplayableMedia}>
+      <Button onClicked={() => void focusActivePlayerWindow()}>
+        <box spacing={6} class="media-content" vexpand={false} valign={Gtk.Align.CENTER}>
           <CavaVisualizer />
           <label
             class="media-info"

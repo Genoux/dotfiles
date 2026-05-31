@@ -197,6 +197,9 @@ export PATH="$HOME/.npm-global/bin:$PATH"
 # Rust cargo binaries
 export PATH="$HOME/.cargo/bin:$PATH"
 
+# Go binaries
+export PATH="$HOME/go/bin:$PATH"
+
 if command -v eza &>/dev/null; then
     alias ls='eza --icons --group-directories-first --color=auto'
     alias ll='eza -lh --icons --group-directories-first --color=auto'

@@ -1,10 +1,11 @@
 import Tray from "gi://AstalTray";
-import Mpris from "gi://AstalMpris";
+import Playerctl from "gi://Playerctl";
 import Gtk from "gi://Gtk?version=4.0";
 import Gdk from "gi://Gdk?version=4.0";
 import { createBinding } from "ags";
 import { execAsync } from "ags/process";
-import { markPlayerAsInteracted } from "../mediaplayer/service";
+import { markPlayerIdAsInteracted } from "../mediaplayer/service";
+import { focusWindow } from "../../services/hyprland";
 
 const tray = Tray.get_default();
 
@@ -33,40 +34,39 @@ export function registerIconTheme(item: Tray.TrayItem) {
   }
 }
 
-function trayItemMatchesMprisPlayer(item: Tray.TrayItem, player: Mpris.Player): boolean {
+function playerNameStableId(name: Playerctl.PlayerName): string {
+  return `${name.source}:${name.name}:${name.instance}`;
+}
+
+function trayItemMatchesPlayerName(item: Tray.TrayItem, name: Playerctl.PlayerName): boolean {
   const id = (item.id || "").toLowerCase();
   const itemTitle = (item.title || "").toLowerCase();
-  const bus = (player.bus_name || "").toLowerCase();
-  const busShort = bus.replace("org.mpris.mediaplayer2.", "");
-  const entry = (player.entry || "").replace(/\.desktop$/i, "").toLowerCase();
+  const playerName = (name.name || "").toLowerCase();
+  const instance = (name.instance || "").toLowerCase();
 
-  if (entry && (id.includes(entry) || itemTitle.includes(entry))) {
+  if (playerName && (id.includes(playerName) || itemTitle.includes(playerName))) {
+    return true;
+  }
+
+  if (instance && (id.includes(instance) || itemTitle.includes(instance))) {
     return true;
   }
 
   const idSegments = id.split(/[._-]+/).filter((s) => s.length > 2);
-  if (idSegments.some((seg) => bus.includes(seg))) {
-    return true;
-  }
-
-  if (busShort.length > 0 && (id.includes(busShort) || busShort.split(".").some((p) => p.length > 2 && id.includes(p)))) {
+  if (idSegments.some((seg) => playerName.includes(seg) || instance.includes(seg))) {
     return true;
   }
 
   return false;
 }
 
-function raiseMprisForTrayItem(item: Tray.TrayItem): boolean {
-  const mpris = Mpris.get_default();
-  for (const player of mpris.players) {
-    if (!player.can_raise || !trayItemMatchesMprisPlayer(item, player)) {
-      continue;
+function markMediaPlayerForTrayItem(item: Tray.TrayItem) {
+  for (const name of Playerctl.list_players()) {
+    if (trayItemMatchesPlayerName(item, name)) {
+      markPlayerIdAsInteracted(playerNameStableId(name));
+      return;
     }
-    markPlayerAsInteracted(player);
-    player.raise();
-    return true;
   }
-  return false;
 }
 
 async function focusHyprWindowForTrayItem(item: Tray.TrayItem) {
@@ -80,7 +80,9 @@ async function focusHyprWindowForTrayItem(item: Tray.TrayItem) {
 
   const id = (item.id || "").toLowerCase();
   const title = (item.title || "").toLowerCase();
-  const tokens = [...new Set([id, ...id.split(/[._-]+/), title.slice(0, 24)])].filter((t) => t && t.length > 2);
+  const tokens = [...new Set([id, ...id.split(/[._-]+/), title.slice(0, 24)])].filter(
+    (t) => t && t.length > 2
+  );
 
   const match = clients.find((c) => {
     const cls = (c.class || "").toLowerCase();
@@ -88,15 +90,12 @@ async function focusHyprWindowForTrayItem(item: Tray.TrayItem) {
     const ttl = (c.title || "").toLowerCase();
     return tokens.some(
       (tok) =>
-        cls.includes(tok) ||
-        initialClass.includes(tok) ||
-        tok.includes(cls) ||
-        ttl.includes(tok),
+        cls.includes(tok) || initialClass.includes(tok) || tok.includes(cls) || ttl.includes(tok)
     );
   });
 
   if (match?.address) {
-    await execAsync(["hyprctl", "dispatch", "focuswindow", `address:${match.address}`]);
+    await focusWindow(`address:${match.address}`);
   }
 }
 
@@ -120,11 +119,7 @@ export function openTrayMenu(item: Tray.TrayItem, widget: any) {
 export async function handlePrimaryClick(item: Tray.TrayItem) {
   try {
     item.activate(0, 0);
-
-    if (raiseMprisForTrayItem(item)) {
-      return;
-    }
-
+    markMediaPlayerForTrayItem(item);
     await focusHyprWindowForTrayItem(item);
   } catch (error) {
     console.error(`Tray activation failed for ${item.id}:`, error);
@@ -150,4 +145,3 @@ export function handleMiddleClick(item: Tray.TrayItem) {
     console.error(`Tray middle click failed for ${item.id}:`, error);
   }
 }
-

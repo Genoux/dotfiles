@@ -1,0 +1,15 @@
+[Unit]
+Description=Hyprland session save loop (restore via system-hyprsession load in autostart)
+Documentation=https://github.com/joshurtree/hyprsession
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+Environment=HYPRSESSION_SAVE_INITIAL_DELAY=120
+Environment=HYPRSESSION_SAVE_INTERVAL=45
+ExecStart=%h/.local/bin/system-hyprsession
+Restart=on-failure
+RestartSec=5
+KillMode=mixed
+TimeoutStopSec=5

@@ -1,0 +1,544 @@
+#!/usr/bin/env bash
+# Hyprland 0.55+ Lua configs: do not use the hyprsession binary for restore (issue #18).
+# Restore/save via this wrapper using hl.dsp.exec_cmd(...) dispatches.
+set -euo pipefail
+
+runtime_dir="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/hyprsession"
+data_home="${XDG_DATA_HOME:-$HOME/.local/share}"
+session_root="${HYPRSESSION_PATH:-$data_home/hyprsession}"
+
+find_live_hyprland_signature() {
+    local instance_dir
+    local signature
+
+    if [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]]; then
+        if HYPRLAND_INSTANCE_SIGNATURE="$HYPRLAND_INSTANCE_SIGNATURE" hyprctl clients -j >/dev/null 2>&1; then
+            printf '%s\n' "$HYPRLAND_INSTANCE_SIGNATURE"
+            return 0
+        fi
+    fi
+
+    for instance_dir in "$runtime_dir"/hypr/*; do
+        [[ -S "$instance_dir/.socket.sock" ]] || continue
+        signature="$(basename "$instance_dir")"
+
+        if HYPRLAND_INSTANCE_SIGNATURE="$signature" hyprctl clients -j >/dev/null 2>&1; then
+            printf '%s\n' "$signature"
+            return 0
+        fi
+    done
+
+    return 1
+}
+
+session_dir_for_name() {
+    local session_name="${1:-}"
+
+    if [[ -n "$session_name" ]]; then
+        printf '%s/%s' "$session_root" "$session_name"
+    else
+        printf '%s' "$session_root"
+    fi
+}
+
+session_json_for_name() {
+    printf '%s/session.json' "$(session_dir_for_name "${1:-}")"
+}
+
+legacy_exec_conf_for_name() {
+    printf '%s/exec.conf' "$(session_dir_for_name "${1:-}")"
+}
+
+restore_marker_for_signature() {
+    printf '%s/restored-%s' "$state_dir" "$1"
+}
+
+session_already_restored() {
+    local signature="$1"
+    [[ -f "$(restore_marker_for_signature "$signature")" ]]
+}
+
+mark_session_restored() {
+    local signature="$1"
+    [[ "${HYPRSESSION_RESTORE_DRY_RUN:-0}" == "1" ]] && return 0
+
+    mkdir -p "$state_dir"
+    : > "$(restore_marker_for_signature "$signature")"
+}
+
+clear_restore_marker() {
+    local signature="$1"
+    rm -f "$(restore_marker_for_signature "$signature")"
+}
+
+restore_log() {
+    printf '%s %s\n' "$(date -Iseconds)" "$*" >>"$state_dir/restore.log"
+}
+
+count_saved_session_clients() {
+    local session_name="${1:-}"
+    local session_file="${2:-}"
+
+    if [[ -z "$session_file" ]]; then
+        session_file="$(session_json_for_name "$session_name")"
+    fi
+
+    if [[ ! -s "$session_file" ]]; then
+        echo 0
+        return 0
+    fi
+
+    HYPRSESSION_FILE="$session_file" python - <<'PY'
+import json
+import os
+
+with open(os.environ["HYPRSESSION_FILE"], encoding="utf-8") as handle:
+    session = json.load(handle)
+
+print(len(session.get("clients") or []))
+PY
+}
+
+resolve_session_file() {
+    local session_name="${1:-}"
+    local session_file
+    local backup_file
+    local client_count
+
+    session_file="$(session_json_for_name "$session_name")"
+    client_count="$(count_saved_session_clients "$session_name" "$session_file")"
+
+    if [[ "$client_count" -gt 0 ]]; then
+        printf '%s\n' "$session_file"
+        return 0
+    fi
+
+    backup_file="${session_file}.bak"
+    if [[ -s "$backup_file" ]]; then
+        client_count="$(count_saved_session_clients "$session_name" "$backup_file")"
+        if [[ "$client_count" -gt 0 ]]; then
+            cp -f "$backup_file" "$session_file"
+            restore_log "restored session.json from backup ($client_count client(s))"
+            printf '%s\n' "$session_file"
+            return 0
+        fi
+    fi
+
+    return 1
+}
+
+dispatch_expression() {
+    local expression="$1"
+
+    if [[ "${HYPRSESSION_RESTORE_DRY_RUN:-0}" == "1" ]]; then
+        printf 'hyprctl dispatch %q\n' "$expression"
+        return 0
+    fi
+
+    if ! hyprctl dispatch "$expression"; then
+        printf 'Failed to restore hyprsession expression: %s\n' "$expression" >&2
+    fi
+}
+
+save_system_session() {
+    local session_name="${1:-}"
+    local allow_empty="${2:-0}"
+    local session_dir
+    local session_file
+    local clients_json
+    local client_count
+
+    session_dir="$(session_dir_for_name "$session_name")"
+    session_file="$(session_json_for_name "$session_name")"
+    mkdir -p "$session_dir"
+
+    clients_json="$(hyprctl clients -j)"
+    client_count="$(CLIENTS_JSON="$clients_json" python - <<'PY'
+import json
+import os
+
+print(len(json.loads(os.environ.get("CLIENTS_JSON") or "[]")))
+PY
+)"
+
+    if [[ "$allow_empty" != "1" && "$client_count" -eq 0 ]]; then
+        printf 'Skipping empty hyprsession save to preserve existing session.json\n' >&2
+        return 0
+    fi
+
+    if [[ "$client_count" -gt 0 ]]; then
+        cp -f "$session_file" "${session_file}.bak" 2>/dev/null || true
+    fi
+
+    HYPRSESSION_CLIENTS_JSON="$clients_json" \
+    HYPRSESSION_DIR="$session_dir" \
+    HYPRSESSION_FILE="$session_file" \
+    python - <<'PY'
+import json
+import os
+import shlex
+import time
+
+
+def read_argv(pid):
+    try:
+        with open(f"/proc/{pid}/cmdline", "rb") as handle:
+            data = handle.read()
+    except OSError:
+        return []
+
+    return [
+        part.decode("utf-8", "surrogateescape")
+        for part in data.split(b"\0")
+        if part
+    ]
+
+
+def workspace_rule(client):
+    workspace = client.get("workspace") or {}
+    workspace_id = workspace.get("id")
+    workspace_name = workspace.get("name") or ""
+
+    if workspace_id == -99 or workspace_name.startswith("special"):
+        return "special silent"
+
+    return f"{workspace_id} silent"
+
+
+def client_rules(client):
+    fullscreen = int(client.get("fullscreen") or 0)
+    rules = {
+        "monitor": str(client.get("monitor") or 0),
+        "workspace": workspace_rule(client),
+        "move": client.get("at") or [0, 0],
+        "size": client.get("size") or [0, 0],
+        "fullscreen_state": f"{fullscreen} {fullscreen}",
+    }
+
+    if client.get("floating"):
+        rules["float"] = True
+    if client.get("pinned"):
+        rules["pin"] = True
+
+    return rules
+
+
+def legacy_rule_text(rules):
+    parts = [
+        f"monitor {rules['monitor']}",
+        f"workspace {rules['workspace']}",
+    ]
+
+    if rules.get("float"):
+        parts.append("float")
+
+    move = rules.get("move") or [0, 0]
+    size = rules.get("size") or [0, 0]
+    fullscreen_state = str(rules.get("fullscreen_state") or "0 0").split()[0]
+
+    parts.extend([
+        f"move {move[0]} {move[1]}",
+        f"size {size[0]} {size[1]}",
+    ])
+
+    if rules.get("pin"):
+        parts.append("pin")
+
+    parts.append(f"fullscreenstate {fullscreen_state}")
+    return ";".join(parts)
+
+
+clients = json.loads(os.environ.get("HYPRSESSION_CLIENTS_JSON") or "[]")
+skip_classes = {
+    item.strip().lower()
+    for item in os.environ.get("HYPRSESSION_SKIP_CLASSES", "dotfiles-manager").split(",")
+    if item.strip()
+}
+
+seen_pids = set()
+entries = []
+legacy_lines = []
+
+for client in reversed(clients):
+    pid = client.get("pid")
+    if not pid or pid in seen_pids:
+        continue
+
+    initial_class = str(client.get("initialClass") or client.get("class") or "").lower()
+    if initial_class in skip_classes:
+        continue
+
+    argv = read_argv(pid)
+    if not argv:
+        continue
+
+    seen_pids.add(pid)
+    rules = client_rules(client)
+    entry = {
+        "argv": argv,
+        "rules": rules,
+        "class": client.get("class"),
+        "initialClass": client.get("initialClass"),
+        "title": client.get("title"),
+        "pid": pid,
+    }
+    entries.append(entry)
+    legacy_lines.append(f"[{legacy_rule_text(rules)}] {shlex.join(argv)}")
+
+session = {
+    "version": 1,
+    "savedAt": int(time.time()),
+    "clients": entries,
+}
+
+session_dir = os.environ["HYPRSESSION_DIR"]
+session_file = os.environ["HYPRSESSION_FILE"]
+tmp_file = f"{session_file}.tmp"
+
+with open(tmp_file, "w", encoding="utf-8") as handle:
+    json.dump(session, handle, indent=2)
+    handle.write("\n")
+os.replace(tmp_file, session_file)
+
+with open(os.path.join(session_dir, "exec.conf"), "w", encoding="utf-8") as handle:
+    for line in legacy_lines:
+        handle.write(line)
+        handle.write("\n")
+
+with open(os.path.join(session_dir, "clients.json"), "w", encoding="utf-8") as handle:
+    json.dump(clients, handle)
+
+print(f"Saved {len(entries)} hyprsession client(s) to {session_file}", file=os.sys.stderr)
+PY
+}
+
+restore_system_session() {
+    local session_name="${1:-}"
+    local session_file
+    local restored=0
+
+    session_file="$(resolve_session_file "$session_name")" || return 1
+
+    printf 'Restoring hyprsession from %s\n' "$session_file" >&2
+    restore_log "restore start from $session_file"
+
+    while IFS= read -r expression || [[ -n "$expression" ]]; do
+        [[ -n "$expression" ]] || continue
+        if dispatch_expression "$expression"; then
+            restored=$((restored + 1))
+        fi
+    done < <(HYPRSESSION_FILE="$session_file" python - <<'PY'
+import json
+import os
+import shlex
+
+
+def lua_value(value):
+    if value is True:
+        return "true"
+    if value is False:
+        return "false"
+    if isinstance(value, int):
+        return str(value)
+    if isinstance(value, list):
+        return "{" + ", ".join(lua_value(item) for item in value) + "}"
+    return json.dumps(value)
+
+
+def lua_table(values):
+    return "{" + ", ".join(
+        f"{key} = {lua_value(value)}" for key, value in values.items()
+    ) + "}"
+
+
+with open(os.environ["HYPRSESSION_FILE"], encoding="utf-8") as handle:
+    session = json.load(handle)
+
+for entry in session.get("clients", []):
+    argv = entry.get("argv") or []
+    if not argv:
+        continue
+
+    command = shlex.join(argv)
+    rules = entry.get("rules") or {}
+
+    if rules:
+        print(f"hl.dsp.exec_cmd({json.dumps(command)}, {lua_table(rules)})")
+    else:
+        print(f"hl.dsp.exec_cmd({json.dumps(command)})")
+PY
+)
+
+    restore_log "restore finished: $restored dispatch(es) ok"
+    [[ "$restored" -gt 0 ]]
+}
+
+restore_legacy_exec_conf() {
+    local session_name="${1:-}"
+    local exec_conf
+    local restored=0
+
+    exec_conf="$(legacy_exec_conf_for_name "$session_name")"
+    [[ -s "$exec_conf" ]] || return 1
+
+    printf 'Restoring legacy hyprsession from %s\n' "$exec_conf" >&2
+    restore_log "legacy restore start from $exec_conf"
+
+    while IFS= read -r command || [[ -n "$command" ]]; do
+        [[ -n "$command" ]] || continue
+
+        local expression
+        expression="$(HYPRSESSION_EXEC_LINE="$command" python - <<'PY'
+import json
+import os
+import re
+
+
+def parse_value(value):
+    parsed = []
+    for part in value.split():
+        try:
+            parsed.append(int(part))
+        except ValueError:
+            parsed.append(part)
+    return parsed
+
+
+def lua_value(value):
+    if value is True:
+        return "true"
+    if value is False:
+        return "false"
+    if isinstance(value, int):
+        return str(value)
+    if isinstance(value, list):
+        return "{" + ", ".join(lua_value(item) for item in value) + "}"
+    return json.dumps(value)
+
+
+def lua_table(values):
+    return "{" + ", ".join(
+        f"{key} = {lua_value(value)}" for key, value in values.items()
+    ) + "}"
+
+
+line = os.environ["HYPRSESSION_EXEC_LINE"]
+command = line
+rules = {}
+
+match = re.match(r"^\[(?P<rules>[^\]]*)\]\s*(?P<command>.*)$", line)
+if match:
+    command = match.group("command")
+    for rule in match.group("rules").split(";"):
+        rule = rule.strip()
+        if not rule:
+            continue
+
+        name, _, value = rule.partition(" ")
+        value = value.strip()
+
+        if name in {"center", "float", "fullscreen", "maximize", "pin", "pseudo", "tile"}:
+            rules[name] = True
+        elif name in {"monitor", "workspace"}:
+            rules[name] = value
+        elif name in {"move", "size"}:
+            rules[name] = parse_value(value)
+        elif name == "fullscreenstate":
+            values = value.split()
+            if len(values) == 1:
+                value = f"{values[0]} {values[0]}"
+            rules["fullscreen_state"] = value
+        elif value:
+            rules[name] = value
+        else:
+            rules[name] = True
+
+if rules:
+    print(f"hl.dsp.exec_cmd({json.dumps(command)}, {lua_table(rules)})")
+else:
+    print(f"hl.dsp.exec_cmd({json.dumps(command)})")
+PY
+)"
+
+        if dispatch_expression "$expression"; then
+            restored=$((restored + 1))
+        fi
+    done < "$exec_conf"
+
+    restore_log "legacy restore finished: $restored dispatch(es) ok"
+    [[ "$restored" -gt 0 ]]
+}
+
+restore_saved_session() {
+    local session_name="${1:-}"
+    local restored=0
+
+    if restore_system_session "$session_name"; then
+        restored=1
+    elif restore_legacy_exec_conf "$session_name"; then
+        restored=1
+    fi
+
+    [[ "$restored" -gt 0 ]]
+}
+
+save_session_forever() {
+    local interval="${HYPRSESSION_SAVE_INTERVAL:-60}"
+    local initial_delay="${HYPRSESSION_SAVE_INITIAL_DELAY:-90}"
+
+    sleep "$initial_delay"
+
+    while true; do
+        local signature
+        if signature=$(find_live_hyprland_signature); then
+            export HYPRLAND_INSTANCE_SIGNATURE="$signature"
+            save_system_session || printf 'Failed to save hyprsession\n' >&2
+        else
+            printf 'No live Hyprland IPC socket found for hyprsession save\n' >&2
+        fi
+
+        sleep "$interval"
+    done
+}
+
+signature="$(find_live_hyprland_signature || true)"
+if [[ -z "$signature" ]]; then
+    echo "No live Hyprland IPC socket found for hyprsession" >&2
+    exit 1
+fi
+
+export HYPRLAND_INSTANCE_SIGNATURE="$signature"
+
+case "${1:-default}" in
+    default)
+        # Restore is triggered from hyprland autostart (delayed) — not here — so startup
+        # commands and desktop services are ready before windows are launched.
+        save_session_forever
+        ;;
+    load)
+        clear_restore_marker "$signature"
+
+        if ! resolve_session_file "${2:-}" >/dev/null; then
+            restore_log "load skipped: no clients in session.json or .bak"
+            printf 'No hyprsession clients in session.json; skipping restore\n' >&2
+            exit 0
+        fi
+
+        if restore_saved_session "${2:-}"; then
+            mark_session_restored "$signature"
+            exit 0
+        fi
+
+        restore_log "load failed: all restore dispatches failed"
+        printf 'hyprsession restore failed; see %s/restore.log\n' "$state_dir" >&2
+        exit 1
+        ;;
+    save)
+        save_system_session "${2:-}" 0
+        exit 0
+        ;;
+    *)
+        exec /usr/local/bin/hyprsession "$@"
+        ;;
+esac

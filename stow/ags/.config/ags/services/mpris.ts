@@ -1,6 +1,6 @@
 import Mpris from "gi://AstalMpris";
 import { createState } from "ags";
-import { hypr } from "./hyprland";
+import { focusWindow } from "./hyprland";
 
 const mpris = Mpris.get_default();
 
@@ -70,7 +70,7 @@ export function hideMediaPanel() {
 
 export function toggleMediaPanel() {
   const player = mpris.players.find((p: Mpris.Player) => p.playbackStatus === Mpris.PlaybackStatus.PLAYING);
-  if (player && hypr) {
-    hypr.dispatch("focuswindow", `class:${player.entry}`);
+  if (player?.entry) {
+    void focusWindow(`class:${player.entry}`);
   }
 }
