@@ -29,11 +29,14 @@ if [[ -d "$SYSTEM_DIR/systemd/sleep.conf.d" ]]; then
     done
 fi
 
-# Disable NVIDIA suspend services only if using AMD graphics (not NVIDIA)
+# NVIDIA needs its sleep helpers enabled for reliable Wayland resume.
 if systemctl list-unit-files | grep -q "nvidia-suspend.service"; then
-    # Check if actually using NVIDIA GPU
     if lspci | grep -i vga | grep -qi nvidia; then
-        log_info "NVIDIA GPU detected - keeping NVIDIA suspend services enabled"
+        log_info "NVIDIA GPU detected - enabling NVIDIA suspend services"
+        sudo systemctl enable nvidia-suspend.service 2>/dev/null || true
+        sudo systemctl enable nvidia-resume.service 2>/dev/null || true
+        sudo systemctl enable nvidia-hibernate.service 2>/dev/null || true
+        log_success "NVIDIA suspend services enabled"
     else
         log_info "No NVIDIA GPU detected - disabling NVIDIA suspend services"
         sudo systemctl disable nvidia-suspend.service 2>/dev/null || true
