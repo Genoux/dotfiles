@@ -15,6 +15,9 @@ local function requireAction(name)
   return module
 end
 
+package.loaded["config.workspaces"] = nil
+local workspaceConfig = require("config.workspaces")
+
 local paths = requireAction("actions.paths")
 local windows = requireAction("actions.windows")
 local workspaces = requireAction("actions.workspaces")
@@ -30,6 +33,7 @@ hl.bind(mainMod .. " + Escape", hl.dsp.exec_cmd("walker --provider menus:system 
 
 hl.bind(mainMod .. " + v", hl.dsp.window.float({ action = "toggle" }))
 hl.bind(mainMod .. " + f", hl.dsp.window.fullscreen())
+hl.bind(mainMod .. " + u", windows.cycleWindowState)
 hl.bind(mainMod .. " + j", hl.dsp.layout("togglesplit"))
 
 hl.bind(mainMod .. " + g", hl.dsp.group.toggle())
@@ -56,7 +60,7 @@ hl.gesture({ fingers = 3, direction = "down", action = "special" })
 hl.gesture({ fingers = 4, direction = "horizontal", action = "move" })
 hl.gesture({ fingers = 4, direction = "up", action = "fullscreen" })
 
-for workspace = 1, 10 do
+for workspace = 1, workspaceConfig.workspace_count do
   local key = workspace % 10
   local workspaceId = workspace
   hl.bind(mainMod .. " + " .. key, function()
