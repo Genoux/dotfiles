@@ -71,7 +71,6 @@ end
 
 hl.bind("SUPER + SHIFT + s", hl.dsp.window.move({ workspace = "special" }))
 hl.bind("SUPER + s", hl.dsp.workspace.toggle_special())
-hl.bind("SUPER + SHIFT + grave", hl.dsp.window.move({ workspace = "special:secret" }))
 
 hl.bind(mainMod .. " + mouse_down", hl.dsp.focus({ workspace = "e+1" }))
 hl.bind(mainMod .. " + mouse_up", hl.dsp.focus({ workspace = "e-1" }))

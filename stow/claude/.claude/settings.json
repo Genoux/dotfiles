@@ -1,51 +1,7 @@
 {
-  "effortLevel": "medium",
-  "enableAllProjectMcpServers": true,
-  "enabledPlugins": {
-    "context7@claude-plugins-official": true,
-    "engram@engram": true,
-    "feature-dev@claude-plugins-official": true,
-    "frontend-design@claude-plugins-official": true,
-    "gitkraken-hooks@gitkraken": true,
-    "linear@claude-plugins-official": true
-  },
   "env": {
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
   },
-  "extraKnownMarketplaces": {
-    "engram": {
-      "source": {
-        "repo": "Gentleman-Programming/engram",
-        "source": "github"
-      }
-    },
-    "gitkraken": {
-      "source": {
-        "path": "/home/john/.claude/plugins/marketplaces/gitkraken",
-        "source": "directory"
-      }
-    },
-    "knowledge-work-plugins": {
-      "source": {
-        "repo": "anthropics/knowledge-work-plugins",
-        "source": "github"
-      }
-    }
-  },
-  "hooks": {
-    "UserPromptSubmit": [
-      {
-        "hooks": [
-          {
-            "command": "gentle-ai skill-registry refresh --quiet --no-gitignore --cwd \"${CLAUDE_PROJECT_DIR:-$PWD}\" || true",
-            "type": "command"
-          }
-        ],
-        "matcher": ""
-      }
-    ]
-  },
-  "outputStyle": "Gentleman",
   "permissions": {
     "allow": [
       "WebFetch",
@@ -66,7 +22,6 @@
       "mcp__engram__mem_current_project",
       "mcp__engram__mem_judge"
     ],
-    "defaultMode": "bypassPermissions",
     "deny": [
       "Bash(rm -rf /)",
       "Bash(sudo rm -rf /)",
@@ -92,6 +47,52 @@
       "Edit(**/*.key)",
       "Read(**/secrets/*)",
       "Edit(**/secrets/*)"
+    ],
+    "defaultMode": "bypassPermissions"
+  },
+  "enableAllProjectMcpServers": true,
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "gentle-ai skill-registry refresh --quiet --no-gitignore --cwd \"${CLAUDE_PROJECT_DIR:-$PWD}\" || true"
+          }
+        ]
+      }
     ]
-  }
+  },
+  "enabledPlugins": {
+    "context7@claude-plugins-official": true,
+    "engram@engram": true,
+    "feature-dev@claude-plugins-official": true,
+    "frontend-design@claude-plugins-official": true,
+    "gitkraken-hooks@gitkraken": true,
+    "linear@claude-plugins-official": true
+  },
+  "extraKnownMarketplaces": {
+    "engram": {
+      "source": {
+        "source": "github",
+        "repo": "Gentleman-Programming/engram"
+      }
+    },
+    "gitkraken": {
+      "source": {
+        "source": "directory",
+        "path": "/home/john/.claude/plugins/marketplaces/gitkraken"
+      }
+    },
+    "knowledge-work-plugins": {
+      "source": {
+        "source": "github",
+        "repo": "anthropics/knowledge-work-plugins"
+      }
+    }
+  },
+  "outputStyle": "Gentleman",
+  "effortLevel": "medium",
+  "skipDangerousModePermissionPrompt": true
 }

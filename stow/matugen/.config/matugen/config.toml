@@ -23,6 +23,12 @@ input_path = "~/.config/matugen/templates/btop.theme"
 output_path = "~/.config/btop/themes/matugen.theme"
 post_hook = "pkill -USR2 btop 2>/dev/null || true"
 
+# Quickshell - imported as the Colors singleton by ~/.config/quickshell/shell.qml.
+# Quickshell hot-reloads QML on file change, so no post_hook is needed.
+[templates.quickshell]
+input_path = "~/.config/matugen/templates/quickshell-colors.qml"
+output_path = "~/.config/quickshell/Colors.qml"
+
 # Starship - matugen renders the full config (replaces the previous static stow copy)
 [templates.starship]
 input_path = "~/.config/matugen/templates/starship.toml"
@@ -49,6 +55,12 @@ output_path = "~/.cursor/extensions/matugen.material-you-1.0.0/package.json"
 [templates.cursor]
 input_path = "~/.config/matugen/templates/cursor-theme.json"
 output_path = "~/.cursor/extensions/matugen.material-you-1.0.0/themes/matugen-color-theme.json"
+
+# Texa — theme file read by app.crynta.terax on startup
+[templates.terax]
+input_path = "~/.config/matugen/templates/terax-theme.json"
+output_path = "~/.config/app.crynta.terax/themes/my-theme-6edc8f0c.terax-theme"
+
 
 # Hyprland borders + (optional) hyprlock — require from hyprland.lua if enabled
 # Uncomment to enable
