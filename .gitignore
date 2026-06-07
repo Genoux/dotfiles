@@ -49,6 +49,9 @@ stow/hypr/.config/hypr/gpu.conf
 stow/hypr/.config/hypr/monitors.lua
 stow/hypr/.config/hypr/gpu.lua
 
+# Private Hyprland secrets (API keys, tokens)
+stow/hypr/.config/hypr/secrets.lua
+
 # Wallpapers
 stow/hypr/.config/hypr/wallpapers/current/current_wallpaper.jpg
 
@@ -56,6 +59,15 @@ stow/hypr/.config/hypr/wallpapers/current/current_wallpaper.jpg
 TODO
 
 .cursor
+!.cursor/agents/
+!.cursor/agents/**
+!.cursor/skills/
+!.cursor/skills/**
+!.cursor/rules/gentle-ai.mdc
+!.cursor/mcp.json
+
+.atl/
+!.atl/skill-registry.md
 
 # MIME cache
 stow/applications/.local/share/applications/mimeinfo.cache

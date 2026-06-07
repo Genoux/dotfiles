@@ -162,7 +162,12 @@ legacy hyprlang one-line rule sprawl unless the user asks.
   `$HOME`).
 - Hypr capability modules live under `stow/hypr/.config/hypr/actions/` (`launchers`,
   `paths`, `screenshots`, `windows`, `workspaces`); trigger via
-  `hyprctl dispatch 'require("actions.*").fn()'`.
+  `hyprctl dispatch 'function() require("actions.*").fn() end'`.
+- `config/workspaces.lua` drives workspace bind count and hyprexpo columns;
+  `hooks.lua` handles hyprsession post-restore fixes;
+  `smart-gaps.lua` adjusts gaps by window count and special workspace state.
+- Window state cycle: `SUPER + u` via `actions.windows.cycleWindowState`.
+- AGS bar TUIs use `launchOrFocus()` from `services/hyprland.ts` (Lua dispatcher).
 - AGS Hyprland integration: `ags.service` needs `PATH` including `~/.local/bin`;
   use the Lua dispatch helper instead of legacy `focuswindow` dispatches.
 
@@ -226,3 +231,24 @@ For package/config changes:
   docs when syntax or API behavior matters.
 - Use MCP documentation servers when relevant and available.
 - Prefer repo-local patterns over examples copied directly from documentation.
+
+## Gentle AI
+
+This repo uses [Gentle AI](https://github.com/Gentleman-Programming/gentle-ai) in
+**workspace scope** for Cursor: SDD subagents, skills, Engram MCP, and the Gentleman
+persona live under `.cursor/` and `.atl/` at the repo root (not in global
+`~/.cursor/`).
+
+Setup and refresh:
+
+- `system-gentle-ai` or `system-gentle-ai setup` — Cursor workspace install, skill registry, GGA
+- `system-gentle-ai sync claude-code` — sync Claude after upgrades (stow-aware)
+- `gentle-ai skill-registry refresh --force` — after adding/removing skills
+- `/sdd-init` in Cursor — initialize SDD project context
+
+Claude settings live in stow; gentle-ai cannot sync symlinked files directly.
+`system-gentle-ai sync claude-code` materializes, syncs, and re-stows automatically.
+
+GGA pre-commit review is enabled via `.gga` + `AGENTS.md`. Use
+`/home/john/.local/bin/gga` explicitly — the shell may alias `gga` to
+`git gui citool`.

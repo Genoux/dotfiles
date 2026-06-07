@@ -1,24 +1,24 @@
 {
-  "env": {
-    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
-  },
-  "permissions": {
-    "allow": [
-      "WebFetch",
-      "Bash(ls:*)",
-      "Bash(python3:*)",
-      "Bash(curl:*)"
-    ]
-  },
+  "effortLevel": "medium",
   "enableAllProjectMcpServers": true,
   "enabledPlugins": {
     "context7@claude-plugins-official": true,
+    "engram@engram": true,
     "feature-dev@claude-plugins-official": true,
     "frontend-design@claude-plugins-official": true,
     "gitkraken-hooks@gitkraken": true,
     "linear@claude-plugins-official": true
   },
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  },
   "extraKnownMarketplaces": {
+    "engram": {
+      "source": {
+        "repo": "Gentleman-Programming/engram",
+        "source": "github"
+      }
+    },
     "gitkraken": {
       "source": {
         "path": "/home/john/.claude/plugins/marketplaces/gitkraken",
@@ -32,5 +32,66 @@
       }
     }
   },
-  "effortLevel": "medium"
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "command": "gentle-ai skill-registry refresh --quiet --no-gitignore --cwd \"${CLAUDE_PROJECT_DIR:-$PWD}\" || true",
+            "type": "command"
+          }
+        ],
+        "matcher": ""
+      }
+    ]
+  },
+  "outputStyle": "Gentleman",
+  "permissions": {
+    "allow": [
+      "WebFetch",
+      "Bash(ls:*)",
+      "Bash(python3:*)",
+      "Bash(curl:*)",
+      "mcp__engram__mem_save",
+      "mcp__engram__mem_search",
+      "mcp__engram__mem_context",
+      "mcp__engram__mem_session_summary",
+      "mcp__engram__mem_session_start",
+      "mcp__engram__mem_session_end",
+      "mcp__engram__mem_get_observation",
+      "mcp__engram__mem_suggest_topic_key",
+      "mcp__engram__mem_capture_passive",
+      "mcp__engram__mem_save_prompt",
+      "mcp__engram__mem_update",
+      "mcp__engram__mem_current_project",
+      "mcp__engram__mem_judge"
+    ],
+    "defaultMode": "bypassPermissions",
+    "deny": [
+      "Bash(rm -rf /)",
+      "Bash(sudo rm -rf /)",
+      "Bash(rm -rf ~)",
+      "Bash(sudo rm -rf ~)",
+      "Read(.env)",
+      "Read(.env.*)",
+      "Edit(.env)",
+      "Edit(.env.*)",
+      "Read(.ssh/*)",
+      "Edit(.ssh/*)",
+      "Read(.credentials/*)",
+      "Edit(.credentials/*)",
+      "Read(Library/Keychains/*)",
+      "Edit(Library/Keychains/*)",
+      "Read(.aws/credentials)",
+      "Edit(.aws/credentials)",
+      "Read(.config/gh/hosts.yml)",
+      "Edit(.config/gh/hosts.yml)",
+      "Read(**/*.pem)",
+      "Edit(**/*.pem)",
+      "Read(**/*.key)",
+      "Edit(**/*.key)",
+      "Read(**/secrets/*)",
+      "Edit(**/secrets/*)"
+    ]
+  }
 }

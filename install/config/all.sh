@@ -6,4 +6,5 @@ run_logged "$DOTFILES_INSTALL/system/setup.sh"
 run_logged "$DOTFILES_INSTALL/config/shell.sh"
 run_logged "$DOTFILES_INSTALL/config/theme.sh"
 run_logged "$DOTFILES_INSTALL/config/hyprland.sh"
+run_logged "$DOTFILES_INSTALL/config/gentle-ai.sh"
 
