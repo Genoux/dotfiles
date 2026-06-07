@@ -11,7 +11,7 @@ if [ $# -gt 0 ]; then
 else
     CLASS="$TITLE"
 fi
-EXTRA_ARGS="$@"
+EXTRA_ARGS=("$@")
 
 lua_string() {
     jq -Rn --arg value "$1" '$value'
@@ -21,24 +21,20 @@ lua_string() {
 if [ "$LAUNCH_OR_FOCUS_DISPLAY" = "1" ]; then
     tput clear
     tput civis
-    
-    $COMMAND $EXTRA_ARGS
-    
+
+    "$COMMAND" "${EXTRA_ARGS[@]}"
+
     stty -echo
     read -n 1 -s
     stty echo
-    
+
     tput cnorm
     exit 0
 fi
 
-# Check if window already exists (by title)
-if hyprctl clients | grep -q "^[[:space:]]*title: $TITLE$"; then
-    # Focus existing window
-    hyprctl dispatch "hl.dsp.focus({ window = $(lua_string "title:$TITLE") })"
-else
-    # Launch new instance in kitty with TUI wrapper
-    kitty --class="$CLASS" --title "$TITLE" \
-        env LAUNCH_OR_FOCUS_DISPLAY=1 "$0" "$TITLE" "$COMMAND" "$CLASS" $EXTRA_ARGS 2>/dev/null &
-fi
+lua_args="$(lua_string "$TITLE"), $(lua_string "$COMMAND"), $(lua_string "$CLASS")"
+for arg in "${EXTRA_ARGS[@]}"; do
+    lua_args+=", $(lua_string "$arg")"
+done
 
+hyprctl dispatch "function() require('actions.launchers').launchOrFocus($lua_args) end"
