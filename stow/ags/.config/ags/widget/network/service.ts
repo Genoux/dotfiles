@@ -1,15 +1,14 @@
 import GLib from "gi://GLib";
 import { Gtk } from "ags/gtk4";
 import { connected, connectionIcon, getNetworkSpeed } from "../../services/network";
+import { launchOrFocus } from "../../services/hyprland";
 
 export { connected, connectionIcon };
 
 export function openNetworkManager() {
-  try {
-    GLib.spawn_command_line_async(`launch-or-focus "impala" "impala" "impala"`);
-  } catch (error) {
-    console.error("Failed to launch launch-impala:", error);
-  }
+  void launchOrFocus("impala", "impala", "impala").catch((error) => {
+    console.error("Failed to launch impala:", error);
+  });
 }
 
 export function showNetworkSpeed(widget: any) {

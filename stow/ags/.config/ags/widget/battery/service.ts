@@ -1,7 +1,7 @@
 import { createState } from "ags";
 import { exec } from "ags/process";
 import Battery from "gi://AstalBattery";
-import GLib from "gi://GLib";
+import { launchOrFocus } from "../../services/hyprland";
 
 export interface BatteryState {
   percentage: number;
@@ -67,7 +67,7 @@ try {
     hasBattery = false;
   }
 } catch (error) {
-  console.log("No battery available:", error);
+  console.warn("No battery available:", error);
   hasBattery = false;
 }
 
@@ -106,9 +106,7 @@ export const batteryStateAccessor = batteryState;
 export const hasBatteryAvailable = hasBattery;
 
 export function openBattop() {
-  try {
-    GLib.spawn_command_line_async('launch-or-focus "battop" "battop" "gnome-power-manager"');
-  } catch (error) {
+  void launchOrFocus("battop", "battop", "gnome-power-manager").catch((error) => {
     console.error("Failed to launch battop:", error);
-  }
+  });
 }

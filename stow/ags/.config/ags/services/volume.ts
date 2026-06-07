@@ -1,6 +1,6 @@
 import Wp from "gi://AstalWp";
 import { createState } from "ags";
-import GLib from "gi://GLib";
+import { launchOrFocus } from "./hyprland";
 
 const wp = Wp.get_default();
 
@@ -129,9 +129,7 @@ wp!.audio.connect("notify::default-speaker", () => {
 setupSpeakerSignals();
 
 export function openVolumeManager() {
-  try {
-    GLib.spawn_command_line_async('launch-or-focus "wiremix" "wiremix" "multimedia-volume-control"');
-  } catch (error) {
+  void launchOrFocus("wiremix", "wiremix", "multimedia-volume-control").catch((error) => {
     console.error("Failed to launch wiremix:", error);
-  }
+  });
 }

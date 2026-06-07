@@ -1,5 +1,6 @@
-import { createState } from "ags";
 import GLib from "gi://GLib";
+import { createState } from "ags";
+import { launchOrFocus } from "../../services/hyprland";
 import Gio from "gi://Gio";
 import { Gtk } from "ags/gtk4";
 
@@ -103,19 +104,22 @@ function readCpuTempFromHwmon(): number {
                 return Math.round(temp / 1000);
               }
             }
-          } catch {}
+          } catch (error) {
+            console.warn("[SystemTemp] Failed to read CPU hwmon label/temp:", error);
+          }
         }
       }
     }
-  } catch {}
-  
+  } catch (error) {
+    console.warn("[SystemTemp] Failed to read CPU temperature from hwmon:", error);
+  }
+
   return 0;
 }
 
 function getGpuTemp(): number {
   try {
     // Try AMD GPU first (amdgpu driver)
-    const amdTempPath = "/sys/class/drm/card0/device/hwmon/hwmon*/temp1_input";
     const amdTempFile = Gio.File.new_for_path("/sys/class/drm/card0/device/hwmon");
 
     if (amdTempFile.query_exists(null)) {
@@ -147,10 +151,13 @@ function getGpuTemp(): number {
         const temp = parseInt(new TextDecoder().decode(out).trim());
         if (!isNaN(temp)) return temp;
       }
-    } catch {}
+    } catch (error) {
+      console.warn("[SystemTemp] nvidia-smi GPU temperature read failed:", error);
+    }
 
     return 0;
-  } catch {
+  } catch (error) {
+    console.warn("[SystemTemp] Failed to read GPU temperature:", error);
     return 0;
   }
 }
@@ -206,11 +213,9 @@ const gpuPollInterval = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 30, () =
 export const systemTemps = systemTempsState;
 
 export function openSystemMonitor() {
-  try {
-    GLib.spawn_command_line_async('launch-or-focus "btop" "btop" "htop"');
-  } catch (error) {
+  void launchOrFocus("btop", "btop", "htop").catch((error) => {
     console.error("Failed to launch btop:", error);
-  }
+  });
 }
 
 export function showTemperatureDetails(widget: any) {

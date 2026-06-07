@@ -1,7 +1,7 @@
-import { createState } from "ags";
-import { timeout } from "ags/time";
 import GLib from "gi://GLib";
 import Gio from "gi://Gio";
+import { createState } from "ags";
+import { launchOrFocus } from "../../services/hyprland";
 import { httpGet } from "../../services/network";
 import { getPositionSync } from "../../services/position";
 
@@ -27,9 +27,13 @@ function getWeatherIcon(code: number): string {
   return ""; // default
 }
 
+function getWeatherApiKey(): string | null {
+  return GLib.getenv("OPENWEATHERMAP_API_KEY") || null;
+}
+
 function fetchWeather(): WeatherData | null {
   try {
-    const apiKey = GLib.getenv("OPENWEATHERMAP_API_KEY") || "d9219c0472bace98bededdf4f2701585";
+    const apiKey = getWeatherApiKey();
     if (!apiKey) return null;
 
     const pos = getPositionSync();
@@ -71,9 +75,9 @@ const triggerRefresh = () => setRefreshTick((v) => v + 1);
 triggerRefresh();
 
 // Refresh every 10 minutes
-timeout(600000, () => {
+GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 600, () => {
   triggerRefresh();
-  return true; // continue
+  return true;
 });
 
 // Watch for network reconnection
@@ -113,8 +117,11 @@ export function openWeatherApp() {
     return;
   }
 
-  // Get API key from environment or use fallback
-  const apiKey = GLib.getenv("OPENWEATHERMAP_API_KEY") || "d9219c0472bace98bededdf4f2701585";
+  const apiKey = getWeatherApiKey();
+  if (!apiKey) {
+    console.error("[Weather] OPENWEATHERMAP_API_KEY is not set");
+    return;
+  }
 
   // Get location from position service (use coordinates for wego, city names with special chars fail)
   const pos = getPositionSync();
@@ -128,8 +135,15 @@ export function openWeatherApp() {
     location = GLib.getenv("WEATHER_CITY") || "Montreal";
   }
 
-  // Launch wego with API key and location
-  // Format: launch-or-focus TITLE COMMAND CLASS EXTRA_ARGS...
-  const command = `launch-or-focus "weather" "${wegoPath}" "weather" "-owm-api-key" "${apiKey}" "-l" "${location}"`;
-  GLib.spawn_command_line_async(command);
+  void launchOrFocus(
+    "weather",
+    wegoPath,
+    "weather",
+    "-owm-api-key",
+    apiKey,
+    "-l",
+    location,
+  ).catch((error) => {
+    console.error("Failed to launch weather:", error);
+  });
 }

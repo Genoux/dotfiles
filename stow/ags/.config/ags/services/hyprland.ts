@@ -32,6 +32,20 @@ export function switchWorkspace(workspaceId: number): Promise<void> {
   );
 }
 
+export function launchOrFocus(
+  title: string,
+  command: string,
+  className?: string,
+  ...extra: string[]
+): Promise<void> {
+  const args = [title, command, className ?? title, ...extra]
+    .map((value) => JSON.stringify(value))
+    .join(", ");
+  return dispatchLua(
+    `function() require("actions.launchers").launchOrFocus(${args}) end`,
+  );
+}
+
 // Common reactive bindings with fallback to empty state when hypr is unavailable
 export const focusedWorkspace = hypr
   ? createBinding(hypr, "focusedWorkspace")

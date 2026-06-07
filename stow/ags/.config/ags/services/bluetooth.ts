@@ -1,6 +1,6 @@
 import Bluetooth from "gi://AstalBluetooth";
-import GLib from "gi://GLib";
 import { createBinding, createState } from "ags";
+import { launchOrFocus } from "./hyprland";
 
 // Safe Bluetooth initialization with error handling
 let bluetooth: Bluetooth.Bluetooth | null = null;
@@ -23,9 +23,22 @@ export function openBluetoothManager() {
     return;
   }
 
-  try {
-    GLib.spawn_command_line_async('launch-or-focus "bluetui" "bluetui" "bluetooth"');
-  } catch (error) {
+  void launchOrFocus("bluetui", "bluetui", "bluetooth").catch((error) => {
     console.error("Failed to launch bluetui:", error);
+  });
+}
+
+export function getConnectedDevices(): string[] {
+  if (!bluetooth) return [];
+
+  try {
+    const devices = bluetooth.get_devices();
+
+    return devices
+      .filter((device: any) => device.connected === true && device.paired === true)
+      .map((device: any) => device.name || device.address || "Unknown Device");
+  } catch (error) {
+    console.error("[Bluetooth] Failed to get connected devices:", error);
+    return [];
   }
 }
