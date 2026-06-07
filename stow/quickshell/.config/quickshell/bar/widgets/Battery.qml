@@ -1,6 +1,5 @@
 import Quickshell.Services.UPower
 import Quickshell
-import Quickshell.Io
 import Quickshell.Widgets
 import QtQuick
 import qs
@@ -50,12 +49,6 @@ Rectangle {
         anchors.fill: parent
         cursorShape: Qt.PointingHandCursor
         hoverEnabled: true
-        onClicked: clickProcess.running = true
-    }
-
-    Process {
-        id: clickProcess
-
-        command: ["bash", "-lc", "hyprctl dispatch 'function() require(\"actions.launchers\").launchOrFocus(\"battop\", \"battop\", \"gnome-power-manager\") end'"]
+        onClicked: Launchers.launchOrFocus("battop", "battop", "gnome-power-manager")
     }
 }

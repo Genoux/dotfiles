@@ -83,3 +83,8 @@ packages/hardware/
 
 # Theme build dependencies
 themes/*/
+
+# Matugen-generated theme outputs (live under ~/.config, not stow)
+stow/quickshell/.config/quickshell/Colors.qml
+stow/ags/.config/ags/styles/abstracts/_theme.scss
+stow/btop/.config/btop/themes/matugen.theme

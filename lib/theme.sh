@@ -14,12 +14,109 @@ CURRENT_WALLPAPER="$HOME/.config/hypr/wallpapers/current/current_wallpaper.jpg"
 declare -a MATUGEN_OUTPUTS=(
     "$HOME/.config/kitty/matugen-theme.conf"
     "$HOME/.config/btop/themes/matugen.theme"
+    "$HOME/.config/quickshell/Colors.qml"
+    "$HOME/.config/ags/styles/abstracts/_theme.scss"
     "$HOME/.config/starship.toml"
     "$HOME/.config/zsh/highlight-colors.zsh"
     "$HOME/.config/matugen/dotfiles-gum.env"
     "$HOME/.cursor/extensions/matugen.material-you-1.0.0/package.json"
     "$HOME/.cursor/extensions/matugen.material-you-1.0.0/themes/matugen-color-theme.json"
 )
+
+declare -a MATUGEN_STOW_SYMLINK_OUTPUTS=(
+    "$HOME/.config/quickshell/Colors.qml"
+    "$HOME/.config/ags/styles/abstracts/_theme.scss"
+    "$HOME/.config/btop/themes/matugen.theme"
+)
+
+declare -a MATUGEN_STOW_STYLE_LINKS=(
+    "$DOTFILES_DIR/stow/ags/.config/ags/styles/abstracts/_theme.scss|$HOME/.config/ags/styles/abstracts/_theme.scss"
+)
+
+matugen_wallpaper_scheme() {
+    local wallpaper="$1"
+    local scheme="scheme-tonal-spot"
+
+    if command -v magick &>/dev/null; then
+        local saturation
+        saturation=$(magick "$wallpaper" -colorspace HSL -channel g \
+            -separate -format "%[fx:mean]" info: 2>/dev/null || echo "1")
+        if awk -v s="$saturation" 'BEGIN { exit !(s < 0.05) }'; then
+            scheme="scheme-monochrome"
+        fi
+    fi
+
+    printf '%s' "$scheme"
+}
+
+matugen_migrate_output_symlinks() {
+    local path target
+
+    for path in "${MATUGEN_STOW_SYMLINK_OUTPUTS[@]}"; do
+        [[ -L "$path" ]] || continue
+        target=$(readlink "$path" 2>/dev/null || true)
+        [[ "$target" == *"dotfiles/stow/"* ]] || continue
+        rm "$path"
+        log_info "Removed stow symlink for matugen output: ${path/#$HOME/~}"
+    done
+}
+
+# AGS tokens.scss lives in stow; sass resolves @use relative to that path.
+matugen_sync_stow_style_links() {
+    local entry stow_path live_path stow_dir
+
+    for entry in "${MATUGEN_STOW_STYLE_LINKS[@]}"; do
+        stow_path="${entry%%|*}"
+        live_path="${entry##*|}"
+        [[ -f "$live_path" ]] || continue
+        stow_dir=$(dirname "$stow_path")
+        mkdir -p "$stow_dir"
+        ln -sf "$live_path" "$stow_path"
+    done
+}
+
+matugen_generate_from_wallpaper() {
+    local wallpaper="${1:-$CURRENT_WALLPAPER}"
+
+    matugen_migrate_output_symlinks
+
+    if ! command -v matugen &>/dev/null; then
+        log_warning "matugen not installed — skipping theme generation"
+        return 1
+    fi
+
+    if [[ ! -f "$wallpaper" ]]; then
+        log_warning "No wallpaper at ${wallpaper/#$HOME/~} — skipping matugen"
+        return 1
+    fi
+
+    local scheme
+    scheme=$(matugen_wallpaper_scheme "$wallpaper")
+    if matugen image -t "$scheme" --prefer saturation --source-color-index 0 "$wallpaper"; then
+        matugen_sync_stow_style_links
+        return 0
+    fi
+    return 1
+}
+
+matugen_ensure_outputs() {
+    local output_path
+
+    matugen_migrate_output_symlinks
+
+    for output_path in "${MATUGEN_OUTPUTS[@]}"; do
+        if [[ ! -f "$output_path" ]] || [[ -L "$output_path" ]]; then
+            log_info "Generating missing matugen theme outputs..."
+            if matugen_generate_from_wallpaper; then
+                return 0
+            fi
+            log_warning "Matugen generation skipped or failed"
+            return 1
+        fi
+    done
+
+    matugen_sync_stow_style_links
+}
 
 get_current_gtk_theme() {
     if command -v gsettings &>/dev/null; then

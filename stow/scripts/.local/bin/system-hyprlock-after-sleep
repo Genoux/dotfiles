@@ -33,4 +33,4 @@ fi
 
 sleep 1
 bash "$HOME/.local/bin/system-awww-wallpaper" >/dev/null 2>&1 || true
-systemctl --user restart ags.service >/dev/null 2>&1 || true
+# systemctl --user restart ags.service >/dev/null 2>&1 || true

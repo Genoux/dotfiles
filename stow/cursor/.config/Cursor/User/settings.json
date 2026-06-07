@@ -72,7 +72,8 @@
   "workbench.editorAssociations": {
     "{git,gitlens,chat-editing-snapshot-text-model,copilot,git-graph,git-graph-3}:/**/*.qrc": "default",
     "{git,gitlens,chat-editing-snapshot-text-model,copilot,git-graph,git-graph-3}:/**/*.ui": "default",
-    "*.qrc": "qt-core.qrcEditor"
+    "*.qrc": "qt-core.qrcEditor",
+    "*.svg": "default"
   },
   "qt-core.additionalQtPaths": [
     {
@@ -80,5 +81,8 @@
       "path": "/usr/bin/qtpaths"
     }
   ],
-  "window.autoDetectColorScheme": false
+  "window.autoDetectColorScheme": false,
+  "[xml]": {
+    "editor.defaultFormatter": "redhat.vscode-xml"
+  }
 }

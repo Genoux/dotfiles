@@ -6,8 +6,9 @@ PartOf=graphical-session.target
 
 [Service]
 Type=simple
+WorkingDirectory=%h/.config/ags
 Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
-ExecStart=/usr/bin/ags run --gtk 4
+ExecStart=/usr/bin/ags run --gtk 4 --directory %h/.config/ags
 ExecStop=/bin/sh -c 'pkill -x ags; pkill -f "gjs -m /run/user/[0-9]+/ags.js" || true'
 Restart=on-failure
 RestartSec=3

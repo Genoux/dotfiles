@@ -46,7 +46,7 @@ windowRule({ name = "kitty-float", float = true, center = true, size = "1000 600
 windowRule({ name = "btop", float = true, center = true, size = "1024 600", match = { title = "^(btop)$" } })
 windowRule({ name = "battop", float = true, center = true, size = "1024 700", match = { title = "^(battop)$" } })
 windowRule({ name = "wiremix", float = true, center = true, size = "800 700", match = { title = "^(wiremix)$" } })
-windowRule({ name = "weather", float = true, center = true, size = "1080 800", match = { title = "^(weather)$" } })
+windowRule({ name = "gnome-weather", float = true, center = true, size = "900 650", match = { class = "^(org\\.gnome\\.Weather)$" } })
 windowRule({ name = "wthrr", float = true, center = true, size = "630 650", match = { title = "^(wthrr)$" } })
 windowRule({ name = "clipse", float = true, center = true, size = "700 700", match = { title = "^(clipse)$" } })
 windowRule({ name = "windowrule-22", float = true, center = true, size = "628 450", match = { class = "^(dotfiles-manager)$" } })
@@ -76,6 +76,7 @@ windowRule({ name = "satty", size = "1280 800", center = true, float = true, mat
 layerRule({ name = "osd", blur = true, ignore_alpha = 0.0, blur_popups = true, animation = "fade", match = { namespace = "osd" } })
 layerRule({ name = "layerrule-brightness-osd", blur = true, ignore_alpha = 0.0, blur_popups = true, animation = "fade", match = { namespace = "^(brightness-osd)$" } })
 layerRule({ name = "layerrule-ags-bar", blur = true, blur_popups = true, ignore_alpha = 0.1, animation = "fade", match = { namespace = "^(ags-bar)$" } })
+layerRule({ name = "layerrule-quickshell", blur = true, blur_popups = true, ignore_alpha = 0.1, animation = "fade", match = { namespace = "^(quickshell)$" } })
 layerRule({ name = "gtk4-layer-shell", blur = true, blur_popups = true, ignore_alpha = 0.1, match = { namespace = "gtk4-layer-shell" } })
 
 windowRule({ name = "claude-desktop", float = true, center = true, size = "1280 800", match = { class = "^(Claude|com\\.anthropic\\.claude-desktop)$" } })

@@ -1,28 +1,34 @@
 import Quickshell
 import Quickshell.Hyprland
 import QtQuick
+import QtQuick.Layouts
 import qs
 import qs.config
 import qs.components
 
-Row {
+RowLayout {
     id: root
-    
+
+    property var hyprMonitor
+
     visible: activeToplevel !== null
-    spacing: 2
+    spacing: 6
 
     readonly property int visibleWorkspaceId: {
-        const monitor = Hyprland.focusedMonitor
+        const monitor = root.hyprMonitor ?? Hyprland.focusedMonitor
         const special = monitor?.lastIpcObject?.specialWorkspace
         if (special?.id < 0)
             return special.id
 
-        const workspace = Hyprland.focusedWorkspace
+        const workspace = monitor?.activeWorkspace ?? Hyprland.focusedWorkspace
         return workspace?.id > 0 ? workspace.id : 0
     }
 
     readonly property var activeToplevel: {
-        const toplevel = Hyprland.activeToplevel
+        const focused = Hyprland.activeToplevel
+        const toplevel = !root.hyprMonitor || focused?.monitor === root.hyprMonitor
+            ? focused
+            : Hyprland.toplevels.values.find((candidate) => candidate.workspace?.id === visibleWorkspaceId && candidate.monitor === root.hyprMonitor)
         const workspaceId = toplevel?.workspace?.id
         if (!toplevel || !workspaceId)
             return null
@@ -30,7 +36,6 @@ Row {
         if (workspaceId === visibleWorkspaceId)
             return toplevel
 
-        // Special overlay keeps focusedWorkspace on the regular workspace underneath
         if (workspaceId < 0 && toplevel.activated)
             return toplevel
 
@@ -60,18 +65,22 @@ Row {
     }
 
     IconButton {
+        Layout.alignment: Qt.AlignVCenter
         iconName: root.appIconName
-        iconSize: 18
+        iconSize: Style.iconSizeMd
+        implicitWidth: Style.pillHeight
+        implicitHeight: Style.pillHeight
         background: Style.transparent
         hoverBackground: Style.transparent
     }
 
     Text {
+        Layout.alignment: Qt.AlignVCenter
         text: activeToplevel?.title ?? ""
         color: Colors.base05
         font.family: Style.fontSans
-        font.pixelSize: 13
+        font.pixelSize: Style.fontSizeSm
         elide: Text.ElideRight
-        width: Math.min(implicitWidth, 420)
+        Layout.maximumWidth: Style.windowTitleMaxWidth
     }
 }

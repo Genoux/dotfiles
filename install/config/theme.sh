@@ -18,3 +18,9 @@ fi
 
 log_info "Matugen theme colors are generated from wallpaper changes."
 log_info "Run system-pick-wallpaper to refresh generated app themes."
+
+if [[ -x "$DOTFILES_DIR/lib/theme.sh" ]]; then
+    # shellcheck source=/dev/null
+    source "$DOTFILES_DIR/lib/theme.sh"
+    matugen_ensure_outputs || true
+fi

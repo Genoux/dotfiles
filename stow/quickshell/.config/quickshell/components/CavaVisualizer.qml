@@ -75,7 +75,7 @@ Row {
                     return Math.max(barHeight, 2)
                 }
                 radius: Style.radiusMd
-                color: Colors.base05
+                color: Colors.base0B
                 opacity: root.active ? 1 : 0.35
             }
         }

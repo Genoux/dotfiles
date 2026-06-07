@@ -23,6 +23,11 @@ input_path = "~/.config/matugen/templates/btop.theme"
 output_path = "~/.config/btop/themes/matugen.theme"
 post_hook = "pkill -USR2 btop 2>/dev/null || true"
 
+# AGS - imported by styles/tokens.scss via abstracts/_theme.scss
+[templates.ags]
+input_path = "~/.config/matugen/templates/ags-theme.scss"
+output_path = "~/.config/ags/styles/abstracts/_theme.scss"
+
 # Quickshell - imported as the Colors singleton by ~/.config/quickshell/shell.qml.
 # Quickshell hot-reloads QML on file change, so no post_hook is needed.
 [templates.quickshell]

@@ -1,37 +1,14 @@
-import Quickshell.Io
-import QtQuick
+import Quickshell
+import Quickshell.Bluetooth
 import qs.components
+
 IconButton {
     id: root
 
-    property bool powered: false
+    readonly property var adapter: Bluetooth.defaultAdapter
 
-    visible: powered
-    iconName: "bluetooth-active-symbolic"
+    visible: adapter?.enabled ?? false
+    iconName: "bluetooth-symbolic"
     interactive: true
-    onClicked: clickProcess.running = true
-
-    Process {
-        id: stateProcess
-
-        command: ["bash", "-lc", "bluetoothctl show 2>/dev/null | grep -q 'Powered: yes' && echo yes || echo no"]
-        running: true
-
-        stdout: StdioCollector {
-            onStreamFinished: root.powered = this.text.trim() === "yes"
-        }
-    }
-
-    Process {
-        id: clickProcess
-
-        command: ["bash", "-lc", "blueman-manager"]
-    }
-
-    Timer {
-        interval: 5000
-        running: true
-        repeat: true
-        onTriggered: stateProcess.running = true
-    }
+    onClicked: Quickshell.execDetached(["blueman-manager"])
 }

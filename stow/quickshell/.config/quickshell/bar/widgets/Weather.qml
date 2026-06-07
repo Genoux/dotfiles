@@ -1,38 +1,41 @@
-import Quickshell.Io
 import QtQuick
+import QtQuick.Layouts
 import qs
 import qs.config
+import qs.services
 
 Rectangle {
     id: root
 
-    property string weatherIcon: ""
-    property string temperature: "--°C"
+    readonly property int horizontalPadding: 6
+    readonly property int contentSpacing: 3
 
-    implicitWidth: content.implicitWidth + 8
+    implicitWidth: content.implicitWidth + horizontalPadding * 2
     implicitHeight: Style.pillHeight
     radius: Style.radiusSm
     color: mouse.containsMouse ? Style.alphaLight : Style.transparent
 
-    Row {
+    RowLayout {
         id: content
 
         anchors.centerIn: parent
-        spacing: 2
+        spacing: root.contentSpacing
 
         Text {
-            visible: root.weatherIcon.length > 0
-            text: root.weatherIcon
+            visible: WeatherState.icon.length > 0
+            text: WeatherState.icon
             color: Colors.base05
-            font.family: "Noto Color Emoji"
+            font.family: Style.fontEmoji
             font.pixelSize: Style.fontSizeSm
+            Layout.alignment: Qt.AlignVCenter
         }
 
         Text {
-            text: root.temperature
+            text: WeatherState.temperature
             color: Colors.base05
             font.family: Style.fontSans
             font.pixelSize: Style.fontSizeSm
+            Layout.alignment: Qt.AlignVCenter
         }
     }
 
@@ -42,34 +45,13 @@ Rectangle {
         anchors.fill: parent
         cursorShape: Qt.PointingHandCursor
         hoverEnabled: true
-        onClicked: clickProcess.running = true
+        onClicked: WeatherState.open()
     }
 
-    Process {
-        id: weatherProcess
-
-        command: ["bash", "-lc", "set -a; [ -f \"$HOME/.config/hypr/secrets.lua\" ] && OPENWEATHERMAP_API_KEY=$(grep -oP 'OPENWEATHERMAP_API_KEY\", \"\\K[^\"]+' \"$HOME/.config/hypr/secrets.lua\" | head -1); export OPENWEATHERMAP_API_KEY; export WEATHER_CITY=\"${WEATHER_CITY:-Montreal}\"; python3 -c \"import json,os,urllib.parse,urllib.request; key=os.getenv('OPENWEATHERMAP_API_KEY'); city=os.getenv('WEATHER_CITY','Montreal');\\nif not key:\\n print('|--°C'); raise SystemExit\\nurl='https://api.openweathermap.org/data/2.5/weather?q='+urllib.parse.quote(city)+'&appid='+key+'&units=metric'\\ntry:\\n data=json.load(urllib.request.urlopen(url, timeout=4)); code=data['weather'][0]['id']; temp=round(data['main']['feels_like']); icon='☀️' if code==800 else '🌤️' if code==801 else '⛅' if code==802 else '☁️' if code in (803,804) or 700<=code<800 else '⛈️' if 200<=code<300 else '🌦️' if 300<=code<400 else '🌧️' if 500<=code<600 else '❄️' if 600<=code<=622 else ''; print(f'{icon}|{temp}°C')\\nexcept Exception:\\n print('|--°C')\""]
-        running: true
-
-        stdout: StdioCollector {
-            onStreamFinished: {
-                const parts = this.text.trim().split("|");
-                root.weatherIcon = parts[0] ?? "";
-                root.temperature = parts[1] || "--°C";
-            }
+    Behavior on color {
+        ColorAnimation {
+            duration: 150
+            easing.type: Easing.InOutQuad
         }
-    }
-
-    Process {
-        id: clickProcess
-
-        command: ["bash", "-lc", "wego >/dev/null 2>&1 || true"]
-    }
-
-    Timer {
-        interval: 600000
-        running: true
-        repeat: true
-        onTriggered: weatherProcess.running = true
     }
 }

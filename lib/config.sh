@@ -80,6 +80,53 @@ restart_ags_if_running() {
     return 0
 }
 
+# Enable and start AGS via user service (dotfiles config link, not Hyprland autostart).
+start_ags_service() {
+    [[ -n "${XDG_RUNTIME_DIR:-}" ]] || export XDG_RUNTIME_DIR="/run/user/$(id -u)"
+    if [[ -z "${DBUS_SESSION_BUS_ADDRESS:-}" && -S "${XDG_RUNTIME_DIR}/bus" ]]; then
+        export DBUS_SESSION_BUS_ADDRESS="unix:path=${XDG_RUNTIME_DIR}/bus"
+    fi
+
+    if [[ ! -f "$HOME/.config/systemd/user/ags.service" ]]; then
+        log_info "ags.service not linked; skip AGS start"
+        return 0
+    fi
+
+    if ! command -v ags >/dev/null 2>&1; then
+        log_warning "ags not installed; skip AGS start"
+        return 0
+    fi
+
+    if [[ -f "$DOTFILES_DIR/lib/theme.sh" ]]; then
+        # shellcheck source=/dev/null
+        source "$DOTFILES_DIR/lib/theme.sh"
+        matugen_sync_stow_style_links
+        local ags_stow_theme="$DOTFILES_DIR/stow/ags/.config/ags/styles/abstracts/_theme.scss"
+        if [[ ! -e "$ags_stow_theme" ]]; then
+            matugen_ensure_outputs || true
+            matugen_sync_stow_style_links
+        fi
+    fi
+
+    systemctl --user daemon-reload 2>/dev/null || true
+    systemctl --user reset-failed ags.service 2>/dev/null || true
+    systemctl --user enable ags.service 2>/dev/null || true
+
+    if systemctl --user is-active --quiet ags.service 2>/dev/null; then
+        if systemctl --user restart ags.service; then
+            log_success "AGS service restarted"
+            return 0
+        fi
+    elif systemctl --user start ags.service; then
+        log_success "AGS service started"
+        return 0
+    fi
+
+    log_warning "systemctl start ags.service failed; trying direct launch"
+    ags run --gtk 4 --directory "$HOME/.config/ags" >/dev/null 2>&1 &
+    log_success "AGS started directly"
+}
+
 # Interactive config management with checkboxes
 config_manage_interactive() {
     check_stow || return 1
@@ -236,6 +283,28 @@ config_manage_interactive() {
     fi
 }
 
+# Quickshell was sometimes linked with absolute symlinks; stow requires relative ones.
+quickshell_remove_absolute_symlinks() {
+    local qs_dir="$HOME/.config/quickshell"
+    local entry target base
+
+    [[ -d "$qs_dir" ]] || return 0
+
+    for entry in "$qs_dir"/*; do
+        [[ -e "$entry" || -L "$entry" ]] || continue
+        base=$(basename "$entry")
+        [[ "$base" == "Colors.qml" ]] && continue
+
+        [[ -L "$entry" ]] || continue
+        target=$(readlink "$entry")
+        [[ "$target" == /* ]] || continue
+        [[ "$target" == *"dotfiles/stow/quickshell/"* ]] || continue
+
+        log_info "Removing absolute quickshell symlink: ${entry/#$HOME/~}"
+        rm "$entry"
+    done
+}
+
 # Get list of available configs
 get_configs() {
     cd "$STOW_DIR"
@@ -260,6 +329,13 @@ is_config_linked() {
         "scripts")
             if [[ -d "$HOME/.local/bin" ]]; then
                 find "$HOME/.local/bin" -type l -exec readlink {} \; 2>/dev/null | grep -q "dotfiles/stow/scripts"
+            else
+                return 1
+            fi
+            ;;
+        "quickshell")
+            if [[ -d "$HOME/.config/quickshell" ]]; then
+                find "$HOME/.config/quickshell" -maxdepth 1 -type l -exec readlink {} \; 2>/dev/null | grep -q "dotfiles/stow/quickshell"
             else
                 return 1
             fi
@@ -309,7 +385,11 @@ config_link() {
             fi
         fi
     fi
-    
+
+    if [[ "$config" == "quickshell" ]]; then
+        quickshell_remove_absolute_symlinks
+    fi
+
     # Stow the config (always restow to pick up new files)
     # Use --adopt to move existing files into stow directory (repo is source of truth)
     if $already_linked; then
@@ -354,6 +434,21 @@ config_link() {
             graceful_error "Failed to link $config" "$stow_output"
             return 1
         fi
+    elif [[ "$config" == "quickshell" ]] && echo "$stow_output" | grep -q "existing target is not owned by stow"; then
+        log_warning "$config has absolute symlinks outside stow ownership"
+        quickshell_remove_absolute_symlinks
+
+        if stow_output=$(stow -R --no-folding --adopt -t "$HOME" "$config" 2>&1); then
+            if $already_linked; then
+                log_success "$config re-stowed successfully"
+            else
+                log_success "$config linked successfully"
+            fi
+            stow_success=true
+        else
+            graceful_error "Failed to link $config after removing absolute symlinks" "$stow_output"
+            return 1
+        fi
     else
         graceful_error "Failed to link $config" "$stow_output"
         return 1
@@ -368,41 +463,55 @@ config_link() {
                     log_info "Updated desktop database"
                 fi
                 ;;
-            "ags")
-                # Create symlink for AGS TypeScript types
-                local ags_config_dir="$HOME/.config/ags"
-                local ags_node_modules="$ags_config_dir/node_modules"
-                local ags_symlink="$ags_node_modules/ags"
-                local ags_source="/usr/share/ags/js"
-
-                if [[ -d "$ags_config_dir" ]]; then
-                    # Ensure node_modules directory exists
-                    if [[ ! -d "$ags_node_modules" ]]; then
-                        mkdir -p "$ags_node_modules"
-                        log_info "Created node_modules directory for AGS"
-                    fi
-
-                    # Create symlink if it doesn't exist or is broken
-                    if [[ -L "$ags_symlink" ]]; then
-                        if [[ -e "$ags_symlink" ]]; then
-                            log_info "AGS types symlink already exists"
-                        else
-                            log_info "Removing broken symlink and recreating..."
-                            rm "$ags_symlink"
-                            ln -s "$ags_source" "$ags_symlink"
-                            log_success "AGS types symlink created"
-                        fi
-                    elif [[ -e "$ags_symlink" ]]; then
-                        log_warning "File exists at $ags_symlink (not a symlink), skipping"
-                    else
-                        if [[ -d "$ags_source" ]]; then
-                            ln -s "$ags_source" "$ags_symlink"
-                            log_success "AGS types symlink created"
-                        else
-                            log_warning "AGS source directory not found at $ags_source, skipping symlink"
-                        fi
-                    fi
+            "ags"|"btop"|"matugen"|"quickshell")
+                if [[ -f "$DOTFILES_DIR/lib/theme.sh" ]]; then
+                    # shellcheck source=/dev/null
+                    source "$DOTFILES_DIR/lib/theme.sh"
+                    matugen_ensure_outputs || true
                 fi
+
+                if [[ "$config" == "ags" ]]; then
+                    # Create symlink for AGS TypeScript types
+                    local ags_config_dir="$HOME/.config/ags"
+                    local ags_node_modules="$ags_config_dir/node_modules"
+                    local ags_symlink="$ags_node_modules/ags"
+                    local ags_source="/usr/share/ags/js"
+
+                    if [[ -d "$ags_config_dir" ]]; then
+                        # Ensure node_modules directory exists
+                        if [[ ! -d "$ags_node_modules" ]]; then
+                            mkdir -p "$ags_node_modules"
+                            log_info "Created node_modules directory for AGS"
+                        fi
+
+                        # Create symlink if it doesn't exist or is broken
+                        if [[ -L "$ags_symlink" ]]; then
+                            if [[ -e "$ags_symlink" ]]; then
+                                log_info "AGS types symlink already exists"
+                            else
+                                log_info "Removing broken symlink and recreating..."
+                                rm "$ags_symlink"
+                                ln -s "$ags_source" "$ags_symlink"
+                                log_success "AGS types symlink created"
+                            fi
+                        elif [[ -e "$ags_symlink" ]]; then
+                            log_warning "File exists at $ags_symlink (not a symlink), skipping"
+                        else
+                            if [[ -d "$ags_source" ]]; then
+                                ln -s "$ags_source" "$ags_symlink"
+                                log_success "AGS types symlink created"
+                            else
+                                log_warning "AGS source directory not found at $ags_source, skipping symlink"
+                            fi
+                        fi
+                    fi
+
+                    start_ags_service
+                fi
+                ;;
+            "scripts")
+                systemctl --user daemon-reload 2>/dev/null || true
+                start_ags_service
                 ;;
         esac
     fi

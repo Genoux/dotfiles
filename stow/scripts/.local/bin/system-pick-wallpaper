@@ -65,32 +65,33 @@ if magick "$selected_wallpaper" -quality 95 "$CURRENT_WALLPAPER" 2>/dev/null || 
     fi
 
     # Regenerate Material You theme from the new wallpaper.
-    # Auto-detect monochrome wallpapers and switch matugen to scheme-monochrome
-    # so a B&W image doesn't get a Material 3 fallback (violet-blue) palette.
-    if command -v matugen &> /dev/null; then
-        scheme="scheme-tonal-spot"
+    SCRIPT_PATH="$(readlink -f "${BASH_SOURCE[0]}")"
+    DOTFILES_DIR="$(cd "$(dirname "$SCRIPT_PATH")/../../../.." && pwd)"
 
-        if command -v magick &> /dev/null; then
-            saturation=$(magick "$CURRENT_WALLPAPER" -colorspace HSL -channel g \
-                -separate -format "%[fx:mean]" info: 2>/dev/null || echo "1")
-            # awk for portable float compare (bash can't < 0.05 directly)
-            if awk -v s="$saturation" 'BEGIN { exit !(s < 0.05) }'; then
-                scheme="scheme-monochrome"
-                echo -e "${YELLOW}🌑 Wallpaper is monochrome (sat=${saturation}) — using ${scheme}${NC}"
+    if [[ -f "$DOTFILES_DIR/lib/theme.sh" ]]; then
+        # shellcheck source=/dev/null
+        source "$DOTFILES_DIR/lib/theme.sh"
+
+        if command -v matugen &> /dev/null; then
+            scheme=$(matugen_wallpaper_scheme "$CURRENT_WALLPAPER")
+
+            if [[ "$scheme" == "scheme-monochrome" ]]; then
+                echo -e "${YELLOW}🌑 Wallpaper is monochrome — using ${scheme}${NC}"
             else
-                echo -e "${GREEN}🎨 Wallpaper has color (sat=${saturation}) — using ${scheme}${NC}"
+                echo -e "${GREEN}🎨 Wallpaper has color — using ${scheme}${NC}"
             fi
-        fi
 
-        echo -e "${GREEN}🎨 Generating theme with matugen (${scheme})...${NC}"
-        # --prefer saturation: bias toward vivid regions; --source-color-index 0 = no TTY prompt
-        if matugen image -t "$scheme" --prefer saturation --source-color-index 0 "$CURRENT_WALLPAPER"; then
-            echo -e "${GREEN}✅ Theme generated and applied${NC}"
+            echo -e "${GREEN}🎨 Generating theme with matugen (${scheme})...${NC}"
+            if matugen_generate_from_wallpaper "$CURRENT_WALLPAPER"; then
+                echo -e "${GREEN}✅ Theme generated and applied${NC}"
+            else
+                echo -e "${YELLOW}⚠️  matugen failed; keeping previous theme${NC}"
+            fi
         else
-            echo -e "${YELLOW}⚠️  matugen failed; keeping previous theme${NC}"
+            echo -e "${YELLOW}⚠️  matugen not installed — skipping theme generation${NC}"
         fi
     else
-        echo -e "${YELLOW}⚠️  matugen not installed — skipping theme generation${NC}"
+        echo -e "${YELLOW}⚠️  dotfiles theme library not found — skipping theme generation${NC}"
     fi
 else
     echo -e "${RED}❌ Failed to copy wallpaper${NC}"

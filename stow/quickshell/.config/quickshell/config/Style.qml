@@ -7,19 +7,56 @@ Singleton {
     readonly property string fontSans: "SF Pro Text"
     readonly property string fontMono: "JetBrainsMono Nerd Font Mono"
     readonly property string fontIcon: "JetBrainsMono Nerd Font"
+    readonly property string fontEmoji: "Noto Color Emoji"
 
     readonly property int barHeight: 34
     readonly property int barMargin: 8
-    readonly property int pillHeight: 22
+    readonly property int pillHeight: 24
+    readonly property int pillWidth: 22
     readonly property int fontSizeSm: 12
     readonly property int fontSizeXs: 10
+    readonly property int iconSizeMd: 18
     readonly property int iconSize: 14
     readonly property int iconSizeSm: 13
     readonly property int iconSizeXs: 12
+    readonly property int mediaInfoWidth: 126
+    readonly property int mediaPadding: 4
+    readonly property int mediaControlsRevealDuration: 200
+    readonly property real mediaBackgroundOpacity: 0.5
+    readonly property real mediaBackgroundOpacityHover: 0.62
+    readonly property int easeDurationFast: 150
+    readonly property int easeDurationNormal: 200
+    readonly property int easeDurationSlow: 320
+
+    readonly property var easeDefault: [0.43, 0.07, 0.59, 0.94]
+    readonly property var easeOut: [0.16, 1, 0.3, 1]
+    readonly property var easeInOut: [0.78, 0, 0.22, 1]
+
+    function bezierEasing(animation, curve) {
+        animation.easing.type = Easing.BezierSpline
+        animation.easing.bezierCurve = curve
+    }
+
+    function surfaceAlpha(color, alpha) {
+        return Qt.rgba(color.r, color.g, color.b, alpha)
+    }
+    readonly property int windowTitleMaxWidth: 420
+    readonly property int pollIntervalFast: 1000
+    readonly property int pollIntervalNormal: 5000
+    readonly property int pollIntervalSlow: 30000
     readonly property int radiusSm: 4
     readonly property int radiusMd: 8
 
     readonly property color transparent: "transparent"
     readonly property color alphaLight: Qt.rgba(1, 1, 1, 0.05)
     readonly property color alphaMedium: Qt.rgba(1, 1, 1, 0.10)
+    readonly property color recording: Qt.rgba(1, 0.11, 0.11, 0.28)
+    readonly property color recordingHover: Qt.rgba(0.86, 0.16, 0.16, 0.73)
+    readonly property color recordingPulse: Qt.rgba(1, 0.11, 0.11, 0.65)
+    readonly property color privacyWebcamFill: Qt.rgba(0.30, 0.27, 0.77, 0.37)
+    readonly property color privacyWebcamBorder: Qt.rgba(0.34, 0.28, 0.77, 0.37)
+    readonly property color privacyMicFill: Qt.rgba(0.20, 1.00, 0.61, 0.20)
+    readonly property color privacyMicBorder: Qt.rgba(0.22, 0.99, 0.58, 0.15)
+    readonly property color privacyScreenFill: Qt.rgba(1.00, 0.43, 1.00, 0.20)
+    readonly property color privacyScreenBorder: Qt.rgba(0.69, 0.33, 0.87, 0.87)
 }

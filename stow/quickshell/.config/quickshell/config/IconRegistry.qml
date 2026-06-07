@@ -14,6 +14,7 @@ Singleton {
         "audio-volume-low-symbolic": "audio-volume-low-symbolic.svg",
         "audio-volume-muted-symbolic": "audio-volume-muted-symbolic.svg",
         "bluetooth-active-symbolic": "bluetooth-active-symbolic.svg",
+        "media-record-symbolic": "media-record-symbolic.svg",
         "media-optical-symbolic": "media-optical-symbolic.svg",
         "media-playback-stop-symbolic": "media-playback-stop-symbolic.svg",
         "media-skip-backward-symbolic": "media-skip-backward-symbolic.svg",
@@ -26,6 +27,10 @@ Singleton {
         "mic-on": "mic-on.svg",
         "video-display-symbolic": "video-display-symbolic.svg",
     })
+
+    function hasOverride(iconName) {
+        return overrides[iconName] !== undefined;
+    }
 
     function source(iconName) {
         const override = overrides[iconName];

@@ -1,9 +1,7 @@
 import GLib from "gi://GLib";
 import Gio from "gi://Gio";
 import { createState } from "ags";
-import { launchOrFocus } from "../../services/hyprland";
 import { httpGet } from "../../services/network";
-import { getPositionSync } from "../../services/position";
 
 interface WeatherData {
   temperature: number;
@@ -12,53 +10,21 @@ interface WeatherData {
   location: string;
 }
 
-function getWeatherIcon(code: number): string {
-  // OpenWeatherMap weather codes
-  if (code === 800) return "☀️"; // clear sky
-  if (code === 801) return "🌤️"; // few clouds
-  if (code === 802) return "⛅"; // scattered clouds
-  if (code === 803 || code === 804) return "☁️"; // broken/overcast clouds
-  if (code >= 200 && code < 300) return "⛈️"; // thunderstorm
-  if (code >= 300 && code < 400) return "🌦️"; // drizzle
-  if (code >= 500 && code < 600) return "🌧️"; // rain
-  // Snow codes: 600-622 (light snow, snow, heavy snow, sleet, etc.)
-  if (code >= 600 && code <= 622) return "❄️"; // snow
-  if (code >= 700 && code < 800) return "☁️"; // atmosphere (fog, mist, etc.)
-  return ""; // default
-}
-
-function getWeatherApiKey(): string | null {
-  return GLib.getenv("OPENWEATHERMAP_API_KEY") || null;
-}
-
 function fetchWeather(): WeatherData | null {
   try {
-    const apiKey = getWeatherApiKey();
-    if (!apiKey) return null;
-
-    const pos = getPositionSync();
-    let url: string;
-
-    if (pos && pos.lat && pos.lon) {
-      // Use coordinates for more accurate weather (from position service)
-      url = `https://api.openweathermap.org/data/2.5/weather?lat=${pos.lat}&lon=${pos.lon}&appid=${apiKey}&units=metric`;
-    } else {
-      // Fallback to hardcoded city
-      const fallbackCity = GLib.getenv("WEATHER_CITY") || "Montreal";
-      url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(fallbackCity)}&appid=${apiKey}&units=metric`;
-    }
-
-    const response = httpGet(url);
+    const city = encodeURIComponent(GLib.getenv("WEATHER_CITY") || "Montreal");
+    const response = httpGet(`https://wttr.in/${city}?format=%c+%t`);
     if (!response) throw new Error("No data");
 
-    const data = JSON.parse(response);
-    if (!data || !data.main || !data.weather || !data.weather[0]) return null;
+    const label = response.replace(/\+/g, "").trim();
+    const temperature = Number(label.match(/-?\d+(?=°C)/)?.[0]);
+    if (!Number.isFinite(temperature)) return null;
 
     return {
-      temperature: Math.round(data.main.temp),
-      feelsLike: Math.round(data.main.feels_like),
-      icon: getWeatherIcon(data.weather[0].id),
-      location: data.name,
+      temperature,
+      feelsLike: temperature,
+      icon: label.replace(/-?\d+°C/, "").trim(),
+      location: GLib.getenv("WEATHER_CITY") || "Montreal",
     };
   } catch (e) {
     console.error("[Weather] Failed to fetch weather:", e);
@@ -109,41 +75,5 @@ export function forceWeatherRefresh() {
 }
 
 export function openWeatherApp() {
-  // Try wego (AUR package) first, fallback to checking PATH
-  const wegoPath = GLib.find_program_in_path("wego");
-
-  if (!wegoPath) {
-    console.error(`[Weather] wego not found. Install with: yay -S wego`);
-    return;
-  }
-
-  const apiKey = getWeatherApiKey();
-  if (!apiKey) {
-    console.error("[Weather] OPENWEATHERMAP_API_KEY is not set");
-    return;
-  }
-
-  // Get location from position service (use coordinates for wego, city names with special chars fail)
-  const pos = getPositionSync();
-  let location: string;
-
-  if (pos && pos.lat && pos.lon) {
-    // Use lat,lon format which wego accepts
-    location = `${pos.lat},${pos.lon}`;
-  } else {
-    // Fallback to environment or default
-    location = GLib.getenv("WEATHER_CITY") || "Montreal";
-  }
-
-  void launchOrFocus(
-    "weather",
-    wegoPath,
-    "weather",
-    "-owm-api-key",
-    apiKey,
-    "-l",
-    location,
-  ).catch((error) => {
-    console.error("Failed to launch weather:", error);
-  });
+  GLib.spawn_command_line_async("gnome-weather");
 }
