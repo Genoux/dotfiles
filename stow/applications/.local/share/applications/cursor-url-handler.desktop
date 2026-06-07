@@ -1,0 +1,12 @@
+[Desktop Entry]
+Name=Cursor - URL Handler
+Comment=Handle cursor:// deep links for MCP OAuth callbacks
+GenericName=Text Editor
+Exec=cursor --open-url %U
+Icon=cursor
+Type=Application
+NoDisplay=true
+StartupNotify=true
+Categories=Utility;TextEditor;Development;IDE;
+MimeType=x-scheme-handler/cursor;
+Keywords=cursor;
