@@ -58,6 +58,30 @@ Singleton {
     readonly property color osdStepFilled: Qt.rgba(1, 1, 1, 1)
     readonly property color osdBorder: alphaLight
 
+    readonly property int launcherWidth: 600
+    readonly property int launcherPadding: 10
+    readonly property int launcherSpacing: 10
+    readonly property int launcherSearchHeight: 36
+    readonly property int launcherResultHeight: 34
+    readonly property int launcherEmptyHeight: 200
+    readonly property int launcherListMaxHeight: 300
+    readonly property int launcherIconSize: 21
+    readonly property int launcherMaxResults: 100
+    readonly property real launcherSurfaceAlpha: 0.5
+    readonly property color launcherBase: "#080808"
+    readonly property color launcherSurface: Qt.rgba(8 / 255, 8 / 255, 8 / 255, launcherSurfaceAlpha)
+    readonly property color launcherText: "#ffffff"
+    readonly property color launcherSelection: Qt.rgba(225 / 255, 225 / 255, 225 / 255, 0.2)
+    readonly property color launcherBorderSubtle: Qt.rgba(1, 1, 1, 0.02)
+    readonly property color launcherSearchBg: Qt.rgba(0, 0, 0, 0.08)
+    readonly property color launcherSelectedBg: Qt.rgba(1, 1, 1, 0.02)
+    readonly property color launcherShadow: Qt.rgba(0, 0, 0, 0.1)
+    readonly property color launcherPlaceholder: Qt.rgba(1, 1, 1, 0.4)
+
+    readonly property real launcherHiddenScale: 0.96
+    readonly property int launcherShowDuration: 180
+    readonly property int launcherHideDuration: 120
+
     function osdBackground(color) {
         return surfaceAlpha(color, 0.1)
     }

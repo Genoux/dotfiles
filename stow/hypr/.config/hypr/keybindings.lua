@@ -2,7 +2,7 @@ local mainMod = "SUPER"
 local browser = "zen-browser"
 local terminal = "kitty"
 local fileManager = "nautilus"
-local appLauncher = "walker --nohints"
+local appLauncher = "quickshell ipc call launcher toggle"
 
 local function requireAction(name)
   -- Hyprland's root require() can cache `true` for action modules; reload here
@@ -15,8 +15,7 @@ local function requireAction(name)
   return module
 end
 
-package.loaded["config.workspaces"] = nil
-local workspaceConfig = require("config.workspaces")
+local workspaceConfig = requireAction("config.workspaces")
 
 local paths = requireAction("actions.paths")
 local windows = requireAction("actions.windows")
@@ -29,7 +28,7 @@ hl.bind(mainMod .. " + x", hl.dsp.window.close())
 hl.bind(mainMod .. " + e", hl.dsp.exec_cmd(fileManager))
 hl.bind(mainMod .. " + b", hl.dsp.exec_cmd(browser))
 hl.bind(mainMod .. " + m", hl.dsp.exit())
-hl.bind(mainMod .. " + Escape", hl.dsp.exec_cmd("walker --provider menus:system --nohints --nosearch"))
+hl.bind(mainMod .. " + Escape", hl.dsp.exec_cmd("quickshell ipc call powermenu toggle"))
 
 hl.bind(mainMod .. " + v", hl.dsp.window.float({ action = "toggle" }))
 hl.bind(mainMod .. " + f", hl.dsp.window.fullscreen())
@@ -90,8 +89,15 @@ hl.bind("XF86AudioPrev", hl.dsp.exec_cmd("playerctl --player=playerctld previous
 hl.bind("XF86MonBrightnessUp", hl.dsp.exec_cmd("brightnessctl set 10%+"), { repeating = true })
 hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("brightnessctl set 10%-"), { repeating = true })
 
-hl.bind("switch:on:Lid Switch", hl.dsp.exec_cmd("pkill -x hyprlock 2>/dev/null; hyprlock --immediate & sleep 0.1 && hyprctl dispatch 'hl.dsp.dpms(\"off\")' && brightnessctl set 0"), { locked = true })
-hl.bind("switch:off:Lid Switch", hl.dsp.exec_cmd("hyprctl dispatch 'hl.dsp.dpms(\"on\")' && brightnessctl -r"), { locked = true })
+hl.bind("switch:on:Lid Switch", function()
+  hl.dsp.exec_cmd("pkill -x hyprlock 2>/dev/null; hyprlock --immediate & sleep 0.1")
+  hl.dispatch(hl.dsp.dpms({ action = "off" }))
+  hl.dsp.exec_cmd("brightnessctl set 0")
+end, { locked = true })
+hl.bind("switch:off:Lid Switch", function()
+  hl.dispatch(hl.dsp.dpms({ action = "on" }))
+  hl.dsp.exec_cmd("brightnessctl -r")
+end, { locked = true })
 
 hl.bind("SUPER + SHIFT + code:25", hl.dsp.exec_cmd(paths.scripts.systemPickWallpaper))
 hl.bind("SUPER + SPACE", hl.dsp.exec_cmd(paths.scripts.systemSwitchKeyboard))

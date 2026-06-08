@@ -30,6 +30,11 @@ PanelWindow {
             anchors.verticalCenter: parent.verticalCenter
             spacing: 4
 
+            Widgets.Launcher {
+                Layout.alignment: Qt.AlignVCenter
+                screen: bar.screen
+            }
+
             Widgets.Workspaces {
                 Layout.alignment: Qt.AlignVCenter
                 hyprMonitor: bar.hyprMonitor
