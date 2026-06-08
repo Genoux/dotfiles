@@ -1,0 +1,86 @@
+---
+description: Quickshell QML bar conventions, API lookup, and dotfiles integration patterns
+globs: "**/*.qml"
+alwaysApply: false
+---
+
+# Quickshell Cursor Rule
+
+You are an expert Quickshell developer for John's Hyprland desktop bar — pure QML, no build step, hot-reload on save.
+
+**Use Context7 MCP** for upstream Quickshell API docs. Resolve library ID first, then query:
+
+- Installed version: **0.3.0** → prefer `/websites/quickshell_v0_3_0`
+- Fallback: `/websites/quickshell_master`
+
+Query Context7 before guessing types, properties, or module APIs (`PanelWindow`, `Variants`, `WlrLayershell`, `Hyprland.*`, `Process`, `FileView`, MPRIS, SystemTray, Pipewire, etc.).
+
+## Codebase Map
+
+Read `OVERVIEW.md` for architecture. Key paths:
+
+| Path | Role |
+|------|------|
+| `shell.qml` | Entry: `ShellRoot` → `Variants { model: Quickshell.screens }` |
+| `bar/Bar.qml` | `PanelWindow` layout per monitor |
+| `bar/widgets/` | Feature widgets (PascalCase filenames) |
+| `config/` | Singletons: `Style`, `Launchers`, `IconRegistry` |
+| `services/` | Singletons: shared reactive state |
+| `components/` | Reusable UI: `IconButton`, `Pill`, `InfoPill` |
+| `Colors.qml` | **Generated** by matugen — not in git |
+
+Quickshell maps directories to imports: `qs.bar.widgets`, `qs.config`, `qs.services`, `qs.components`.
+
+## Architecture Rules
+
+- **Thin UI, thick platform:** widgets render state; Hyprland logic lives in Lua `actions/*`.
+- **Single Hyprland bridge:** use `Launchers.qml` — never duplicate window/workspace logic in widgets.
+- **Per-monitor scoping:** `Hyprland.monitorFor(screen)` in `Bar.qml`, pass `hyprMonitor` to widgets.
+- **No npm/build:** edit QML, Quickshell hot-reloads. Do not restart shell for theme/wallpaper changes.
+
+## Hyprland Dispatch (`config/Launchers.qml`)
+
+All compositor actions go through `hyprctl dispatch` into Lua:
+
+```qml
+Launchers.launchOrFocus(appId, command, fallback?)  // actions.launchers.launchOrFocus
+Launchers.focusWindow(selector)                     // hl.dsp.focus
+Launchers.switchWorkspace(id)                       // actions.workspaces.switch
+Launchers.run(command)                              // Quickshell.execDetached
+```
+
+Use Hyprland 0.55 Lua dispatcher API (`hl.dsp`, `require("actions.*")`) — not legacy dispatch strings in widgets.
+
+## Conventions
+
+1. **PascalCase** QML filenames matching component type names
+2. **`pragma Singleton`** for `config/` and `services/`
+3. **Colors:** `Colors.base00`–`base0F` from matugen (same base16 as former AGS)
+4. **Icons:** bundled SVGs via `IconRegistry` + `ColorOverlay`; else `Quickshell.iconPath()`
+5. **Polling tiers** from `Style.qml`: 1s / 5s / 30s — match existing intervals for new polls
+6. **Process patterns:** long-running daemon (`Privacy`), one-shot poll, or `FileView` watch
+
+## UX Policies (do not regress)
+
+- **Tray:** left/right click → focus/raise app (`TrayFocus`); middle click → tray menu
+- **Media player:** selection from explicit user interaction + playback order — **not** Hyprland window focus
+- **TUIs:** open via `~/.local/bin` scripts (wiremix, impala, launch-dotfiles-menu, etc.)
+
+## Adding a Widget
+
+1. Create `bar/widgets/Foo.qml`
+2. Import in `bar/Bar.qml` at the correct zone (left / center / right)
+3. Add a service singleton under `services/` only if shared state is needed
+4. Route Hyprland actions through `Launchers`, not inline `hyprctl`
+
+## Skill & Memory
+
+- Load `.cursor/skills/quickshell/SKILL.md` for detailed patterns and examples
+- Save non-obvious discoveries to Engram (`project: quickshell`)
+
+## Do Not
+
+- Duplicate Hyprland window logic in QML
+- Commit or hand-edit `Colors.qml`
+- Restart Quickshell for matugen theme updates
+- Copy random public Quickshell configs as best practice — most are outdated
