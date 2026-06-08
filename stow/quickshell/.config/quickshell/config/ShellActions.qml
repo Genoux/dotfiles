@@ -50,8 +50,7 @@ Singleton {
         if (!Number.isFinite(id))
             return
 
-        Hyprland.dispatch(`workspace ${id}`)
-        dispatchLua("function() require(\"actions.workspaces\").closeVisibleSpecial() end")
+        dispatchLua(`function() require("actions.workspaces").switch(${id}) end`)
     }
 
     function launchOrFocus(appId, command, fallback) {

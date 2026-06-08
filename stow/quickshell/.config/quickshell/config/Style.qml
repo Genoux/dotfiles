@@ -38,8 +38,29 @@ Singleton {
     readonly property int pollIntervalFast: 1000
     readonly property int pollIntervalNormal: 5000
     readonly property int pollIntervalSlow: 30000
+    readonly property int radiusXs: 2
     readonly property int radiusSm: 4
     readonly property int radiusMd: 8
+
+    readonly property int osdSize: 120
+    readonly property int osdWidth: 132
+    readonly property int osdHeight: 100
+    readonly property int osdIconSize: 36
+    readonly property int osdStepCount: 10
+    readonly property int osdStepWidth: 8
+    readonly property int osdStepHeight: 6
+    readonly property int osdStepSpacing: 3
+    readonly property int osdContentSpacing: 18
+    readonly property int osdHideDelay: 2000
+    readonly property int osdInitDelay: 250
+    readonly property int osdBottomMargin: barHeight + barMargin + 16
+    readonly property color osdStepEmpty: Qt.rgba(1, 1, 1, 0.2)
+    readonly property color osdStepFilled: Qt.rgba(1, 1, 1, 1)
+    readonly property color osdBorder: alphaLight
+
+    function osdBackground(color) {
+        return surfaceAlpha(color, 0.1)
+    }
 
     readonly property color transparent: "transparent"
     readonly property color alphaLight: Qt.rgba(1, 1, 1, 0.05)

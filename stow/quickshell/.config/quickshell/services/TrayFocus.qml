@@ -64,6 +64,6 @@ Singleton {
 
         const address = match?.lastIpcObject?.address
         if (address)
-            Hyprland.dispatch(`focuswindow address:${address}`)
+            ShellActions.focusWindow(`address:${address}`)
     }
 }
