@@ -7,21 +7,18 @@ Singleton {
     id: root
 
     property bool visible: false
-    property string query: ""
     property var screen: null
 
     function openFor(targetScreen) {
-        if (PowerMenu.visible)
-            PowerMenu.close()
+        if (Launcher.visible)
+            Launcher.close()
 
         screen = targetScreen
-        query = ""
         visible = true
     }
 
     function close() {
         visible = false
-        query = ""
     }
 
     function toggleFor(targetScreen) {

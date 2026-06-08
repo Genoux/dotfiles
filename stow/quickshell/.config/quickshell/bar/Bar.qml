@@ -30,10 +30,7 @@ PanelWindow {
             anchors.verticalCenter: parent.verticalCenter
             spacing: 4
 
-            Widgets.Launcher {
-                Layout.alignment: Qt.AlignVCenter
-                screen: bar.screen
-            }
+            
 
             Widgets.Workspaces {
                 Layout.alignment: Qt.AlignVCenter
@@ -99,9 +96,14 @@ PanelWindow {
             }
             Widgets.Menu {
                 Layout.alignment: Qt.AlignVCenter
+                screen: bar.screen
             }
             Widgets.Dotfiles {
                 Layout.alignment: Qt.AlignVCenter
+            }
+            Widgets.Launcher {
+                Layout.alignment: Qt.AlignVCenter
+                screen: bar.screen
             }
         }
     }

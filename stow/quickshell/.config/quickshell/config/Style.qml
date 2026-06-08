@@ -75,12 +75,33 @@ Singleton {
     readonly property color launcherBorderSubtle: Qt.rgba(1, 1, 1, 0.02)
     readonly property color launcherSearchBg: Qt.rgba(0, 0, 0, 0.08)
     readonly property color launcherSelectedBg: Qt.rgba(1, 1, 1, 0.02)
-    readonly property color launcherShadow: Qt.rgba(0, 0, 0, 0.1)
+    readonly property color launcherShadow: Qt.rgba(0, 0, 0, 0.2)
     readonly property color launcherPlaceholder: Qt.rgba(1, 1, 1, 0.4)
+    readonly property real launcherBackdropOpacity: 0.4
+    readonly property color launcherBackdrop: '#191818'
 
     readonly property real launcherHiddenScale: 0.96
-    readonly property int launcherShowDuration: 180
+    readonly property int launcherShowDuration: 120
     readonly property int launcherHideDuration: 120
+
+    readonly property int powerMenuPadding: 12
+    readonly property int powerMenuItemWidth: 68
+    readonly property int powerMenuItemHeight: 56
+    readonly property int powerMenuItemGap: 4
+    readonly property int powerMenuItemSpacing: 6
+    readonly property int powerMenuIconSize: 16
+    readonly property int powerMenuLabelSize: 12
+    readonly property real powerMenuSurfaceAlpha: 0.5
+    readonly property color powerMenuSurface: Qt.rgba(8 / 255, 8 / 255, 8 / 255, powerMenuSurfaceAlpha)
+    readonly property color powerMenuText: "#ffffff"
+    readonly property color powerMenuBorderSubtle: Qt.rgba(1, 1, 1, 0.02)
+    readonly property color powerMenuSelectedBg: Qt.rgba(1, 1, 1, 0.02)
+    readonly property color powerMenuShadow: Qt.rgba(0, 0, 0, 0.2)
+    readonly property real powerMenuBackdropOpacity: 0.4
+    readonly property color powerMenuBackdrop: "#191818"
+    readonly property real powerMenuHiddenScale: 0.96
+    readonly property int powerMenuShowDuration: 120
+    readonly property int powerMenuHideDuration: 120
 
     function osdBackground(color) {
         return surfaceAlpha(color, 0.1)
