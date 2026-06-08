@@ -1,0 +1,5 @@
+# Local AI runtime state (cache only — registry is tracked)
+.atl/*
+!.atl/
+!.atl/skill-registry.md
+.atl/

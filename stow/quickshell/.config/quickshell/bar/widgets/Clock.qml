@@ -22,6 +22,6 @@ Item {
         text: Qt.formatDateTime(clock.date, "ddd dd MMM HH:mm")
         foreground: Colors.base05
         interactive: true
-        onClicked: Launchers.openGnomeCalendar()
+        onClicked: Launchers.launchOrFocus("org.gnome.Calendar", "gnome-calendar", "org.gnome.Calendar")
     }
 }

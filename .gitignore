@@ -69,6 +69,10 @@ TODO
 .atl/
 !.atl/skill-registry.md
 
+# Quickshell workspace Gentle AI (workspace scope under stow)
+!stow/quickshell/.config/quickshell/.cursor/
+!stow/quickshell/.config/quickshell/.cursor/**
+
 # MIME cache
 stow/applications/.local/share/applications/mimeinfo.cache
 
