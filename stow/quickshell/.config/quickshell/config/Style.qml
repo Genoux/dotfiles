@@ -103,6 +103,20 @@ Singleton {
     readonly property int powerMenuShowDuration: 120
     readonly property int powerMenuHideDuration: 120
 
+    readonly property int notificationWidth: 360
+    readonly property int notificationPadding: 10
+    readonly property int notificationGap: 2
+    readonly property int notificationIconSize: 34
+    readonly property int notificationMaxVisible: 10
+    readonly property int notificationTimeout: 5000
+    readonly property int notificationBottomMargin: barHeight + barMargin - 6
+    readonly property int notificationRightMargin: barMargin - 2
+    readonly property int notificationShowDuration: 160
+    readonly property int notificationHideDuration: 140
+    readonly property real notificationSurfaceAlpha: 0.54
+    readonly property color notificationSurface: Qt.rgba(8 / 255, 8 / 255, 8 / 255, notificationSurfaceAlpha)
+    readonly property color notificationBorder: Qt.rgba(1, 1, 1, 0.025)
+
     function osdBackground(color) {
         return surfaceAlpha(color, 0.1)
     }

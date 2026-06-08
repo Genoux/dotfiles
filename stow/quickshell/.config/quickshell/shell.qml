@@ -2,6 +2,7 @@ import Quickshell
 import Quickshell.Io
 import qs.bar
 import qs.launcher
+import qs.notifications
 import qs.osd
 import qs.power
 import qs.services as Services
@@ -54,6 +55,15 @@ ShellRoot {
         model: Quickshell.screens
 
         VolumeOsdWindow {
+            required property var modelData
+            screen: modelData
+        }
+    }
+
+    Variants {
+        model: Quickshell.screens
+
+        NotificationWindow {
             required property var modelData
             screen: modelData
         }

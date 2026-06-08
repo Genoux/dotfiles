@@ -75,7 +75,7 @@ hl.layer_rule({ name = "gtk4-layer-shell", blur = true, blur_popups = true, igno
 
 hl.window_rule({ name = "claude-desktop", float = true, center = true, size = "1280 800", match = { class = "^(Claude|com\\.anthropic\\.claude-desktop)$" } })
 
-hl.layer_rule({ name = "notifications", blur = true, ignore_alpha = 0.0, match = { namespace = "notifications" } })
+hl.layer_rule({ name = "notifications", blur = true, blur_popups = true, ignore_alpha = 0.1, match = { namespace = "^(notifications)$" } })
 hl.layer_rule({ name = "walker", blur = true, ignore_alpha = 0.1, no_anim = true, match = { namespace = "^(walker)$" } })
 hl.layer_rule({ name = "launcher-backdrop", no_anim = true, match = { namespace = "^(launcher-backdrop)$" } })
 hl.layer_rule({ name = "launcher", blur = true, ignore_alpha = 0.1, no_anim = true, match = { namespace = "^(launcher)$" } })

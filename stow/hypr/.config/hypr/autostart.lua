@@ -4,7 +4,6 @@ local sessionEnvironment =
 local desktopServices = {
   "walker.service",
   "elephant.service",
-  "mako.service",
   "awww-daemon.service",
   "hypridle.service",
   "quickshell",
