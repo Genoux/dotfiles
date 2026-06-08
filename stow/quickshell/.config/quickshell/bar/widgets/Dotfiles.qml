@@ -3,17 +3,17 @@ import Quickshell
 import qs
 import qs.config
 import qs.components
-import qs.services
+import qs.services as Services
 
 IconButton {
     id: root
 
     interactive: true
     iconName: "input-keyboard"
-    onClicked: Quickshell.execDetached(["launch-dotfiles-menu"])
+    onClicked: ShellActions.run(["launch-dotfiles-menu"])
 
     Rectangle {
-        visible: Dotfiles.updatesAvailable
+        visible: Services.Dotfiles.updatesAvailable
         anchors.right: parent.right
         anchors.top: parent.top
         anchors.rightMargin: 4

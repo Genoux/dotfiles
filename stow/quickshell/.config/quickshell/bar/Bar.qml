@@ -5,7 +5,7 @@ import QtQuick
 import QtQuick.Layouts
 import qs
 import qs.config
-import qs.bar.widgets
+import qs.bar.widgets as Widgets
 
 PanelWindow {
     id: bar
@@ -30,17 +30,17 @@ PanelWindow {
             anchors.verticalCenter: parent.verticalCenter
             spacing: 4
 
-            Workspaces {
+            Widgets.Workspaces {
                 Layout.alignment: Qt.AlignVCenter
                 hyprMonitor: bar.hyprMonitor
             }
 
-            SystemTray {
+            Widgets.SystemTray {
                 Layout.alignment: Qt.AlignVCenter
             }
         }
 
-        WindowTitle {
+        Widgets.WindowTitle {
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.verticalCenter: parent.verticalCenter
             hyprMonitor: bar.hyprMonitor
@@ -51,51 +51,51 @@ PanelWindow {
             anchors.verticalCenter: parent.verticalCenter
             spacing: 2
 
-            PrivacyIndicator {
+            Widgets.PrivacyIndicator {
                 Layout.alignment: Qt.AlignVCenter
             }
 
-            MediaPlayer {
+            Widgets.MediaPlayer {
                 id: mediaPlayer
                 Layout.alignment: Qt.AlignVCenter
                 Layout.leftMargin: mediaPlayer.visible ? 2 : 0
                 Layout.rightMargin: mediaPlayer.visible ? 2 : 0
             }
 
-            VolumeButton {
+            Widgets.Volume {
                 Layout.alignment: Qt.AlignVCenter
             }
-            NetworkButton {
+            Widgets.Network {
                 Layout.alignment: Qt.AlignVCenter
             }
-            BluetoothButton {
+            Widgets.Bluetooth {
                 Layout.alignment: Qt.AlignVCenter
             }
-            ScreenRecordButton {
+            Widgets.ScreenRecord {
                 Layout.alignment: Qt.AlignVCenter
             }
-            KeyboardButton {
+            Widgets.Keyboard {
                 Layout.alignment: Qt.AlignVCenter
             }
-            Battery {
+            Widgets.Battery {
                 Layout.alignment: Qt.AlignVCenter
             }
-            Weather {
+            Widgets.Weather {
                 Layout.alignment: Qt.AlignVCenter
             }
-            SystemTemp {
+            Widgets.Temperature {
                 Layout.alignment: Qt.AlignVCenter
             }
-            Clock {
+            Widgets.Clock {
                 Layout.alignment: Qt.AlignVCenter
             }
-            SystemInfoButton {
+            Widgets.Info {
                 Layout.alignment: Qt.AlignVCenter
             }
-            SystemMenuButton {
+            Widgets.Menu {
                 Layout.alignment: Qt.AlignVCenter
             }
-            SystemDotfilesButton {
+            Widgets.Dotfiles {
                 Layout.alignment: Qt.AlignVCenter
             }
         }

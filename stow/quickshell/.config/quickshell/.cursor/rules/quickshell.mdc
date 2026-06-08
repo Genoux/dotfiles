@@ -24,7 +24,7 @@ Read `OVERVIEW.md` for architecture. Key paths:
 | `shell.qml` | Entry: `ShellRoot` → `Variants { model: Quickshell.screens }` |
 | `bar/Bar.qml` | `PanelWindow` layout per monitor |
 | `bar/widgets/` | Feature widgets (PascalCase filenames) |
-| `config/` | Singletons: `Style`, `Launchers`, `IconRegistry` |
+| `config/` | Singletons: `Style`, `ShellActions`, `IconRegistry` |
 | `services/` | Singletons: shared reactive state |
 | `components/` | Reusable UI: `IconButton`, `Pill`, `InfoPill` |
 | `Colors.qml` | **Generated** by matugen — not in git |
@@ -33,32 +33,32 @@ Quickshell maps directories to imports: `qs.bar.widgets`, `qs.config`, `qs.servi
 
 ## Architecture Rules
 
-- **Thin UI, thick platform:** widgets render state; Hyprland logic lives in Lua `actions/*`.
-- **Single Hyprland bridge:** use `Launchers.qml` — never duplicate window/workspace logic in widgets.
+- **Thin UI, thick platform:** widgets render state; Hyprland logic lives in Lua `actions/*` when dispatch is needed.
 - **Per-monitor scoping:** `Hyprland.monitorFor(screen)` in `Bar.qml`, pass `hyprMonitor` to widgets.
 - **No npm/build:** edit QML, Quickshell hot-reloads. Do not restart shell for theme/wallpaper changes.
+- **Shell actions:** use `ShellActions.qml` — `Hyprland.dispatch`, `workspace.activate()`, `toplevel.wayland.activate()`, `Quickshell.execDetached`.
 
-## Hyprland Dispatch (`config/Launchers.qml`)
+## Hyprland & App Actions (`config/ShellActions.qml`)
 
-All compositor actions go through `hyprctl dispatch` into Lua:
+Follow [outfoxxed's shell](https://git.outfoxxed.me/outfoxxed/nixnew/src/branch/master/modules/user/modules/quickshell/shell): use `Hyprland.dispatch()` directly, not `hyprctl` subprocesses.
 
-```qml
-Launchers.launchOrFocus(appId, command, fallback?)  // actions.launchers.launchOrFocus
-Launchers.focusWindow(selector)                     // hl.dsp.focus
-Launchers.switchWorkspace(id)                       // actions.workspaces.switch
-Launchers.run(command)                              // Quickshell.execDetached
-```
-
-Use Hyprland 0.55 Lua dispatcher API (`hl.dsp`, `require("actions.*")`) — not legacy dispatch strings in widgets.
+| Function | Mechanism |
+|----------|-----------|
+| `launchOrFocus(appId, cmd, fallback?)` | `toplevel.wayland.activate()` or `execDetached` / `launch-or-focus` for TUIs |
+| `focusWindow(selector)` | `Hyprland.dispatch` → Lua `hl.dsp.focus` |
+| `switchWorkspace(workspace)` | `HyprlandWorkspace.activate()` + close special workspaces |
+| `run(command)` | `Quickshell.execDetached` |
 
 ## Conventions
 
 1. **PascalCase** QML filenames matching component type names
-2. **`pragma Singleton`** for `config/` and `services/`
-3. **Colors:** `Colors.base00`–`base0F` from matugen (same base16 as former AGS)
-4. **Icons:** bundled SVGs via `IconRegistry` + `ColorOverlay`; else `Quickshell.iconPath()`
-5. **Polling tiers** from `Style.qml`: 1s / 5s / 30s — match existing intervals for new polls
-6. **Process patterns:** long-running daemon (`Privacy`), one-shot poll, or `FileView` watch
+2. **`bar/widgets/`:** domain names for controls (`Volume`, `Clock`); compound names for composites (`MediaPlayer`, `Workspaces`) — no `Button` suffix
+3. **Name collisions:** `import qs.bar.widgets as Widgets` in `Bar.qml`; `import qs.services as Services` inside widgets that share a service name
+4. **`pragma Singleton`** for `config/` and `services/`
+5. **Colors:** `Colors.base00`–`base0F` from matugen (same base16 as former AGS)
+6. **Icons:** bundled SVGs via `IconRegistry` + `ColorOverlay`; else `Quickshell.iconPath()`
+7. **Polling tiers** from `Style.qml`: 1s / 5s / 30s — match existing intervals for new polls
+8. **Process patterns:** long-running daemon (`Privacy`), one-shot poll, or `FileView` watch
 
 ## UX Policies (do not regress)
 
@@ -71,7 +71,7 @@ Use Hyprland 0.55 Lua dispatcher API (`hl.dsp`, `require("actions.*")`) — not 
 1. Create `bar/widgets/Foo.qml`
 2. Import in `bar/Bar.qml` at the correct zone (left / center / right)
 3. Add a service singleton under `services/` only if shared state is needed
-4. Route Hyprland actions through `Launchers`, not inline `hyprctl`
+4. Route Hyprland/app actions through `ShellActions`, not inline `hyprctl` or scattered `execDetached`
 
 ## Skill & Memory
 

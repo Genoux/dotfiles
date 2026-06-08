@@ -57,6 +57,11 @@ Singleton {
             return tokens.some(t => cls.includes(t) || initialClass.includes(t) || t.includes(cls) || wTitle.includes(t))
         })
 
+        if (match?.wayland) {
+            match.wayland.activate()
+            return
+        }
+
         const address = match?.lastIpcObject?.address
         if (address)
             Hyprland.dispatch(`focuswindow address:${address}`)

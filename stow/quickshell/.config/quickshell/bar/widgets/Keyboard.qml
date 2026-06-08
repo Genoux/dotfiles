@@ -2,10 +2,10 @@ import qs
 import QtQuick.Layouts
 import qs.config
 import qs.components
-import qs.services
+import qs.services as Services
 
 Pill {
-    text: Keyboard.layout
+    text: Services.Keyboard.layout
     foreground: Colors.base05
     fontFamily: Style.fontSans
     fontSize: Style.fontSizeSm
@@ -13,5 +13,5 @@ Pill {
     implicitWidth: Style.pillWidth
     Layout.fillWidth: false
     interactive: true
-    onClicked: Keyboard.switchLayout()
+    onClicked: Services.Keyboard.switchLayout()
 }

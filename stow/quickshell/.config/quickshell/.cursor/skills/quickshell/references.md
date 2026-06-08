@@ -12,7 +12,7 @@ Distilled from `OVERVIEW.md` and codebase. For upstream API, use Context7 (`/web
 │   ├── Bar.qml               # PanelWindow layout
 │   └── widgets/              # 18 feature widgets
 ├── components/               # IconButton, Pill, InfoPill, CavaVisualizer, PrivacyButton
-├── config/                   # Style, Launchers, IconRegistry (singletons)
+├── config/                   # Style, ShellActions, IconRegistry (singletons)
 ├── services/                 # Privacy, TrayFocus, Network, Keyboard, Temperature, WeatherState, Dotfiles
 └── assets/
     ├── icons/                # Bundled SVG overrides (22)
@@ -26,7 +26,7 @@ Distilled from `OVERVIEW.md` and codebase. For upstream API, use Context7 (`/web
 |--------|----------|
 | `qs.bar` | `Bar.qml` |
 | `qs.bar.widgets` | All bar widgets |
-| `qs.config` | `Style`, `Launchers`, `IconRegistry` |
+| `qs.config` | `Style`, `ShellActions`, `IconRegistry` |
 | `qs.services` | Service singletons |
 | `qs.components` | Shared UI components |
 
@@ -36,7 +36,7 @@ Quickshell also provides: `Quickshell.Hyprland`, `Quickshell.Wayland`, `Quickshe
 
 **Left:** Workspaces, SystemTray  
 **Center:** WindowTitle  
-**Right:** PrivacyIndicator → MediaPlayer → Volume → Network → Bluetooth → ScreenRecord → Keyboard → Battery → Weather → SystemTemp → Clock → SystemInfo → SystemMenu → Dotfiles
+**Right:** PrivacyIndicator → MediaPlayer → Volume → Network → Bluetooth → ScreenRecord → Keyboard → Battery → Weather → Temperature → Clock → Info → Menu → Dotfiles
 
 ## Service Responsibilities
 
@@ -84,7 +84,7 @@ Fonts: SF Pro Text (sans), JetBrainsMono Nerd Font (mono/icon).
 | AGS | Quickshell |
 |-----|------------|
 | `widget/Bar.tsx` | `bar/Bar.qml` |
-| `services/hyprland.ts` | `config/Launchers.qml` |
+| `services/hyprland.ts` | `config/ShellActions.qml` |
 | `widget/systemtray/service.ts` | `services/TrayFocus.qml` |
 | TypeScript + pnpm build | QML only, hot-reload |
 | Layer namespace `ags-bar` | `quickshell` (framework default) |

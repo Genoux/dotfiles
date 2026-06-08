@@ -20,7 +20,7 @@ Singleton {
     }
 
     function switchLayout() {
-        Quickshell.execDetached(["system-switch-keyboard"])
+        ShellActions.run(["system-switch-keyboard"])
     }
 
     function formatLayout(rawLayout) {

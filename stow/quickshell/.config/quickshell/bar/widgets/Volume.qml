@@ -17,7 +17,7 @@ IconButton {
                 ? "audio-volume-medium-symbolic"
                 : "audio-volume-low-symbolic"
     interactive: true
-    onClicked: Launchers.launchOrFocus("wiremix", "wiremix", "multimedia-volume-control")
+    onClicked: ShellActions.launchOrFocus("wiremix", "wiremix", "multimedia-volume-control")
 
     PwObjectTracker {
         objects: root.sink ? [root.sink] : []

@@ -25,7 +25,7 @@ Row {
             horizontalPadding: 4
             fontSize: 12
             interactive: true
-            onClicked: Launchers.switchWorkspace(modelData.id)
+            onClicked: ShellActions.switchWorkspace(modelData)
 
             Behavior on fontSize {
                 NumberAnimation {

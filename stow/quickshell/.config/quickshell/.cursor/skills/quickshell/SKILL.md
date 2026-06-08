@@ -13,7 +13,7 @@ description: >-
 
 1. Read `OVERVIEW.md` for this codebase's architecture and UX policies
 2. Query **Context7** for upstream API (`/websites/quickshell_v0_3_0` on 0.3.x)
-3. Match patterns in existing files — especially `bar/Bar.qml`, `config/Launchers.qml`, `components/IconButton.qml`
+3. Match patterns in existing files — especially `bar/Bar.qml`, `config/ShellActions.qml`, `components/IconButton.qml`
 
 For detailed local reference, see [references.md](references.md).
 
@@ -86,27 +86,32 @@ Singleton {
 
 Register singletons by placing `pragma Singleton` QML under `config/` or `services/`. Import as `import qs.services` / `import qs.config`.
 
-## Hyprland Bridge (mandatory)
+## Shell Actions (`config/ShellActions.qml`)
 
-All compositor actions flow through `Launchers`:
+Reference: [outfoxxed/nixnew shell](https://git.outfoxxed.me/outfoxxed/nixnew/src/branch/master/modules/user/modules/quickshell/shell) uses `Hyprland.dispatch()` directly — not `hyprctl` subprocesses.
 
 | Need | Call |
 |------|------|
-| Launch or focus app | `Launchers.launchOrFocus(appId, cmd, fallback?)` |
-| Focus window | `Launchers.focusWindow(selector)` |
-| Switch workspace | `Launchers.switchWorkspace(id)` |
-| Run script/TUI | `Launchers.run(["script-name"])` or `Quickshell.execDetached` |
+| Launch or focus app | `ShellActions.launchOrFocus(appId, cmd, fallback?)` |
+| Focus window | `ShellActions.focusWindow(selector)` |
+| Switch workspace | `ShellActions.switchWorkspace(workspaceObject)` |
+| Run script/TUI | `ShellActions.run(["script-name"])` |
 
-Implementation dispatches to Lua:
+Native patterns inside `ShellActions`:
 
 ```qml
-Quickshell.execDetached([
-    "hyprctl", "dispatch",
-    `function() require("actions.launchers").launchOrFocus("app", "cmd") end`,
-])
-```
+// Workspace — pass HyprlandWorkspace object from Repeater modelData
+workspace.activate()
 
-Workspace switch clears `package.loaded["actions.workspaces"]` before `require` — preserve this when touching workspace logic.
+// Window focus
+toplevel.wayland.activate()
+
+// Hyprland Lua when needed (special workspace cleanup, hl.dsp.focus)
+Hyprland.dispatch(`function() hl.dsp.focus({ window = "..." }) end`)
+
+// External commands
+Quickshell.execDetached(["wiremix"])
+```
 
 ## Widget Checklist
 
@@ -116,7 +121,7 @@ When adding `bar/widgets/NewWidget.qml`:
 - [ ] Use `IconButton` / `Pill` / `InfoPill` from `qs.components` where appropriate
 - [ ] Colors from `Colors.base**` — never hardcode theme colors
 - [ ] Sizes/spacing from `Style.qml` constants
-- [ ] Hyprland actions via `Launchers` only
+- [ ] Hyprland/app actions via `ShellActions` only
 - [ ] Per-monitor data: accept `hyprMonitor` prop from `Bar.qml`
 - [ ] Polling: reuse `Style.pollIntervalFast|Normal|Slow`
 
@@ -168,7 +173,7 @@ After changes:
 - [ ] Bar renders on all monitors
 - [ ] QML saves without Quickshell console errors
 - [ ] Workspace pills scoped per monitor
-- [ ] New widget uses `Launchers` for Hyprland (if applicable)
+- [ ] New widget uses `ShellActions` for Hyprland/apps (if applicable)
 - [ ] Theme still reads `Colors.base**` correctly
 
 Manual run: `quickshell` from `~/.config/quickshell`. Link via `dotfiles config link quickshell`.

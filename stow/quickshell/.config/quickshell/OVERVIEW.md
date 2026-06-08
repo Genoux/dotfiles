@@ -79,7 +79,7 @@ flowchart TB
     SR --> BAR --> W
     W --> SVC & CFG & CMP
     SVC --> Platform
-    W -->|Launchers.qml| HL
+    W -->|ShellActions.qml| HL
     HL --> LUA
     W -->|exec/run| SCR
     MAT --> Shell
@@ -93,7 +93,7 @@ flowchart TB
 |---------|-------|-----------|
 | **Singleton services** | `config/*.qml`, `services/*.qml` | Shared reactive state without a framework |
 | **Module-per-folder** | `qs.bar.widgets`, `qs.services`, etc. | Quickshell auto-maps directories to imports |
-| **Dispatch bridge** | `Launchers.qml` | Single choke point for Hyprland Lua API (0.55 `hl.dsp`) |
+| **Shell actions** | `config/ShellActions.qml` | Quickshell-native: `Hyprland.dispatch`, `workspace.activate()`, `toplevel.wayland.activate()` |
 | **Generated theme** | `Colors.qml` outside stow | Hot-reload on wallpaper change; avoid git/stow conflicts |
 | **Per-monitor variants** | `shell.qml` + `Hyprland.monitorFor` | Workspace/title scoping without manual monitor logic |
 | **External daemon for privacy** | `privacy-monitor.sh` | Testable, low-overhead state-change signaling |
@@ -142,7 +142,7 @@ Three zones mirror the former AGS `Bar.tsx`:
 |------|---------|
 | **Left** | Workspaces, SystemTray |
 | **Center** | WindowTitle |
-| **Right** | Privacy → Media → Volume → Network → Bluetooth → ScreenRecord → Keyboard → Battery → Weather → SystemTemp → Clock → SystemInfo → SystemMenu → Dotfiles |
+| **Right** | Privacy → Media → Volume → Network → Bluetooth → ScreenRecord → Keyboard → Battery → Weather → Temperature → Clock → Info → Menu → Dotfiles |
 
 See `bar/Bar.qml` for the canonical widget order.
 
@@ -152,7 +152,7 @@ See `bar/Bar.qml` for the canonical widget order.
 graph LR
     subgraph qs.config
         Style[Style.qml]
-        Launchers[Launchers.qml]
+        ShellActions[ShellActions.qml]
         IconRegistry[IconRegistry.qml]
     end
 
@@ -182,19 +182,18 @@ graph LR
     W18 --> Colors[Colors.qml generated]
 ```
 
-### Hyprland Bridge (`config/Launchers.qml`)
+### Shell Actions (`config/ShellActions.qml`)
 
-All compositor actions go through `hyprctl dispatch` into Lua:
+Quickshell-native action layer (pattern from [outfoxxed's shell](https://git.outfoxxed.me/outfoxxed/nixnew/src/branch/master/modules/user/modules/quickshell/shell)):
 
-| Function | Target |
-|----------|--------|
-| `launchOrFocus(appId, cmd, fallback?)` | `actions.launchers.launchOrFocus` |
-| `focusWindow(selector)` | `hl.dsp.focus` |
-| `switchWorkspace(id)` | `actions.workspaces.switch` (clears `package.loaded` cache) |
-| `openGnomeCalendar()` | Inline focus-or-launch for `org.gnome.Calendar` |
+| Function | Mechanism |
+|----------|-----------|
+| `launchOrFocus(appId, cmd, fallback?)` | `toplevel.wayland.activate()` or `execDetached` / `launch-or-focus` for TUIs |
+| `focusWindow(selector)` | `Hyprland.dispatch` → Lua `hl.dsp.focus` |
+| `switchWorkspace(workspace)` | `HyprlandWorkspace.activate()` + `closeVisibleSpecial()` via dispatch |
 | `run(command)` | `Quickshell.execDetached` |
 
-This matches the dotfiles convention: **never duplicate window logic in the shell**.
+No `hyprctl` subprocess bridge — uses Quickshell's built-in Hyprland IPC.
 
 ### Service Responsibilities
 
@@ -225,6 +224,7 @@ This matches the dotfiles convention: **never duplicate window logic in the shel
 ### Key Implementation Conventions
 
 1. **PascalCase** QML filenames matching component types
+2. **`bar/widgets/` naming:** domain name for controls (`Volume`, `Clock`); compound name for composites (`MediaPlayer`, `PrivacyIndicator`) — no `Button` suffix; qualify services as `Services.Network` when names collide
 2. **`pragma Singleton`** for shared config/services
 3. **`Colors.base00`–`base0F`** base16 slots from matugen (same as AGS)
 4. **Process patterns:** long-running (`Privacy`, `CavaVisualizer`) vs one-shot polls vs `FileView` watches
@@ -315,7 +315,7 @@ This prevents jarring player switches when focusing unrelated windows — a deli
 
 #### Workspace switching
 
-Click workspace pill → `Launchers.switchWorkspace(id)` → Hyprland `actions.workspaces.switch` — same behavior as keybinds and AGS bar.
+Click workspace pill → `ShellActions.switchWorkspace(modelData)` → `workspace.activate()` + close special workspaces.
 
 ### Alignment with Desktop Goals
 
@@ -348,7 +348,7 @@ Click workspace pill → `Launchers.switchWorkspace(id)` → Hyprland `actions.w
 │   ├── Bar.qml               # PanelWindow layout
 │   └── widgets/              # 18 feature widgets
 ├── components/               # IconButton, Pill, CavaVisualizer, …
-├── config/                   # Style, Launchers, IconRegistry singletons
+├── config/                   # Style, ShellActions, IconRegistry singletons
 ├── services/                 # Privacy, TrayFocus, Network, … singletons
 └── assets/
     ├── icons/                # 22 bundled SVG overrides
@@ -417,7 +417,7 @@ Quickshell is positioned as a **parity replacement**, not a redesign:
 | Language | TypeScript + SCSS | QML only |
 | Build | pnpm | None |
 | Bar layout | `widget/Bar.tsx` | `bar/Bar.qml` (same order) |
-| Hyprland bridge | `services/hyprland.ts` | `config/Launchers.qml` |
+| Hyprland bridge | `services/hyprland.ts` | `config/ShellActions.qml` |
 | Tray focus | `widget/systemtray/service.ts` | `services/TrayFocus.qml` |
 | Media selection | explicit player key | Same policy in `MediaPlayer.qml` |
 | Layer namespace | `ags-bar` | `quickshell` (framework default) |

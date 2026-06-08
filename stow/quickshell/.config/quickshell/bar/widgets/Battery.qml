@@ -49,6 +49,6 @@ Rectangle {
         anchors.fill: parent
         cursorShape: Qt.PointingHandCursor
         hoverEnabled: true
-        onClicked: Launchers.launchOrFocus("battop", "battop", "gnome-power-manager")
+        onClicked: ShellActions.launchOrFocus("battop", "battop", "gnome-power-manager")
     }
 }

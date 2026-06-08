@@ -14,7 +14,7 @@ IconButton {
     background: Privacy.screenrecord ? recordingColor : Style.transparent
     hoverBackground: Privacy.screenrecord ? Style.recordingHover : Style.alphaLight
     interactive: true
-    onClicked: Quickshell.execDetached(Privacy.screenrecord ? ["system-screenrecord"] : ["system-screenrecord", "region"])
+    onClicked: ShellActions.run(Privacy.screenrecord ? ["system-screenrecord"] : ["system-screenrecord", "region"])
 
     SequentialAnimation {
         running: Privacy.screenrecord

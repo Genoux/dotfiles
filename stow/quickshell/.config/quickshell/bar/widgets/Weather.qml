@@ -8,5 +8,5 @@ InfoPill {
     iconFont: Style.fontEmoji
     iconVisible: WeatherState.icon.length > 0
     labelText: WeatherState.temperature
-    onClicked: Launchers.launchOrFocus("gnome-weather", "gnome-weather", "org.gnome.Weather")
+    onClicked: ShellActions.launchOrFocus("gnome-weather", "gnome-weather", "org.gnome.Weather")
 }
