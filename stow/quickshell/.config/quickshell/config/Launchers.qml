@@ -17,8 +17,47 @@ Singleton {
         ])
     }
 
+    function focusWindow(selector) {
+        Quickshell.execDetached([
+            "hyprctl",
+            "dispatch",
+            `function() hl.dsp.focus({ window = ${quoteLuaString(selector)} }) end`,
+        ])
+    }
+
     function run(command) {
         Quickshell.execDetached(command)
+    }
+
+    function switchWorkspace(workspaceId) {
+        Quickshell.execDetached([
+            "hyprctl",
+            "dispatch",
+            `function() require("actions.workspaces").switch(${workspaceId}) end`,
+        ])
+    }
+
+    function closeVisibleSpecial() {
+        Quickshell.execDetached([
+            "hyprctl",
+            "dispatch",
+            "function() require(\"actions.workspaces\").closeVisibleSpecial() end",
+        ])
+    }
+
+    function openGnomeCalendar() {
+        Quickshell.execDetached([
+            "hyprctl",
+            "dispatch",
+            `function()
+                local selector = "class:org.gnome.Calendar"
+                if hl.get_window(selector) ~= nil then
+                    hl.dispatch(hl.dsp.focus({ window = selector }))
+                else
+                    hl.dispatch(hl.dsp.exec_cmd("gnome-calendar"))
+                end
+            end`,
+        ])
     }
 
     function quoteLuaString(value) {

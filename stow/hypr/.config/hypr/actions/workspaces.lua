@@ -14,6 +14,10 @@ local function closeVisibleSpecialWorkspaces()
   end
 end
 
+function M.closeVisibleSpecial()
+  closeVisibleSpecialWorkspaces()
+end
+
 function M.switch(workspace)
   hl.dispatch(hl.dsp.focus({ workspace = workspace }))
   closeVisibleSpecialWorkspaces()

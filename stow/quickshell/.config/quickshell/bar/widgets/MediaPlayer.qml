@@ -20,12 +20,12 @@ Rectangle {
 
     readonly property real borderOpacity: 0.1
     readonly property real chromeInset: border.width + Style.mediaPadding
-    readonly property int innerHeight: Style.pillHeight - border.width * 2
+    readonly property int innerHeight: Style.mediaHeight - chromeInset * 2
 
     visible: player !== null && trackText.length > 0
     implicitWidth: content.implicitWidth + chromeInset * 2
-    anchors.verticalCenter: parent.verticalCenter
-    height: 30
+    implicitHeight: Style.mediaHeight
+    height: implicitHeight
     border.width: 1
     border.color: Qt.rgba(Colors.base04.r, Colors.base04.g, Colors.base04.b, borderOpacity)
     radius: Style.radiusMd
@@ -44,12 +44,8 @@ Rectangle {
     Row {
         id: content
 
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.verticalCenter: parent.verticalCenter
-        anchors.leftMargin: chromeInset
-        anchors.rightMargin: chromeInset
-        height: innerHeight
+        anchors.fill: parent
+        anchors.margins: chromeInset
         spacing: root.controlsExpanded ? 3 : 0
 
         Rectangle {
@@ -108,7 +104,6 @@ Rectangle {
                 text: root.trackText
                 font.family: Style.fontMono
                 font.pixelSize: 11
-               onImplicitWidthChanged: mediaInfo.singleTextWidth = implicitWidth
             }
 
             MouseArea {
@@ -127,7 +122,7 @@ Rectangle {
                 repeat: true
                 onTriggered: {
                     const loopWidth = mediaLabel.implicitWidth / 2;
-                    root.scrollOffset = root.scrollOffset >= loopWidth ? 0 : root.scrollOffset + 0.35;
+                    root.scrollOffset = root.scrollOffset >= loopWidth ? 0 : root.scrollOffset + 0.20;
                 }
             }
 

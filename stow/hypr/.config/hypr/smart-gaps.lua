@@ -1,18 +1,8 @@
 local gapProfiles = {
-  solo = { gaps_in = 2, gaps_out = 16 },
-  normal = { gaps_in = 2, gaps_out = 8 },
-  dense = { gaps_in = 1, gaps_out = 4 },
-  special = { gaps_in = 0, gaps_out = 12 },
+  solo = { gaps_in = 2, gaps_out = 6 },
+  normal = { gaps_in = 2, gaps_out = 4 },
+  dense = { gaps_in = 1, gaps_out = 2 },
 }
-
-local function specialWorkspaceOpen()
-  for _, monitor in ipairs(hl.get_monitors()) do
-    if monitor.active_special_workspace ~= nil then
-      return true
-    end
-  end
-  return false
-end
 
 local function tiledWindowCount(workspace)
   if workspace == nil then
@@ -37,11 +27,6 @@ local function tiledWindowCount(workspace)
 end
 
 local function applySmartGaps()
-  if specialWorkspaceOpen() then
-    hl.config({ general = gapProfiles.special })
-    return
-  end
-
   local workspace = hl.get_active_workspace()
   local tiledCount = tiledWindowCount(workspace)
   local profile = gapProfiles.normal

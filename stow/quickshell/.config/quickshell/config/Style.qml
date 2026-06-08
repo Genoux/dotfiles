@@ -9,7 +9,7 @@ Singleton {
     readonly property string fontIcon: "JetBrainsMono Nerd Font"
     readonly property string fontEmoji: "Noto Color Emoji"
 
-    readonly property int barHeight: 34
+    readonly property int barHeight: 38
     readonly property int barMargin: 8
     readonly property int pillHeight: 24
     readonly property int pillWidth: 22
@@ -19,7 +19,8 @@ Singleton {
     readonly property int iconSize: 14
     readonly property int iconSizeSm: 13
     readonly property int iconSizeXs: 12
-    readonly property int mediaInfoWidth: 126
+    readonly property int mediaInfoWidth: 142
+    readonly property int mediaHeight: 30
     readonly property int mediaPadding: 4
     readonly property int mediaControlsRevealDuration: 200
     readonly property real mediaBackgroundOpacity: 0.5

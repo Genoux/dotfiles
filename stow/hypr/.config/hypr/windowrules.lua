@@ -52,6 +52,7 @@ windowRule({ name = "clipse", float = true, center = true, size = "700 700", mat
 windowRule({ name = "windowrule-22", float = true, center = true, size = "628 450", match = { class = "^(dotfiles-manager)$" } })
 windowRule({ name = "windowrule-telegram", float = true, center = true, size = "420 640", match = { class = "^(org.telegram.desktop)$" } })
 windowRule({ name = "gnome-calculator", float = true, center = true, size = "628 400", match = { class = "^(org.gnome.Calculator)$" } })
+windowRule({ name = "gnome-calendar", float = true, center = true, size = "1280 750", match = { class = "^(org.gnome.Calendar)$" } })
 
 windowRule({
   name = "picture-in-picture",
@@ -77,6 +78,7 @@ layerRule({ name = "osd", blur = true, ignore_alpha = 0.0, blur_popups = true, a
 layerRule({ name = "layerrule-brightness-osd", blur = true, ignore_alpha = 0.0, blur_popups = true, animation = "fade", match = { namespace = "^(brightness-osd)$" } })
 layerRule({ name = "layerrule-ags-bar", blur = true, blur_popups = true, ignore_alpha = 0.1, animation = "fade", match = { namespace = "^(ags-bar)$" } })
 layerRule({ name = "layerrule-quickshell", blur = true, blur_popups = true, ignore_alpha = 0.1, animation = "fade", match = { namespace = "^(quickshell)$" } })
+layerRule({ name = "layerrule-calendar", blur = true, blur_popups = true, ignore_alpha = 0.1, animation = "fade", match = { namespace = "^(calendar_widget)$" } })
 layerRule({ name = "gtk4-layer-shell", blur = true, blur_popups = true, ignore_alpha = 0.1, match = { namespace = "gtk4-layer-shell" } })
 
 windowRule({ name = "claude-desktop", float = true, center = true, size = "1280 800", match = { class = "^(Claude|com\\.anthropic\\.claude-desktop)$" } })

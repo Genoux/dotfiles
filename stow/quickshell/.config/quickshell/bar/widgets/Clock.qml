@@ -4,14 +4,24 @@ import qs
 import qs.config
 import qs.components
 
-Pill {
+Item {
+    id: root
+
+    implicitWidth: pill.implicitWidth
+    implicitHeight: pill.implicitHeight
+
     SystemClock {
         id: clock
         precision: SystemClock.Minutes
     }
 
-    text: Qt.formatDateTime(clock.date, "ddd dd MMM HH:mm")
-    foreground: Colors.base05
-    interactive: true
-    onClicked: Launchers.launchOrFocus("calcurse", "calcurse")
+    Pill {
+        id: pill
+
+        anchors.centerIn: parent
+        text: Qt.formatDateTime(clock.date, "ddd dd MMM HH:mm")
+        foreground: Colors.base05
+        interactive: true
+        onClicked: Launchers.openGnomeCalendar()
+    }
 }

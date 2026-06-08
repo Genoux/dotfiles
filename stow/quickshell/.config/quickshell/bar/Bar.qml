@@ -37,7 +37,6 @@ PanelWindow {
 
             SystemTray {
                 Layout.alignment: Qt.AlignVCenter
-                shellWindow: bar
             }
         }
 

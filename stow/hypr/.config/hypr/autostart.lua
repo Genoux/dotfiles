@@ -2,12 +2,12 @@ local sessionEnvironment =
   "WAYLAND_DISPLAY HYPRLAND_INSTANCE_SIGNATURE XDG_CURRENT_DESKTOP XDG_SESSION_TYPE XDG_SESSION_DESKTOP XCURSOR_THEME XCURSOR_SIZE XCURSOR_PATH HYPRCURSOR_SIZE GBM_BACKEND __GLX_VENDOR_LIBRARY_NAME LIBVA_DRIVER_NAME WLR_DRM_DEVICES WLR_RENDER_DRM_DEVICE WLR_NO_HARDWARE_CURSORS WEATHER_CITY"
 
 local desktopServices = {
-  -- "ags.service", -- Hyprland autostart off while quickshell is the bar; dotfiles config link starts it
   "walker.service",
   "elephant.service",
   "mako.service",
   "awww-daemon.service",
   "hypridle.service",
+  "quickshell",
 }
 
 local portalServices = {
