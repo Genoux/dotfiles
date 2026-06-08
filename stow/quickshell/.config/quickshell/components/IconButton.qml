@@ -1,6 +1,7 @@
 import Quickshell
 import Quickshell.Widgets
 import QtQuick
+import Qt5Compat.GraphicalEffects
 import qs
 import qs.config
 
@@ -28,14 +29,27 @@ Rectangle {
     border.width: borderWidth
     border.color: borderColor
 
-    Image {
+    Item {
         anchors.centerIn: parent
         visible: root.usesBundledIcon && root.resolvedSource.toString().length > 0
         width: root.iconSize
         height: root.iconSize
-        source: root.resolvedSource
-        fillMode: Image.PreserveAspectFit
-        sourceSize: Qt.size(root.iconSize, root.iconSize)
+
+        Image {
+            id: bundledIcon
+
+            anchors.fill: parent
+            source: root.resolvedSource
+            fillMode: Image.PreserveAspectFit
+            sourceSize: Qt.size(root.iconSize, root.iconSize)
+            visible: false
+        }
+
+        ColorOverlay {
+            anchors.fill: parent
+            source: bundledIcon
+            color: root.foreground
+        }
     }
 
     IconImage {

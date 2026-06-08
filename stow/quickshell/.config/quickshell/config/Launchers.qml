@@ -33,15 +33,7 @@ Singleton {
         Quickshell.execDetached([
             "hyprctl",
             "dispatch",
-            `function() require("actions.workspaces").switch(${workspaceId}) end`,
-        ])
-    }
-
-    function closeVisibleSpecial() {
-        Quickshell.execDetached([
-            "hyprctl",
-            "dispatch",
-            "function() require(\"actions.workspaces\").closeVisibleSpecial() end",
+            `function() package.loaded["actions.workspaces"]=nil; require("actions.workspaces").switch(${workspaceId}) end`,
         ])
     }
 

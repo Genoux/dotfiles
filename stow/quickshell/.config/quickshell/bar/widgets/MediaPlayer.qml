@@ -51,17 +51,29 @@ Rectangle {
         Rectangle {
             id: mediaInfo
 
+            readonly property real textLeftInset: 32
+            readonly property real textRightInset: 6
             readonly property string scrollText: `${root.trackText} • `
             readonly property real singleTextWidth: mediaMeasure.implicitWidth
-            readonly property bool shouldScroll: singleTextWidth > textViewport.width
+            readonly property real textViewportMaxWidth: Style.mediaInfoWidth - textLeftInset - textRightInset
+            readonly property bool shouldScroll: singleTextWidth > textViewportMaxWidth
+            readonly property real fittedWidth: textLeftInset + singleTextWidth + textRightInset
 
-            width: Style.mediaInfoWidth
+            width: shouldScroll ? Style.mediaInfoWidth : fittedWidth
+            implicitWidth: width
             height: parent.height
             radius: Style.radiusSm
             color: root.controlsExpanded ? Style.alphaLight : Style.transparent
 
             Behavior on color {
                 ColorAnimation {
+                    duration: Style.mediaControlsRevealDuration
+                    easing.type: Easing.OutCubic
+                }
+            }
+
+            Behavior on width {
+                NumberAnimation {
                     duration: Style.mediaControlsRevealDuration
                     easing.type: Easing.OutCubic
                 }

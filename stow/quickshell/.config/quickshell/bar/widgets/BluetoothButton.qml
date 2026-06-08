@@ -7,8 +7,10 @@ IconButton {
 
     readonly property var adapter: Bluetooth.defaultAdapter
 
+    readonly property bool hasConnectedDevice: (adapter?.devices?.values ?? []).some(d => d.connected)
+
     visible: adapter?.enabled ?? false
-    iconName: "bluetooth-symbolic"
+    iconName: hasConnectedDevice ? "bluetooth-active-symbolic" : "bluetooth-symbolic"
     interactive: true
     onClicked: Quickshell.execDetached(["blueman-manager"])
 }

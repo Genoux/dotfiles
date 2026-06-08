@@ -10,11 +10,8 @@ Pill {
     fontFamily: Style.fontSans
     fontSize: Style.fontSizeSm
     horizontalPadding: 0
-    minimumWidth: Style.pillWidth
     implicitWidth: Style.pillWidth
-    Layout.minimumWidth: Style.pillWidth
-    Layout.preferredWidth: Style.pillWidth
-    Layout.maximumWidth: Style.pillWidth
+    Layout.fillWidth: false
     interactive: true
     onClicked: Keyboard.switchLayout()
 }

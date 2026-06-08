@@ -2,31 +2,54 @@ import Quickshell.Services.SystemTray
 import QtQuick
 import qs
 import qs.components
+import qs.config
 import qs.services
 
-Row {
+Rectangle {
     id: root
 
+    readonly property real borderOpacity: 0.1
+    readonly property real chromeInset: border.width + Style.mediaPadding
+    readonly property real innerHeight: height - chromeInset * 2
+
     visible: SystemTray.items.values.length > 0
-    spacing: 2
+    implicitWidth: trayRow.implicitWidth + chromeInset * 2
+    implicitHeight: Style.mediaHeight
+    height: implicitHeight
+    border.width: 1
+    border.color: Qt.rgba(Colors.base04.r, Colors.base04.g, Colors.base04.b, borderOpacity)
+    radius: Style.radiusMd
+    color: Style.transparent
 
-    Repeater {
-        model: SystemTray.items
+    Row {
+        id: trayRow
 
-        IconButton {
-            required property var modelData
+        anchors.fill: parent
+        anchors.margins: root.chromeInset
+        spacing: 1
 
-            iconSource: modelData.icon
-            iconSize: 12
-            interactive: true
+        Repeater {
+            model: SystemTray.items
 
-            onClicked: (mouse) => {
-                if (mouse.button === Qt.MiddleButton) {
-                    modelData.secondaryActivate()
-                    return
+            IconButton {
+                required property var modelData
+
+                readonly property real buttonSize: trayRow.height
+
+                iconSource: modelData.icon
+                iconSize: Math.max(10, Math.round(buttonSize * 0.55))
+                interactive: true
+                width: buttonSize
+                height: buttonSize
+
+                onClicked: (mouse) => {
+                    if (mouse.button === Qt.MiddleButton) {
+                        modelData.secondaryActivate()
+                        return
+                    }
+
+                    TrayFocus.activate(modelData)
                 }
-
-                TrayFocus.activate(modelData)
             }
         }
     }

@@ -14,7 +14,6 @@ Singleton {
         return stateFile.loaded ? stateFile.text() : ""
     }
     readonly property bool updatesAvailable: parseValue("UPDATES_AVAILABLE") === "true"
-    readonly property int commitCount: Number(parseValue("COMMIT_COUNT")) || 0
 
     function parseValue(key) {
         const prefix = `${key}=`

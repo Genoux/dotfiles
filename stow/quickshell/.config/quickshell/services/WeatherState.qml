@@ -15,10 +15,6 @@ Singleton {
         weatherProcess.running = true
     }
 
-    function open() {
-        Quickshell.execDetached(["gnome-weather"])
-    }
-
     Process {
         id: weatherProcess
 

@@ -24,7 +24,7 @@ IconButton {
             target: root
             property: "recordingColor"
             to: Style.recordingPulse
-            duration: 1000
+            duration: Style.recordingPulseDuration
             easing.type: Easing.InOutQuad
         }
 
@@ -32,7 +32,7 @@ IconButton {
             target: root
             property: "recordingColor"
             to: Style.recording
-            duration: 1000
+            duration: Style.recordingPulseDuration
             easing.type: Easing.InOutQuad
         }
     }

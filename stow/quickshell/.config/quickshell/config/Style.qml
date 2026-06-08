@@ -19,24 +19,17 @@ Singleton {
     readonly property int iconSize: 14
     readonly property int iconSizeSm: 13
     readonly property int iconSizeXs: 12
+    readonly property int fontSizeMedia: 11
     readonly property int mediaInfoWidth: 142
     readonly property int mediaHeight: 30
     readonly property int mediaPadding: 4
     readonly property int mediaControlsRevealDuration: 200
+    readonly property int recordingPulseDuration: 1000
     readonly property real mediaBackgroundOpacity: 0.5
     readonly property real mediaBackgroundOpacityHover: 0.62
     readonly property int easeDurationFast: 150
     readonly property int easeDurationNormal: 200
     readonly property int easeDurationSlow: 320
-
-    readonly property var easeDefault: [0.43, 0.07, 0.59, 0.94]
-    readonly property var easeOut: [0.16, 1, 0.3, 1]
-    readonly property var easeInOut: [0.78, 0, 0.22, 1]
-
-    function bezierEasing(animation, curve) {
-        animation.easing.type = Easing.BezierSpline
-        animation.easing.bezierCurve = curve
-    }
 
     function surfaceAlpha(color, alpha) {
         return Qt.rgba(color.r, color.g, color.b, alpha)
