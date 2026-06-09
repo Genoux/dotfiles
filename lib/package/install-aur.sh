@@ -1,5 +1,4 @@
 #!/bin/bash
-# AUR package installation helpers
 
 read_aur_install_packages() {
     local -n aur_packages_ref=$1
@@ -15,10 +14,7 @@ read_aur_install_packages() {
 _clean_aur_package_build_dirs() {
     local -n missing_aur_ref=$1
 
-    if ! command -v go &>/dev/null; then
-        return 0
-    fi
-
+    # Stale yay src trees often break incremental AUR rebuilds after manifest changes.
     for pkg in "${missing_aur_ref[@]}"; do
         if [[ -d "$HOME/.cache/yay/$pkg" ]]; then
             chmod -R +w "$HOME/.cache/yay/$pkg" 2>/dev/null || true
@@ -56,12 +52,6 @@ _detect_aur_conflicts() {
     local -n conflicts_ref=$2
 
     conflicts_ref=()
-
-    if printf '%s\n' "${missing_aur_ref[@]}" | grep -q '^elephant$'; then
-        if pacman -Q elephant-bin &>/dev/null; then
-            conflicts_ref+=("elephant-bin")
-        fi
-    fi
 
     for pkg in "${missing_aur_ref[@]}"; do
         if [[ "$pkg" == *"-bin" ]]; then
@@ -167,6 +157,7 @@ install_aur_packages() {
     [[ -n "${DOTFILES_LOG_FILE:-}" ]] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] Installing packages: ${missing_aur[*]}" >> "$DOTFILES_LOG_FILE"
     [[ -n "${DOTFILES_LOG_FILE:-}" ]] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] Starting installation..." >> "$DOTFILES_LOG_FILE"
 
+    # yay still prompts for clean/diff review even with --noconfirm; feed defaults non-interactively.
     printf '1\nY\n' | yay -S --needed --noconfirm --refresh --answerclean None --answerdiff None --removemake "${missing_aur[@]}"
     local yay_exit_code=$?
     echo

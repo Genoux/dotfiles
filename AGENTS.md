@@ -22,10 +22,12 @@ the existing layout, naming, and shell style.
 - `stow/`: GNU Stow packages. Paths under each package mirror `$HOME`.
 - `stow/hypr/.config/hypr/`: Hyprland, Hyprlock, Hypridle, wallpaper, monitors,
   input, window rules, animations, plugins, and user preferences.
-- `stow/ags/.config/ags/`: AGS/Astal GTK4 shell. TypeScript, TSX widgets,
-  services, and SCSS styles live here.
+- `stow/quickshell/.config/quickshell/`: Quickshell QML bottom bar, launcher,
+  notifications, and shell services.
+- `stow/ags/.config/ags/`: Legacy AGS/Astal GTK4 shell (retained in repo, not
+  session-started).
 - `stow/scripts/.local/bin/`: User-facing helper commands used by Hyprland,
-  AGS, menus, wallpaper, screenshots, packages, and system workflows.
+  Quickshell, menus, wallpaper, screenshots, packages, and system workflows.
 - `stow/*/.config/systemd/user/`: User services and timers started from the
   session or managed by the dotfiles tooling.
 - `install/`: Install and setup entrypoints.
@@ -100,25 +102,23 @@ legacy hyprlang one-line rule sprawl unless the user asks.
 
 ## Desktop Components
 
-- AGS/Astal is the shell and bar implementation. It is GTK4 and lives under
-  `stow/ags/.config/ags/`.
-- AGS scripts are managed with `pnpm` from the AGS config directory. Useful
-  commands are `pnpm run format:check`, `pnpm run format`, and `pnpm run dev`.
-- AGS does not reliably hot reload TS/SCSS. The config tooling may restart the
-  `ags.service` when AGS files change.
-- Do not restart AGS when changing wallpaper. Wallpaper or matugen theme updates
-  are not a reason to bounce the shell here.
-- Walker is the launcher/menu provider.
-- Mako handles notifications.
+- Quickshell is the active shell and bar. It lives under
+  `stow/quickshell/.config/quickshell/` (QML, hot-reload, no build step).
+- Quickshell provides the app launcher, power menu, volume OSD, and
+  notifications (Mako/Walker/Elephant removed from session startup).
+- Do not restart Quickshell when changing wallpaper. Wallpaper or matugen theme
+  updates are not a reason to bounce the shell here.
 - Awww handles wallpaper transitions.
 - Matugen generates theme assets. Do not reintroduce wallust or a dual
   matugen-plus-wallust terminal pipeline unless explicitly requested.
+- Legacy AGS config remains under `stow/ags/` for reference; it is not started
+  from Hyprland autostart and has no stowed `ags.service` unit.
 
 ## Learned User Preferences
 
-- In AGS, system tray primary/left click should focus or raise the application.
-  Secondary/right click opens the tray menu or popover.
-- For the AGS media player, update the displayed MPRIS source from explicit
+- In Quickshell, system tray primary/left click should focus or raise the
+  application. Secondary/right click opens the tray menu or popover.
+- For the Quickshell media player, update the displayed MPRIS source from explicit
   interaction and playback-driven ordering, not from Hyprland window focus alone.
 - Keep Hyprland visual tuning polished but practical: preserve the modular files,
   frosted-glass blur intent, rounded/bordered look, and readable grouping.
@@ -129,7 +129,7 @@ legacy hyprlang one-line rule sprawl unless the user asks.
 - The user is comfortable being challenged directly if an approach is wrong or
   likely to make the setup harder to maintain.
 - Keep `keybindings.lua` thin: bind keys only; put reusable Hypr logic in `actions/*`
-  modules (also callable from AGS via `require("actions.*")`).
+  modules.
 - Anything that drives Hyprland (keybinds, widgets, scripts) should use the 0.55
   Lua dispatcher API (`hl.dsp`, `hl.bind`), not legacy `hyprctl dispatch` strings.
 - Cursor theme should follow GTK/matugen theme install/switch, not stay hardcoded
@@ -153,9 +153,10 @@ legacy hyprlang one-line rule sprawl unless the user asks.
 - `hyprsession` 0.2.0 restore is incompatible with `hyprland.lua` (upstream issue
   #18); dotfiles use `system-hyprsession` to wrap restore as `hl.dsp.exec_cmd(...)`
   and re-detect live `HYPRLAND_INSTANCE_SIGNATURE`.
-- `hyprsession.service` / `ags.service` start only from Hyprland `autostart.lua`
-  (not `WantedBy=graphical-session.target`); start `hyprsession` before AGS/Walker/Mako;
-  no long `ExecStartPre` wait on AGS.
+- `hyprsession.service` and `quickshell` start from Hyprland `autostart.lua`
+  (not `WantedBy=graphical-session.target`); Quickshell starts first, then hyprsession
+  restore runs asynchronously after an 8-second delay — this prevents the session save
+  loop from blocking logout.
 - Cursor theme: `lib/gtk.sh` writes only `theme` to
   `~/.config/hypr/generated/cursor.lua` on GTK install; cursor size stays in
   `cursor.lua`. Set `XCURSOR_THEME` with expanded `XCURSOR_PATH` (not literal
@@ -167,9 +168,9 @@ legacy hyprlang one-line rule sprawl unless the user asks.
   `hooks.lua` handles hyprsession post-restore fixes;
   `smart-gaps.lua` adjusts gaps by window count and special workspace state.
 - Window state cycle: `SUPER + u` via `actions.windows.cycleWindowState`.
-- AGS bar TUIs use `launchOrFocus()` from `services/hyprland.ts` (Lua dispatcher).
-- AGS Hyprland integration: `ags.service` needs `PATH` including `~/.local/bin`;
-  use the Lua dispatch helper instead of legacy `focuswindow` dispatches.
+- Quickshell bar TUIs use `ShellActions.launchOrFocus()` / `ShellActions.run()`.
+- Quickshell needs `PATH` including `~/.local/bin` when started from systemd or
+  Hyprland autostart.
 
 ## Shell And Script Style
 
@@ -214,7 +215,13 @@ For shell changes:
 - If a script uses sourced helpers, inspect the helper contract before changing
   arguments or return behavior.
 
-For AGS changes:
+For Quickshell changes:
+
+- Edit QML under `stow/quickshell/.config/quickshell/`; Quickshell hot-reloads.
+- Use `Colors.base**` from matugen-generated `Colors.qml`.
+- Hyprland actions go through `config/ShellActions.qml`, not `hyprctl` subprocesses.
+
+For legacy AGS changes (if ever needed):
 
 - Run checks from `stow/ags/.config/ags/`.
 - Prefer `pnpm run format:check` for formatting verification.

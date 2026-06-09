@@ -16,10 +16,10 @@ hl.window_rule({
 hl.window_rule({
   name = "browser-empty-noblur",
   no_blur = true,
-  match = { class = "^()$", title = "^()$" },
+  match = { class = "^$", title = "^$" },
 })
 
-hl.window_rule({ name = "windowrule-slack", float = true, size = "1200 800", match = { class = "^(slack)$" } })
+hl.window_rule({ name = "slack", float = true, size = "1200 800", match = { class = "^(slack)$" } })
 hl.window_rule({ name = "nautilus", float = true, center = true, size = "(monitor_w*0.65) (monitor_h*0.65)", opacity = "0.90 0.90", match = { class = "^(org.gnome.Nautilus)$" } })
 hl.window_rule({ name = "file-picker-portal", float = true, size = "(monitor_w*0.6) (monitor_h*0.7)", center = true, opacity = "0.90 0.90", match = { class = "^(xdg-desktop-portal-gtk)$" } })
 hl.window_rule({ name = "modal-open", float = true, match = { title = "^(Open)$" } })
@@ -42,7 +42,7 @@ hl.window_rule({ name = "gnome-weather", float = true, center = true, size = "90
 hl.window_rule({ name = "wthrr", float = true, center = true, size = "630 650", match = { title = "^(wthrr)$" } })
 hl.window_rule({ name = "clipse", float = true, center = true, size = "700 700", match = { title = "^(clipse)$" } })
 hl.window_rule({ name = "dotfiles-manager", float = true, center = true, size = "628 450", match = { class = "^(dotfiles-manager)$" } })
-hl.window_rule({ name = "windowrule-telegram", float = true, center = true, size = "420 640", match = { class = "^(org.telegram.desktop)$" } })
+hl.window_rule({ name = "telegram", float = true, center = true, size = "420 640", match = { class = "^(org.telegram.desktop)$" } })
 hl.window_rule({ name = "gnome-calculator", float = true, center = true, size = "628 400", match = { class = "^(org.gnome.Calculator)$" } })
 hl.window_rule({ name = "gnome-calendar", float = true, center = true, size = "1280 750", match = { class = "^(org.gnome.Calendar)$" } })
 
@@ -68,7 +68,6 @@ hl.window_rule({ name = "satty", size = "1280 800", center = true, float = true,
 
 hl.layer_rule({ name = "osd", blur = true, ignore_alpha = 0.0, blur_popups = true, animation = "fade", match = { namespace = "osd" } })
 hl.layer_rule({ name = "layerrule-brightness-osd", blur = true, ignore_alpha = 0.0, blur_popups = true, animation = "fade", match = { namespace = "^(brightness-osd)$" } })
-hl.layer_rule({ name = "layerrule-ags-bar", blur = true, blur_popups = true, ignore_alpha = 0.1, animation = "fade", match = { namespace = "^(ags-bar)$" } })
 hl.layer_rule({ name = "layerrule-quickshell", blur = true, blur_popups = true, ignore_alpha = 0.1, animation = "fade", match = { namespace = "^(quickshell)$" } })
 hl.layer_rule({ name = "layerrule-calendar", blur = true, blur_popups = true, ignore_alpha = 0.1, animation = "fade", match = { namespace = "^(calendar_widget)$" } })
 hl.layer_rule({ name = "gtk4-layer-shell", blur = true, blur_popups = true, ignore_alpha = 0.1, match = { namespace = "gtk4-layer-shell" } })
@@ -76,7 +75,6 @@ hl.layer_rule({ name = "gtk4-layer-shell", blur = true, blur_popups = true, igno
 hl.window_rule({ name = "claude-desktop", float = true, center = true, size = "1280 800", match = { class = "^(Claude|com\\.anthropic\\.claude-desktop)$" } })
 
 hl.layer_rule({ name = "notifications", blur = true, blur_popups = true, ignore_alpha = 0.1, match = { namespace = "^(notifications)$" } })
-hl.layer_rule({ name = "walker", blur = true, ignore_alpha = 0.1, no_anim = true, match = { namespace = "^(walker)$" } })
 hl.layer_rule({ name = "launcher-backdrop", no_anim = true, match = { namespace = "^(launcher-backdrop)$" } })
 hl.layer_rule({ name = "launcher", blur = true, ignore_alpha = 0.1, no_anim = true, match = { namespace = "^(launcher)$" } })
 hl.layer_rule({ name = "power-menu-backdrop", no_anim = true, match = { namespace = "^(power-menu-backdrop)$" } })
