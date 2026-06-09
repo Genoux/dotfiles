@@ -58,31 +58,46 @@ Singleton {
     readonly property color osdStepFilled: Qt.rgba(1, 1, 1, 1)
     readonly property color osdBorder: alphaLight
 
+    readonly property color overlayBackdrop: "#191818"
+    readonly property real overlayBackdropOpacity: 0.4
+    readonly property color overlaySurface: Qt.rgba(8 / 255, 8 / 255, 8 / 255, 0.3)
+    readonly property color overlayBorderSubtle: Qt.rgba(1, 1, 1, 0.02)
+    readonly property color overlayShadow: Qt.rgba(0, 0, 0, 0.2)
+    readonly property real overlayHiddenScale: 0.98
+    readonly property int overlayShowDuration: 160
+    readonly property int overlayHideDuration: 160
+
+    readonly property color launcherBorderSubtle: overlayBorderSubtle
+    readonly property color launcherShadow: overlayShadow
+    readonly property color launcherBackdrop: overlayBackdrop
+    readonly property real launcherBackdropOpacity: overlayBackdropOpacity
+    readonly property real launcherHiddenScale: overlayHiddenScale
+    readonly property int launcherShowDuration: overlayShowDuration
+    readonly property int launcherHideDuration: overlayHideDuration
+
+    readonly property color powerMenuBorderSubtle: overlayBorderSubtle
+    readonly property color powerMenuShadow: overlayShadow
+    readonly property color powerMenuBackdrop: overlayBackdrop
+    readonly property real powerMenuBackdropOpacity: overlayBackdropOpacity
+    readonly property color powerMenuSurface: overlaySurface
+    readonly property real powerMenuHiddenScale: overlayHiddenScale
+    readonly property int powerMenuShowDuration: overlayShowDuration
+    readonly property int powerMenuHideDuration: overlayHideDuration
+
     readonly property int launcherWidth: 600
     readonly property int launcherPadding: 10
     readonly property int launcherSpacing: 10
     readonly property int launcherSearchHeight: 36
-    readonly property int launcherResultHeight: 34
+    readonly property int launcherResultHeight: 40
     readonly property int launcherEmptyHeight: 200
     readonly property int launcherListMaxHeight: 300
-    readonly property int launcherIconSize: 21
+    readonly property int launcherIconSize: 24
     readonly property int launcherMaxResults: 100
-    readonly property real launcherSurfaceAlpha: 0.5
-    readonly property color launcherBase: "#080808"
-    readonly property color launcherSurface: Qt.rgba(8 / 255, 8 / 255, 8 / 255, launcherSurfaceAlpha)
     readonly property color launcherText: "#ffffff"
     readonly property color launcherSelection: Qt.rgba(225 / 255, 225 / 255, 225 / 255, 0.2)
-    readonly property color launcherBorderSubtle: Qt.rgba(1, 1, 1, 0.02)
     readonly property color launcherSearchBg: Qt.rgba(0, 0, 0, 0.08)
     readonly property color launcherSelectedBg: Qt.rgba(1, 1, 1, 0.02)
-    readonly property color launcherShadow: Qt.rgba(0, 0, 0, 0.2)
     readonly property color launcherPlaceholder: Qt.rgba(1, 1, 1, 0.4)
-    readonly property real launcherBackdropOpacity: 0.4
-    readonly property color launcherBackdrop: '#191818'
-
-    readonly property real launcherHiddenScale: 0.96
-    readonly property int launcherShowDuration: 120
-    readonly property int launcherHideDuration: 120
 
     readonly property int powerMenuPadding: 12
     readonly property int powerMenuItemWidth: 68
@@ -91,22 +106,13 @@ Singleton {
     readonly property int powerMenuItemSpacing: 6
     readonly property int powerMenuIconSize: 16
     readonly property int powerMenuLabelSize: 12
-    readonly property real powerMenuSurfaceAlpha: 0.5
-    readonly property color powerMenuSurface: Qt.rgba(8 / 255, 8 / 255, 8 / 255, powerMenuSurfaceAlpha)
     readonly property color powerMenuText: "#ffffff"
-    readonly property color powerMenuBorderSubtle: Qt.rgba(1, 1, 1, 0.02)
     readonly property color powerMenuSelectedBg: Qt.rgba(1, 1, 1, 0.02)
-    readonly property color powerMenuShadow: Qt.rgba(0, 0, 0, 0.2)
-    readonly property real powerMenuBackdropOpacity: 0.4
-    readonly property color powerMenuBackdrop: "#191818"
-    readonly property real powerMenuHiddenScale: 0.96
-    readonly property int powerMenuShowDuration: 120
-    readonly property int powerMenuHideDuration: 120
 
     readonly property int notificationWidth: 360
     readonly property int notificationPadding: 10
     readonly property int notificationGap: 2
-    readonly property int notificationIconSize: 34
+    readonly property int notificationIconSize: 42
     readonly property int notificationMaxVisible: 10
     readonly property int notificationTimeout: 5000
     readonly property int notificationBottomMargin: barHeight + barMargin - 6

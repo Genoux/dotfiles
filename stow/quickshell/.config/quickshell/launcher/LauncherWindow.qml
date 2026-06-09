@@ -5,6 +5,7 @@ import QtQuick
 import QtQuick.Layouts
 import Qt5Compat.GraphicalEffects
 import qs
+import qs.components
 import qs.config
 import qs.services as Services
 
@@ -37,6 +38,19 @@ PanelWindow {
     readonly property bool active: Services.Launcher.visible && Services.Launcher.screen === root.screen
 
     property bool displayed: false
+    property var closingEntries: []
+    property int closingListHeight: listHeight
+    property int closingSurfaceHeight: surfaceHeight
+
+    readonly property var visibleEntries: root.active ? root.filteredEntries : root.closingEntries
+    readonly property int visibleListHeight: root.active ? root.listHeight : root.closingListHeight
+
+    OverlayRevealController {
+        id: reveal
+
+        active: root.active
+        onHideFinished: root.finishHide()
+    }
 
     screen: root.screen
     visible: displayed
@@ -54,21 +68,27 @@ PanelWindow {
         right: true
     }
 
-    onActiveChanged: {
-        if (active) {
-            hideTimer.stop()
-            displayed = true
-            Qt.callLater(() => searchInput.forceActiveFocus())
-        } else {
-            hideTimer.restart()
-        }
+    function snapshotClosingLayout() {
+        closingEntries = filteredEntries
+        closingListHeight = listHeight
+        closingSurfaceHeight = surfaceHeight
     }
 
-    Timer {
-        id: hideTimer
+    function finishHide() {
+        displayed = false
+        Services.Launcher.finalizeClose()
+    }
 
-        interval: Style.launcherHideDuration
-        onTriggered: root.displayed = false
+    onActiveChanged: {
+        if (active) {
+            reveal.stopHide()
+            displayed = true
+            reveal.show()
+            Qt.callLater(() => searchInput.forceActiveFocus())
+        } else {
+            snapshotClosingLayout()
+            reveal.hide()
+        }
     }
 
     MouseArea {
@@ -81,49 +101,26 @@ PanelWindow {
         id: surfaceHost
 
         width: Style.launcherWidth
-        height: root.surfaceHeight
+        height: root.active ? root.surfaceHeight : root.closingSurfaceHeight
         anchors.centerIn: parent
-        opacity: root.active ? 1 : 0
-        scale: root.active ? 1 : Style.launcherHiddenScale
+        scale: reveal.revealScale
         transformOrigin: Item.Center
 
-        Behavior on opacity {
+        Behavior on height {
             NumberAnimation {
-                duration: root.active ? Style.launcherShowDuration : Style.launcherHideDuration
-                easing.type: root.active ? Easing.OutCubic : Easing.InCubic
+                duration: Style.overlayShowDuration
+                easing.type: Easing.OutCubic
             }
         }
 
-        Behavior on scale {
-            NumberAnimation {
-                duration: root.active ? Style.launcherShowDuration : Style.launcherHideDuration
-                easing.type: root.active ? Easing.OutCubic : Easing.InCubic
-            }
-        }
-
-        Rectangle {
-            id: surface
-
+        OverlayDialogSurface {
             anchors.fill: parent
-            radius: Style.radiusMd
-            color: Style.launcherSurface
-            border.width: 1
-            border.color: Style.launcherBorderSubtle
+            revealOpacity: reveal.revealOpacity
 
-            layer.enabled: true
-            layer.effect: DropShadow {
-                horizontalOffset: 0
-                verticalOffset: 0
-                radius: 10
-                samples: 21
-                color: Style.launcherShadow
-                transparentBorder: true
-            }
-
-        ColumnLayout {
-            anchors.fill: parent
-            anchors.margins: Style.launcherPadding
-            spacing: Style.launcherSpacing
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: Style.launcherPadding
+                spacing: Style.launcherSpacing
 
             Rectangle {
                 Layout.fillWidth: true
@@ -131,7 +128,7 @@ PanelWindow {
                 radius: Style.radiusMd
                 color: Style.launcherSearchBg
                 border.width: 1
-                border.color: Style.launcherBorderSubtle
+                border.color: Style.overlayBorderSubtle
 
                 RowLayout {
                     anchors.fill: parent
@@ -176,6 +173,8 @@ PanelWindow {
                             font.pixelSize: Style.fontSizeSm
                             font.weight: Font.Normal
                             clip: true
+                            enabled: root.active
+                            cursorVisible: root.active && activeFocus
                             onTextChanged: {
                                 if (Services.Launcher.query !== text)
                                     Services.Launcher.query = text
@@ -223,7 +222,7 @@ PanelWindow {
 
             Item {
                 Layout.fillWidth: true
-                Layout.preferredHeight: root.listHeight
+                Layout.preferredHeight: root.visibleListHeight
                 clip: true
 
                 ListView {
@@ -231,7 +230,7 @@ PanelWindow {
 
                     anchors.fill: parent
                     model: ScriptModel {
-                        values: root.filteredEntries
+                        values: root.visibleEntries
                     }
                     currentIndex: 0
                     spacing: 0
@@ -249,7 +248,7 @@ PanelWindow {
                         radius: Style.radiusMd
                         color: selected ? Style.launcherSelectedBg : Style.transparent
                         border.width: selected ? 1 : 0
-                        border.color: Style.launcherBorderSubtle
+                        border.color: Style.overlayBorderSubtle
 
                         RowLayout {
                             anchors.fill: parent
@@ -289,7 +288,7 @@ PanelWindow {
 
                 Text {
                     anchors.centerIn: parent
-                    visible: root.filteredEntries.length === 0
+                    visible: root.visibleEntries.length === 0
                     text: "No Results"
                     color: Style.launcherPlaceholder
                     font.family: Style.fontSans

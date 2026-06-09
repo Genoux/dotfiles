@@ -20,7 +20,7 @@ Rectangle {
     radius: Style.radiusMd
     color: selected ? Style.powerMenuSelectedBg : Style.transparent
     border.width: selected ? 1 : 0
-    border.color: Style.powerMenuBorderSubtle
+    border.color: Style.overlayBorderSubtle
 
     ColumnLayout {
         anchors.centerIn: parent

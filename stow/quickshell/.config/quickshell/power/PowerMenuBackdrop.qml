@@ -40,18 +40,18 @@ PanelWindow {
     Timer {
         id: hideTimer
 
-        interval: Style.powerMenuHideDuration
+        interval: Style.overlayHideDuration
         onTriggered: root.displayed = false
     }
 
     Rectangle {
         anchors.fill: parent
-        color: Style.powerMenuBackdrop
-        opacity: root.active ? Style.powerMenuBackdropOpacity : 0
+        color: Style.overlayBackdrop
+        opacity: root.active ? Style.overlayBackdropOpacity : 0
 
         Behavior on opacity {
             NumberAnimation {
-                duration: root.active ? Style.powerMenuShowDuration : Style.powerMenuHideDuration
+                duration: root.active ? Style.overlayShowDuration : Style.overlayHideDuration
                 easing.type: root.active ? Easing.OutCubic : Easing.InCubic
             }
         }

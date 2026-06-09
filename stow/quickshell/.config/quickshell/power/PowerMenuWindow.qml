@@ -4,8 +4,8 @@ import Quickshell.Wayland
 import Quickshell.Widgets
 import QtQuick
 import QtQuick.Layouts
-import Qt5Compat.GraphicalEffects
 import qs
+import qs.components
 import qs.config
 import qs.services as Services
 
@@ -56,6 +56,13 @@ PanelWindow {
 
     property bool displayed: false
 
+    OverlayRevealController {
+        id: reveal
+
+        active: root.active
+        onHideFinished: root.displayed = false
+    }
+
     screen: root.screen
     visible: displayed
     color: Style.transparent
@@ -74,19 +81,13 @@ PanelWindow {
 
     onActiveChanged: {
         if (active) {
-            hideTimer.stop()
+            reveal.stopHide()
             displayed = true
+            reveal.show()
             Qt.callLater(() => focusScope.forceActiveFocus())
         } else {
-            hideTimer.restart()
+            reveal.hide()
         }
-    }
-
-    Timer {
-        id: hideTimer
-
-        interval: Style.powerMenuHideDuration
-        onTriggered: root.displayed = false
     }
 
     MouseArea {
@@ -101,40 +102,12 @@ PanelWindow {
         width: root.surfaceWidth
         height: root.surfaceHeight
         anchors.centerIn: parent
-        opacity: root.active ? 1 : 0
-        scale: root.active ? 1 : Style.powerMenuHiddenScale
+        scale: reveal.revealScale
         transformOrigin: Item.Center
 
-        Behavior on opacity {
-            NumberAnimation {
-                duration: root.active ? Style.powerMenuShowDuration : Style.powerMenuHideDuration
-                easing.type: root.active ? Easing.OutCubic : Easing.InCubic
-            }
-        }
-
-        Behavior on scale {
-            NumberAnimation {
-                duration: root.active ? Style.powerMenuShowDuration : Style.powerMenuHideDuration
-                easing.type: root.active ? Easing.OutCubic : Easing.InCubic
-            }
-        }
-
-        Rectangle {
+        OverlayDialogSurface {
             anchors.fill: parent
-            radius: Style.radiusMd
-            color: Style.powerMenuSurface
-            border.width: 1
-            border.color: Style.powerMenuBorderSubtle
-
-            layer.enabled: true
-            layer.effect: DropShadow {
-                horizontalOffset: 0
-                verticalOffset: 0
-                radius: 10
-                samples: 21
-                color: Style.powerMenuShadow
-                transparentBorder: true
-            }
+            revealOpacity: reveal.revealOpacity
 
             FocusScope {
                 id: focusScope

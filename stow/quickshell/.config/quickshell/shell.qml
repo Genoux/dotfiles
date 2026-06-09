@@ -36,7 +36,7 @@ ShellRoot {
     Variants {
         model: Quickshell.screens
 
-        LauncherWindow {
+        LauncherBackdrop {
             required property var modelData
             screen: modelData
         }
@@ -45,7 +45,7 @@ ShellRoot {
     Variants {
         model: Quickshell.screens
 
-        LauncherBackdrop {
+        LauncherWindow {
             required property var modelData
             screen: modelData
         }
@@ -72,7 +72,7 @@ ShellRoot {
     Variants {
         model: Quickshell.screens
 
-        PowerMenuWindow {
+        PowerMenuBackdrop {
             required property var modelData
             screen: modelData
         }
@@ -81,7 +81,7 @@ ShellRoot {
     Variants {
         model: Quickshell.screens
 
-        PowerMenuBackdrop {
+        PowerMenuWindow {
             required property var modelData
             screen: modelData
         }

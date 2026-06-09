@@ -40,19 +40,19 @@ PanelWindow {
     Timer {
         id: hideTimer
 
-        interval: Style.launcherHideDuration
+        interval: Style.overlayHideDuration
         onTriggered: root.displayed = false
     }
 
     Rectangle {
         anchors.fill: parent
-        color: Style.launcherBackdrop
-        opacity: root.active ? Style.launcherBackdropOpacity : 0
+        color: Style.overlayBackdrop
+        opacity: root.active ? Style.overlayBackdropOpacity : 0
 
         Behavior on opacity {
             NumberAnimation {
-                duration: root.active ? Style.launcherShowDuration : Style.launcherHideDuration
-                easing.type: root.active ? Easing.OutQuad : Easing.InQuad
+                duration: root.active ? Style.overlayShowDuration : Style.overlayHideDuration
+                easing.type: root.active ? Easing.OutCubic : Easing.InCubic
             }
         }
     }

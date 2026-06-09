@@ -90,7 +90,7 @@ _remove_safe_aur_conflicts() {
 
     for pkg in "${conflicts_ref[@]}"; do
         local required_by
-        required_by=$(pacman -Qi "$pkg" 2>/dev/null | grep "Required By" | cut -d: -f2 | xargs)
+        required_by=$(pacman -Qi "$pkg" 2>/dev/null | rg "Required By" | cut -d: -f2 | xargs)
 
         if [[ -z "$required_by" || "$required_by" == "None" ]]; then
             safe_to_remove+=("$pkg")

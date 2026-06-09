@@ -21,6 +21,9 @@ Singleton {
 
     function close() {
         visible = false
+    }
+
+    function finalizeClose() {
         query = ""
     }
 
