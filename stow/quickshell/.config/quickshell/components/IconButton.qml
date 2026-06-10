@@ -17,6 +17,7 @@ Rectangle {
     property color foreground: Colors.base05
     property int iconSize: Style.iconSize
     property bool interactive: false
+    property bool animateColor: true
     readonly property var resolvedSource: iconSource || IconRegistry.source(iconName)
     readonly property bool usesBundledIcon: iconSource.length === 0 && IconRegistry.hasOverride(iconName)
 
@@ -72,6 +73,7 @@ Rectangle {
     }
 
     Behavior on color {
+        enabled: root.animateColor
         ColorAnimation {
             duration: 150
             easing.type: Easing.InOutQuad

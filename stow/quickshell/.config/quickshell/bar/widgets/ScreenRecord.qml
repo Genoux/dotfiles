@@ -7,17 +7,54 @@ import qs.services
 IconButton {
     id: root
 
-    property color recordingColor: Style.recording
+    animateColor: false
+    property color recordingColor: Style.transparent
 
-    iconName: Privacy.screenrecord ? "media-playback-stop-symbolic" : "media-record-symbolic"
+    iconName: "media-record-symbolic"
     iconSize: Style.iconSizeMd
-    background: Privacy.screenrecord ? recordingColor : Style.transparent
+    background: recordingColor
     hoverBackground: Privacy.screenrecord ? Style.recordingHover : Style.alphaLight
     interactive: true
     onClicked: ShellActions.run(Privacy.screenrecord ? ["system-screenrecord"] : ["system-screenrecord", "region"])
 
+    Component.onCompleted: {
+        if (Privacy.screenrecord)
+            introAnimation.start()
+    }
+
+    Connections {
+        target: Privacy
+        function onScreenrecordChanged() {
+            introAnimation.stop()
+            pulseAnimation.stop()
+            fadeOutAnimation.stop()
+
+            if (Privacy.screenrecord)
+                introAnimation.start()
+            else
+                fadeOutAnimation.start()
+        }
+    }
+
     SequentialAnimation {
-        running: Privacy.screenrecord
+        id: introAnimation
+
+        ColorAnimation {
+            target: root
+            property: "recordingColor"
+            from: Style.transparent
+            to: Style.recording
+            duration: Style.easeDurationNormal
+            easing.type: Easing.OutCubic
+        }
+
+        ScriptAction {
+            script: pulseAnimation.start()
+        }
+    }
+
+    SequentialAnimation {
+        id: pulseAnimation
         loops: Animation.Infinite
 
         ColorAnimation {
@@ -25,7 +62,7 @@ IconButton {
             property: "recordingColor"
             to: Style.recordingPulse
             duration: Style.recordingPulseDuration
-            easing.type: Easing.InOutQuad
+            easing.type: Easing.InOutSine
         }
 
         ColorAnimation {
@@ -33,7 +70,17 @@ IconButton {
             property: "recordingColor"
             to: Style.recording
             duration: Style.recordingPulseDuration
-            easing.type: Easing.InOutQuad
+            easing.type: Easing.InOutSine
         }
+    }
+
+    ColorAnimation {
+        id: fadeOutAnimation
+
+        target: root
+        property: "recordingColor"
+        to: Style.transparent
+        duration: Style.easeDurationNormal
+        easing.type: Easing.InCubic
     }
 }
