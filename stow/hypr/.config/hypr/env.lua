@@ -19,7 +19,6 @@ hl.env("QT_QPA_PLATFORM", "wayland;xcb")
 hl.env("QT_QPA_PLATFORMTHEME", "gtk3")
 hl.env("QT_WAYLAND_DISABLE_WINDOWDECORATION", "1")
 
-hl.env("GTK_IM_MODULE", "wayland")
 hl.env("GTK_CSD", "0")
 hl.env("HL_INITIAL_WORKSPACE_TOKEN", "0")
 hl.env("GDK_DECORATION_LAYOUT", "")

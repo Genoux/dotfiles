@@ -5,7 +5,7 @@ import Quickshell.Hyprland
 import QtQuick
 
 Singleton {
-    readonly property var tuiExecutables: ["btop", "impala", "wiremix", "fastfetch", "battop"]
+    readonly property var tuiExecutables: ["bluetui", "btop", "impala", "wiremix", "fastfetch", "battop"]
 
     function normalize(value) {
         return String(value || "").toLowerCase().trim()
