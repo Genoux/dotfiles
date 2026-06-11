@@ -21,7 +21,7 @@ Singleton {
         if (interfaceName.startsWith("eth") || interfaceName.startsWith("en"))
             return "network-idle-symbolic"
 
-        return "network-idle"
+        return "network-idle-symbolic"
     }
 
     function refresh() {
@@ -50,9 +50,9 @@ Singleton {
     }
 
     Connections {
-        target: Networking
+        target: Networking.devices
 
-        function onDevicesChanged() {
+        function onValuesChanged() {
             root.refresh()
         }
     }

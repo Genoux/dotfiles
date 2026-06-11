@@ -5,27 +5,16 @@ import qs.components
 import qs.config
 import qs.services
 
-Rectangle {
+BarGroup {
     id: root
-
-    readonly property real borderOpacity: 0.1
-    readonly property real chromeInset: border.width + Style.mediaPadding
-    readonly property real innerHeight: height - chromeInset * 2
 
     visible: SystemTray.items.values.length > 0
     implicitWidth: trayRow.implicitWidth + chromeInset * 2
-    implicitHeight: Style.mediaHeight
-    height: implicitHeight
-    border.width: 1
-    border.color: Qt.rgba(Colors.base04.r, Colors.base04.g, Colors.base04.b, borderOpacity)
-    radius: Style.radiusMd
-    color: Style.transparent
 
     Row {
         id: trayRow
 
         anchors.fill: parent
-        anchors.margins: root.chromeInset
         spacing: 1
 
         Repeater {

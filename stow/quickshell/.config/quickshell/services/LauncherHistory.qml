@@ -99,6 +99,23 @@ Singleton {
         })
     }
 
+    function matches(entry, normalizedQuery) {
+        if (normalizedQuery.length === 0)
+            return false
+
+        const haystack = [
+            entry.name,
+            entry.genericName,
+            entry.comment,
+            entry.id,
+            ...(entry.keywords ?? []),
+            ...(entry.categories ?? []),
+        ].join(" ").toLowerCase()
+
+        const terms = normalizedQuery.split(/\s+/).filter((term) => term.length > 0)
+        return terms.every((term) => haystack.includes(term))
+    }
+
     function persistRecent(recent, importedLegacyHistory) {
         if (!historyFile.adapter)
             return

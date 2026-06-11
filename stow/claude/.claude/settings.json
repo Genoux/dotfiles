@@ -20,7 +20,33 @@
       "mcp__engram__mem_save_prompt",
       "mcp__engram__mem_update",
       "mcp__engram__mem_current_project",
-      "mcp__engram__mem_judge"
+      "mcp__engram__mem_judge",
+      "Bash(qmllint /home/john/dotfiles/stow/quickshell/.config/quickshell/config/Style.qml /home/john/dotfiles/stow/quickshell/.config/quickshell/config/ShellActions.qml /home/john/dotfiles/stow/quickshell/.config/quickshell/config/IconRegistry.qml)",
+      "Bash(qmllint /home/john/dotfiles/stow/quickshell/.config/quickshell/services/Launcher.qml /home/john/dotfiles/stow/quickshell/.config/quickshell/services/PowerMenu.qml /home/john/dotfiles/stow/quickshell/.config/quickshell/services/Notifications.qml /home/john/dotfiles/stow/quickshell/.config/quickshell/services/VolumeOsd.qml /home/john/dotfiles/stow/quickshell/.config/quickshell/services/LauncherHistory.qml)",
+      "Bash(qmllint /home/john/dotfiles/stow/quickshell/.config/quickshell/power/PowerMenuWindow.qml /home/john/dotfiles/stow/quickshell/.config/quickshell/shell.qml)",
+      "mcp__plugin_engram_engram__mem_save",
+      "mcp__plugin_engram_engram__mem_judge",
+      "Bash(git -C /home/john/dotfiles diff --stat)",
+      "WebSearch",
+      "Bash(git -C /home/john/dotfiles diff stow/quickshell/.config/quickshell/services/PowerMenu.qml)",
+      "Bash(qs list *)",
+      "Bash(qs log *)",
+      "Read(//usr/lib/qt6/qml/Quickshell/Networking/**)",
+      "Read(//usr/lib/qt6/qml/Quickshell/**)",
+      "Bash(rg -l 'UntypedObjectModel' /usr/lib/qt6/qml/Quickshell/*.qmltypes)",
+      "Bash(eza -la /home/john/.cache/quickshell)",
+      "Bash(eza -la /home/john/.config/quickshell/services/)",
+      "Bash(eza -la /home/john/.config/quickshell/components/ /home/john/.config/quickshell/launcher/)",
+      "Read(//home/john/dotfiles/**)",
+      "Bash(rg -rn 'stow ' /home/john/dotfiles/install.sh /home/john/dotfiles/scripts/*.sh)",
+      "Bash(dotfiles config *)",
+      "Bash(eza -la /home/john/.config/quickshell/components/)",
+      "Bash(eza -la /home/john/.config/quickshell/launcher/)",
+      "Bash(qs -i gsuq1tvwggt ipc show)",
+      "Bash(qs -i gsuq1tvwggt ipc call launcher toggle)",
+      "Bash(qs -i gsuq1tvwggt ipc call powermenu toggle)",
+      "Bash(qs ipc *)",
+      "mcp__plugin_engram_engram__mem_session_summary"
     ],
     "deny": [
       "Bash(rm -rf /)",
@@ -50,6 +76,7 @@
     ],
     "defaultMode": "bypassPermissions"
   },
+  "model": "claude-fable-5[1m]",
   "enableAllProjectMcpServers": true,
   "hooks": {
     "UserPromptSubmit": [
@@ -94,6 +121,5 @@
   },
   "outputStyle": "Gentleman",
   "effortLevel": "medium",
-  "skipDangerousModePermissionPrompt": true,
-  "model": "claude-fable-5[1m]"
+  "skipDangerousModePermissionPrompt": true
 }

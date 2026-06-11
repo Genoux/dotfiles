@@ -2,14 +2,15 @@ import Quickshell
 import Quickshell.Wayland
 import QtQuick
 import qs.config
-import qs.services as Services
 
 PanelWindow {
     id: root
 
     required property var screen
+    required property bool active
+    required property string layerNamespace
 
-    readonly property bool active: Services.PowerMenu.visible && Services.PowerMenu.screen === root.screen
+    signal dismissed
 
     property bool displayed: false
 
@@ -19,7 +20,7 @@ PanelWindow {
     exclusionMode: ExclusionMode.Ignore
 
     WlrLayershell.layer: WlrLayer.Top
-    WlrLayershell.namespace: "power-menu-backdrop"
+    WlrLayershell.namespace: root.layerNamespace
 
     anchors {
         top: true
@@ -60,6 +61,6 @@ PanelWindow {
     MouseArea {
         anchors.fill: parent
         acceptedButtons: Qt.LeftButton
-        onClicked: Services.PowerMenu.close()
+        onClicked: root.dismissed()
     }
 }

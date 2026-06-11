@@ -1,8 +1,8 @@
 pragma Singleton
 
 import Quickshell
-import Quickshell.Hyprland
 import Quickshell.Services.Notifications
+import qs.config
 
 Singleton {
     id: root
@@ -12,22 +12,11 @@ Singleton {
 
     property var screen: null
 
-    function focusedScreen() {
-        const monitor = Hyprland.focusedMonitor
-        if (!monitor)
-            return Quickshell.screens[0] ?? null
-
-        return Quickshell.screens.find((candidate) => {
-            const hyprMonitor = Hyprland.monitorFor(candidate)
-            return hyprMonitor === monitor || hyprMonitor?.name === monitor?.name
-        }) ?? Quickshell.screens[0] ?? null
-    }
-
     function track(notification) {
         if (!notification)
             return
 
-        root.screen = root.focusedScreen()
+        root.screen = ShellActions.focusedScreen()
         notification.tracked = true
     }
 

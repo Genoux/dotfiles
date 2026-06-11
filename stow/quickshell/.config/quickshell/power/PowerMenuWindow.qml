@@ -14,38 +14,7 @@ PanelWindow {
 
     required property var screen
 
-    readonly property var entries: [
-        {
-            id: "lock",
-            label: "Lock",
-            icon: "system-lock-screen-symbolic",
-            command: ["sh", "-c", "pkill -x hyprlock 2>/dev/null; sleep 0.1; hyprlock"],
-        },
-        {
-            id: "sleep",
-            label: "Sleep",
-            icon: "system-suspend-symbolic",
-            command: ["systemctl", "suspend"],
-        },
-        {
-            id: "reboot",
-            label: "Reboot",
-            icon: "system-reboot-symbolic",
-            command: ["systemctl", "reboot"],
-        },
-        {
-            id: "shutdown",
-            label: "Shutdown",
-            icon: "system-shutdown-symbolic",
-            command: ["systemctl", "poweroff"],
-        },
-        {
-            id: "logout",
-            label: "Log Out",
-            icon: "system-log-out-symbolic",
-            dispatch: "exit",
-        },
-    ]
+    readonly property var entries: Services.PowerMenu.entries
 
     readonly property int surfaceWidth: Style.powerMenuPadding * 2
         + entries.length * Style.powerMenuItemWidth

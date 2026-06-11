@@ -7,7 +7,7 @@ Singleton {
     readonly property var overrides: ({
         "emblem-favorite-symbolic": "emblem-favorite-symbolic.svg",
         "network-wireless-symbolic": "network-wireless-symbolic.svg",
-        "network-idle": "network-idle-symbolic.svg",
+        "network-idle-symbolic": "network-idle-symbolic.svg",
         "network-offline-symbolic": "network-offline-symbolic.svg",
         "audio-volume-high-symbolic": "audio-volume-high-symbolic.svg",
         "audio-volume-medium-symbolic": "audio-volume-medium-symbolic.svg",

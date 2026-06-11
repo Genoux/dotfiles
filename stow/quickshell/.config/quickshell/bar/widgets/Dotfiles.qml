@@ -20,7 +20,7 @@ IconButton {
         anchors.topMargin: 4
         width: 5
         height: 5
-        radius: 999
+        radius: width / 2
         color: Colors.base0D
     }
 }

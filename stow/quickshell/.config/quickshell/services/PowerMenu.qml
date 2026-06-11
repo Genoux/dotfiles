@@ -1,13 +1,46 @@
 pragma Singleton
 
 import Quickshell
-import Quickshell.Hyprland
+import qs.config
 
 Singleton {
     id: root
 
     property bool visible: false
     property var screen: null
+
+    readonly property var entries: [
+        {
+            id: "lock",
+            label: "Lock",
+            icon: "system-lock-screen-symbolic",
+            command: ["sh", "-c", "pkill -x hyprlock 2>/dev/null; sleep 0.1; hyprlock"],
+        },
+        {
+            id: "sleep",
+            label: "Sleep",
+            icon: "system-suspend-symbolic",
+            command: ["systemctl", "suspend"],
+        },
+        {
+            id: "reboot",
+            label: "Reboot",
+            icon: "system-reboot-symbolic",
+            command: ["systemctl", "reboot"],
+        },
+        {
+            id: "shutdown",
+            label: "Shutdown",
+            icon: "system-shutdown-symbolic",
+            command: ["systemctl", "poweroff"],
+        },
+        {
+            id: "logout",
+            label: "Log Out",
+            icon: "system-log-out-symbolic",
+            dispatch: "exit",
+        },
+    ]
 
     function openFor(targetScreen) {
         if (Launcher.visible)
@@ -30,18 +63,7 @@ Singleton {
         openFor(targetScreen)
     }
 
-    function focusedScreen() {
-        const monitor = Hyprland.focusedMonitor
-        if (!monitor)
-            return Quickshell.screens[0] ?? null
-
-        return Quickshell.screens.find((candidate) => {
-            const hyprMonitor = Hyprland.monitorFor(candidate)
-            return hyprMonitor === monitor || hyprMonitor?.name === monitor?.name
-        }) ?? Quickshell.screens[0] ?? null
-    }
-
     function toggle() {
-        toggleFor(focusedScreen())
+        toggleFor(ShellActions.focusedScreen())
     }
 }

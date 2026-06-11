@@ -24,7 +24,7 @@ Singleton {
         const nextMuted = root.muted
         const changed = nextVolume !== root._lastVolume || nextMuted !== root._lastMuted
 
-        root.iconName = root.resolveIcon(nextVolume, nextMuted)
+        root.iconName = root.resolveIcon(!!root.sink, nextVolume, nextMuted)
 
         if (!root.initializing && changed)
             root.show()
@@ -33,8 +33,8 @@ Singleton {
         root._lastMuted = nextMuted
     }
 
-    function resolveIcon(level, isMuted) {
-        if (!root.sink || isMuted)
+    function resolveIcon(hasSink, level, isMuted) {
+        if (!hasSink || isMuted)
             return "audio-volume-muted-symbolic"
         if (level > 0.66)
             return "audio-volume-high-symbolic"

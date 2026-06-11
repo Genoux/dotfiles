@@ -1,3 +1,4 @@
+import Quickshell.Widgets
 import QtQuick
 import QtQuick.Layouts
 import qs
@@ -9,14 +10,18 @@ Rectangle {
     property string iconText: ""
     property string iconFont: Style.fontIcon
     property bool iconVisible: iconText.length > 0
+    property string iconSource: ""
+    property int iconSourceSize: Style.iconSizeXs
     property string labelText: ""
+    property color labelColor: Colors.base05
+    property bool interactive: true
 
     signal clicked
 
     implicitWidth: content.implicitWidth + 12
     implicitHeight: Style.pillHeight
     radius: Style.radiusSm
-    color: mouse.containsMouse ? Style.alphaLight : Style.transparent
+    color: mouse.containsMouse && interactive ? Style.alphaLight : Style.transparent
 
     RowLayout {
         id: content
@@ -24,8 +29,16 @@ Rectangle {
         anchors.centerIn: parent
         spacing: 3
 
+        IconImage {
+            visible: root.iconSource.length > 0
+            width: root.iconSourceSize
+            height: root.iconSourceSize
+            source: root.iconSource
+            Layout.alignment: Qt.AlignVCenter
+        }
+
         Text {
-            visible: root.iconVisible
+            visible: root.iconVisible && root.iconSource.length === 0
             text: root.iconText
             color: Colors.base05
             font.family: root.iconFont
@@ -35,7 +48,7 @@ Rectangle {
 
         Text {
             text: root.labelText
-            color: Colors.base05
+            color: root.labelColor
             font.family: Style.fontSans
             font.pixelSize: Style.fontSizeSm
             Layout.alignment: Qt.AlignVCenter
@@ -46,7 +59,8 @@ Rectangle {
         id: mouse
 
         anchors.fill: parent
-        cursorShape: Qt.PointingHandCursor
+        acceptedButtons: root.interactive ? Qt.LeftButton : Qt.NoButton
+        cursorShape: root.interactive ? Qt.PointingHandCursor : Qt.ArrowCursor
         hoverEnabled: true
         onClicked: root.clicked()
     }

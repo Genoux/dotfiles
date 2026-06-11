@@ -3,7 +3,8 @@ import QtQuick
 import qs
 import qs.config
 import qs.components
-Rectangle {
+
+BarGroup {
     id: root
 
     property string explicitPlayerKey: ""
@@ -17,19 +18,11 @@ Rectangle {
     property real scrollOffset: 0
 
     readonly property bool controlsExpanded: hoverHandler.hovered
-
-    readonly property real borderOpacity: 0.1
-    readonly property real chromeInset: border.width + Style.mediaPadding
     readonly property int innerHeight: Style.mediaHeight - chromeInset * 2
 
     visible: player !== null && trackText.length > 0
-    implicitWidth: content.implicitWidth + chromeInset * 2
-    implicitHeight: Style.mediaHeight
-    height: implicitHeight
-    border.width: 1
-    border.color: Qt.rgba(Colors.base04.r, Colors.base04.g, Colors.base04.b, borderOpacity)
-    radius: Style.radiusMd
-    color: Style.transparent
+    implicitWidth: contentRow.implicitWidth + chromeInset * 2
+
     Behavior on color {
         ColorAnimation {
             duration: Style.mediaControlsRevealDuration
@@ -42,10 +35,9 @@ Rectangle {
     }
 
     Row {
-        id: content
+        id: contentRow
 
         anchors.fill: parent
-        anchors.margins: chromeInset
         spacing: root.controlsExpanded ? 3 : 0
 
         Rectangle {
@@ -105,7 +97,7 @@ Rectangle {
                     text: mediaInfo.shouldScroll ? mediaInfo.scrollText + mediaInfo.scrollText : root.trackText
                     color: Colors.base05
                     font.family: Style.fontMono
-                    font.pixelSize: 11
+                    font.pixelSize: Style.fontSizeMedia
                 }
             }
 
@@ -115,7 +107,7 @@ Rectangle {
                 visible: false
                 text: root.trackText
                 font.family: Style.fontMono
-                font.pixelSize: 11
+                font.pixelSize: Style.fontSizeMedia
             }
 
             MouseArea {

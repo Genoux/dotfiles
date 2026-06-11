@@ -72,6 +72,17 @@ Singleton {
         run(args)
     }
 
+    function focusedScreen() {
+        const monitor = Hyprland.focusedMonitor
+        if (!monitor)
+            return Quickshell.screens[0] ?? null
+
+        return Quickshell.screens.find((candidate) => {
+            const hyprMonitor = Hyprland.monitorFor(candidate)
+            return hyprMonitor === monitor || hyprMonitor?.name === monitor?.name
+        }) ?? Quickshell.screens[0] ?? null
+    }
+
     function quoteLuaString(value) {
         return `"${String(value).replace(/\\/g, "\\\\").replace(/"/g, "\\\"")}"`
     }

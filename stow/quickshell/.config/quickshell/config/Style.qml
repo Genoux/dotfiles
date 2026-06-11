@@ -2,6 +2,7 @@ pragma Singleton
 
 import Quickshell
 import QtQuick
+import qs
 
 Singleton {
     readonly property string fontSans: "SF Pro Text"
@@ -67,22 +68,6 @@ Singleton {
     readonly property int overlayShowDuration: 100
     readonly property int overlayHideDuration: 100
 
-    readonly property color launcherBorderSubtle: overlayBorderSubtle
-    readonly property color launcherShadow: overlayShadow
-    readonly property color launcherBackdrop: overlayBackdrop
-    readonly property real launcherBackdropOpacity: overlayBackdropOpacity
-    readonly property real launcherHiddenScale: overlayHiddenScale
-    readonly property int launcherShowDuration: overlayShowDuration
-    readonly property int launcherHideDuration: overlayHideDuration
-
-    readonly property color powerMenuBorderSubtle: overlayBorderSubtle
-    readonly property color powerMenuShadow: overlayShadow
-    readonly property color powerMenuBackdrop: overlayBackdrop
-    readonly property real powerMenuBackdropOpacity: overlayBackdropOpacity
-    readonly property color powerMenuSurface: overlaySurface
-    readonly property real powerMenuHiddenScale: overlayHiddenScale
-    readonly property int powerMenuShowDuration: overlayShowDuration
-    readonly property int powerMenuHideDuration: overlayHideDuration
 
     readonly property int launcherWidth: 600
     readonly property int launcherPadding: 10
@@ -93,7 +78,7 @@ Singleton {
     readonly property int launcherListMaxHeight: 300
     readonly property int launcherIconSize: 24
     readonly property int launcherMaxResults: 100
-    readonly property color launcherText: "#ffffff"
+    readonly property color launcherText: Colors.base05
     readonly property color launcherSelection: Qt.rgba(225 / 255, 225 / 255, 225 / 255, 0.2)
     readonly property color launcherSearchBg: Qt.rgba(0, 0, 0, 0.08)
     readonly property color launcherSelectedBg: Qt.rgba(1, 1, 1, 0.02)
@@ -106,7 +91,7 @@ Singleton {
     readonly property int powerMenuItemSpacing: 6
     readonly property int powerMenuIconSize: 16
     readonly property int powerMenuLabelSize: 12
-    readonly property color powerMenuText: "#ffffff"
+    readonly property color powerMenuText: Colors.base05
     readonly property color powerMenuSelectedBg: Qt.rgba(1, 1, 1, 0.02)
 
     readonly property int notificationWidth: 360

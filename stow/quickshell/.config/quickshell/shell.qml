@@ -1,6 +1,7 @@
 import Quickshell
 import Quickshell.Io
 import qs.bar
+import qs.components
 import qs.launcher
 import qs.notifications
 import qs.osd
@@ -36,9 +37,13 @@ ShellRoot {
     Variants {
         model: Quickshell.screens
 
-        LauncherBackdrop {
+        OverlayBackdrop {
             required property var modelData
+
             screen: modelData
+            active: Services.Launcher.visible && Services.Launcher.screen === modelData
+            layerNamespace: "launcher-backdrop"
+            onDismissed: Services.Launcher.close()
         }
     }
 
@@ -72,9 +77,13 @@ ShellRoot {
     Variants {
         model: Quickshell.screens
 
-        PowerMenuBackdrop {
+        OverlayBackdrop {
             required property var modelData
+
             screen: modelData
+            active: Services.PowerMenu.visible && Services.PowerMenu.screen === modelData
+            layerNamespace: "power-menu-backdrop"
+            onDismissed: Services.PowerMenu.close()
         }
     }
 

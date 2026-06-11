@@ -1,10 +1,11 @@
 import Quickshell.Services.UPower
 import Quickshell
-import Quickshell.Widgets
 import QtQuick
 import qs
 import qs.config
-Rectangle {
+import qs.components
+
+InfoPill {
     id: root
 
     readonly property var device: UPower.displayDevice
@@ -16,39 +17,11 @@ Rectangle {
         : `battery-level-${iconStep}-${charging ? "charging-" : ""}symbolic`
 
     visible: device.isLaptopBattery
-    implicitWidth: content.implicitWidth + 8
-    implicitHeight: Style.pillHeight
-    radius: Style.radiusSm
-    color: mouse.containsMouse ? Style.alphaLight : Style.transparent
+    iconSource: IconRegistry.source(iconName)
+    iconSourceSize: Style.iconSizeXs
+    labelText: `${root.percentage}%`
+    labelColor: root.percentage <= 15 && !root.charging ? Colors.base08 : Colors.base05
+    interactive: true
 
-    Row {
-        id: content
-
-        anchors.centerIn: parent
-        spacing: 2
-
-        IconImage {
-            anchors.verticalCenter: parent.verticalCenter
-            width: Style.iconSizeXs
-            height: Style.iconSizeXs
-            source: IconRegistry.source(root.iconName)
-        }
-
-        Text {
-            anchors.verticalCenter: parent.verticalCenter
-            text: `${root.percentage}%`
-            color: root.percentage <= 15 && !root.charging ? Colors.base08 : Colors.base05
-            font.family: Style.fontSans
-            font.pixelSize: Style.fontSizeSm
-        }
-    }
-
-    MouseArea {
-        id: mouse
-
-        anchors.fill: parent
-        cursorShape: Qt.PointingHandCursor
-        hoverEnabled: true
-        onClicked: ShellActions.launchOrFocus("battop", "battop", "gnome-power-manager")
-    }
+    onClicked: ShellActions.launchOrFocus("battop", "battop", "gnome-power-manager")
 }
