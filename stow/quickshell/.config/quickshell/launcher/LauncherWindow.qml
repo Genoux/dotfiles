@@ -27,10 +27,10 @@ PanelWindow {
     readonly property int listHeight: filteredEntries.length === 0
         ? Style.launcherEmptyHeight
         : Math.min(
-            filteredEntries.length * Style.launcherResultHeight,
+            filteredEntries.length * Style.launcherResultHeight + Style.launcherPadding,
             Style.launcherListMaxHeight
         )
-    readonly property int surfaceHeight: Style.launcherPadding * 2
+    readonly property int surfaceHeight: Style.launcherPadding
         + Style.launcherSearchHeight
         + Style.launcherSpacing
         + listHeight
@@ -119,7 +119,9 @@ PanelWindow {
 
             ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: Style.launcherPadding
+                anchors.topMargin: Style.launcherPadding
+                anchors.leftMargin: Style.launcherPadding
+                anchors.rightMargin: Style.launcherPadding
                 spacing: Style.launcherSpacing
 
             Rectangle {
@@ -129,6 +131,7 @@ PanelWindow {
                 color: Style.launcherSearchBg
                 border.width: 1
                 border.color: Style.overlayBorderSubtle
+                
 
                 RowLayout {
                     anchors.fill: parent
@@ -209,7 +212,8 @@ PanelWindow {
 
                         Text {
                             anchors.fill: parent
-                            visible: searchInput.text.length === 0 && !searchInput.activeFocus
+                            z: -1
+                            visible: searchInput.text.length === 0
                             text: "Search..."
                             color: Style.launcherPlaceholder
                             font.family: Style.fontSans
@@ -236,6 +240,11 @@ PanelWindow {
                     spacing: 0
                     clip: true
                     boundsBehavior: Flickable.StopAtBounds
+
+                    footer: Item {
+                        width: results.width
+                        height: Style.launcherPadding
+                    }
 
                     delegate: Rectangle {
                         required property var modelData

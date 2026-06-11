@@ -94,5 +94,6 @@
   },
   "outputStyle": "Gentleman",
   "effortLevel": "medium",
-  "skipDangerousModePermissionPrompt": true
+  "skipDangerousModePermissionPrompt": true,
+  "model": "claude-fable-5[1m]"
 }

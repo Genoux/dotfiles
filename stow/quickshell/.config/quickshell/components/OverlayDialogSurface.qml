@@ -12,8 +12,8 @@ Item {
     DropShadow {
         anchors.fill: surface
         source: surface
-        horizontalOffset: 0
-        verticalOffset: 0
+        horizontalOffset: 6
+        verticalOffset: 6
         radius: 10
         samples: 21
         color: Style.overlayShadow

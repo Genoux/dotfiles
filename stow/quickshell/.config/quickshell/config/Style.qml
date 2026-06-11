@@ -53,19 +53,19 @@ Singleton {
     readonly property int osdContentSpacing: 18
     readonly property int osdHideDelay: 2000
     readonly property int osdInitDelay: 250
-    readonly property int osdBottomMargin: barHeight + barMargin + 16
+    readonly property int osdBottomMargin: barHeight + barMargin + 32
     readonly property color osdStepEmpty: Qt.rgba(1, 1, 1, 0.2)
     readonly property color osdStepFilled: Qt.rgba(1, 1, 1, 1)
     readonly property color osdBorder: alphaLight
 
     readonly property color overlayBackdrop: "#191818"
-    readonly property real overlayBackdropOpacity: 0.4
+    readonly property real overlayBackdropOpacity: 0
     readonly property color overlaySurface: Qt.rgba(8 / 255, 8 / 255, 8 / 255, 0.3)
     readonly property color overlayBorderSubtle: Qt.rgba(1, 1, 1, 0.02)
     readonly property color overlayShadow: Qt.rgba(0, 0, 0, 0.2)
     readonly property real overlayHiddenScale: 0.98
-    readonly property int overlayShowDuration: 160
-    readonly property int overlayHideDuration: 160
+    readonly property int overlayShowDuration: 100
+    readonly property int overlayHideDuration: 100
 
     readonly property color launcherBorderSubtle: overlayBorderSubtle
     readonly property color launcherShadow: overlayShadow
@@ -86,8 +86,8 @@ Singleton {
 
     readonly property int launcherWidth: 600
     readonly property int launcherPadding: 10
-    readonly property int launcherSpacing: 10
-    readonly property int launcherSearchHeight: 36
+    readonly property int launcherSpacing: 4
+    readonly property int launcherSearchHeight: 40
     readonly property int launcherResultHeight: 40
     readonly property int launcherEmptyHeight: 200
     readonly property int launcherListMaxHeight: 300
