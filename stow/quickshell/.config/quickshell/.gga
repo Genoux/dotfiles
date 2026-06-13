@@ -30,7 +30,7 @@ FILE_PATTERNS="*.qml,*.sh,*.svg,*.md"
 # Examples:
 #   EXCLUDE_PATTERNS="*.test.ts,*.spec.ts"
 #   EXCLUDE_PATTERNS="*_test.go,*.mock.ts"
-EXCLUDE_PATTERNS="**/.atl/**,**/Colors.qml,SKILL.md,sdd-init.md,sdd-explore.md,sdd-propose.md,sdd-spec.md,sdd-design.md,sdd-tasks.md,sdd-apply.md,sdd-verify.md,sdd-archive.md,sdd-onboard.md,init-details.md,chaining-details.md,prompts-and-formats.md,report-format.md,strict-tdd.md,strict-tdd-verify.md,examples.md,engram-convention.md,openspec-convention.md,persistence-contract.md,sdd-phase-common.md,sdd-status-contract.md,skill-resolver.md"
+EXCLUDE_PATTERNS="**/.atl/**,**/Colors.qml,SKILL.md,OVERVIEW.md,sdd-init.md,sdd-explore.md,sdd-propose.md,sdd-spec.md,sdd-design.md,sdd-tasks.md,sdd-apply.md,sdd-verify.md,sdd-archive.md,sdd-onboard.md,init-details.md,chaining-details.md,prompts-and-formats.md,report-format.md,strict-tdd.md,strict-tdd-verify.md,examples.md,engram-convention.md,openspec-convention.md,persistence-contract.md,sdd-phase-common.md,sdd-status-contract.md,skill-resolver.md"
 
 # File containing code review rules
 # Default: AGENTS.md

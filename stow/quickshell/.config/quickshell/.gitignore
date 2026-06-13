@@ -3,3 +3,15 @@
 !.atl/
 !.atl/skill-registry.md
 .atl/
+
+.cursor/*
+!.cursor/rules
+!.cursor/skills
+
+.gga
+.github/*
+!.github/workflows
+.github/workflows/
+.github/workflows/gga.yml
+.github/workflows/gga.yml
+

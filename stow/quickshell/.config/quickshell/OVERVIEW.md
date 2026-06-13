@@ -75,7 +75,7 @@ flowchart TB
         STATE[updates.state]
     end
 
-    AS -->|systemctl start quickshell| Shell
+    AS -->|exec quickshell| Shell
     SR --> BAR --> W
     W --> SVC & CFG & CMP
     SVC --> Platform
@@ -111,10 +111,6 @@ flowchart TB
 - No package manager or type checking — large refactors rely on manual testing.
 - Tight coupling to Hyprland-specific APIs (`Quickshell.Hyprland`, `hyprctl dispatch`).
 - Weather and temperature use shell/bash polling, not native bindings — fine for a personal bar, harder to scale to many instances.
-
-### Operational Gap
-
-Hyprland `autostart.lua` starts `quickshell` via systemd, but **no `quickshell.service` unit exists in dotfiles** (only legacy `ags.service` remains). Session startup depends on a unit that may be missing or user-provided.
 
 ---
 
@@ -225,10 +221,10 @@ No `hyprctl` subprocess bridge — uses Quickshell's built-in Hyprland IPC.
 
 1. **PascalCase** QML filenames matching component types
 2. **`bar/widgets/` naming:** domain name for controls (`Volume`, `Clock`); compound name for composites (`MediaPlayer`, `PrivacyIndicator`) — no `Button` suffix; qualify services as `Services.Network` when names collide
-2. **`pragma Singleton`** for shared config/services
-3. **`Colors.base00`–`base0F`** base16 slots from matugen (same as AGS)
-4. **Process patterns:** long-running (`Privacy`, `CavaVisualizer`) vs one-shot polls vs `FileView` watches
-5. **No README in repo by default** — this file is the onboarding doc for the shell config
+3. **`pragma Singleton`** for shared config/services
+4. **`Colors.base00`–`base0F`** base16 slots from matugen (same as AGS)
+5. **Process patterns:** long-running (`Privacy`, `CavaVisualizer`) vs one-shot polls vs `FileView` watches
+6. **No README in repo by default** — this file is the onboarding doc for the shell config
 
 ### Dependencies
 
@@ -268,7 +264,7 @@ A **always-visible bottom bar** on every monitor that surfaces desktop state and
 | **Media player** | Control music without switching windows | Hover for controls; scroll title |
 | **Volume** | Adjust audio | Opens wiremix |
 | **Network** | Wi-Fi/Ethernet status | Opens impala |
-| **Bluetooth** | Adapter state | Opens blueman-manager |
+| **Bluetooth** | Adapter state | Opens bluetui |
 | **Screen record** | Start/stop recording | Toggles `system-screenrecord` |
 | **Keyboard layout** | See/toggle layout | Opens layout switcher |
 | **Battery** | Charge state | Opens battop |
@@ -276,7 +272,7 @@ A **always-visible bottom bar** on every monitor that surfaces desktop state and
 | **System temp** | CPU/GPU heat | Opens btop |
 | **Clock** | Date/time | Opens gnome-calendar |
 | **System info** | Machine stats | Opens fastfetch via system-info |
-| **System menu** | Power/session actions | Walker system menu |
+| **System menu** | Power/session actions | Quickshell power menu |
 | **Dotfiles** | Config/package management | launch-dotfiles-menu; badge when updates pending |
 
 ### User Flows
@@ -331,10 +327,7 @@ Click workspace pill → `ShellActions.switchWorkspace(modelData)` → `workspac
 
 | Missing in Quickshell | Impact |
 |-----------------------|--------|
-| Brightness/volume OSD overlays | No on-screen feedback for hardware keys |
-| In-bar notification UI | Relies on Mako only |
-| calcurse clock action | Clock opens gnome-calendar instead |
-| bluetui for Bluetooth | Uses blueman-manager |
+| calcurse clock action | Clock opens gnome-calendar instead of calcurse |
 
 ---
 
@@ -350,6 +343,10 @@ Click workspace pill → `ShellActions.switchWorkspace(modelData)` → `workspac
 ├── components/               # IconButton, Pill, CavaVisualizer, …
 ├── config/                   # Style, ShellActions, IconRegistry singletons
 ├── services/                 # Privacy, TrayFocus, Network, … singletons
+├── notifications/            # NotificationCard, NotificationWindow
+├── osd/                      # VolumeOsdWindow (hardware key feedback)
+├── launcher/                 # LauncherPanel, LauncherWindow
+├── power/                    # PowerMenuWindow, PowerMenuAction
 └── assets/
     ├── icons/                # 22 bundled SVG overrides
     └── scripts/
@@ -379,9 +376,8 @@ sequenceDiagram
     participant MAT as matugen
 
     H->>AS: hyprland.start
-    AS->>SD: import-environment + start quickshell
-    Note over SD,QS: quickshell.service missing from dotfiles
-    SD->>QS: ExecStart (expected)
+    AS->>SD: import-environment + start desktop services
+    AS->>QS: exec quickshell (direct, not via systemd)
     QS->>QS: Load shell.qml
     QS->>QS: Bar × screen count
 
@@ -390,7 +386,7 @@ sequenceDiagram
     QS->>QS: Hot-reload theme
 
     H->>AS: hyprland.shutdown
-    AS->>SD: stop quickshell (+ other services)
+    AS->>SD: stop desktop + portal services
 ```
 
 ---
@@ -420,7 +416,7 @@ Quickshell is positioned as a **parity replacement**, not a redesign:
 | Tray focus | `widget/systemtray/service.ts` | `services/TrayFocus.qml` |
 | Media selection | explicit player key | Same policy in `MediaPlayer.qml` |
 | Layer namespace | `ags-bar` | `quickshell` (framework default) |
-| Systemd | `ags.service` in stow | Referenced but **not stowed yet** |
+| Systemd | `ags.service` in stow | Quickshell starts via exec in `autostart.lua`, not a service unit |
 
 ---
 
@@ -428,28 +424,17 @@ Quickshell is positioned as a **parity replacement**, not a redesign:
 
 ### Recommended next steps
 
-1. **Add `quickshell.service`** under `stow/scripts/.config/systemd/user/`, modeled on `ags.service`:
-   - `WorkingDirectory=%h/.config/quickshell`
-   - `Environment=PATH=%h/.local/bin:...`
-   - `ExecStart=/usr/bin/quickshell --daemonize` (confirm flags against installed version)
-   - `Restart=on-failure`
+1. **Retire or document `ags.service`** if migration is complete — avoid confusion from a stale unit for the old shell.
 
-2. **Retire or document `ags.service`** if migration is complete — avoid two shell units fighting for the bar role.
+2. **Weather reliability** — wttr.in is convenient but rate-limited; consider Open-Meteo or a local cache if fetches fail often.
 
-3. **OSD parity** — if hardware volume/brightness keys feel silent, port AGS OSD windows or rely on existing system OSD.
-
-4. **Weather reliability** — wttr.in is convenient but rate-limited; consider Open-Meteo or a local cache if fetches fail often.
-
-5. **Temperature polling** — 30s bash hwmon scrape works; native sensors API would reduce subprocess overhead if Quickshell adds bindings.
+3. **Temperature polling** — 30s bash hwmon scrape works; native sensors API would reduce subprocess overhead if Quickshell adds bindings.
 
 ### Questions for further refinement
 
 | Question | Why it matters |
 |----------|----------------|
-| Is `quickshell` intentionally listed without `.service` in autostart? | systemd accepts both; unit must exist somewhere |
 | Should clock open calcurse again (AGS behavior) or stay on gnome-calendar? | Calendar workflow preference |
-| Do we want Bluetooth back on bluetui for terminal consistency? | UX vs blueman GUI |
-| Are notification summaries ever desired in-bar, or is Mako sufficient? | Scope creep vs AGS parity |
 | Should `libastal-cava-git` be removed from AUR manifest if unused? | Package list hygiene |
 | Multi-instance: need `instanceName` if running dev + prod configs? | Quickshell supports named instances |
 
