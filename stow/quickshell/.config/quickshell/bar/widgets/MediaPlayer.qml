@@ -1,5 +1,6 @@
 import Quickshell.Services.Mpris
 import QtQuick
+import Qt5Compat.GraphicalEffects
 import qs
 import qs.config
 import qs.components
@@ -10,7 +11,8 @@ BarGroup {
     property string explicitPlayerKey: ""
     readonly property var activePlayers: Mpris.players.values.filter((candidate) => candidate.playbackState !== MprisPlaybackState.Stopped)
     readonly property var explicitPlayer: explicitPlayerKey.length > 0 ? activePlayers.find((candidate) => playerKey(candidate) === explicitPlayerKey) ?? null : null
-    readonly property var player: explicitPlayer ?? activePlayers.find((candidate) => candidate.isPlaying) ?? activePlayers[0] ?? Mpris.players.values[0] ?? null
+    readonly property var playingPlayer: activePlayers.find((candidate) => candidate.isPlaying) ?? null
+    readonly property var player: (explicitPlayer && (explicitPlayer.isPlaying || !playingPlayer)) ? explicitPlayer : playingPlayer ?? activePlayers[0] ?? Mpris.players.values[0] ?? null
     readonly property string trackText: player ? `${player.trackTitle || player.identity || "Media"}${player.trackArtist ? " - " + player.trackArtist : ""}` : ""
     readonly property bool canGoPrevious: player?.canGoPrevious ?? false
     readonly property bool canGoNext: player?.canGoNext ?? false
@@ -43,7 +45,7 @@ BarGroup {
         Rectangle {
             id: mediaInfo
 
-            readonly property real textLeftInset: 32
+            readonly property real textLeftInset: 6 + Style.cavaVisualWidth + 4
             readonly property real textRightInset: 6
             readonly property string scrollText: `${root.trackText} • `
             readonly property real singleTextWidth: mediaMeasure.implicitWidth
@@ -83,21 +85,51 @@ BarGroup {
                 id: textViewport
 
                 anchors.left: parent.left
-                anchors.leftMargin: 32
+                anchors.leftMargin: mediaInfo.textLeftInset + 2
                 anchors.right: parent.right
                 anchors.rightMargin: 6
                 anchors.verticalCenter: parent.verticalCenter
                 height: mediaLabel.implicitHeight
-                clip: true
 
-                Text {
-                    id: mediaLabel
+                readonly property real edgeFade: Math.min(
+                    Style.mediaTextFadeWidth / Math.max(width, 1),
+                    0.2
+                )
 
-                    x: mediaInfo.shouldScroll ? -root.scrollOffset : 0
-                    text: mediaInfo.shouldScroll ? mediaInfo.scrollText + mediaInfo.scrollText : root.trackText
-                    color: Colors.base05
-                    font.family: Style.fontMono
-                    font.pixelSize: Style.fontSizeMedia
+                Item {
+                    id: textLayer
+
+                    anchors.fill: parent
+                    clip: true
+                    layer.enabled: mediaInfo.shouldScroll
+                    layer.smooth: true
+                    layer.effect: OpacityMask {
+                        maskSource: textFadeMask
+                    }
+
+                    Text {
+                        id: mediaLabel
+
+                        x: mediaInfo.shouldScroll ? -root.scrollOffset : 0
+                        text: mediaInfo.shouldScroll ? mediaInfo.scrollText + mediaInfo.scrollText : root.trackText
+                        color: Colors.base05
+                        font.family: Style.fontMono
+                        font.pixelSize: Style.fontSizeMedia
+                    }
+                }
+
+                Rectangle {
+                    id: textFadeMask
+
+                    anchors.fill: parent
+                    visible: false
+                    gradient: Gradient {
+                        orientation: Gradient.Horizontal
+                        GradientStop { position: 0; color: "#00000000" }
+                        GradientStop { position: textViewport.edgeFade; color: "#ffffffff" }
+                        GradientStop { position: 1 - textViewport.edgeFade; color: "#ffffffff" }
+                        GradientStop { position: 1; color: "#00000000" }
+                    }
                 }
             }
 

@@ -352,7 +352,6 @@ Click workspace pill → `ShellActions.switchWorkspace(modelData)` → `workspac
 ├── services/                 # Privacy, TrayFocus, Network, … singletons
 └── assets/
     ├── icons/                # 22 bundled SVG overrides
-    ├── cava/config           # Audio visualizer config
     └── scripts/
         └── privacy-monitor.sh
 ```
@@ -404,7 +403,7 @@ sequenceDiagram
 | **Session env** | `env.lua` — `WEATHER_CITY` | Imported into systemd session |
 | **Theme** | matugen `[templates.quickshell]` | Output: `~/.config/quickshell/Colors.qml` |
 | **Dotfiles updates badge** | `~/.local/state/dotfiles/updates.state` | `UPDATES_AVAILABLE=true` |
-| **Cava** | `assets/cava/config` + `CavaVisualizer.qml` | Subprocess when media playing |
+| **Cava** | Inline config in `CavaVisualizer.qml` | Subprocess when media playing |
 
 ---
 

@@ -7,7 +7,7 @@ Rectangle {
 
     default property alias content: contentContainer.data
 
-    readonly property real borderOpacity: 0.1
+    readonly property real borderOpacity: 0.07
     readonly property real chromeInset: border.width + Style.mediaPadding
 
     implicitHeight: Style.mediaHeight

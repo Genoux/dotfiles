@@ -4,7 +4,6 @@ local sessionEnvironment =
 local desktopServices = {
   "awww-daemon.service",
   "hypridle.service",
-  "quickshell",
 }
 
 local portalServices = {
@@ -14,6 +13,7 @@ local portalServices = {
 }
 
 local startupCommands = {
+  "quickshell",
   "/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1",
   "hyprpm reload -n",
   "gsettings set org.gnome.desktop.wm.preferences button-layout appmenu",
@@ -46,11 +46,11 @@ hl.on("hyprland.start", function()
   local hyprsession = home .. "/.local/bin/system-hyprsession"
   local restoreState = home .. "/.local/state/hyprsession"
   hl.exec_cmd(
-    "rm -f "
+    "rm -f '"
       .. restoreState
-      .. "/restored-*; sleep 8; "
+      .. "'/restored-*; sleep 8; '"
       .. hyprsession
-      .. " load; systemctl --user start hyprsession.service"
+      .. "' load; systemctl --user start hyprsession.service"
   )
 end)
 

@@ -21,7 +21,8 @@ Singleton {
     readonly property int iconSizeSm: 13
     readonly property int iconSizeXs: 12
     readonly property int fontSizeMedia: 11
-    readonly property int mediaInfoWidth: 142
+    readonly property int mediaInfoWidth: 180
+    readonly property int mediaTextFadeWidth: 10
     readonly property int mediaHeight: 30
     readonly property int mediaPadding: 4
     readonly property int mediaControlsRevealDuration: 200
@@ -124,4 +125,39 @@ Singleton {
     readonly property color privacyMicBorder: Qt.rgba(0.22, 0.99, 0.58, 0.15)
     readonly property color privacyScreenFill: Qt.rgba(1.00, 0.43, 1.00, 0.20)
     readonly property color privacyScreenBorder: Qt.rgba(0.69, 0.33, 0.87, 0.87)
+
+    // Cava visualizer — edit these to tune the media player bars
+    readonly property int cavaDisplayBars: 4
+    readonly property int cavaAnalyzeBars: 4
+    readonly property int cavaBarWidth: 3
+    readonly property int cavaBarHeight: 12
+    readonly property int cavaSpacing: 2
+    readonly property int cavaFramerate: 60
+    readonly property int cavaAsciiMaxRange: 1000
+    readonly property int cavaNoiseReduction: 50
+    readonly property bool cavaMonstercat: true
+    readonly property int cavaAnimationDuration: 120
+    readonly property string cavaEasing: "OutCubic"
+    readonly property int cavaSilenceThreshold: 2
+    readonly property real cavaMaxFill: 1
+    readonly property real cavaSnapThreshold: 4.5
+    readonly property int cavaSnapHeight: 3
+    readonly property real cavaInactiveOpacity: 0.35
+    readonly property int cavaVisualWidth: cavaDisplayBars * cavaBarWidth + ((cavaDisplayBars - 1) * cavaSpacing)
+
+    function cavaEasingCurve(name) {
+        switch (name) {
+        case "Linear":
+            return Easing.Linear
+        case "InOutSine":
+            return Easing.InOutSine
+        case "InOutQuad":
+            return Easing.InOutQuad
+        case "OutQuad":
+            return Easing.OutQuad
+        case "OutCubic":
+        default:
+            return Easing.OutCubic
+        }
+    }
 }
