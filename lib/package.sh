@@ -18,10 +18,12 @@ AUR_PACKAGES_FILE="$DOTFILES_DIR/packages/aur.package"
 # Source all package management modules
 source "$DOTFILES_DIR/lib/package/common.sh"    # Common utilities
 source "$DOTFILES_DIR/lib/package/core.sh"      # yay, Node.js, system prep
+source "$DOTFILES_DIR/lib/package/dependency.sh"       # Dependency resolution
 source "$DOTFILES_DIR/lib/package/install-official.sh" # Official package installation
 source "$DOTFILES_DIR/lib/package/install-aur.sh"      # AUR package installation
 source "$DOTFILES_DIR/lib/package/install-audit.sh"    # Post-install package audit
 source "$DOTFILES_DIR/lib/package/install.sh"          # Package installation orchestration
+source "$DOTFILES_DIR/lib/package/verify.sh"           # Installation verification
 source "$DOTFILES_DIR/lib/package/manage.sh"    # Interactive management
 source "$DOTFILES_DIR/lib/package/update.sh"    # System updates
 source "$DOTFILES_DIR/lib/package/sync.sh"      # Package list sync (deprecated)

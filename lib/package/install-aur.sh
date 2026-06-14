@@ -157,21 +157,73 @@ install_aur_packages() {
     [[ -n "${DOTFILES_LOG_FILE:-}" ]] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] Installing packages: ${missing_aur[*]}" >> "$DOTFILES_LOG_FILE"
     [[ -n "${DOTFILES_LOG_FILE:-}" ]] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] Starting installation..." >> "$DOTFILES_LOG_FILE"
 
+    # First attempt - batch install
     # yay still prompts for clean/diff review even with --noconfirm; feed defaults non-interactively.
+    log_info "Installing ${#missing_aur[@]} AUR packages (attempt 1)..."
     printf '1\nY\n' | yay -S --needed --noconfirm --refresh --answerclean None --answerdiff None --removemake "${missing_aur[@]}"
     local yay_exit_code=$?
     echo
 
     _restore_npm_config_after_aur "$npmrc_backup"
 
-    if [[ $yay_exit_code -ne 0 ]]; then
-        [[ -n "${DOTFILES_LOG_FILE:-}" ]] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] Installation completed with some failures (exit code: $yay_exit_code)" >> "$DOTFILES_LOG_FILE"
-        log_warning "Some AUR packages failed to install, but continuing..."
-        echo
-        log_info "Check log file for details: $DOTFILES_LOG_FILE"
-    else
-        [[ -n "${DOTFILES_LOG_FILE:-}" ]] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] Installation completed successfully" >> "$DOTFILES_LOG_FILE"
+    # Check which packages actually installed
+    local failed=()
+    for pkg in "${missing_aur[@]}"; do
+        if ! pacman -Q "$pkg" &>/dev/null; then
+            failed+=("$pkg")
+        fi
+    done
+
+    # If batch install succeeded or all packages installed, we're done
+    if [[ $yay_exit_code -eq 0 ]] || [[ ${#failed[@]} -eq 0 ]]; then
+        [[ -n "${DOTFILES_LOG_FILE:-}" ]] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] All packages installed successfully" >> "$DOTFILES_LOG_FILE"
+        log_success "✓ All AUR packages installed"
+        return 0
     fi
 
-    echo
+    # Retry failed packages individually
+    log_warning "First attempt failed for ${#failed[@]} packages, retrying individually..."
+    [[ -n "${DOTFILES_LOG_FILE:-}" ]] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] Retrying ${#failed[@]} failed packages individually" >> "$DOTFILES_LOG_FILE"
+
+    local retry_failed=()
+    for pkg in "${failed[@]}"; do
+        log_info "Retrying: $pkg"
+
+        # Clean build dir for retry
+        if [[ -d "$HOME/.cache/yay/$pkg" ]]; then
+            chmod -R +w "$HOME/.cache/yay/$pkg" 2>/dev/null || true
+            rm -rf "$HOME/.cache/yay/$pkg"
+        fi
+
+        # Neutralize npm config again
+        local npmrc_backup_retry=""
+        _neutralize_npm_config_for_aur npmrc_backup_retry
+
+        # Retry installation
+        if printf '1\nY\n' | yay -S --needed --noconfirm --refresh --answerclean None --answerdiff None --removemake "$pkg" 2>&1 | tee -a "${DOTFILES_LOG_FILE:-/dev/null}"; then
+            if pacman -Q "$pkg" &>/dev/null; then
+                log_success "✓ Installed: $pkg"
+            else
+                retry_failed+=("$pkg")
+                log_error "Failed to install: $pkg (package not found after install)"
+            fi
+        else
+            retry_failed+=("$pkg")
+            log_error "Failed to install: $pkg"
+        fi
+
+        _restore_npm_config_after_aur "$npmrc_backup_retry"
+        echo
+    done
+
+    if [[ ${#retry_failed[@]} -gt 0 ]]; then
+        log_error "Failed to install ${#retry_failed[@]} AUR packages after retry:"
+        printf '  ✗ %s\n' "${retry_failed[@]}"
+        [[ -n "${DOTFILES_LOG_FILE:-}" ]] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [YAY] Final failure count: ${#retry_failed[@]}" >> "$DOTFILES_LOG_FILE"
+        log_info "Check log file for details: $DOTFILES_LOG_FILE"
+        return 1
+    fi
+
+    log_success "✓ All AUR packages installed after retry"
+    return 0
 }

@@ -1,0 +1,62 @@
+{
+  "comment": "Package dependency definitions for ordered installation",
+  "groups": {
+    "core": {
+      "priority": 1,
+      "packages": ["base", "base-devel", "git", "stow", "gum", "jq"]
+    },
+    "aur_helper": {
+      "priority": 2,
+      "depends_on": ["core"],
+      "packages": ["yay"]
+    },
+    "system": {
+      "priority": 3,
+      "depends_on": ["core"],
+      "packages": ["linux", "linux-firmware", "linux-headers", "grub", "efibootmgr"]
+    },
+    "drivers": {
+      "priority": 4,
+      "depends_on": ["system"],
+      "packages": ["mesa", "vulkan-radeon", "nvidia-open-dkms", "nvidia-utils"]
+    },
+    "display_server": {
+      "priority": 5,
+      "depends_on": ["drivers"],
+      "packages": ["wayland", "xorg-server", "xorg-xinit"]
+    },
+    "compositor": {
+      "priority": 6,
+      "depends_on": ["display_server"],
+      "packages": ["hyprland", "hyprlock", "hypridle", "hyprpicker"]
+    },
+    "shell_ui": {
+      "priority": 7,
+      "depends_on": ["compositor"],
+      "packages": ["quickshell", "waybar", "ags", "swaync"]
+    },
+    "terminal": {
+      "priority": 8,
+      "depends_on": ["display_server"],
+      "packages": ["kitty", "fish", "zsh"]
+    },
+    "themes": {
+      "priority": 9,
+      "depends_on": ["compositor"],
+      "packages": ["kvantum", "papirus-icon-theme", "nwg-look", "qt5ct", "qt6ct"]
+    },
+    "applications": {
+      "priority": 10,
+      "depends_on": ["compositor", "terminal"],
+      "packages": []
+    }
+  },
+  "critical_packages": [
+    "hyprland",
+    "kitty",
+    "quickshell",
+    "stow",
+    "gum",
+    "waybar"
+  ]
+}

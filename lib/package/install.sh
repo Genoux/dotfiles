@@ -50,4 +50,17 @@ packages_install() {
 
     echo
     package_install_audit packages aur_packages
+
+    # Verify installation
+    echo
+    source "$DOTFILES_DIR/lib/package/verify.sh"
+    if ! verify_package_installation packages "official"; then
+        log_error "Official package verification failed"
+        log_info "Some packages may have failed to install. Check logs for details."
+    fi
+
+    if ! verify_package_installation aur_packages "AUR"; then
+        log_error "AUR package verification failed"
+        log_info "Some AUR packages may have failed to install. Check logs for details."
+    fi
 }
