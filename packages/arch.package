@@ -27,6 +27,8 @@ dialog
 discord
 docker
 dolphin
+dotnet-sdk
+dotnet-sdk-8.0
 earlyoom
 efibootmgr
 electron41
@@ -42,6 +44,7 @@ flatpak
 font-manager
 fuse2
 fzf
+gimp
 git
 git-delta
 github-cli
@@ -212,6 +215,7 @@ wget
 wine
 wine-gecko
 wine-mono
+winetricks
 wireless_tools
 wiremix
 wireplumber
