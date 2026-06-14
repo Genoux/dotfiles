@@ -35,6 +35,7 @@ PanelWindow {
             Widgets.Workspaces {
                 Layout.alignment: Qt.AlignVCenter
                 hyprMonitor: bar.hyprMonitor
+                panelWindow: bar
             }
 
             Widgets.SystemTray {

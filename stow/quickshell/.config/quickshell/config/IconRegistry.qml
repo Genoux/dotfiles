@@ -39,4 +39,65 @@ Singleton {
         }
         return Quickshell.iconPath(iconName, "image-missing");
     }
+
+    function className(toplevel) {
+        if (!toplevel)
+            return "";
+
+        const wayland = toplevel.wayland;
+        if (wayland && wayland.appId)
+            return wayland.appId;
+
+        const ipc = toplevel.lastIpcObject;
+        if (ipc && ipc.class)
+            return ipc.class;
+
+        if (ipc && ipc.initialClass)
+            return ipc.initialClass;
+
+        return "";
+    }
+
+    function desktopEntryForClass(className) {
+        if (!className)
+            return null;
+
+        const direct = DesktopEntries.heuristicLookup(className);
+        if (direct && direct.icon)
+            return direct;
+
+        const normalized = className.toLowerCase();
+        return DesktopEntries.applications.values.find((entry) => {
+            const startup = (entry.startupClass || "").toLowerCase();
+            if (startup && (normalized === startup || normalized.includes(startup)))
+                return true;
+
+            const exec = entry.execString || "";
+            const match = exec.match(/--app=(\S+)/);
+            if (!match)
+                return false;
+
+            try {
+                const url = new URL(match[1]);
+                const host = url.hostname.replace(/^www\./, "").toLowerCase();
+                const pathKey = url.pathname.replace(/^\/+|\/+$/g, "").replace(/\//g, "_").toLowerCase();
+                return (host && normalized.includes(host))
+                    || (pathKey && normalized.includes(pathKey));
+            } catch (_) {
+                return false;
+            }
+        }) || null;
+    }
+
+    function iconNameForToplevel(toplevel) {
+        const appClass = className(toplevel);
+        const desktopEntry = desktopEntryForClass(appClass);
+        if (desktopEntry && desktopEntry.icon)
+            return desktopEntry.icon;
+
+        if (appClass)
+            return appClass;
+
+        return "application-x-executable";
+    }
 }

@@ -6,6 +6,8 @@ Item {
     id: root
 
     property real revealOpacity: 1
+    property color surfaceColor: Style.overlaySurface
+    property color surfaceBorderColor: Style.overlayBorderSubtle
 
     default property alias content: contentLayer.data
 
@@ -26,9 +28,9 @@ Item {
 
         anchors.fill: parent
         radius: Style.radiusMd
-        color: Style.overlaySurface
+        color: root.surfaceColor
         border.width: 1
-        border.color: Style.overlayBorderSubtle
+        border.color: root.surfaceBorderColor
         opacity: root.revealOpacity
     }
 

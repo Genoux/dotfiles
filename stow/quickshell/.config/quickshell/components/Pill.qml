@@ -14,6 +14,7 @@ Rectangle {
     property int horizontalPadding: 8
     property int minimumWidth: 0
     property bool interactive: false
+    readonly property bool hovered: mouse.containsMouse
 
     signal clicked
 
