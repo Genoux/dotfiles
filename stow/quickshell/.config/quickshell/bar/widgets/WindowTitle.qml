@@ -55,7 +55,35 @@ RowLayout {
 
         return ""
     }
-    readonly property var desktopEntry: DesktopEntries.heuristicLookup(appClass)
+    function desktopEntryForClass(className) {
+        const direct = DesktopEntries.heuristicLookup(className)
+        if (direct?.icon)
+            return direct
+
+        const normalized = className.toLowerCase()
+        return DesktopEntries.applications.values.find((entry) => {
+            const startup = (entry.startupClass || "").toLowerCase()
+            if (startup && (normalized === startup || normalized.includes(startup)))
+                return true
+
+            const exec = entry.execString || ""
+            const match = exec.match(/--app=(\S+)/)
+            if (!match)
+                return false
+
+            try {
+                const url = new URL(match[1])
+                const host = url.hostname.replace(/^www\./, "").toLowerCase()
+                const pathKey = url.pathname.replace(/^\/+|\/+$/g, "").replace(/\//g, "_").toLowerCase()
+                return (host && normalized.includes(host))
+                    || (pathKey && normalized.includes(pathKey))
+            } catch (_) {
+                return false
+            }
+        }) ?? null
+    }
+
+    readonly property var desktopEntry: desktopEntryForClass(appClass)
     readonly property string appIconName: {
         if (desktopEntry?.icon)
             return desktopEntry.icon
