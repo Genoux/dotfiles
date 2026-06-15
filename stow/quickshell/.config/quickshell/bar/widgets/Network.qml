@@ -3,7 +3,7 @@ import qs.components
 import qs.services as Services
 
 Button {
-    iconName: Services.Network.connectionIcon
+    iconSource: IconRegistry.networkIcon(Services.Network.connectionIcon)
     interactive: true
     onClicked: ShellActions.launchOrFocus("impala", "impala", "impala")
 }

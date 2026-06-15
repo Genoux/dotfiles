@@ -8,6 +8,8 @@ Button {
     foreground: Colors.base05
     fontFamily: StyleTokens.fontSans
     fontSize: StyleTokens.fontSizeSm
+    paddingHorizontal: StyleControl.buttonPaddingHorizontal + 2
     interactive: true
-    onClicked: Services.Keyboard.switchLayout()
+
+    onClicked: ShellActions.switchKeyboardLayout("current")
 }

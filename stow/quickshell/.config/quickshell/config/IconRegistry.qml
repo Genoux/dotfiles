@@ -4,100 +4,141 @@ import Quickshell
 import QtQuick
 
 Singleton {
-    readonly property var overrides: ({
-        "emblem-favorite-symbolic": "emblem-favorite-symbolic.svg",
-        "network-wireless-symbolic": "network-wireless-symbolic.svg",
-        "network-idle-symbolic": "network-idle-symbolic.svg",
-        "network-offline-symbolic": "network-offline-symbolic.svg",
-        "audio-volume-high-symbolic": "audio-volume-high-symbolic.svg",
-        "audio-volume-medium-symbolic": "audio-volume-medium-symbolic.svg",
-        "audio-volume-low-symbolic": "audio-volume-low-symbolic.svg",
-        "audio-volume-muted-symbolic": "audio-volume-muted-symbolic.svg",
-        "bluetooth-active-symbolic": "bluetooth-active-symbolic.svg",
-        "media-record-symbolic": "media-record-symbolic.svg",
-        "media-optical-symbolic": "media-optical-symbolic.svg",
-        "media-playback-stop-symbolic": "media-playback-stop-symbolic.svg",
-        "media-skip-backward-symbolic": "media-skip-backward-symbolic.svg",
-        "media-playback-start-symbolic": "media-playback-start-symbolic.svg",
-        "media-playback-pause-symbolic": "media-playback-pause-symbolic.svg",
-        "media-skip-forward-symbolic": "media-skip-forward-symbolic.svg",
-        "system-shutdown-symbolic": "system-shutdown-symbolic.svg",
-        "input-keyboard": "input-keyboard.svg",
-        "camera-video-symbolic": "camera-video-symbolic.svg",
-        "mic-on": "mic-on.svg",
-        "video-display-symbolic": "video-display-symbolic.svg",
-    })
+    function barIcon(domain, name) {
+        return Quickshell.shellPath(`assets/icons/${domain}/${name}.svg`)
+    }
+
+    function isBarIcon(url) {
+        const path = url?.toString?.() ?? String(url ?? "")
+        return path.includes("assets/icons/")
+    }
+
+    function batteryIcon(percent, charging) {
+        const step = Math.min(Math.floor(percent / 10) * 10, 100)
+        if (charging && step === 100)
+            return barIcon("battery", "charged")
+        if (charging)
+            return barIcon("battery", `charging-${step}`)
+        return barIcon("battery", `${step}`)
+    }
+
+    function volumeIcon(level, isMuted, hasSink) {
+        if (!hasSink || isMuted)
+            return barIcon("audio", "muted")
+        if (level > 0.66)
+            return barIcon("audio", "high")
+        if (level > 0.33)
+            return barIcon("audio", "medium")
+        return barIcon("audio", "low")
+    }
+
+    function networkIcon(key) {
+        return barIcon("network", key)
+    }
+
+    function temperatureIcon(status) {
+        return barIcon("temperature", status)
+    }
+
+    function weatherIcon(condition) {
+        return barIcon("weather", condition)
+    }
 
     function hasOverride(iconName) {
-        return overrides[iconName] !== undefined;
+        return isBarIcon(source(iconName))
     }
 
     function source(iconName) {
-        const override = overrides[iconName];
-        if (override) {
-            return Qt.resolvedUrl("../assets/icons/" + override);
-        }
-        return Quickshell.iconPath(iconName, "image-missing");
+        const mapped = legacyBarIcons[iconName]
+        if (mapped)
+            return barIcon(mapped.domain, mapped.name)
+        return Quickshell.iconPath(iconName, "image-missing")
     }
+
+    readonly property var legacyBarIcons: ({
+        "audio-volume-high-symbolic": { domain: "audio", name: "high" },
+        "audio-volume-medium-symbolic": { domain: "audio", name: "medium" },
+        "audio-volume-low-symbolic": { domain: "audio", name: "low" },
+        "audio-volume-muted-symbolic": { domain: "audio", name: "muted" },
+        "bluetooth-active-symbolic": { domain: "bluetooth", name: "active" },
+        "bluetooth-symbolic": { domain: "bluetooth", name: "idle" },
+        "camera-video-symbolic": { domain: "privacy", name: "camera" },
+        "emblem-favorite-symbolic": { domain: "shell", name: "info" },
+        "media-optical-symbolic": { domain: "media", name: "optical" },
+        "media-playback-pause-symbolic": { domain: "media", name: "pause" },
+        "media-playback-start-symbolic": { domain: "media", name: "play" },
+        "media-playback-stop-symbolic": { domain: "media", name: "stop" },
+        "media-record-symbolic": { domain: "media", name: "record" },
+        "media-skip-backward-symbolic": { domain: "media", name: "skip-backward" },
+        "media-skip-forward-symbolic": { domain: "media", name: "skip-forward" },
+        "mic-on": { domain: "privacy", name: "mic" },
+        "network-idle-symbolic": { domain: "network", name: "wired" },
+        "network-offline-symbolic": { domain: "network", name: "offline" },
+        "network-wireless-symbolic": { domain: "network", name: "wireless" },
+        "system-search-symbolic": { domain: "launcher", name: "search" },
+        "system-shutdown-symbolic": { domain: "menu", name: "shutdown" },
+        "utilities-terminal-symbolic": { domain: "shell", name: "terminal" },
+        "video-display-symbolic": { domain: "privacy", name: "display" },
+    })
 
     function className(toplevel) {
         if (!toplevel)
-            return "";
+            return ""
 
-        const wayland = toplevel.wayland;
+        const wayland = toplevel.wayland
         if (wayland && wayland.appId)
-            return wayland.appId;
+            return wayland.appId
 
-        const ipc = toplevel.lastIpcObject;
+        const ipc = toplevel.lastIpcObject
         if (ipc && ipc.class)
-            return ipc.class;
+            return ipc.class
 
         if (ipc && ipc.initialClass)
-            return ipc.initialClass;
+            return ipc.initialClass
 
-        return "";
+        return ""
     }
 
     function desktopEntryForClass(className) {
         if (!className)
-            return null;
+            return null
 
-        const direct = DesktopEntries.heuristicLookup(className);
+        const direct = DesktopEntries.heuristicLookup(className)
         if (direct && direct.icon)
-            return direct;
+            return direct
 
-        const normalized = className.toLowerCase();
+        const normalized = className.toLowerCase()
         return DesktopEntries.applications.values.find((entry) => {
-            const startup = (entry.startupClass || "").toLowerCase();
+            const startup = (entry.startupClass || "").toLowerCase()
             if (startup && (normalized === startup || normalized.includes(startup)))
-                return true;
+                return true
 
-            const exec = entry.execString || "";
-            const match = exec.match(/--app=(\S+)/);
+            const exec = entry.execString || ""
+            const match = exec.match(/--app=(\S+)/)
             if (!match)
-                return false;
+                return false
 
             try {
-                const url = new URL(match[1]);
-                const host = url.hostname.replace(/^www\./, "").toLowerCase();
-                const pathKey = url.pathname.replace(/^\/+|\/+$/g, "").replace(/\//g, "_").toLowerCase();
+                const url = new URL(match[1])
+                const host = url.hostname.replace(/^www\./, "").toLowerCase()
+                const pathKey = url.pathname.replace(/^\/+|\/+$/g, "").replace(/\//g, "_").toLowerCase()
                 return (host && normalized.includes(host))
-                    || (pathKey && normalized.includes(pathKey));
+                    || (pathKey && normalized.includes(pathKey))
             } catch (_) {
-                return false;
+                return false
             }
-        }) || null;
+        }) || null
     }
 
     function iconNameForToplevel(toplevel) {
-        const appClass = className(toplevel);
-        const desktopEntry = desktopEntryForClass(appClass);
+        const appClass = className(toplevel)
+        const desktopEntry = desktopEntryForClass(appClass)
         if (desktopEntry && desktopEntry.icon)
-            return desktopEntry.icon;
+            return desktopEntry.icon
 
         if (appClass)
-            return appClass;
+            return appClass
 
-        return "application-x-executable";
+        return "application-x-executable"
     }
 }

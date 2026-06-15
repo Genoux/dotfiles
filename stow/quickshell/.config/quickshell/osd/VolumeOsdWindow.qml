@@ -43,7 +43,7 @@ PanelWindow {
                 Layout.preferredHeight: StyleOsd.iconSize
                 width: StyleOsd.iconSize
                 height: StyleOsd.iconSize
-                iconName: VolumeOsd.iconName
+                iconSource: IconRegistry.volumeIcon(VolumeOsd.volume, VolumeOsd.muted, !!VolumeOsd.sink)
                 iconSize: StyleOsd.iconSize
                 interactive: false
                 background: StyleTokens.transparent

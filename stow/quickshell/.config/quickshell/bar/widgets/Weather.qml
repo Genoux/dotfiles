@@ -4,8 +4,8 @@ import qs.components
 import qs.services
 
 Button {
-    iconGlyph: WeatherState.icon
-    iconFont: StyleTokens.fontEmoji
+    iconSource: IconRegistry.weatherIcon(WeatherState.icon)
+    iconColored: true
     text: WeatherState.temperature
     interactive: true
     onClicked: ShellActions.launchOrFocus("gnome-weather", "gnome-weather", "org.gnome.Weather")

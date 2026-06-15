@@ -1,32 +1,27 @@
+import QtQuick
+import QtQuick.Layouts
 import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Wayland
-import QtQuick
-import QtQuick.Layouts
 import qs
-import qs.config
 import qs.bar.widgets as Widgets
+import qs.config
 
 PanelWindow {
     id: bar
 
     readonly property var hyprMonitor: Hyprland.monitorFor(screen)
+    readonly property int contentHeight: Math.max(StyleBar.estimatedContentHeight, leftRow.implicitHeight, windowTitle.implicitHeight, rightRow.implicitHeight)
 
-    readonly property int contentHeight: Math.max(
-        StyleBar.estimatedContentHeight,
-        leftRow.implicitHeight,
-        windowTitle.implicitHeight,
-        rightRow.implicitHeight
-    )
+    implicitHeight: contentHeight + StyleBar.topPadding + StyleBar.bottomPadding
+    height: implicitHeight
+    color: StyleBar.background
 
     anchors {
         bottom: true
         left: true
         right: true
     }
-    implicitHeight: contentHeight + StyleBar.topPadding + StyleBar.bottomPadding
-    height: implicitHeight
-    color: StyleBar.background
 
     Item {
         anchors.fill: parent
@@ -50,6 +45,7 @@ PanelWindow {
             Widgets.SystemTray {
                 Layout.alignment: Qt.AlignVCenter
             }
+
         }
 
         Widgets.WindowTitle {
@@ -63,12 +59,14 @@ PanelWindow {
         RowLayout {
             id: rightRow
 
+            z: 1
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
-            spacing: 0
+            spacing: 4
 
             Widgets.PrivacyIndicator {
                 Layout.alignment: Qt.AlignVCenter
+                barWindow: bar
             }
 
             Widgets.MediaPlayer {
@@ -79,47 +77,69 @@ PanelWindow {
                 Layout.rightMargin: mediaPlayer.visible ? 2 : 0
             }
 
-            Widgets.Volume {
-                Layout.alignment: Qt.AlignVCenter
+            RowLayout {
+                spacing: 3
+                Layout.rightMargin: -2
+
+                Widgets.Volume {
+                    Layout.alignment: Qt.AlignVCenter
+                }
+
+                Widgets.Network {
+                    Layout.alignment: Qt.AlignVCenter
+                }
+
+                Widgets.Bluetooth {
+                    Layout.alignment: Qt.AlignVCenter
+                }
+
+                Widgets.ScreenRecord {
+                    Layout.alignment: Qt.AlignVCenter
+                    screen: bar.screen
+                    barWindow: bar
+                }
+
+                Widgets.Keyboard {
+                    Layout.alignment: Qt.AlignVCenter
+                }
+
+                Widgets.Battery {
+                    Layout.alignment: Qt.AlignVCenter
+                }
+
             }
-            Widgets.Network {
-                Layout.alignment: Qt.AlignVCenter
-            }
-            Widgets.Bluetooth {
-                Layout.alignment: Qt.AlignVCenter
-            }
-            Widgets.ScreenRecord {
-                Layout.alignment: Qt.AlignVCenter
-            }
-            Widgets.Keyboard {
-                Layout.alignment: Qt.AlignVCenter
-            }
-            Widgets.Battery {
-                Layout.alignment: Qt.AlignVCenter
-            }
+
             Widgets.Weather {
                 Layout.alignment: Qt.AlignVCenter
             }
+
             Widgets.Temperature {
                 Layout.alignment: Qt.AlignVCenter
             }
+
             Widgets.Clock {
                 Layout.alignment: Qt.AlignVCenter
             }
+
             Widgets.Info {
                 Layout.alignment: Qt.AlignVCenter
             }
+
             Widgets.Menu {
                 Layout.alignment: Qt.AlignVCenter
                 screen: bar.screen
             }
+
             Widgets.Dotfiles {
                 Layout.alignment: Qt.AlignVCenter
             }
+
             Widgets.Launcher {
                 Layout.alignment: Qt.AlignVCenter
                 screen: bar.screen
             }
+
         }
+
     }
 }

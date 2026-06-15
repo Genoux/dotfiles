@@ -1,6 +1,5 @@
 import Quickshell.Services.SystemTray
 import QtQuick
-import qs
 import qs.components
 import qs.config
 import qs.services

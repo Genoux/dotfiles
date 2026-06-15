@@ -8,19 +8,19 @@ import qs.config
 Singleton {
     id: root
 
-    property string connectionIcon: "network-offline-symbolic"
+    property string connectionIcon: "offline"
 
     function iconForInterface(interfaceName) {
         if (!interfaceName)
-            return "network-offline-symbolic"
+            return "offline"
 
         if (interfaceName.startsWith("wl") || interfaceName.startsWith("wlan") || interfaceName.includes("wifi"))
-            return "network-wireless-symbolic"
+            return "wireless"
 
         if (interfaceName.startsWith("eth") || interfaceName.startsWith("en"))
-            return "network-idle"
+            return "wired"
 
-        return "network-idle"
+        return "wired"
     }
 
     function refresh() {
@@ -36,14 +36,14 @@ Singleton {
             onStreamFinished: {
                 const output = this.text.trim()
                 if (!output) {
-                    root.connectionIcon = "network-offline-symbolic"
+                    root.connectionIcon = "offline"
                     return
                 }
 
                 const match = output.match(/dev\s+(\w+)/)
                 root.connectionIcon = match
                     ? root.iconForInterface(match[1])
-                    : "network-offline-symbolic"
+                    : "offline"
             }
         }
     }

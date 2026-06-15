@@ -7,7 +7,6 @@ M.scripts = {
   launchDotfilesMenu = M.localBin .. "/launch-dotfiles-menu",
   systemPickWallpaper = M.localBin .. "/system-pick-wallpaper",
   systemScreenrecord = M.localBin .. "/system-screenrecord",
-  systemSwitchKeyboard = M.localBin .. "/system-switch-keyboard",
 }
 
 function M.shellQuote(value)

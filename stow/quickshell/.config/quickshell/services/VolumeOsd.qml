@@ -10,7 +10,7 @@ Singleton {
 
     property bool visible: false
     property bool initializing: true
-    property string iconName: "audio-volume-medium-symbolic"
+    property string iconKey: "medium"
 
     readonly property var sink: Pipewire.defaultAudioSink
     readonly property real volume: Math.min(root.sink?.audio?.volume ?? 0, 1)
@@ -24,7 +24,7 @@ Singleton {
         const nextMuted = root.muted
         const changed = nextVolume !== root._lastVolume || nextMuted !== root._lastMuted
 
-        root.iconName = root.resolveIcon(!!root.sink, nextVolume, nextMuted)
+        root.iconKey = root.resolveIcon(!!root.sink, nextVolume, nextMuted)
 
         if (!root.initializing && changed)
             root.show()
@@ -35,12 +35,12 @@ Singleton {
 
     function resolveIcon(hasSink, level, isMuted) {
         if (!hasSink || isMuted)
-            return "audio-volume-muted-symbolic"
+            return "muted"
         if (level > 0.66)
-            return "audio-volume-high-symbolic"
+            return "high"
         if (level > 0.33)
-            return "audio-volume-medium-symbolic"
-        return "audio-volume-low-symbolic"
+            return "medium"
+        return "low"
     }
 
     function show() {

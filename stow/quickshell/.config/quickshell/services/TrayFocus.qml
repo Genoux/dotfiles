@@ -10,6 +10,12 @@ Singleton {
     function activate(item) {
         if (!item)
             return
+
+        if (item.onlyMenu && item.hasMenu) {
+            item.secondaryActivate()
+            return
+        }
+
         item.activate()
         tryRaiseMprisPlayer(item)
         focusMatchingWindow(item)

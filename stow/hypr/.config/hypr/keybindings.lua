@@ -100,7 +100,7 @@ hl.bind("switch:off:Lid Switch", function()
 end, { locked = true })
 
 hl.bind("SUPER + SHIFT + code:25", hl.dsp.exec_cmd(paths.scripts.systemPickWallpaper))
-hl.bind("SUPER + SPACE", hl.dsp.exec_cmd(paths.scripts.systemSwitchKeyboard))
+hl.bind("SUPER + SPACE", hl.dsp.exec_cmd("hyprctl switchxkblayout current next"))
 
 hl.bind(mainMod .. " + r", screenshots.region)
 hl.bind(mainMod .. " + SHIFT + r", screenshots.output)

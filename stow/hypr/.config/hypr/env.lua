@@ -9,7 +9,13 @@ hl.env("GTK_USE_PORTAL", "0")
 hl.env("QT_WAYLAND_DISABLE_SELECTION", "1")
 hl.env("HYPRLAND_NO_SD_NOTIFY", "1")
 
-hl.env("PATH", "$HOME/.local/bin:$HOME/dotfiles/bin:/usr/local/sbin:/usr/local/bin:/usr/bin:/var/lib/flatpak/exports/bin:/usr/lib/jvm/default/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl")
+hl.env(
+  "PATH",
+  home
+    .. "/.local/bin:"
+    .. home
+    .. "/dotfiles/bin:/usr/local/sbin:/usr/local/bin:/usr/bin:/var/lib/flatpak/exports/bin:/usr/lib/jvm/default/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl"
+)
 
 hl.env("CLUTTER_BACKEND", "wayland")
 hl.env("GDK_BACKEND", "wayland,x11")

@@ -9,6 +9,17 @@ Singleton {
     id: root
 
     property string value: "--°C"
+    property string icon: "normal"
+
+    function iconForCelsius(celsius) {
+        if (celsius < 0)
+            return "normal"
+        if (celsius >= 85)
+            return "hot"
+        if (celsius >= 70)
+            return "warm"
+        return "normal"
+    }
 
     function refresh() {
         tempProcess.running = true
@@ -58,7 +69,13 @@ Singleton {
         running: true
 
         stdout: StdioCollector {
-            onStreamFinished: root.value = this.text.trim() || "--°C"
+            onStreamFinished: {
+                const trimmed = this.text.trim() || "--°C"
+                const match = trimmed.match(/(\d+)/)
+                const celsius = match ? parseInt(match[1], 10) : -1
+                root.value = trimmed
+                root.icon = root.iconForCelsius(celsius)
+            }
         }
     }
 

@@ -84,5 +84,8 @@
   "window.autoDetectColorScheme": false,
   "[xml]": {
     "editor.defaultFormatter": "redhat.vscode-xml"
+  },
+  "[qml]": {
+    "editor.defaultFormatter": "Delgan.qml-format"
   }
 }

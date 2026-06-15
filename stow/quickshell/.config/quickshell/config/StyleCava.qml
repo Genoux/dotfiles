@@ -11,10 +11,10 @@ Singleton {
     readonly property int barHeight: 12
     readonly property int spacing: 2
     readonly property int framerate: 60
-    readonly property int asciiMaxRange: 1000
-    readonly property int noiseReduction: 50
+    readonly property int asciiMaxRange: 4000
+    readonly property int noiseReduction: 20
     readonly property bool monstercat: true
-    readonly property int animationDuration: 120
+    readonly property int animationDuration: 150
     readonly property int silenceThreshold: 2
     readonly property real maxFill: 1
     readonly property real snapThreshold: 4.5

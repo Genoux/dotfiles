@@ -2,10 +2,14 @@ pragma Singleton
 
 import Quickshell
 import Quickshell.Hyprland
+import QtCore
 import QtQuick
 
 Singleton {
     readonly property var tuiExecutables: ["bluetui", "btop", "impala", "wiremix", "fastfetch", "battop"]
+    readonly property var localScripts: ["launch-or-focus", "system-screenrecord", "launch-dotfiles-menu"]
+    readonly property string homePath: String(StandardPaths.writableLocation(StandardPaths.HomeLocation)).replace(/^file:\/\//, "")
+    readonly property string localBin: homePath + "/.local/bin/"
 
     function normalize(value) {
         return String(value || "").toLowerCase().trim()
@@ -33,8 +37,38 @@ Singleton {
         }) ?? null
     }
 
+    function runLocalScript(scriptName, extraArgs) {
+        const parts = [localBin + scriptName].concat(extraArgs ?? [])
+        const command = parts.join(" ")
+        console.log(`ShellActions local script: ${command}`)
+        Quickshell.execDetached([
+            "hyprctl",
+            "dispatch",
+            `function() hl.dispatch(hl.dsp.exec_cmd(${quoteLuaString(command)})) end`,
+        ])
+    }
+
     function run(command) {
-        Quickshell.execDetached(commandArgs(command))
+        const args = commandArgs(command)
+        if (!args.length)
+            return
+
+        const executable = String(args[0])
+        if (!executable.includes("/") && localScripts.includes(executable)) {
+            runLocalScript(executable, args.slice(1))
+            return
+        }
+
+        Quickshell.execDetached(args)
+    }
+
+    function openDotfilesMenu() {
+        dispatchLua(`function() require("actions.launchers").openDotfilesManager() end`)
+    }
+
+    function switchKeyboardLayout(device) {
+        const target = device && String(device).length > 0 ? String(device) : "current"
+        Quickshell.execDetached(["hyprctl", "switchxkblayout", target, "next"])
     }
 
     function dispatchLua(expression) {
@@ -59,7 +93,12 @@ Singleton {
         const executable = args[0] || className
 
         if (tuiExecutables.includes(executable) || tuiExecutables.includes(normalize(appId))) {
-            run(["launch-or-focus", appId, executable, className])
+            const extraArgs = args.slice(1)
+            let expression = `function() require("actions.launchers").launchOrFocus(${quoteLuaString(appId)}, ${quoteLuaString(executable)}, ${quoteLuaString(className)}`
+            for (const extra of extraArgs)
+                expression += `, ${quoteLuaString(extra)}`
+            expression += ") end"
+            dispatchLua(expression)
             return
         }
 

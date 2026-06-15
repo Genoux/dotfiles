@@ -1,4 +1,5 @@
 import Quickshell.Services.Mpris
+import Quickshell.Hyprland
 import QtQuick
 import Qt5Compat.GraphicalEffects
 import qs
@@ -9,10 +10,11 @@ BarGroup {
     id: root
 
     property string explicitPlayerKey: ""
+    property var recentPlayingKeys: []
+
+    readonly property int recentPlayingMax: 12
     readonly property var activePlayers: Mpris.players.values.filter((candidate) => candidate.playbackState !== MprisPlaybackState.Stopped)
-    readonly property var explicitPlayer: explicitPlayerKey.length > 0 ? activePlayers.find((candidate) => playerKey(candidate) === explicitPlayerKey) ?? null : null
-    readonly property var playingPlayer: activePlayers.find((candidate) => candidate.isPlaying) ?? null
-    readonly property var player: (explicitPlayer && (explicitPlayer.isPlaying || !playingPlayer)) ? explicitPlayer : playingPlayer ?? activePlayers[0] ?? Mpris.players.values[0] ?? null
+    readonly property var player: pickActivePlayer()
     readonly property string trackText: player ? `${player.trackTitle || player.identity || "Media"}${player.trackArtist ? " - " + player.trackArtist : ""}` : ""
     readonly property bool canGoPrevious: player?.canGoPrevious ?? false
     readonly property bool canGoNext: player?.canGoNext ?? false
@@ -32,6 +34,34 @@ BarGroup {
 
     HoverHandler {
         id: hoverHandler
+    }
+
+    Instantiator {
+        model: Mpris.players.values
+
+        delegate: Connections {
+            required property var modelData
+
+            target: modelData
+
+            function onIsPlayingChanged() {
+                if (modelData.isPlaying)
+                    root.notePlayerPlaying(modelData)
+            }
+
+            function onPlaybackStateChanged() {
+                if (modelData.isPlaying)
+                    root.notePlayerPlaying(modelData)
+            }
+        }
+    }
+
+    Component.onCompleted: {
+        for (let i = 0; i < Mpris.players.values.length; i++) {
+            const candidate = Mpris.players.values[i]
+            if (candidate?.isPlaying)
+                notePlayerPlaying(candidate)
+        }
     }
 
     Row {
@@ -145,10 +175,10 @@ BarGroup {
                 id: mediaMouse
 
                 anchors.fill: parent
-                acceptedButtons: (root.player?.canRaise ?? false) ? Qt.LeftButton : Qt.NoButton
-                cursorShape: (root.player?.canRaise ?? false) ? Qt.PointingHandCursor : Qt.ArrowCursor
+                acceptedButtons: root.player ? Qt.LeftButton : Qt.NoButton
+                cursorShape: root.player ? Qt.PointingHandCursor : Qt.ArrowCursor
                 hoverEnabled: true
-                onClicked: root.raisePlayer()
+                onClicked: root.focusPlayerWindow()
             }
 
             Timer {
@@ -219,18 +249,167 @@ BarGroup {
 
     onTrackTextChanged: scrollOffset = 0
 
+    function keysMatch(storedKey, candidate) {
+        if (!storedKey || !candidate)
+            return false
+
+        const id = playerKey(candidate)
+        if (storedKey === id)
+            return true
+
+        const left = storedKey.toLowerCase()
+        const right = id.toLowerCase()
+        return left.includes(right) || right.includes(left)
+    }
+
+    function pushRecentPlaying(candidate) {
+        const key = playerKey(candidate)
+        if (!key)
+            return
+
+        const rest = recentPlayingKeys.filter((storedKey) => !keysMatch(storedKey, candidate))
+        recentPlayingKeys = [key].concat(rest).slice(0, recentPlayingMax)
+    }
+
+    function stackRank(candidate) {
+        for (let i = 0; i < recentPlayingKeys.length; i++) {
+            if (keysMatch(recentPlayingKeys[i], candidate))
+                return i
+        }
+
+        return recentPlayingMax + 1
+    }
+
+    function pickByStackOrder(candidates) {
+        if (!candidates.length)
+            return null
+
+        return [...candidates].sort((left, right) => stackRank(left) - stackRank(right))[0]
+    }
+
+    function prunePlayerState() {
+        const active = activePlayers
+        const pruned = recentPlayingKeys.filter((storedKey) => active.some((candidate) => keysMatch(storedKey, candidate)))
+
+        if (pruned.length !== recentPlayingKeys.length)
+            recentPlayingKeys = pruned
+
+        if (explicitPlayerKey.length > 0 && !active.some((candidate) => keysMatch(explicitPlayerKey, candidate)))
+            explicitPlayerKey = ""
+    }
+
+    function pickActivePlayer() {
+        prunePlayerState()
+
+        const active = activePlayers
+        if (!active.length)
+            return Mpris.players.values[0] ?? null
+
+        const playing = active.filter((candidate) => candidate.isPlaying)
+        if (playing.length > 0) {
+            if (explicitPlayerKey.length > 0) {
+                const explicitHit = playing.find((candidate) => keysMatch(explicitPlayerKey, candidate))
+                if (explicitHit)
+                    return explicitHit
+            }
+
+            return pickByStackOrder(playing)
+        }
+
+        if (explicitPlayerKey.length > 0) {
+            const explicitHit = active.find((candidate) => keysMatch(explicitPlayerKey, candidate))
+            if (explicitHit)
+                return explicitHit
+        }
+
+        return pickByStackOrder(active)
+    }
+
+    function notePlayerPlaying(candidate) {
+        if (!candidate?.isPlaying)
+            return
+
+        pushRecentPlaying(candidate)
+    }
+
     function playerKey(candidate) {
-        return candidate ? (candidate.desktopEntry || candidate.identity || "") : ""
+        if (!candidate)
+            return ""
+
+        if (candidate.dbusName)
+            return candidate.dbusName
+
+        return candidate.desktopEntry || candidate.identity || ""
+    }
+
+    function playerMatchTokens(player) {
+        const desktopEntry = String(player.desktopEntry || "").replace(/\.desktop$/i, "").toLowerCase()
+        const identity = String(player.identity || "").toLowerCase()
+        return [...new Set([desktopEntry, identity, ...desktopEntry.split(/[._-]+/), ...identity.split(/[._-]+/)])].filter((token) => token.length > 2)
+    }
+
+    function focusToplevel(toplevel) {
+        if (!toplevel)
+            return false
+
+        if (toplevel.wayland) {
+            toplevel.wayland.activate()
+            return true
+        }
+
+        const address = toplevel.lastIpcObject?.address
+        if (address) {
+            ShellActions.focusWindow(`address:${address}`)
+            return true
+        }
+
+        return false
+    }
+
+    function focusPlayerHyprlandWindow(player) {
+        const tokens = playerMatchTokens(player)
+        if (tokens.length > 0) {
+            const classMatch = Hyprland.toplevels.values.find((toplevel) => {
+                const cls = String(toplevel.wayland?.appId || toplevel.lastIpcObject?.class || "").toLowerCase()
+                const initialClass = String(toplevel.lastIpcObject?.initialClass || "").toLowerCase()
+                return tokens.some((token) => cls.includes(token) || initialClass.includes(token) || token.includes(cls))
+            })
+
+            if (focusToplevel(classMatch))
+                return true
+        }
+
+        const trackTitle = String(player.trackTitle || "").trim()
+        if (trackTitle.length < 3)
+            return false
+
+        const normalizedTitle = trackTitle.toLowerCase()
+        const titleMatch = Hyprland.toplevels.values.find((toplevel) => String(toplevel.title || "").toLowerCase().includes(normalizedTitle))
+        return focusToplevel(titleMatch)
     }
 
     function markPlayerInteracted() {
+        if (!root.player)
+            return
+
+        pushRecentPlaying(root.player)
         explicitPlayerKey = playerKey(root.player)
     }
 
-    function raisePlayer() {
+    function focusPlayerWindow() {
+        if (!root.player)
+            return
+
         markPlayerInteracted()
-        if (root.player?.canRaise)
+
+        if (root.player.canRaise)
             root.player.raise()
+
+        focusPlayerHyprlandWindow(root.player)
+    }
+
+    function raisePlayer() {
+        focusPlayerWindow()
     }
 
     function previous() {

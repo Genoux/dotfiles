@@ -20,7 +20,11 @@ Singleton {
     }
 
     function switchLayout() {
-        ShellActions.run(["system-switch-keyboard"])
+        const target = root.keyboardName.length > 0 ? root.keyboardName : "current"
+        switchLayoutProcess.command = ["hyprctl", "switchxkblayout", target, "next"]
+        if (switchLayoutProcess.running)
+            switchLayoutProcess.running = false
+        switchLayoutProcess.running = true
     }
 
     function formatLayout(rawLayout) {
@@ -46,6 +50,11 @@ Singleton {
         stdout: StdioCollector {
             onStreamFinished: root.applyDeviceLine(this.text)
         }
+    }
+
+    Process {
+        id: switchLayoutProcess
+        running: false
     }
 
     Connections {

@@ -25,6 +25,7 @@ dfu-util
 dhcpcd
 dialog
 discord
+dmidecode
 docker
 dolphin
 dotnet-sdk

@@ -7,8 +7,8 @@ import qs.services as Services
 
 Button {
     interactive: true
-    iconName: "utilities-terminal-symbolic"
-    onClicked: ShellActions.run(["launch-dotfiles-menu"])
+    iconName: "utilities-terminal"
+    onClicked: ShellActions.openDotfilesMenu()
 
     Rectangle {
         visible: Services.Dotfiles.updatesAvailable

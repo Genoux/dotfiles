@@ -17,7 +17,7 @@ Button {
         : `battery-level-${iconStep}-${charging ? "charging-" : ""}symbolic`
 
     visible: device.isLaptopBattery
-    iconSource: IconRegistry.source(iconName)
+    iconSource: IconRegistry.batteryIcon(percentage, charging)
     text: `${root.percentage}%`
     foreground: root.percentage <= 15 && !root.charging ? Colors.base08 : Colors.base05
     interactive: true
