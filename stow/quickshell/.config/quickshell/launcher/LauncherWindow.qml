@@ -18,12 +18,12 @@ PanelWindow {
 
         return Services.LauncherHistory.sortEntries(
             DesktopEntries.applications.values.filter((entry) => Services.LauncherHistory.matches(entry, normalizedQuery))
-        ).slice(0, Style.launcherMaxResults)
+        ).slice(0, StyleLauncher.maxResults)
     }
 
-    readonly property int surfaceHeight: Style.launcherPadding
-        + Style.launcherSearchHeight
-        + Style.launcherSpacing
+    readonly property int surfaceHeight: StyleLauncher.padding
+        + StyleLauncher.searchHeight
+        + StyleLauncher.spacing
         + panel.listHeight
 
     readonly property bool active: Services.Launcher.visible && Services.Launcher.screen === root.screen
@@ -36,16 +36,9 @@ PanelWindow {
     readonly property var visibleEntries: root.active ? root.filteredEntries : root.closingEntries
     readonly property int visibleListHeight: root.active ? panel.listHeight : root.closingListHeight
 
-    OverlayRevealController {
-        id: reveal
-
-        active: root.active
-        onHideFinished: root.finishHide()
-    }
-
     screen: root.screen
     visible: displayed
-    color: Style.transparent
+    color: StyleTokens.transparent
     exclusionMode: ExclusionMode.Ignore
 
     WlrLayershell.layer: WlrLayer.Overlay
@@ -72,13 +65,13 @@ PanelWindow {
 
     onActiveChanged: {
         if (active) {
-            reveal.stopHide()
+            surface.stopHide()
             displayed = true
-            reveal.show()
+            surface.show()
             Qt.callLater(() => panel.focusSearch())
         } else {
             snapshotClosingLayout()
-            reveal.hide()
+            surface.hide()
         }
     }
 
@@ -88,35 +81,30 @@ PanelWindow {
         onClicked: Services.Launcher.close()
     }
 
-    Item {
-        id: surfaceHost
+    OverlayPanel {
+        id: surface
 
-        width: Style.launcherWidth
+        width: StyleLauncher.width
         height: root.active ? root.surfaceHeight : root.closingSurfaceHeight
         anchors.centerIn: parent
-        scale: reveal.revealScale
-        transformOrigin: Item.Center
+        active: root.active
+        onHideFinished: root.finishHide()
 
         Behavior on height {
             NumberAnimation {
-                duration: Style.overlayShowDuration
+                duration: StyleOverlay.showDuration
                 easing.type: Easing.OutCubic
             }
         }
 
-        OverlayDialogSurface {
+        LauncherPanel {
+            id: panel
+
             anchors.fill: parent
-            revealOpacity: reveal.revealOpacity
-
-            LauncherPanel {
-                id: panel
-
-                anchors.fill: parent
-                filteredEntries: root.visibleEntries
-                active: root.active
-                onLaunch: (entry) => root.launchEntry(entry)
-                onClose: Services.Launcher.close()
-            }
+            filteredEntries: root.visibleEntries
+            active: root.active
+            onLaunch: (entry) => root.launchEntry(entry)
+            onClose: Services.Launcher.close()
         }
     }
 

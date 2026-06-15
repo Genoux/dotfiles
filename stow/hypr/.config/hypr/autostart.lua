@@ -33,7 +33,9 @@ hl.on("hyprland.start", function()
       .. " "
       .. "hyprsession.service "
       .. table.concat(desktopServices, " "),
-    "systemctl --user start xdg-desktop-portal-hyprland.service || true",
+    "systemctl --user start "
+      .. table.concat(portalServices, " ")
+      .. " || true",
     "systemctl --user start " .. table.concat(desktopServices, " "),
   }, "; "))
 

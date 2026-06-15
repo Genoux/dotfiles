@@ -3,7 +3,7 @@ import qs.config
 import qs.components
 import qs.services as Services
 
-IconButton {
+Button {
     id: root
 
     readonly property var sink: Pipewire.defaultAudioSink

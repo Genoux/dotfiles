@@ -7,8 +7,6 @@ import QtQuick
 import qs.config
 
 Singleton {
-    id: root
-
     function activate(item) {
         if (!item)
             return

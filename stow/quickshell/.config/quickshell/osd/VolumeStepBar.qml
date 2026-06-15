@@ -4,11 +4,11 @@ import qs.config
 Row {
     id: root
 
-    property int steps: Style.osdStepCount
+    property int steps: StyleOsd.stepCount
     property real volume: 0
     property bool muted: false
 
-    spacing: Style.osdStepSpacing
+    spacing: StyleOsd.stepSpacing
 
     Repeater {
         model: root.steps
@@ -16,18 +16,18 @@ Row {
         Rectangle {
             required property int index
 
-            width: Style.osdStepWidth
-            height: Style.osdStepHeight
-            radius: Style.radiusXs
+            width: StyleOsd.stepWidth
+            height: StyleOsd.stepHeight
+            radius: StyleTokens.radiusXs
 
             readonly property real threshold: ((index + 1) / root.steps) - 0.001
             readonly property bool filled: !root.muted && root.volume > threshold
 
-            color: filled ? Style.osdStepFilled : Style.osdStepEmpty
+            color: filled ? StyleOsd.stepFilled : StyleOsd.stepEmpty
 
             Behavior on color {
                 ColorAnimation {
-                    duration: Style.easeDurationFast
+                    duration: StyleTokens.easeDurationFast
                     easing.type: Easing.InOutQuad
                 }
             }

@@ -10,7 +10,7 @@ PanelWindow {
     required property var screen
 
     readonly property var shownNotifications: Services.Notifications.notifications
-        .slice(Math.max(0, Services.Notifications.notifications.length - Style.notificationMaxVisible))
+        .slice(Math.max(0, Services.Notifications.notifications.length - StyleNotification.maxVisible))
         .reverse()
     readonly property bool active: Services.Notifications.visible
         && Services.Notifications.screen === root.screen
@@ -18,10 +18,10 @@ PanelWindow {
 
     screen: root.screen
     visible: active
-    color: Style.transparent
+    color: StyleTokens.transparent
     exclusionMode: ExclusionMode.Ignore
 
-    implicitWidth: Style.notificationWidth
+    implicitWidth: StyleNotification.width
     implicitHeight: Math.max(1, notificationList.contentHeight)
 
     WlrLayershell.layer: WlrLayer.Overlay
@@ -33,15 +33,15 @@ PanelWindow {
     }
 
     margins {
-        bottom: Style.notificationBottomMargin
-        right: Style.notificationRightMargin
+        bottom: StyleShellLayout.notificationBottomMargin
+        right: StyleShellLayout.notificationRightMargin
     }
 
     ListView {
         id: notificationList
 
         anchors.fill: parent
-        spacing: Style.notificationGap
+        spacing: StyleNotification.gap
         interactive: false
         clip: true
         model: ScriptModel {
@@ -60,7 +60,7 @@ PanelWindow {
                 property: "opacity"
                 from: 0
                 to: 1
-                duration: Style.notificationShowDuration
+                duration: StyleNotification.showDuration
                 easing.type: Easing.OutCubic
             }
         }
@@ -68,7 +68,7 @@ PanelWindow {
         displaced: Transition {
             NumberAnimation {
                 properties: "x,y"
-                duration: Style.notificationHideDuration
+                duration: StyleNotification.hideDuration
                 easing.type: Easing.InOutCubic
             }
         }
@@ -77,7 +77,7 @@ PanelWindow {
             NumberAnimation {
                 property: "opacity"
                 to: 0
-                duration: Style.notificationHideDuration
+                duration: StyleNotification.hideDuration
                 easing.type: Easing.InCubic
             }
         }

@@ -16,7 +16,7 @@ PanelWindow {
 
     screen: root.screen
     visible: displayed
-    color: Style.transparent
+    color: StyleTokens.transparent
     exclusionMode: ExclusionMode.Ignore
 
     WlrLayershell.layer: WlrLayer.Top
@@ -41,18 +41,18 @@ PanelWindow {
     Timer {
         id: hideTimer
 
-        interval: Style.overlayHideDuration
+        interval: StyleOverlay.hideDuration
         onTriggered: root.displayed = false
     }
 
     Rectangle {
         anchors.fill: parent
-        color: Style.overlayBackdrop
-        opacity: root.active ? Style.overlayBackdropOpacity : 0
+        color: StyleOverlay.backdrop
+        opacity: root.active ? StyleOverlay.backdropOpacity : 0
 
         Behavior on opacity {
             NumberAnimation {
-                duration: root.active ? Style.overlayShowDuration : Style.overlayHideDuration
+                duration: root.active ? StyleOverlay.showDuration : StyleOverlay.hideDuration
                 easing.type: root.active ? Easing.OutCubic : Easing.InCubic
             }
         }

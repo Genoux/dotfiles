@@ -16,25 +16,18 @@ PanelWindow {
 
     readonly property var entries: Services.PowerMenu.entries
 
-    readonly property int surfaceWidth: Style.powerMenuPadding * 2
-        + entries.length * Style.powerMenuItemWidth
-        + Math.max(0, entries.length - 1) * Style.powerMenuItemGap
-    readonly property int surfaceHeight: Style.powerMenuPadding * 2 + Style.powerMenuItemHeight
+    readonly property int surfaceWidth: StylePowerMenu.padding * 2
+        + entries.length * StylePowerMenu.itemWidth
+        + Math.max(0, entries.length - 1) * StylePowerMenu.itemGap
+    readonly property int surfaceHeight: StylePowerMenu.padding * 2 + StylePowerMenu.itemHeight
 
     readonly property bool active: Services.PowerMenu.visible && Services.PowerMenu.screen === root.screen
 
     property bool displayed: false
 
-    OverlayRevealController {
-        id: reveal
-
-        active: root.active
-        onHideFinished: root.displayed = false
-    }
-
     screen: root.screen
     visible: displayed
-    color: Style.transparent
+    color: StyleTokens.transparent
     exclusionMode: ExclusionMode.Ignore
 
     WlrLayershell.layer: WlrLayer.Overlay
@@ -50,12 +43,12 @@ PanelWindow {
 
     onActiveChanged: {
         if (active) {
-            reveal.stopHide()
+            surface.stopHide()
             displayed = true
-            reveal.show()
+            surface.show()
             Qt.callLater(() => focusScope.forceActiveFocus())
         } else {
-            reveal.hide()
+            surface.hide()
         }
     }
 
@@ -65,74 +58,69 @@ PanelWindow {
         onClicked: Services.PowerMenu.close()
     }
 
-    Item {
-        id: surfaceHost
+    OverlayPanel {
+        id: surface
 
         width: root.surfaceWidth
         height: root.surfaceHeight
         anchors.centerIn: parent
-        scale: reveal.revealScale
-        transformOrigin: Item.Center
+        active: root.active
+        onHideFinished: root.displayed = false
 
-        OverlayDialogSurface {
+        FocusScope {
+            id: focusScope
+
             anchors.fill: parent
-            revealOpacity: reveal.revealOpacity
+            anchors.margins: StylePowerMenu.padding
 
-            FocusScope {
-                id: focusScope
-
-                anchors.fill: parent
-                anchors.margins: Style.powerMenuPadding
-
-                Keys.onPressed: (event) => {
-                    if (event.key === Qt.Key_Escape) {
-                        Services.PowerMenu.close()
-                        event.accepted = true
-                        return
-                    }
-
-                    if (event.key === Qt.Key_Right || event.key === Qt.Key_Down) {
-                        actions.currentIndex = Math.min(actions.currentIndex + 1, Math.max(0, root.entries.length - 1))
-                        event.accepted = true
-                        return
-                    }
-
-                    if (event.key === Qt.Key_Left || event.key === Qt.Key_Up) {
-                        actions.currentIndex = Math.max(actions.currentIndex - 1, 0)
-                        event.accepted = true
-                        return
-                    }
-
-                    if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-                        root.activate(root.entries[actions.currentIndex])
-                        event.accepted = true
-                    }
+            Keys.onPressed: (event) => {
+                if (event.key === Qt.Key_Escape) {
+                    Services.PowerMenu.close()
+                    event.accepted = true
+                    return
                 }
 
-                ListView {
-                    id: actions
+                if (event.key === Qt.Key_Right || event.key === Qt.Key_Down) {
+                    actions.currentIndex = Math.min(actions.currentIndex + 1, Math.max(0, root.entries.length - 1))
+                    event.accepted = true
+                    return
+                }
 
-                    anchors.fill: parent
-                    orientation: ListView.Horizontal
-                    spacing: Style.powerMenuItemGap
-                    model: ScriptModel {
-                        values: root.entries
-                    }
-                    currentIndex: 0
-                    clip: true
-                    boundsBehavior: Flickable.StopAtBounds
+                if (event.key === Qt.Key_Left || event.key === Qt.Key_Up) {
+                    actions.currentIndex = Math.max(actions.currentIndex - 1, 0)
+                    event.accepted = true
+                    return
+                }
 
-                    delegate: PowerMenuAction {
-                        required property var modelData
-                        required property int index
+                if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                    root.activate(root.entries[actions.currentIndex])
+                    event.accepted = true
+                }
+            }
 
-                        label: modelData.label
-                        icon: modelData.icon
-                        selected: ListView.isCurrentItem
+            ListView {
+                id: actions
 
-                        onTriggered: root.activate(modelData)
-                        onHovered: actions.currentIndex = index
-                    }
+                anchors.fill: parent
+                orientation: ListView.Horizontal
+                spacing: StylePowerMenu.itemGap
+                model: ScriptModel {
+                    values: root.entries
+                }
+                currentIndex: 0
+                clip: true
+                boundsBehavior: Flickable.StopAtBounds
+
+                delegate: PowerMenuAction {
+                    required property var modelData
+                    required property int index
+
+                    label: modelData.label
+                    icon: modelData.icon
+                    selected: ListView.isCurrentItem
+
+                    onTriggered: root.activate(modelData)
+                    onHovered: actions.currentIndex = index
                 }
             }
         }

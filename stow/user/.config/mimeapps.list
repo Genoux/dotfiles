@@ -1,4 +1,3 @@
-
 [Default Applications]
 text/html=zen.desktop
 x-scheme-handler/http=zen.desktop

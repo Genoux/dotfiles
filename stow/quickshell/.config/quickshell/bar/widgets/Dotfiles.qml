@@ -5,11 +5,9 @@ import qs.config
 import qs.components
 import qs.services as Services
 
-IconButton {
-    id: root
-
+Button {
     interactive: true
-    iconName: "input-keyboard"
+    iconName: "utilities-terminal-symbolic"
     onClicked: ShellActions.run(["launch-dotfiles-menu"])
 
     Rectangle {

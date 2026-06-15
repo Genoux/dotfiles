@@ -43,23 +43,21 @@ RowLayout {
     }
     readonly property string appIconName: IconRegistry.iconNameForToplevel(activeToplevel)
 
-    IconButton {
+    Button {
         Layout.alignment: Qt.AlignVCenter
         iconName: root.appIconName
-        iconSize: Style.iconSizeMd
-        implicitWidth: Style.pillHeight
-        implicitHeight: Style.pillHeight
-        background: Style.transparent
-        hoverBackground: Style.transparent
+        iconSize: StyleControl.iconSizeMd
+        background: StyleTokens.transparent
+        hoverBackground: StyleTokens.transparent
     }
 
     Text {
         Layout.alignment: Qt.AlignVCenter
         text: activeToplevel ? activeToplevel.title : ""
         color: Colors.base05
-        font.family: Style.fontSans
-        font.pixelSize: Style.fontSizeSm
+        font.family: StyleTokens.fontSans
+        font.pixelSize: StyleTokens.fontSizeSm
         elide: Text.ElideRight
-        Layout.maximumWidth: Style.windowTitleMaxWidth
+        Layout.maximumWidth: StyleBar.windowTitleMaxWidth
     }
 }

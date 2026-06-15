@@ -18,9 +18,9 @@ Singleton {
             return "network-wireless-symbolic"
 
         if (interfaceName.startsWith("eth") || interfaceName.startsWith("en"))
-            return "network-idle-symbolic"
+            return "network-idle"
 
-        return "network-idle-symbolic"
+        return "network-idle"
     }
 
     function refresh() {
@@ -49,7 +49,7 @@ Singleton {
     }
 
     Timer {
-        interval: Style.pollIntervalNormal
+        interval: StyleTokens.pollIntervalNormal
         running: true
         repeat: true
         onTriggered: root.refresh()

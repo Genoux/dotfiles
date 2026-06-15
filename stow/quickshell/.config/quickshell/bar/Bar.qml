@@ -12,30 +12,39 @@ PanelWindow {
 
     readonly property var hyprMonitor: Hyprland.monitorFor(screen)
 
+    readonly property int contentHeight: Math.max(
+        StyleBar.estimatedContentHeight,
+        leftRow.implicitHeight,
+        windowTitle.implicitHeight,
+        rightRow.implicitHeight
+    )
+
     anchors {
         bottom: true
         left: true
         right: true
     }
-    implicitHeight: Style.barHeight
-    color: Style.transparent
+    implicitHeight: contentHeight + StyleBar.topPadding + StyleBar.bottomPadding
+    height: implicitHeight
+    color: StyleBar.background
 
     Item {
         anchors.fill: parent
-        anchors.leftMargin: Style.barMargin
-        anchors.rightMargin: Style.barMargin
+        anchors.leftMargin: StyleBar.margin
+        anchors.rightMargin: StyleBar.margin
+        anchors.topMargin: StyleBar.topPadding
+        anchors.bottomMargin: StyleBar.bottomPadding
 
         RowLayout {
+            id: leftRow
+
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
-            spacing: 4
-
-            
+            spacing: 6
 
             Widgets.Workspaces {
                 Layout.alignment: Qt.AlignVCenter
                 hyprMonitor: bar.hyprMonitor
-                panelWindow: bar
             }
 
             Widgets.SystemTray {
@@ -44,15 +53,19 @@ PanelWindow {
         }
 
         Widgets.WindowTitle {
+            id: windowTitle
+
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.verticalCenter: parent.verticalCenter
             hyprMonitor: bar.hyprMonitor
         }
 
         RowLayout {
+            id: rightRow
+
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
-            spacing: 2
+            spacing: 0
 
             Widgets.PrivacyIndicator {
                 Layout.alignment: Qt.AlignVCenter
@@ -60,6 +73,7 @@ PanelWindow {
 
             Widgets.MediaPlayer {
                 id: mediaPlayer
+
                 Layout.alignment: Qt.AlignVCenter
                 Layout.leftMargin: mediaPlayer.visible ? 2 : 0
                 Layout.rightMargin: mediaPlayer.visible ? 2 : 0

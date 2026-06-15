@@ -19,18 +19,18 @@ Item {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.topMargin: Style.launcherPadding
-        anchors.leftMargin: Style.launcherPadding
-        anchors.rightMargin: Style.launcherPadding
-        spacing: Style.launcherSpacing
+        anchors.topMargin: StyleLauncher.padding
+        anchors.leftMargin: StyleLauncher.padding
+        anchors.rightMargin: StyleLauncher.padding
+        spacing: StyleLauncher.spacing
 
         Rectangle {
             Layout.fillWidth: true
-            Layout.preferredHeight: Style.launcherSearchHeight
-            radius: Style.radiusMd
-            color: Style.launcherSearchBg
+            Layout.preferredHeight: StyleLauncher.searchHeight
+            radius: StyleTokens.radiusMd
+            color: StyleLauncher.searchBg
             border.width: 1
-            border.color: Style.overlayBorderSubtle
+            border.color: StyleOverlay.borderSubtle
 
             RowLayout {
                 anchors.fill: parent
@@ -54,7 +54,7 @@ Item {
                     ColorOverlay {
                         anchors.fill: parent
                         source: searchIconSource
-                        color: Style.launcherText
+                        color: StyleLauncher.text
                     }
                 }
 
@@ -68,11 +68,11 @@ Item {
                         anchors.fill: parent
                         verticalAlignment: TextInput.AlignVCenter
                         text: Services.Launcher.query
-                        color: Style.launcherText
-                        selectionColor: Style.launcherSelection
-                        selectedTextColor: Style.launcherText
-                        font.family: Style.fontSans
-                        font.pixelSize: Style.fontSizeSm
+                        color: StyleLauncher.text
+                        selectionColor: StyleLauncher.selection
+                        selectedTextColor: StyleLauncher.text
+                        font.family: StyleTokens.fontSans
+                        font.pixelSize: StyleTokens.fontSizeSm
                         font.weight: Font.Normal
                         clip: true
                         enabled: root.active
@@ -114,9 +114,9 @@ Item {
                         z: -1
                         visible: searchInput.text.length === 0
                         text: "Search..."
-                        color: Style.launcherPlaceholder
-                        font.family: Style.fontSans
-                        font.pixelSize: Style.fontSizeSm
+                        color: StyleLauncher.placeholder
+                        font.family: StyleTokens.fontSans
+                        font.pixelSize: StyleTokens.fontSizeSm
                         verticalAlignment: Text.AlignVCenter
                     }
                 }
@@ -142,7 +142,7 @@ Item {
 
                 footer: Item {
                     width: results.width
-                    height: Style.launcherPadding
+                    height: StyleLauncher.padding
                 }
 
                 delegate: Rectangle {
@@ -152,11 +152,11 @@ Item {
                     readonly property bool selected: ListView.isCurrentItem
 
                     width: results.width
-                    height: Style.launcherResultHeight
-                    radius: Style.radiusMd
-                    color: selected ? Style.launcherSelectedBg : Style.transparent
+                    height: StyleLauncher.resultHeight
+                    radius: StyleTokens.radiusMd
+                    color: selected ? StyleLauncher.selectedBg : StyleTokens.transparent
                     border.width: selected ? 1 : 0
-                    border.color: Style.overlayBorderSubtle
+                    border.color: StyleOverlay.borderSubtle
 
                     RowLayout {
                         anchors.fill: parent
@@ -166,9 +166,9 @@ Item {
 
                         IconImage {
                             Layout.alignment: Qt.AlignVCenter
-                            width: Style.launcherIconSize
-                            height: Style.launcherIconSize
-                            implicitSize: Style.launcherIconSize
+                            width: StyleLauncher.iconSize
+                            height: StyleLauncher.iconSize
+                            implicitSize: StyleLauncher.iconSize
                             source: Quickshell.iconPath(modelData.icon || "application-x-executable")
                         }
 
@@ -176,9 +176,9 @@ Item {
                             Layout.fillWidth: true
                             Layout.alignment: Qt.AlignVCenter
                             text: modelData.name
-                            color: Style.launcherText
-                            font.family: Style.fontSans
-                            font.pixelSize: Style.fontSizeSm
+                            color: StyleLauncher.text
+                            font.family: StyleTokens.fontSans
+                            font.pixelSize: StyleTokens.fontSizeSm
                             font.weight: Font.Normal
                             elide: Text.ElideRight
                         }
@@ -198,18 +198,18 @@ Item {
                 anchors.centerIn: parent
                 visible: root.filteredEntries.length === 0
                 text: "No Results"
-                color: Style.launcherPlaceholder
-                font.family: Style.fontSans
-                font.pixelSize: Style.fontSizeSm
+                color: StyleLauncher.placeholder
+                font.family: StyleTokens.fontSans
+                font.pixelSize: StyleTokens.fontSizeSm
             }
         }
     }
 
     readonly property int listHeight: filteredEntries.length === 0
-        ? Style.launcherEmptyHeight
+        ? StyleLauncher.emptyHeight
         : Math.min(
-            filteredEntries.length * Style.launcherResultHeight + Style.launcherPadding,
-            Style.launcherListMaxHeight
+            filteredEntries.length * StyleLauncher.resultHeight + StyleLauncher.padding,
+            StyleLauncher.listMaxHeight
         )
 
     function focusSearch() {

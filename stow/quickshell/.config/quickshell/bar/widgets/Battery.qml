@@ -5,7 +5,7 @@ import qs
 import qs.config
 import qs.components
 
-InfoPill {
+Button {
     id: root
 
     readonly property var device: UPower.displayDevice
@@ -18,9 +18,8 @@ InfoPill {
 
     visible: device.isLaptopBattery
     iconSource: IconRegistry.source(iconName)
-    iconSourceSize: Style.iconSizeXs
-    labelText: `${root.percentage}%`
-    labelColor: root.percentage <= 15 && !root.charging ? Colors.base08 : Colors.base05
+    text: `${root.percentage}%`
+    foreground: root.percentage <= 15 && !root.charging ? Colors.base08 : Colors.base05
     interactive: true
 
     onClicked: ShellActions.launchOrFocus("battop", "battop", "gnome-power-manager")

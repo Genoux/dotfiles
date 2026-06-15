@@ -3,11 +3,8 @@ import Quickshell.Bluetooth
 import qs.components
 import qs.config
 
-IconButton {
-    id: root
-
+Button {
     readonly property var adapter: Bluetooth.defaultAdapter
-
     readonly property bool hasConnectedDevice: (adapter?.devices?.values ?? []).some(d => d.connected)
 
     visible: adapter?.enabled ?? false

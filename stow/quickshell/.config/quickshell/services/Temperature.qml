@@ -63,7 +63,7 @@ Singleton {
     }
 
     Timer {
-        interval: Style.pollIntervalSlow
+        interval: StyleTokens.pollIntervalSlow
         running: true
         repeat: true
         onTriggered: root.refresh()

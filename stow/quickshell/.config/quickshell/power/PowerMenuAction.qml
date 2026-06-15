@@ -15,23 +15,23 @@ Rectangle {
     signal triggered()
     signal hovered()
 
-    width: Style.powerMenuItemWidth
-    height: Style.powerMenuItemHeight
-    radius: Style.radiusMd
-    color: selected ? Style.powerMenuSelectedBg : Style.transparent
+    width: StylePowerMenu.itemWidth
+    height: StylePowerMenu.itemHeight
+    radius: StyleTokens.radiusMd
+    color: selected ? StylePowerMenu.selectedBg : StyleTokens.transparent
     border.width: selected ? 1 : 0
-    border.color: Style.overlayBorderSubtle
+    border.color: StyleOverlay.borderSubtle
 
     ColumnLayout {
         anchors.centerIn: parent
-        spacing: Style.powerMenuItemSpacing
+        spacing: StylePowerMenu.itemSpacing
 
         Item {
             Layout.alignment: Qt.AlignHCenter
-            Layout.preferredWidth: Style.powerMenuIconSize
-            Layout.preferredHeight: Style.powerMenuIconSize
-            width: Style.powerMenuIconSize
-            height: Style.powerMenuIconSize
+            Layout.preferredWidth: StylePowerMenu.iconSize
+            Layout.preferredHeight: StylePowerMenu.iconSize
+            width: StylePowerMenu.iconSize
+            height: StylePowerMenu.iconSize
 
             IconImage {
                 id: iconSource
@@ -44,16 +44,16 @@ Rectangle {
             ColorOverlay {
                 anchors.fill: parent
                 source: iconSource
-                color: Style.powerMenuText
+                color: StylePowerMenu.text
             }
         }
 
         Text {
             Layout.alignment: Qt.AlignHCenter
             text: root.label
-            color: Style.powerMenuText
-            font.family: Style.fontSans
-            font.pixelSize: Style.powerMenuLabelSize
+            color: StylePowerMenu.text
+            font.family: StyleTokens.fontSans
+            font.pixelSize: StylePowerMenu.labelSize
             font.weight: Font.Normal
             horizontalAlignment: Text.AlignHCenter
             elide: Text.ElideRight

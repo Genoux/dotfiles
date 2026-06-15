@@ -56,13 +56,13 @@ Singleton {
     Timer {
         id: hideTimer
 
-        interval: Style.osdHideDelay
+        interval: StyleOsd.hideDelay
         repeat: false
         onTriggered: root.visible = false
     }
 
     Timer {
-        interval: Style.osdInitDelay
+        interval: StyleOsd.initDelay
         running: true
         repeat: false
         onTriggered: root.initializing = false

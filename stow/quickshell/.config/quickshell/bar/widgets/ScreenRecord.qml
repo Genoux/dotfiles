@@ -5,39 +5,33 @@ import qs.config
 import qs.components
 import qs.services
 
-Rectangle {
+Button {
     id: root
 
     readonly property bool recording: Privacy.screenrecord
-    readonly property bool expanded: hoverHandler.hovered && recording
-    readonly property color hoverContent: "#ffffff"
-    readonly property int edgePadding: 4
-    readonly property int iconGap: 2
-    readonly property int timerContentWidth: durationLabel.implicitWidth
-    readonly property int expandedContentWidth: Style.pillWidth + iconGap + timerContentWidth
-    readonly property int expandedWidth: edgePadding * 2 + expandedContentWidth
-    readonly property int expandedExtra: expandedWidth - Style.pillWidth
+    readonly property bool expanded: root.hovered && recording
+    readonly property color trailForeground: "#ffffff"
     readonly property color iconForeground: !recording
         ? Colors.base05
-        : mixColor(recordingColor, hoverContent, expandProgress)
+        : mixColor(recordingColor, trailForeground, trailReveal)
     readonly property color backgroundFill: !recording
-        ? (hoverHandler.hovered ? Style.alphaLight : Style.transparent)
-        : Qt.rgba(recordingColor.r, recordingColor.g, recordingColor.b, recordingColor.a * expandProgress)
+        ? (root.hovered ? StyleTokens.alphaLight : StyleTokens.transparent)
+        : Qt.rgba(recordingColor.r, recordingColor.g, recordingColor.b, recordingColor.a * trailReveal)
 
-    width: Style.pillWidth + expandProgress * expandedExtra
-    implicitWidth: width
-    implicitHeight: Style.pillHeight
-    radius: Style.radiusSm
-    clip: true
-    color: backgroundFill
+    iconName: "media-record-symbolic"
+    foreground: iconForeground
+    background: backgroundFill
+    interactive: true
+    animateColor: false
+    manageHoverColor: false
+    clipContent: true
+    trailGap: 2
+    trailWidth: durationLabel.implicitWidth
 
-    property real expandProgress: 0
-    property color recordingColor: Style.recording
+    property color recordingColor: StyleRecording.fill
     property int elapsedSeconds: 0
 
-    HoverHandler {
-        id: hoverHandler
-    }
+    onClicked: ShellActions.run(Privacy.screenrecord ? ["system-screenrecord"] : ["system-screenrecord", "region"])
 
     function mixColor(from, to, amount) {
         const t = Math.max(0, Math.min(1, amount))
@@ -74,7 +68,7 @@ Rectangle {
         elapsedSeconds = 0
         elapsedTimer.restart()
         pulseAnimation.stop()
-        recordingColor = Style.recording
+        recordingColor = StyleRecording.fill
         pulseAnimation.start()
 
         if (root.expanded)
@@ -85,64 +79,29 @@ Rectangle {
         elapsedSeconds = 0
         elapsedTimer.stop()
         pulseAnimation.stop()
-        recordingColor = Style.recording
+        recordingColor = StyleRecording.fill
         setExpanded(false)
     }
 
     onExpandedChanged: setExpanded(expanded)
 
-    Row {
-        id: contentRow
+    Text {
+        id: durationLabel
 
-        anchors.centerIn: parent
-        spacing: root.iconGap * root.expandProgress
-
-        IconButton {
-            id: recordButton
-
-            width: Style.pillWidth
-            height: Style.pillHeight
-            iconName: "media-record-symbolic"
-            iconSize: Style.iconSizeMd
-            foreground: root.iconForeground
-            background: Style.transparent
-            hoverBackground: Style.transparent
-            animateColor: false
-            interactive: false
-        }
-
-        Item {
-            id: durationReveal
-
-            height: parent.height
-            width: root.timerContentWidth * root.expandProgress
-            clip: true
-
-            Text {
-                id: durationLabel
-
-                anchors.verticalCenter: parent.verticalCenter
-                anchors.left: parent.left
-                text: root.formatElapsed(root.elapsedSeconds)
-                color: root.hoverContent
-                font.family: Style.fontMono
-                font.pixelSize: Style.fontSizeSm
-            }
-        }
-    }
-
-    MouseArea {
-        anchors.fill: parent
-        cursorShape: Qt.PointingHandCursor
-        onClicked: ShellActions.run(Privacy.screenrecord ? ["system-screenrecord"] : ["system-screenrecord", "region"])
+        anchors.verticalCenter: parent.verticalCenter
+        anchors.left: parent.left
+        text: root.formatElapsed(root.elapsedSeconds)
+        color: root.trailForeground
+        font.family: StyleTokens.fontMono
+        font.pixelSize: StyleTokens.fontSizeSm
     }
 
     NumberAnimation {
         id: expandAnimation
 
         target: root
-        property: "expandProgress"
-        duration: Style.mediaControlsRevealDuration
+        property: "trailReveal"
+        duration: StyleRecording.expandDuration
         easing.type: Easing.OutCubic
     }
 
@@ -153,16 +112,16 @@ Rectangle {
         ColorAnimation {
             target: root
             property: "recordingColor"
-            to: Style.recordingPulse
-            duration: Style.recordingPulseDuration
+            to: StyleRecording.pulse
+            duration: StyleRecording.pulseDuration
             easing.type: Easing.InOutSine
         }
 
         ColorAnimation {
             target: root
             property: "recordingColor"
-            to: Style.recording
-            duration: Style.recordingPulseDuration
+            to: StyleRecording.fill
+            duration: StyleRecording.pulseDuration
             easing.type: Easing.InOutSine
         }
     }

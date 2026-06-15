@@ -1,17 +1,13 @@
 import qs
-import QtQuick.Layouts
 import qs.config
 import qs.components
 import qs.services as Services
 
-Pill {
+Button {
     text: Services.Keyboard.layout
     foreground: Colors.base05
-    fontFamily: Style.fontSans
-    fontSize: Style.fontSizeSm
-    horizontalPadding: 0
-    implicitWidth: Style.pillWidth
-    Layout.fillWidth: false
+    fontFamily: StyleTokens.fontSans
+    fontSize: StyleTokens.fontSizeSm
     interactive: true
     onClicked: Services.Keyboard.switchLayout()
 }

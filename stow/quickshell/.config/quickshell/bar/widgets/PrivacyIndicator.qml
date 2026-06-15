@@ -4,29 +4,33 @@ import qs.components
 import qs.services
 
 Row {
-    id: root
-
     visible: Privacy.anyActive
     spacing: 2
 
-    PrivacyButton {
+    Button {
         visible: Privacy.webcam
         iconName: "camera-video-symbolic"
-        fillColor: Style.privacyWebcamFill
-        borderColor: Style.privacyWebcamBorder
+        background: StylePrivacy.webcamFill
+        hoverBackground: StylePrivacy.webcamFill
+        borderWidth: 1
+        borderColor: StylePrivacy.webcamBorder
     }
 
-    PrivacyButton {
+    Button {
         visible: Privacy.mic
         iconName: "mic-on"
-        fillColor: Style.privacyMicFill
-        borderColor: Style.privacyMicBorder
+        background: StylePrivacy.micFill
+        hoverBackground: StylePrivacy.micFill
+        borderWidth: 1
+        borderColor: StylePrivacy.micBorder
     }
 
-    PrivacyButton {
+    Button {
         visible: Privacy.screenrecord
         iconName: "video-display-symbolic"
-        fillColor: Style.privacyScreenFill
-        borderColor: Style.privacyScreenBorder
+        background: StylePrivacy.screenFill
+        hoverBackground: StylePrivacy.screenFill
+        borderWidth: 1
+        borderColor: StylePrivacy.screenBorder
     }
 }

@@ -513,6 +513,9 @@ config_link() {
                 systemctl --user daemon-reload 2>/dev/null || true
                 start_ags_service
                 ;;
+            "xdg-desktop-portal")
+                systemctl --user daemon-reload 2>/dev/null || true
+                ;;
         esac
     fi
 

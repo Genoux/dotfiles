@@ -1,4 +1,3 @@
-import Quickshell
 import Quickshell.Io
 import QtQuick
 import qs
@@ -10,15 +9,10 @@ Row {
     property bool enabled: true
     property bool active: false
 
-    readonly property int displayBars: Style.cavaDisplayBars
-    readonly property int analyzeBars: Style.cavaAnalyzeBars
-    readonly property int barWidth: Style.cavaBarWidth
-    readonly property int barHeight: Style.cavaBarHeight
-    readonly property int barSpacing: Style.cavaSpacing
     readonly property string cavaConfig: `
 [general]
-bars = ${analyzeBars}
-framerate = ${Style.cavaFramerate}
+bars = ${StyleCava.analyzeBars}
+framerate = ${StyleCava.framerate}
 
 [input]
 method = "pulse"
@@ -26,25 +20,23 @@ method = "pulse"
 [output]
 method = "raw"
 data_format = "ascii"
-ascii_max_range = ${Style.cavaAsciiMaxRange}
+ascii_max_range = ${StyleCava.asciiMaxRange}
 channels = mono
 mono_option = average
 
 [smoothing]
-monstercat = ${Style.cavaMonstercat ? 1 : 0}
-noise_reduction = ${Style.cavaNoiseReduction}
+monstercat = ${StyleCava.monstercat ? 1 : 0}
+noise_reduction = ${StyleCava.noiseReduction}
 `
 
-    spacing: barSpacing
-    height: barHeight
-    width: (displayBars * barWidth) + ((displayBars - 1) * barSpacing)
+    spacing: StyleCava.spacing
+    height: StyleCava.barHeight
+    width: StyleCava.visualWidth
 
     onActiveChanged: {
         if (!active)
             resetBars()
     }
-
-    onDisplayBarsChanged: rebuildBarsModel()
 
     Component.onCompleted: rebuildBarsModel()
 
@@ -66,11 +58,11 @@ noise_reduction = ${Style.cavaNoiseReduction}
                     return
 
                 const values = data.trim().split(";").map(Number).filter(v => !Number.isNaN(v))
-                if (values.length < root.analyzeBars)
+                if (values.length < StyleCava.analyzeBars)
                     return
 
-                const displayValues = root.mapToDisplay(values.slice(0, root.analyzeBars))
-                for (let i = 0; i < root.displayBars; i++)
+                const displayValues = root.mapToDisplay(values.slice(0, StyleCava.analyzeBars))
+                for (let i = 0; i < StyleCava.displayBars; i++)
                     barsModel.setProperty(i, "barValue", root.normalize(displayValues[i]))
             }
         }
@@ -82,28 +74,28 @@ noise_reduction = ${Style.cavaNoiseReduction}
         Item {
             required property real barValue
 
-            width: root.barWidth
-            height: root.barHeight
+            width: StyleCava.barWidth
+            height: StyleCava.barHeight
 
             Rectangle {
                 anchors.centerIn: parent
-                width: root.barWidth
-                height: Math.max(barValue, Style.cavaSilenceThreshold)
-                radius: Style.radiusMd
+                width: StyleCava.barWidth
+                height: Math.max(barValue, StyleCava.silenceThreshold)
+                radius: StyleTokens.radiusMd
                 color: Colors.base04
-                opacity: root.active ? 1 : Style.cavaInactiveOpacity
+                opacity: root.active ? 1 : StyleCava.inactiveOpacity
 
                 Behavior on height {
                     NumberAnimation {
-                        duration: Style.cavaAnimationDuration
-                        easing.type: Style.cavaEasingCurve(Style.cavaEasing)
+                        duration: StyleCava.animationDuration
+                        easing.type: Easing.OutCubic
                     }
                 }
 
                 Behavior on opacity {
                     NumberAnimation {
-                        duration: Style.easeDurationNormal
-                        easing.type: Style.cavaEasingCurve(Style.cavaEasing)
+                        duration: StyleTokens.easeDurationNormal
+                        easing.type: Easing.OutCubic
                     }
                 }
             }
@@ -113,7 +105,7 @@ noise_reduction = ${Style.cavaNoiseReduction}
     function rebuildBarsModel() {
         barsModel.clear()
 
-        for (let i = 0; i < displayBars; i++)
+        for (let i = 0; i < StyleCava.displayBars; i++)
             barsModel.append({ barValue: 0 })
     }
 
@@ -134,13 +126,13 @@ noise_reduction = ${Style.cavaNoiseReduction}
     }
 
     function mapToDisplay(values) {
-        if (displayBars === analyzeBars)
-            return values.slice(0, displayBars)
+        if (StyleCava.displayBars === StyleCava.analyzeBars)
+            return values.slice(0, StyleCava.displayBars)
 
-        const bucketSize = values.length / displayBars
+        const bucketSize = values.length / StyleCava.displayBars
         const mapped = []
 
-        for (let i = 0; i < displayBars; i++) {
+        for (let i = 0; i < StyleCava.displayBars; i++) {
             const start = Math.floor(i * bucketSize)
             const end = Math.floor((i + 1) * bucketSize)
             mapped.push(averageRange(values, start, end))
@@ -150,15 +142,15 @@ noise_reduction = ${Style.cavaNoiseReduction}
     }
 
     function normalize(value) {
-        if (value < Style.cavaSilenceThreshold)
+        if (value < StyleCava.silenceThreshold)
             return 0
 
-        const usableHeight = barHeight - Style.cavaSilenceThreshold
-        const level = Math.min(value / Style.cavaAsciiMaxRange, 1) * Style.cavaMaxFill
-        const barValue = Style.cavaSilenceThreshold + (level * usableHeight)
+        const usableHeight = StyleCava.barHeight - StyleCava.silenceThreshold
+        const level = Math.min(value / StyleCava.asciiMaxRange, 1) * StyleCava.maxFill
+        const barValue = StyleCava.silenceThreshold + (level * usableHeight)
 
-        if (barValue < Style.cavaSnapThreshold)
-            return Style.cavaSnapHeight
+        if (barValue < StyleCava.snapThreshold)
+            return StyleCava.snapHeight
 
         return barValue
     }

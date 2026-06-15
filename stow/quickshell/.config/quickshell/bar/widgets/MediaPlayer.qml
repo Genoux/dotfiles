@@ -20,14 +20,12 @@ BarGroup {
     property real scrollOffset: 0
 
     readonly property bool controlsExpanded: hoverHandler.hovered
-    readonly property int innerHeight: Style.mediaHeight - chromeInset * 2
 
     visible: player !== null && trackText.length > 0
-    implicitWidth: contentRow.implicitWidth + chromeInset * 2
 
     Behavior on color {
         ColorAnimation {
-            duration: Style.mediaControlsRevealDuration
+            duration: StyleMedia.controlsRevealDuration
             easing.type: Easing.OutCubic
         }
     }
@@ -39,36 +37,38 @@ BarGroup {
     Row {
         id: contentRow
 
-        anchors.fill: parent
+        height: StyleMedia.trackHeight
         spacing: root.controlsExpanded ? 3 : 0
 
         Rectangle {
             id: mediaInfo
 
-            readonly property real textLeftInset: 6 + Style.cavaVisualWidth + 4
-            readonly property real textRightInset: 6
+            readonly property real textLeftInset: StyleMedia.textLeftInset
+            readonly property real textRightInset: StyleMedia.textRightInset
+            readonly property real textViewportLeftMargin: textLeftInset + 2
+            readonly property real textViewportRightMargin: 6
             readonly property string scrollText: `${root.trackText} • `
-            readonly property real singleTextWidth: mediaMeasure.implicitWidth
-            readonly property real textViewportMaxWidth: Style.mediaInfoWidth - textLeftInset - textRightInset
+            readonly property real singleTextWidth: mediaMeasure.advanceWidth
+            readonly property real textViewportMaxWidth: StyleMedia.infoWidth - textLeftInset - textRightInset
             readonly property bool shouldScroll: singleTextWidth > textViewportMaxWidth
             readonly property real fittedWidth: textLeftInset + singleTextWidth + textRightInset
 
-            width: shouldScroll ? Style.mediaInfoWidth : fittedWidth
+            width: shouldScroll ? StyleMedia.infoWidth : fittedWidth
             implicitWidth: width
-            height: parent.height
-            radius: Style.radiusSm
-            color: root.controlsExpanded ? Style.alphaLight : Style.transparent
+            height: contentRow.height
+            radius: StyleTokens.radiusSm
+            color: root.controlsExpanded ? StyleTokens.alphaLight : StyleTokens.transparent
 
             Behavior on color {
                 ColorAnimation {
-                    duration: Style.mediaControlsRevealDuration
+                    duration: StyleMedia.controlsRevealDuration
                     easing.type: Easing.OutCubic
                 }
             }
 
             Behavior on width {
                 NumberAnimation {
-                    duration: Style.mediaControlsRevealDuration
+                    duration: StyleMedia.controlsRevealDuration
                     easing.type: Easing.OutCubic
                 }
             }
@@ -85,14 +85,14 @@ BarGroup {
                 id: textViewport
 
                 anchors.left: parent.left
-                anchors.leftMargin: mediaInfo.textLeftInset + 2
+                anchors.leftMargin: mediaInfo.textViewportLeftMargin
                 anchors.right: parent.right
-                anchors.rightMargin: 6
+                anchors.rightMargin: mediaInfo.textViewportRightMargin
                 anchors.verticalCenter: parent.verticalCenter
                 height: mediaLabel.implicitHeight
 
                 readonly property real edgeFade: Math.min(
-                    Style.mediaTextFadeWidth / Math.max(width, 1),
+                    StyleMedia.textFadeWidth / Math.max(width, 1),
                     0.2
                 )
 
@@ -113,8 +113,8 @@ BarGroup {
                         x: mediaInfo.shouldScroll ? -root.scrollOffset : 0
                         text: mediaInfo.shouldScroll ? mediaInfo.scrollText + mediaInfo.scrollText : root.trackText
                         color: Colors.base05
-                        font.family: Style.fontMono
-                        font.pixelSize: Style.fontSizeMedia
+                        font.family: StyleTokens.fontMono
+                        font.pixelSize: StyleTokens.fontSizeMedia
                     }
                 }
 
@@ -133,13 +133,12 @@ BarGroup {
                 }
             }
 
-            Text {
+            TextMetrics {
                 id: mediaMeasure
 
-                visible: false
                 text: root.trackText
-                font.family: Style.fontMono
-                font.pixelSize: Style.fontSizeMedia
+                font.family: StyleTokens.fontMono
+                font.pixelSize: StyleTokens.fontSizeMedia
             }
 
             MouseArea {
@@ -158,7 +157,7 @@ BarGroup {
                 repeat: true
                 onTriggered: {
                     const loopWidth = mediaLabel.implicitWidth / 2;
-                    root.scrollOffset = root.scrollOffset >= loopWidth ? 0 : root.scrollOffset + 0.20;
+                    root.scrollOffset = root.scrollOffset >= loopWidth ? 0 : root.scrollOffset + 0.35;
                 }
             }
 
@@ -169,13 +168,13 @@ BarGroup {
         Item {
             id: controlsReveal
 
-            height: parent.height
+            height: StyleMedia.trackHeight
             width: root.controlsExpanded ? controlsRow.implicitWidth : 0
             clip: true
 
             Behavior on width {
                 NumberAnimation {
-                    duration: Style.mediaControlsRevealDuration
+                    duration: StyleMedia.controlsRevealDuration
                     easing.type: Easing.OutCubic
                 }
             }
@@ -183,40 +182,34 @@ BarGroup {
             Row {
                 id: controlsRow
 
-                height: parent.height
+                height: StyleMedia.trackHeight
                 spacing: 0
                 opacity: root.controlsExpanded ? 1 : 0
 
                 Behavior on opacity {
                     NumberAnimation {
-                        duration: Style.mediaControlsRevealDuration
+                        duration: StyleMedia.controlsRevealDuration
                         easing.type: Easing.OutCubic
                     }
                 }
 
-                IconButton {
+                Button {
                     iconName: "media-skip-backward-symbolic"
-                    iconSize: Style.iconSizeSm
-                    implicitWidth: root.innerHeight
-                    implicitHeight: root.innerHeight
+                    iconSize: StyleControl.iconSizeSm
                     interactive: root.controlsExpanded && root.canGoPrevious
                     onClicked: root.previous()
                 }
 
-                IconButton {
+                Button {
                     iconName: player?.isPlaying ? "media-playback-pause-symbolic" : "media-playback-start-symbolic"
-                    iconSize: Style.iconSizeSm
-                    implicitWidth: root.innerHeight
-                    implicitHeight: root.innerHeight
+                    iconSize: StyleControl.iconSizeSm
                     interactive: root.controlsExpanded && root.canTogglePlayback
                     onClicked: root.togglePlayback()
                 }
 
-                IconButton {
+                Button {
                     iconName: "media-skip-forward-symbolic"
-                    iconSize: Style.iconSizeSm
-                    implicitWidth: root.innerHeight
-                    implicitHeight: root.innerHeight
+                    iconSize: StyleControl.iconSizeSm
                     interactive: root.controlsExpanded && root.canGoNext
                     onClicked: root.next()
                 }

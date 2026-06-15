@@ -32,12 +32,12 @@ Rectangle {
 
     property bool hovered: false
 
-    width: Style.notificationWidth
-    implicitHeight: content.implicitHeight + Style.notificationPadding * 2
-    radius: Style.radiusMd
-    color: Style.notificationSurface
+    width: StyleNotification.width
+    implicitHeight: content.implicitHeight + StyleNotification.padding * 2
+    radius: StyleTokens.radiusMd
+    color: StyleNotification.surface
     border.width: 1
-    border.color: Style.notificationBorder
+    border.color: StyleNotification.border
 
     Timer {
         id: expireTimer
@@ -78,13 +78,13 @@ Rectangle {
         id: content
 
         anchors.fill: parent
-        anchors.margins: Style.notificationPadding
+        anchors.margins: StyleNotification.padding
         spacing: 10
 
         Item {
             Layout.alignment: Qt.AlignTop
-            Layout.preferredWidth: Style.notificationIconSize
-            Layout.preferredHeight: Style.notificationIconSize
+            Layout.preferredWidth: StyleNotification.iconSize
+            Layout.preferredHeight: StyleNotification.iconSize
             clip: true
 
             // Clipboard screenshot thumbnail (fills icon slot)
@@ -93,7 +93,7 @@ Rectangle {
                 visible: root.hasClipboardImage
                 source: root.clipboardImagePath.length > 0 ? `file://${root.clipboardImagePath}` : ""
                 fillMode: Image.PreserveAspectCrop
-                sourceSize: Qt.size(Style.notificationIconSize * 2, Style.notificationIconSize * 2)
+                sourceSize: Qt.size(StyleNotification.iconSize * 2, StyleNotification.iconSize * 2)
             }
 
             // Regular notification image
@@ -103,15 +103,15 @@ Rectangle {
                 visible: !root.hasClipboardImage && root.hasImage
                 source: root.notification?.image ?? ""
                 fillMode: Image.PreserveAspectCrop
-                sourceSize: Qt.size(Style.notificationIconSize, Style.notificationIconSize)
+                sourceSize: Qt.size(StyleNotification.iconSize, StyleNotification.iconSize)
             }
 
             IconImage {
                 anchors.centerIn: parent
                 visible: !root.hasClipboardImage && !root.hasImage
-                width: Style.iconSizeMd
-                height: Style.iconSizeMd
-                implicitSize: Style.iconSizeMd
+                width: StyleControl.iconSizeMd
+                height: StyleControl.iconSizeMd
+                implicitSize: StyleControl.iconSizeMd
                 source: Quickshell.iconPath(root.iconName, "dialog-information-symbolic")
             }
         }
@@ -125,8 +125,8 @@ Rectangle {
                 visible: root.summary.length > 0
                 text: root.summary
                 color: Colors.base05
-                font.family: Style.fontSans
-                font.pixelSize: Style.fontSizeSm
+                font.family: StyleTokens.fontSans
+                font.pixelSize: StyleTokens.fontSizeSm
                 font.weight: Font.DemiBold
                 elide: Text.ElideRight
             }
@@ -136,8 +136,8 @@ Rectangle {
                 visible: root.body.length > 0
                 text: root.body
                 color: Colors.base05
-                font.family: Style.fontSans
-                font.pixelSize: Style.fontSizeSm
+                font.family: StyleTokens.fontSans
+                font.pixelSize: StyleTokens.fontSizeSm
                 textFormat: Text.PlainText
                 wrapMode: Text.WordWrap
                 maximumLineCount: 4
@@ -173,7 +173,7 @@ Rectangle {
         if (requestedTimeout > 0)
             return Math.max(1200, requestedTimeout * 1000)
 
-        return Style.notificationTimeout
+        return StyleNotification.timeout
     }
 
     function startExpireTimer() {

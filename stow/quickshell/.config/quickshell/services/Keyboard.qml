@@ -67,7 +67,7 @@ Singleton {
     }
 
     Timer {
-        interval: Style.pollIntervalFast
+        interval: StyleTokens.pollIntervalFast
         running: root.keyboardName.length === 0
         repeat: true
         onTriggered: root.refresh()

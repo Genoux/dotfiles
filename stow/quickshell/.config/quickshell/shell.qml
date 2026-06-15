@@ -37,7 +37,7 @@ ShellRoot {
     Variants {
         model: Quickshell.screens
 
-        OverlayBackdrop {
+        Backdrop {
             required property var modelData
 
             screen: modelData
@@ -77,7 +77,7 @@ ShellRoot {
     Variants {
         model: Quickshell.screens
 
-        OverlayBackdrop {
+        Backdrop {
             required property var modelData
 
             screen: modelData
