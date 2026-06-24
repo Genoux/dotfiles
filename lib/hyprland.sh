@@ -103,6 +103,29 @@ get_monitor_best_mode() {
     echo "$best_resolution@$max_refresh"
 }
 
+# Get the EDID description for a monitor (stable across reboots, unlike the connector name)
+get_monitor_description() {
+    local monitor_name="$1"
+
+    if ! command -v hyprctl &>/dev/null || ! hyprctl monitors all &>/dev/null 2>&1; then
+        return
+    fi
+
+    local hypr_output=$(hyprctl monitors all 2>/dev/null)
+    local in_monitor_section=false
+
+    while IFS= read -r line; do
+        if [[ $line =~ ^Monitor\ $monitor_name\ \(ID ]]; then
+            in_monitor_section=true
+        elif [[ $line =~ ^Monitor\ [^[:space:]]+\ \(ID ]] && [[ $in_monitor_section == true ]]; then
+            in_monitor_section=false
+        elif [[ $in_monitor_section == true && $line =~ ^[[:space:]]*description: ]]; then
+            echo "${line#*description: }"
+            return
+        fi
+    done <<< "$hypr_output"
+}
+
 # Detect connected monitors
 detect_monitors() {
     if ! command -v hyprctl &>/dev/null || ! hyprctl monitors &>/dev/null 2>&1; then
@@ -115,7 +138,8 @@ detect_monitors() {
         if [[ $line =~ ^Monitor\ ([^[:space:]]+)\ \(ID ]]; then
             local monitor_name="${BASH_REMATCH[1]}"
             local best_mode=$(get_monitor_best_mode "$monitor_name")
-            monitors+=("$monitor_name:$best_mode")
+            local description=$(get_monitor_description "$monitor_name")
+            monitors+=("$monitor_name|$best_mode|$description")
         fi
     done <<< "$(hyprctl monitors 2>/dev/null)"
     
@@ -142,7 +166,7 @@ generate_monitor_config() {
     local external_monitors=()
     
     for info in "${monitors[@]}"; do
-        local monitor_name=$(echo "$info" | cut -d':' -f1)
+        local monitor_name=$(echo "$info" | cut -d'|' -f1)
         if [[ "$monitor_name" =~ ^(eDP|LVDS|DSI) ]]; then
             builtin_monitors+=("$info")
         else
@@ -152,14 +176,17 @@ generate_monitor_config() {
     
     # Configure built-in monitors first
     for info in "${builtin_monitors[@]}"; do
-        local monitor_name=$(echo "$info" | cut -d':' -f1)
-        local mode_info=$(echo "$info" | cut -d':' -f2)
+        local monitor_name=$(echo "$info" | cut -d'|' -f1)
+        local mode_info=$(echo "$info" | cut -d'|' -f2)
+        local description=$(echo "$info" | cut -d'|' -f3)
         local resolution=$(echo "$mode_info" | cut -d'@' -f1)
         local refresh_rate=$(echo "$mode_info" | cut -d'@' -f2)
-        
+        local output_id="$monitor_name"
+        [[ -n "$description" ]] && output_id="desc:$description"
+
         cat << EOF
 hl.monitor({
-  output = "$monitor_name",
+  output = "$output_id",
   mode = "$resolution@$refresh_rate",
   position = "${x_offset}x0",
   scale = $laptop_scale,
@@ -176,14 +203,17 @@ EOF
     [[ "$device_type" == "laptop" ]] && ext_scale="$laptop_scale"
     
     for info in "${external_monitors[@]}"; do
-        local monitor_name=$(echo "$info" | cut -d':' -f1)
-        local mode_info=$(echo "$info" | cut -d':' -f2)
+        local monitor_name=$(echo "$info" | cut -d'|' -f1)
+        local mode_info=$(echo "$info" | cut -d'|' -f2)
+        local description=$(echo "$info" | cut -d'|' -f3)
         local resolution=$(echo "$mode_info" | cut -d'@' -f1)
         local refresh_rate=$(echo "$mode_info" | cut -d'@' -f2)
-        
+        local output_id="$monitor_name"
+        [[ -n "$description" ]] && output_id="desc:$description"
+
         cat << EOF
 hl.monitor({
-  output = "$monitor_name",
+  output = "$output_id",
   mode = "$resolution@$refresh_rate",
   position = "${x_offset}x0",
   scale = $ext_scale,
