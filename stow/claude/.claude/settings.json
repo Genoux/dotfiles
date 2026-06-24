@@ -50,7 +50,30 @@
       "Bash(rg --files -g '*.ts' -g '*.tsx' -g '*.sql')",
       "Read(//home/john/.claude/plans/**)",
       "Bash(sh -c 'printf \"%s\" \"$CAVA_CONFIG\" | timeout 3 cava -p /dev/stdin')",
-      "Bash(sh -c 'printf \"%s\" \"$CAVA_CONFIG\" | timeout 4 cava -p /dev/stdin')"
+      "Bash(sh -c 'printf \"%s\" \"$CAVA_CONFIG\" | timeout 4 cava -p /dev/stdin')",
+      "Bash(grep -v \"from.*@/features/$\\(echo {})",
+      "Bash(awk -F: '{file=$1; rest=$0} {match\\(file, /features\\\\/\\([^\\\\/]+\\)\\\\//, arr\\); srcFeature=arr[1]; match\\(rest, /@\\\\/features\\\\/\\([^\\\\/]+\\)\\\\//, arr2\\); destFeature=arr2[1]; if \\(srcFeature != destFeature\\) print file \":\" $2 \": \" srcFeature \" -> \" destFeature}')",
+      "Bash(sed -n '185,195p' /home/john/Desktop/@inbeat/proof-agent/src/features/sessions/components/session-list-item.tsx)",
+      "Bash(sed -n '168,175p' /home/john/Desktop/@inbeat/proof-agent/src/features/clients/components/_components/sst-rule-list.tsx)",
+      "Bash(sed -n '275,282p' /home/john/Desktop/@inbeat/proof-agent/src/features/clients/components/_components/sst-custom-rules-list.tsx)",
+      "Bash(sed -n '166,173p' /home/john/Desktop/@inbeat/proof-agent/src/features/clients/components/_components/sst-disclaimer-list.tsx)",
+      "Bash(sd 'features/clients/components/_components/client-settings-pages' 'features/clients/lib/client-settings-pages' src/features/settings/components/settings-view.tsx src/features/settings/lib/settings-routes.ts src/features/clients/components/_components/sst-page-content.tsx src/features/clients/components/_components/product-overview-panel.tsx src/features/clients/components/client-detail-panel.tsx src/features/clients/components/_components/client-overview-panel.tsx)",
+      "Bash(bun run *)",
+      "Bash(bunx tsc *)",
+      "Bash(bunx vitest *)",
+      "Bash(perl -i -pe 's{@/features/clients/lib/sst-merge}{@/shared/lib/sst-merge}g' src/features/sessions/server/workflow-run-submit-helpers.ts)",
+      "Bash(mkdir -p sst products)",
+      "Bash(mv sst-page-content.tsx sst-rule-list.tsx sst-disclaimer-list.tsx sst-custom-rules-list.tsx sst-list-item-row.tsx sst/)",
+      "Bash(mv products-section.tsx product-overview-panel.tsx product-general-content.tsx products/)",
+      "Bash(rm src/app/settings/\\\\[...path\\\\]/page.tsx)",
+      "Bash(rmdir 'src/app/settings/[...path]')",
+      "Bash(bun remove *)",
+      "Bash(rg -ln 'markdown|MarkdownDialog|MarkdownPreview' /home/john/Desktop/@inbeat/proof-agent/src -g '*.{ts,tsx}')",
+      "Bash(bat -p /home/john/Desktop/@inbeat/proof-agent/src/db/schema/check-results.ts /home/john/Desktop/@inbeat/proof-agent/src/db/schema/check-feedback.ts)",
+      "Bash(bat -p /home/john/Desktop/@inbeat/proof-agent/src/db/schema/workflow-runs.ts)",
+      "Bash(rg -ln 'checkResults|check_results|\"check_results\"' /home/john/Desktop/@inbeat/proof-agent/src -g '*.{ts,tsx}')",
+      "Bash(rg -n 'WorkflowCheckFeedbackDbRow|workflowCheckIdEnum' /home/john/Desktop/@inbeat/proof-agent/src -g '*.{ts,tsx}')",
+      "Bash(bun test *)"
     ],
     "deny": [
       "Bash(rm -rf /)",
@@ -80,7 +103,7 @@
     ],
     "defaultMode": "bypassPermissions"
   },
-  "model": "claude-sonnet-4-5",
+  "model": "opus[1m]",
   "enableAllProjectMcpServers": true,
   "hooks": {
     "UserPromptSubmit": [
