@@ -10,9 +10,12 @@ fi
 # Source package library
 source "$DOTFILES_DIR/lib/package.sh"
 
-# Setup hardware-specific packages FIRST (GPU drivers, CPU microcode)
-# This detects hardware and generates package lists before installation
-hardware_packages_setup
+# Hardware packages should already be detected in hardware_detect phase
+# Just verify and install if needed
+if [[ ! -d "$DOTFILES_DIR/packages/hardware" ]] || [[ -z "$(ls -A "$DOTFILES_DIR/packages/hardware" 2>/dev/null)" ]]; then
+    log_warning "Hardware packages not detected, running detection now..."
+    hardware_packages_setup
+fi
 
 # Install packages (now includes hardware packages)
 packages_install

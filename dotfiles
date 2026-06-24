@@ -35,6 +35,13 @@ show_usage() {
     echo
     echo "  status               Show system state"
     echo "  install              Run full installation"
+    echo "  verify               Verify installation completeness"
+    echo "  recovery             Recovery mode commands"
+    echo "    status                 Show recovery status (default)"
+    echo "    fallback               Enable fallback shell (waybar)"
+    echo "    restore                Restore normal configuration"
+    echo "    auto                   Auto-detect and fix issues"
+    echo "    emergency              Launch emergency minimal shell"
     echo
     echo "  packages             Manage packages"
     echo "    manage                 Interactive package management (default)"
@@ -236,6 +243,21 @@ main() {
         install)
             clear
             exec bash "$DOTFILES_DIR/install.sh"
+            ;;
+        verify)
+            source "$DOTFILES_DIR/lib/package/verify.sh"
+            run_full_verification
+            ;;
+        recovery)
+            source "$DOTFILES_DIR/lib/recovery.sh"
+            case "$subcommand" in
+                status|"") show_recovery_status ;;
+                fallback) enable_fallback_shell ;;
+                restore) restore_quickshell ;;
+                auto) auto_recover ;;
+                emergency) emergency_shell ;;
+                *) log_error "Unknown recovery command: $subcommand"; exit 1 ;;
+            esac
             ;;
         packages|pkg)
             source "$DOTFILES_DIR/lib/package.sh"

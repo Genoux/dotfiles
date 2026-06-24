@@ -148,5 +148,6 @@
   },
   "outputStyle": "Gentleman",
   "effortLevel": "medium",
-  "skipDangerousModePermissionPrompt": true
+  "skipDangerousModePermissionPrompt": true,
+  "theme": "auto"
 }
