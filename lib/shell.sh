@@ -128,14 +128,14 @@ install_plugins() {
 
         if is_plugin_installed "$plugin_name"; then
             echo "[$(date '+%Y-%m-%d %H:%M:%S')] $plugin_name already installed" >> "$DOTFILES_LOG_FILE"
-            ((skipped++))
+            skipped=$((skipped + 1))
             continue
         fi
 
         if run_command_logged "Install plugin: $plugin_name" git clone --depth=1 "$plugin_url" "$plugin_dir"; then
-            ((installed++))
+            installed=$((installed + 1))
         else
-            ((failed++))
+            failed=$((failed + 1))
         fi
     done < "$PLUGINS_FILE"
 

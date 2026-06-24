@@ -201,13 +201,13 @@ auto_recover() {
 
     # Check quickshell
     if ! check_quickshell; then
-        ((issues_found++))
+        issues_found=$((issues_found + 1))
         log_warning "QuickShell not working properly"
 
         if command -v waybar &>/dev/null; then
             log_info "Enabling fallback shell..."
             if enable_fallback_shell; then
-                ((fixes_applied++))
+                fixes_applied=$((fixes_applied + 1))
             fi
         else
             log_error "No fallback shell available"
@@ -223,7 +223,7 @@ auto_recover() {
     done
 
     if [[ ${#missing_critical[@]} -gt 0 ]]; then
-        ((issues_found++))
+        issues_found=$((issues_found + 1))
         log_warning "Missing critical packages: ${missing_critical[*]}"
         log_info "Run: dotfiles install --resume"
     fi
@@ -237,7 +237,7 @@ auto_recover() {
     done
 
     if [[ ${#missing_configs[@]} -gt 0 ]]; then
-        ((issues_found++))
+        issues_found=$((issues_found + 1))
         log_warning "Missing configs: ${missing_configs[*]}"
         log_info "Run: dotfiles config link"
     fi

@@ -331,7 +331,7 @@ hyprland_status() {
             current_res="${BASH_REMATCH[1]}"
             current_refresh=$(printf "%.0f" "${BASH_REMATCH[2]}")
             echo "$(status_info) $current_monitor $(gum style --foreground 8 "$current_res @ ${current_refresh}Hz")"
-            ((monitor_count++))
+            monitor_count=$((monitor_count + 1))
         fi
     done < <(hyprctl monitors 2>/dev/null)
 
@@ -354,10 +354,10 @@ hyprland_status() {
             for plugin_name in "${!HYPRLAND_PLUGINS[@]}"; do
                 if is_plugin_enabled "$plugin_name"; then
                     echo "$(status_ok) $plugin_name"
-                    ((enabled_count++))
+                    enabled_count=$((enabled_count + 1))
                 else
                     echo "$(status_warning) $plugin_name (not enabled)"
-                    ((missing_count++))
+                    missing_count=$((missing_count + 1))
                 fi
             done
             echo

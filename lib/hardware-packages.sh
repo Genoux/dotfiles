@@ -405,7 +405,7 @@ _show_gpu_packages() {
             printf "  ✓ %s\n" "$pkg"
         else
             printf "  ✗ %s (missing)\n" "$pkg"
-            ((missing++))
+            missing=$((missing + 1))
         fi
     done
 

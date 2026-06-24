@@ -202,7 +202,7 @@ setup_hyprland_plugins() {
         for installed_plugin in "${installed_plugins[@]}"; do
             if [[ -z "${HYPRLAND_PLUGINS[$installed_plugin]:-}" ]] && is_plugin_enabled "$installed_plugin"; then
                 if hyprpm disable "$installed_plugin" 2>/dev/null; then
-                    ((disabled_count++))
+                    disabled_count=$((disabled_count + 1))
                 else
                     log_warning "Failed to disable orphaned plugin: $installed_plugin"
                 fi
@@ -228,20 +228,20 @@ setup_hyprland_plugins() {
 
             if is_plugin_enabled "$plugin_name"; then
                 log_info "Plugin already enabled: $plugin_name (will update)"
-                ((installed_count++))
+                installed_count=$((installed_count + 1))
             elif is_plugin_installed "$plugin_name"; then
                 log_info "Plugin installed but disabled: $plugin_name (enabling and updating)"
                 if hyprpm enable "$plugin_name" 2>/dev/null; then
-                    ((installed_count++))
+                    installed_count=$((installed_count + 1))
                 else
                     log_warning "Failed to enable plugin: $plugin_name"
-                    ((failed_count++))
+                    failed_count=$((failed_count + 1))
                 fi
             else
                 if install_plugin "$plugin_name" "$plugin_url"; then
-                    ((installed_count++))
+                    installed_count=$((installed_count + 1))
                 else
-                    ((failed_count++))
+                    failed_count=$((failed_count + 1))
                 fi
             fi
         done

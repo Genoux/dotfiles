@@ -20,9 +20,9 @@ packages_status() {
                     [[ -z "$line" ]] && continue
                     local pkg_name=$(echo "$line" | awk '{print $1}')
                     if pacman -Qm "$pkg_name" &>/dev/null; then
-                        ((aur_count++))
+                        aur_count=$((aur_count + 1))
                     else
-                        ((official_count++))
+                        official_count=$((official_count + 1))
                     fi
                 done <<< "$outdated_packages"
 
@@ -61,11 +61,11 @@ packages_status() {
     local installed_aur=0
     for pkg in "${official_packages[@]}"; do
         [[ -z "$pkg" ]] && continue
-        [[ -v installed_packages["$pkg"] ]] && ((installed_official++))
+        [[ -v installed_packages["$pkg"] ]] && installed_official=$((installed_official + 1))
     done
     for pkg in "${aur_packages[@]}"; do
         [[ -z "$pkg" ]] && continue
-        [[ -v installed_packages["$pkg"] ]] && ((installed_aur++))
+        [[ -v installed_packages["$pkg"] ]] && installed_aur=$((installed_aur + 1))
     done
 
     # Find missing packages (in dotfiles but not installed)
@@ -73,11 +73,11 @@ packages_status() {
     local missing_aur=0
     for pkg in "${official_packages[@]}"; do
         [[ -z "$pkg" ]] && continue
-        [[ ! -v installed_packages["$pkg"] ]] && ((missing_official++))
+        [[ ! -v installed_packages["$pkg"] ]] && missing_official=$((missing_official + 1))
     done
     for pkg in "${aur_packages[@]}"; do
         [[ -z "$pkg" ]] && continue
-        [[ ! -v installed_packages["$pkg"] ]] && ((missing_aur++))
+        [[ ! -v installed_packages["$pkg"] ]] && missing_aur=$((missing_aur + 1))
     done
 
     # Count updates available
@@ -90,9 +90,9 @@ packages_status() {
                 [[ -z "$line" ]] && continue
                 local pkg_name=$(echo "$line" | awk '{print $1}')
                 if pacman -Qm "$pkg_name" &>/dev/null; then
-                    ((updates_aur++))
+                    updates_aur=$((updates_aur + 1))
                 else
-                    ((updates_official++))
+                    updates_official=$((updates_official + 1))
                 fi
             done <<< "$outdated_packages"
         fi
@@ -107,7 +107,7 @@ packages_status() {
     local orphaned_count=0
     while IFS= read -r pkg_name; do
         [[ -z "$pkg_name" ]] && continue
-        [[ ! -v tracked_packages["$pkg_name"] ]] && ((orphaned_count++))
+        [[ ! -v tracked_packages["$pkg_name"] ]] && orphaned_count=$((orphaned_count + 1))
     done < <(pacman -Qeq 2>/dev/null)
 
     # Display summary

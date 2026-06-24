@@ -194,11 +194,11 @@ config_manage_interactive() {
 
         if $is_selected; then
             if ! is_config_linked "$config"; then
-                ((will_link++))
+                will_link=$((will_link + 1))
             fi
         else
             if is_config_linked "$config"; then
-                ((will_unlink++))
+                will_unlink=$((will_unlink + 1))
             fi
         fi
     done
@@ -259,7 +259,7 @@ config_manage_interactive() {
         echo
         for config in "${to_link[@]}"; do
             config_link "$config"
-            ((changes++))
+            changes=$((changes + 1))
         done
         echo
     fi
@@ -269,7 +269,7 @@ config_manage_interactive() {
         echo
         for config in "${to_unlink[@]}"; do
             config_unlink "$config"
-            ((changes++))
+            changes=$((changes + 1))
         done
         echo
     fi
@@ -641,7 +641,7 @@ config_link_all() {
 
     for config in "${configs[@]}"; do
         if ! config_link "$config" "$force"; then
-            ((failed++))
+            failed=$((failed + 1))
         fi
     done
 
@@ -673,7 +673,7 @@ config_unlink_all() {
     
     for config in "${configs[@]}"; do
         if ! config_unlink "$config"; then
-            ((failed++))
+            failed=$((failed + 1))
         fi
     done
     
@@ -770,10 +770,10 @@ config_status() {
         if $is_broken; then
             echo "$(status_error) $config$(gum style --foreground 8 " (broken symlink)")"
             broken_configs+=("$config")
-            ((broken_count++))
+            broken_count=$((broken_count + 1))
         elif $is_linked; then
             echo "$(status_ok) $config$(gum style --foreground 8 " (linked)")"
-            ((linked_count++))
+            linked_count=$((linked_count + 1))
         else
             echo "$(status_neutral) $config (not linked)"
         fi
@@ -839,7 +839,7 @@ config_menu() {
         local configs=($(get_configs))
         local linked_count=0
         for config in "${configs[@]}"; do
-            is_config_linked "$config" && ((linked_count++))
+            is_config_linked "$config" && linked_count=$((linked_count + 1))
         done
         show_quick_summary "Status" "$linked_count/${#configs[@]} linked"
 

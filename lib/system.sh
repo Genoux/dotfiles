@@ -68,7 +68,7 @@ system_show_summary() {
     for script in "$DOTFILES_DIR/install/system"/*.sh; do
         [[ ! -f "$script" ]] && continue
         [[ "$(basename "$script")" == "setup.sh" ]] && continue
-        ((total_count++))
+        total_count=$((total_count + 1))
     done
 
     for script in "$DOTFILES_DIR/install/system"/*.sh; do
@@ -77,11 +77,11 @@ system_show_summary() {
 
         if rg -q "^check_config_status\(\)" "$script" 2>/dev/null; then
             if (source "$script" 2>/dev/null && check_config_status 2>/dev/null); then
-                ((applied_count++))
+                applied_count=$((applied_count + 1))
             fi
         else
             # If no status check defined, assume applied (can't verify)
-            ((applied_count++))
+            applied_count=$((applied_count + 1))
         fi
     done
 

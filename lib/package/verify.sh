@@ -116,19 +116,19 @@ run_full_verification() {
 
     # Verify critical packages
     if ! verify_critical_packages; then
-        ((failed++))
+        failed=$((failed + 1))
     fi
     echo
 
     # Verify config links
     if ! verify_config_links; then
-        ((failed++))
+        failed=$((failed + 1))
     fi
     echo
 
     # Verify theme setup
     if ! verify_theme_setup; then
-        ((failed++))
+        failed=$((failed + 1))
     fi
     echo
 

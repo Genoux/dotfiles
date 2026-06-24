@@ -345,7 +345,7 @@ main() {
                     local i=1
                     for theme in "${themes[@]}"; do
                         echo "  $i) $theme"
-                        ((i++))
+                        i=$((i + 1))
                     done
                     echo
                     read -p "Choice (1-${#themes[@]}, or Enter to cancel): " choice

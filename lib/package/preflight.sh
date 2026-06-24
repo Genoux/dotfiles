@@ -44,18 +44,18 @@ check_package_files() {
 
     if [[ ! -f "$PACKAGES_FILE" ]]; then
         log_error "Missing: packages/arch.package"
-        ((errors++))
+        errors=$((errors + 1))
     elif [[ ! -r "$PACKAGES_FILE" ]]; then
         log_error "Cannot read: packages/arch.package"
-        ((errors++))
+        errors=$((errors + 1))
     fi
 
     if [[ ! -f "$AUR_PACKAGES_FILE" ]]; then
         log_error "Missing: packages/aur.package"
-        ((errors++))
+        errors=$((errors + 1))
     elif [[ ! -r "$AUR_PACKAGES_FILE" ]]; then
         log_error "Cannot read: packages/aur.package"
-        ((errors++))
+        errors=$((errors + 1))
     fi
 
     # Check for syntax errors (invalid package names)
@@ -70,7 +70,7 @@ check_package_files() {
     if [[ ${#invalid_packages[@]} -gt 0 ]]; then
         log_error "Invalid package names in arch.package:"
         printf '  ✗ %s\n' "${invalid_packages[@]}"
-        ((errors++))
+        errors=$((errors + 1))
     fi
 
     if [[ $errors -gt 0 ]]; then
@@ -158,22 +158,22 @@ run_preflight_checks() {
 
     local failed=0
 
-    check_network || ((failed++))
+    check_network || failed=$((failed + 1))
     echo
 
-    check_disk_space || ((failed++))
+    check_disk_space || failed=$((failed + 1))
     echo
 
-    check_package_files || ((failed++))
+    check_package_files || failed=$((failed + 1))
     echo
 
-    check_yay || ((failed++))
+    check_yay || failed=$((failed + 1))
     echo
 
-    check_pacman_db || ((failed++))
+    check_pacman_db || failed=$((failed + 1))
     echo
 
-    check_conflicts || ((failed++))
+    check_conflicts || failed=$((failed + 1))
     echo
 
     if [[ $failed -gt 0 ]]; then

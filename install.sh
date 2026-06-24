@@ -124,8 +124,8 @@ else
     atomic_begin
 fi
 
-# Setup atomic rollback on error
-trap 'atomic_rollback; exit 1' ERR
+# Setup atomic rollback on error (log the failing command/line first, then roll back)
+trap 'handle_error ${LINENO} "$BASH_COMMAND"; atomic_rollback; exit 1' ERR
 
 # Check prerequisites
 check_prerequisites
