@@ -249,7 +249,11 @@ hyprland_setup() {
     echo
     log_info "Detecting monitors..."
     
-    local monitors=($(detect_monitors))
+    # Read line-by-line: each entry is "name|mode|description" and the EDID
+    # description contains spaces (e.g. "Lenovo Group Limited 0x889A"), which an
+    # unquoted $() split into bogus extra monitors.
+    local monitors=()
+    mapfile -t monitors < <(detect_monitors)
     
     # Ensure directory exists
     ensure_directory "$(dirname "$MONITORS_LUA")"
