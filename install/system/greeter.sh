@@ -39,6 +39,12 @@ if [[ -f "$DOTFILES_DIR/system/greetd/preferences.json" ]]; then
     log_success "Greeter preferences deployed"
 fi
 
+# Deploy greeter Hyprland config (watchdog warning suppression + sysc-greet autostart)
+if [[ -f "$DOTFILES_DIR/system/greetd/hyprland-greeter-config.conf" ]]; then
+    sudo cp "$DOTFILES_DIR/system/greetd/hyprland-greeter-config.conf" /etc/greetd/hyprland-greeter-config.conf 2>/dev/null
+    log_success "Greeter Hyprland config deployed"
+fi
+
 # Copy wallpapers if user has any
 if [[ -d "$HOME/.config/hypr/wallpapers" ]]; then
     sudo find "$HOME/.config/hypr/wallpapers" -type f \( -name "*.png" -o -name "*.jpg" -o -name "*.jpeg" \) \
