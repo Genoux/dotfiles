@@ -40,8 +40,12 @@ packages_install() {
     read_official_install_packages packages
     read_aur_install_packages aur_packages
 
-    if ! run_command_logged "Sync package databases" sudo pacman -Sy --noconfirm; then
-        log_error "Failed to sync package databases"
+    # Full sync + upgrade, not just -Sy: 'pacman -S --needed' never upgrades
+    # already-installed packages, so on a populated machine an old package (e.g.
+    # quickshell) would stay behind the version the configs expect. -Syu keeps
+    # the system current and avoids partial-upgrade breakage.
+    if ! run_command_logged "Sync and upgrade system" sudo pacman -Syu --noconfirm; then
+        log_error "Failed to sync/upgrade packages"
         return 1
     fi
 

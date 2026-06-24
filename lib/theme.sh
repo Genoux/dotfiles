@@ -85,6 +85,22 @@ matugen_generate_from_wallpaper() {
         return 1
     fi
 
+    # On a fresh machine there is no current wallpaper yet, so seed one from the
+    # shipped saves/ — otherwise themes (kitty, starship, btop, ...) never get
+    # generated on install.
+    if [[ ! -f "$wallpaper" ]]; then
+        local seed
+        seed=$(find "$HOME/.config/hypr/wallpapers/saves" -maxdepth 1 -xtype f \
+            \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \) \
+            2>/dev/null | sort | head -1)
+        if [[ -n "$seed" ]]; then
+            mkdir -p "$(dirname "$CURRENT_WALLPAPER")"
+            cp "$seed" "$CURRENT_WALLPAPER"
+            wallpaper="$CURRENT_WALLPAPER"
+            log_info "Seeded initial wallpaper from saves: $(basename "$seed")"
+        fi
+    fi
+
     if [[ ! -f "$wallpaper" ]]; then
         log_warning "No wallpaper at ${wallpaper/#$HOME/~} — skipping matugen"
         return 1
