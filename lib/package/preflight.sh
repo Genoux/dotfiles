@@ -23,7 +23,10 @@ check_network() {
 check_disk_space() {
     log_info "Checking disk space..."
 
-    local required_mb=5000  # 5GB minimum
+    # 2GB floor. A from-scratch install wants more headroom, but on an already
+    # populated machine (re-sync) the real need is small, and a tight root can't
+    # spare 5GB. Override with DOTFILES_MIN_DISK_MB for a true fresh install.
+    local required_mb="${DOTFILES_MIN_DISK_MB:-2000}"
     local cache_dir="/var/cache/pacman/pkg"
     local available_mb
     available_mb=$(df "$cache_dir" --output=avail -BM | tail -1 | tr -dc '0-9')
