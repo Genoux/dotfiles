@@ -19,16 +19,29 @@ check_network() {
     return 0
 }
 
-# Check disk space
+# Check disk space (auto-reclaims the package cache when low before failing)
 check_disk_space() {
     log_info "Checking disk space..."
 
     local required_mb=5000  # 5GB minimum
-    local available_mb=$(df /var/cache/pacman/pkg --output=avail -BM | tail -1 | sed 's/M//')
+    local cache_dir="/var/cache/pacman/pkg"
+    local available_mb
+    available_mb=$(df "$cache_dir" --output=avail -BM | tail -1 | tr -dc '0-9')
 
-    if [[ $available_mb -lt $required_mb ]]; then
+    # A clean install re-downloads packages into the pacman cache, which sits on
+    # root. On a tight root that cache is the difference between pass and fail, so
+    # reclaim it automatically and re-check before giving up. Cached .pkg files are
+    # just downloads — removing them only means future installs re-fetch.
+    if [[ ${available_mb:-0} -lt $required_mb ]]; then
+        log_warning "Low disk space (${available_mb}M) — clearing package cache to reclaim..."
+        sudo rm -rf "$cache_dir"/download-* 2>/dev/null || true
+        sudo find "$cache_dir" -maxdepth 1 -type f -name '*.pkg.tar*' -delete 2>/dev/null || true
+        available_mb=$(df "$cache_dir" --output=avail -BM | tail -1 | tr -dc '0-9')
+    fi
+
+    if [[ ${available_mb:-0} -lt $required_mb ]]; then
         log_error "Insufficient disk space: ${available_mb}M available, ${required_mb}M required"
-        log_info "Run: dotfiles cleanup all"
+        log_info "Free space on / — e.g. remove unused /opt apps. See: df -h /"
         return 1
     fi
 
