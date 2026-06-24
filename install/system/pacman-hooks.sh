@@ -9,7 +9,7 @@ SYSTEM_DIR="$DOTFILES_DIR/system"
 # Source helpers if not already loaded
 if [[ -z "${DOTFILES_HELPERS_LOADED:-}" ]]; then
     source "$DOTFILES_DIR/install/helpers/all.sh"
-    export DOTFILES_HELPERS_LOADED=true
+    DOTFILES_HELPERS_LOADED=true
 fi
 
 log_info "Configuring pacman hooks for dotfiles sync..."

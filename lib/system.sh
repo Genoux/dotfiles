@@ -5,7 +5,7 @@ SYSTEM_DIR="$DOTFILES_DIR/system"
 
 if [[ -z "${DOTFILES_HELPERS_LOADED:-}" ]]; then
     source "$DOTFILES_DIR/install/helpers/all.sh"
-    export DOTFILES_HELPERS_LOADED=true
+    DOTFILES_HELPERS_LOADED=true
 fi
 
 configure_laptop_settings() {

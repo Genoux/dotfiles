@@ -11,7 +11,7 @@ export DOTFILES_INSTALL="${DOTFILES_INSTALL:-$DOTFILES_DIR/install}"
 
 if [[ -z "${DOTFILES_HELPERS_LOADED:-}" ]]; then
     source "$DOTFILES_INSTALL/helpers/all.sh"
-    export DOTFILES_HELPERS_LOADED=true
+    DOTFILES_HELPERS_LOADED=true
 fi
 
 GENTLE_AI_BIN="${GENTLE_AI_BIN:-$HOME/.local/bin/gentle-ai}"

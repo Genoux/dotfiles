@@ -9,7 +9,7 @@ DOTFILES_DIR="$(cd "$(dirname "$(dirname "$(dirname "${BASH_SOURCE[0]}")")")" &&
 # Source helpers (always load to ensure functions are available)
 if [[ -z "${DOTFILES_HELPERS_LOADED:-}" ]]; then
     source "$DOTFILES_DIR/install/helpers/all.sh"
-    export DOTFILES_HELPERS_LOADED=true
+    DOTFILES_HELPERS_LOADED=true
 else
     source "$DOTFILES_DIR/install/helpers/all.sh" 2>/dev/null || true
 fi

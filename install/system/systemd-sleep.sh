@@ -9,7 +9,7 @@ SYSTEM_DIR="$DOTFILES_DIR/system"
 # Source helpers (always load to ensure functions are available)
 if [[ -z "${DOTFILES_HELPERS_LOADED:-}" ]]; then
     source "$DOTFILES_DIR/install/helpers/all.sh"
-    export DOTFILES_HELPERS_LOADED=true
+    DOTFILES_HELPERS_LOADED=true
 else
     # Ensure helpers are sourced even if flag is set (might be from different shell)
     source "$DOTFILES_DIR/install/helpers/all.sh" 2>/dev/null || true

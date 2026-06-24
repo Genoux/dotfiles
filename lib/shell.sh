@@ -8,7 +8,7 @@ PLUGINS_FILE="$DOTFILES_DIR/packages/zsh-plugins.package"
 # Source helpers if not already loaded
 if [[ -z "${DOTFILES_HELPERS_LOADED:-}" ]]; then
     source "$DOTFILES_DIR/install/helpers/all.sh"
-    export DOTFILES_HELPERS_LOADED=true
+    DOTFILES_HELPERS_LOADED=true
 fi
 
 # Check if zsh is installed, install if missing
