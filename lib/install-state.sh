@@ -168,6 +168,23 @@ record_config() {
     mv "$temp_file" "$STATE_FILE"
 }
 
+# List dotfiles-managed stow symlinks under existing home config dirs.
+# Best-effort and pipefail-safe: skips missing dirs and swallows find errors
+# so callers running under `set -e` are never aborted by the scan (a fresh
+# machine may not have ~/.config or ~/.local yet).
+list_stow_symlinks() {
+    local search_dirs=()
+    [[ -d "$HOME/.config" ]] && search_dirs+=("$HOME/.config")
+    [[ -d "$HOME/.local" ]] && search_dirs+=("$HOME/.local")
+    [[ ${#search_dirs[@]} -eq 0 ]] && return 0
+
+    local link target
+    while IFS= read -r link; do
+        target=$(readlink "$link")
+        [[ "$target" == *"dotfiles/stow"* ]] && echo "$link -> $target"
+    done < <(find "${search_dirs[@]}" -type l 2>/dev/null || true)
+}
+
 # Create snapshot before phase
 create_snapshot() {
     local phase="$1"
@@ -185,12 +202,7 @@ create_snapshot() {
 
     # Snapshot stow links
     local stow_snapshot="$SNAPSHOT_DIR/${snapshot_id}_stow.txt"
-    find ~/.config ~/.local -type l 2>/dev/null | while read -r link; do
-        target=$(readlink "$link")
-        if [[ "$target" == *"dotfiles/stow"* ]]; then
-            echo "$link -> $target"
-        fi
-    done > "$stow_snapshot"
+    list_stow_symlinks > "$stow_snapshot"
 
     # Update state with snapshot info
     local temp_file
@@ -260,15 +272,14 @@ rollback_to_phase() {
         log_info "Rolling back configuration links..."
 
         # Remove links that weren't in snapshot
-        find ~/.config ~/.local -type l 2>/dev/null | while read -r link; do
-            target=$(readlink "$link")
-            if [[ "$target" == *"dotfiles/stow"* ]]; then
-                if ! grep -Fq "$link ->" "$stow_snapshot" 2>/dev/null; then
-                    log_info "Removing link: ${link/#$HOME/~}"
-                    rm "$link"
-                fi
+        local link
+        while IFS= read -r link; do
+            link="${link%% -> *}"
+            if ! grep -Fq "$link ->" "$stow_snapshot" 2>/dev/null; then
+                log_info "Removing link: ${link/#$HOME/~}"
+                rm "$link"
             fi
-        done
+        done < <(list_stow_symlinks)
     fi
 
     # Update state
