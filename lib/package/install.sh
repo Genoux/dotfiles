@@ -46,7 +46,10 @@ packages_install() {
     fi
 
     install_official_packages packages
-    install_aur_packages aur_packages || return $?
+    # AUR is inherently flaky (stale PKGBUILD urls, checksum drift, AppImage 404s).
+    # A failed AUR package is reported by install_aur_packages and the verify step
+    # below; it must not abort the whole install (config linking still has to run).
+    install_aur_packages aur_packages || log_warning "Some AUR packages failed — continuing"
 
     echo
     package_install_audit packages aur_packages
