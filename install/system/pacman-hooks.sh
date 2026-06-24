@@ -26,19 +26,19 @@ if [[ ! -d "/etc/pacman.d/hooks" ]]; then
     sudo mkdir -p /etc/pacman.d/hooks
 fi
 
-# Install hook files
-HOOK_INSTALL="$SYSTEM_DIR/pacman/hooks/dotfiles-sync-install.hook"
-HOOK_REMOVE="$SYSTEM_DIR/pacman/hooks/dotfiles-sync-remove.hook"
+# Install all hook files from the dotfiles hooks directory
+shopt -s nullglob
+hook_files=("$SYSTEM_DIR/pacman/hooks"/*.hook)
+shopt -u nullglob
 
-if [[ ! -f "$HOOK_INSTALL" ]] || [[ ! -f "$HOOK_REMOVE" ]]; then
-    log_error "Hook files not found in $SYSTEM_DIR/pacman/hooks/"
+if [[ ${#hook_files[@]} -eq 0 ]]; then
+    log_error "No hook files found in $SYSTEM_DIR/pacman/hooks/"
     exit 1
 fi
 
-log_info "Installing pacman hooks..."
-sudo cp "$HOOK_INSTALL" /etc/pacman.d/hooks/
-sudo cp "$HOOK_REMOVE" /etc/pacman.d/hooks/
-sudo chmod 644 /etc/pacman.d/hooks/dotfiles-sync-*.hook
+log_info "Installing ${#hook_files[@]} pacman hooks..."
+sudo cp "${hook_files[@]}" /etc/pacman.d/hooks/
+sudo chmod 644 /etc/pacman.d/hooks/*.hook
 log_success "Pacman hooks installed"
 
 # Ensure sync script is executable and accessible
