@@ -89,6 +89,11 @@ source "$DOTFILES_INSTALL/helpers/all.sh"
 source "$DOTFILES_DIR/lib/install-state.sh"
 source "$DOTFILES_DIR/lib/atomic.sh"
 
+# Load package management entry point early: defines PACKAGES_FILE /
+# AUR_PACKAGES_FILE and the package API used by pre-flight (before the package
+# phases would otherwise source it).
+source "$DOTFILES_DIR/lib/package.sh"
+
 # Handle state commands
 if $SHOW_STATE; then
     show_state
