@@ -168,21 +168,20 @@ record_config() {
     mv "$temp_file" "$STATE_FILE"
 }
 
-# List dotfiles-managed stow symlinks under existing home config dirs.
-# Best-effort and pipefail-safe: skips missing dirs and swallows find errors
-# so callers running under `set -e` are never aborted by the scan (a fresh
-# machine may not have ~/.config or ~/.local yet).
+# List dotfiles-managed stow symlinks under existing home config dirs, one
+# "<link> -> <target>" per line. find filters by symlink target (-lname) and
+# prints both paths (-printf) in a single pass, so there is no per-link
+# readlink fork that could be slow over a large tree or fail mid-scan and
+# abort callers running under `set -e`. Best-effort: missing dirs and find
+# errors are tolerated.
 list_stow_symlinks() {
     local search_dirs=()
     [[ -d "$HOME/.config" ]] && search_dirs+=("$HOME/.config")
     [[ -d "$HOME/.local" ]] && search_dirs+=("$HOME/.local")
     [[ ${#search_dirs[@]} -eq 0 ]] && return 0
 
-    local link target
-    while IFS= read -r link; do
-        target=$(readlink "$link")
-        [[ "$target" == *"dotfiles/stow"* ]] && echo "$link -> $target"
-    done < <(find "${search_dirs[@]}" -type l 2>/dev/null || true)
+    find "${search_dirs[@]}" -type l -lname '*dotfiles/stow*' \
+        -printf '%p -> %l\n' 2>/dev/null || true
 }
 
 # Create snapshot before phase
