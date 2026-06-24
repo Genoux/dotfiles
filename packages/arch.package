@@ -122,6 +122,7 @@ libappindicator
 libc++
 libnotify
 libpulse
+libxmp
 linux
 linux-firmware
 linux-headers
@@ -182,6 +183,7 @@ rsync
 samba
 sassc
 satty
+sdl2_ttf
 seahorse
 socat
 solid5
