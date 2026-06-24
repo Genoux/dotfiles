@@ -69,7 +69,7 @@ System-level configs requiring root access:
 **Config directories:**
 - `system/keyd/` - Keyboard remapping (keyd)
 - `system/systemd/` - Systemd units, sleep config, zram
-- `system/greetd/` - Login manager (greetd + tuigreet)
+- `system/greetd/` - Login manager (greetd + sysc-greet)
 - `system/tlp.d/` - Power management (TLP)
 - `system/udev/` - udev rules (ESP32, AMD power save)
 - `system/pacman/hooks/` - Pacman hooks for auto-sync
