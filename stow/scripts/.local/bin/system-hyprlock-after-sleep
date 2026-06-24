@@ -23,10 +23,10 @@ wait_for_hyprland() {
 wait_for_hyprland || sleep 2
 hyprctl dispatch 'hl.dsp.dpms("on")' >/dev/null 2>&1 || true
 
-pkill -x hyprlock >/dev/null 2>&1 || true
-sleep 0.5
-wait_for_hyprland || true
-
+# Never kill an existing hyprlock: it is the active Wayland session-lock client,
+# and killing it makes Hyprland throw the OOPSI "lockscreen died" screen on resume.
+# The lock client started by before_sleep_cmd survives suspend, so only start one
+# if it is somehow missing (e.g. lock failed before sleep).
 if ! pgrep -x hyprlock >/dev/null 2>&1; then
     hyprlock >/dev/null 2>&1 &
 fi
