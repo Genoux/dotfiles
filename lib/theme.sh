@@ -108,7 +108,8 @@ matugen_generate_from_wallpaper() {
 
     local scheme
     scheme=$(matugen_wallpaper_scheme "$wallpaper")
-    if matugen image -t "$scheme" --prefer saturation --source-color-index 0 "$wallpaper"; then
+    # ponytail: removed --prefer and --source-color-index (not in matugen 3.1.0)
+    if matugen image -t "$scheme" "$wallpaper"; then
         matugen_sync_stow_style_links
         return 0
     fi

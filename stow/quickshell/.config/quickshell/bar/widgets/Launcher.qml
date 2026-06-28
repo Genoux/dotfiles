@@ -6,6 +6,6 @@ Button {
     required property var screen
 
     interactive: true
-    iconName: "system-search"
+    iconName: "system-search-symbolic"
     onClicked: Services.Launcher.toggleFor(screen)
 }
