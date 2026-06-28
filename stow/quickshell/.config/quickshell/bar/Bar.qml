@@ -78,8 +78,8 @@ PanelWindow {
             }
 
             RowLayout {
-                spacing: 3
-                Layout.rightMargin: -2
+                spacing: 4
+                Layout.rightMargin: 0
 
                 Widgets.Volume {
                     Layout.alignment: Qt.AlignVCenter
