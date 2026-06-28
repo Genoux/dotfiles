@@ -10,7 +10,7 @@ Button {
     readonly property real volume: sink?.audio?.volume ?? 0
     readonly property bool muted: sink?.audio?.muted ?? false
 
-    iconSource: IconRegistry.volumeIcon(volume, muted, !!sink)
+    iconName: "multimedia-volume-control-symbolic"
     interactive: true
     onClicked: ShellActions.launchOrFocus("wiremix", "wiremix", "multimedia-volume-control")
 

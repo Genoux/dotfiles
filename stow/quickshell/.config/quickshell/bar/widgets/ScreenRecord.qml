@@ -94,7 +94,7 @@ Button {
         setExpanded(false);
     }
 
-    iconSource: IconRegistry.barIcon("media", "record")
+    iconName: "record-screen-symbolic"
     foreground: iconForeground
     background: recording ? Qt.rgba(recordingColor.r, recordingColor.g, recordingColor.b, recordingColor.a * trailReveal) : StyleTokens.transparent
     hoverBackground: StyleTokens.alphaLight
