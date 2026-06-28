@@ -9,15 +9,15 @@ Button {
     id: root
 
     readonly property var device: UPower.displayDevice
-    readonly property int percentage: Math.round(device.percentage)
+    readonly property int percentage: Math.round(device.percentage * 100)
     readonly property bool charging: device.state === UPowerDeviceState.Charging
     readonly property int iconStep: Math.min(Math.floor(percentage / 10) * 10, 100)
-    readonly property string iconName: charging && iconStep === 100
+    readonly property string batteryIconName: charging && iconStep === 100
         ? "battery-level-100-charged-symbolic"
         : `battery-level-${iconStep}-${charging ? "charging-" : ""}symbolic`
 
     visible: device.isLaptopBattery
-    iconSource: IconRegistry.batteryIcon(percentage, charging)
+    iconName: batteryIconName
     text: `${root.percentage}%`
     foreground: root.percentage <= 15 && !root.charging ? Colors.base08 : Colors.base05
     interactive: true
