@@ -73,7 +73,15 @@
       "Bash(bat -p /home/john/Desktop/@inbeat/proof-agent/src/db/schema/workflow-runs.ts)",
       "Bash(rg -ln 'checkResults|check_results|\"check_results\"' /home/john/Desktop/@inbeat/proof-agent/src -g '*.{ts,tsx}')",
       "Bash(rg -n 'WorkflowCheckFeedbackDbRow|workflowCheckIdEnum' /home/john/Desktop/@inbeat/proof-agent/src -g '*.{ts,tsx}')",
-      "Bash(bun test *)"
+      "Bash(bun test *)",
+      "Bash(rg '\\\\.sql$')",
+      "Bash(git ls-tree *)",
+      "Bash(bat -p .gitignore)",
+      "Bash(git check-ignore *)",
+      "Bash(bat -p package.json)",
+      "Bash(rg -n 'updatedAt.*\\\\$onUpdate' /home/john/Desktop/@inbeat/proof-agent/src/db/schema/clients.ts /home/john/Desktop/@inbeat/proof-agent/src/db/schema/products.ts)",
+      "Bash(bat /home/john/Desktop/@inbeat/proof-agent/src/db/schema/workflow-runs.ts /home/john/Desktop/@inbeat/proof-agent/src/db/schema/assets.ts /home/john/Desktop/@inbeat/proof-agent/src/db/schema/sessions.ts /home/john/Desktop/@inbeat/proof-agent/src/db/schema/app-users.ts --plain)",
+      "Bash(git -C /home/john/Desktop/@inbeat/proof-agent log -27 --pretty=format:\"%h %s\")"
     ],
     "deny": [
       "Bash(rm -rf /)",
@@ -124,7 +132,8 @@
     "feature-dev@claude-plugins-official": true,
     "frontend-design@claude-plugins-official": true,
     "gitkraken-hooks@gitkraken": true,
-    "linear@claude-plugins-official": true
+    "linear@claude-plugins-official": true,
+    "ponytail@ponytail": true
   },
   "extraKnownMarketplaces": {
     "engram": {
@@ -143,6 +152,12 @@
       "source": {
         "source": "github",
         "repo": "anthropics/knowledge-work-plugins"
+      }
+    },
+    "ponytail": {
+      "source": {
+        "source": "github",
+        "repo": "DietrichGebert/ponytail"
       }
     }
   },
