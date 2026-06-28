@@ -1,6 +1,6 @@
 import qs
-import qs.config
 import qs.components
+import qs.config
 import qs.services as Services
 
 Button {
@@ -8,8 +8,7 @@ Button {
     foreground: Colors.base05
     fontFamily: StyleTokens.fontSans
     fontSize: StyleTokens.fontSizeSm
-    paddingHorizontal: StyleControl.buttonPaddingHorizontal + 2
+    paddingHorizontal: 5
     interactive: true
-
     onClicked: ShellActions.switchKeyboardLayout("current")
 }

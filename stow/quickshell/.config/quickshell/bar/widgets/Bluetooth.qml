@@ -8,7 +8,8 @@ Button {
     readonly property bool hasConnectedDevice: (adapter?.devices?.values ?? []).some(d => d.connected)
 
     visible: adapter?.enabled ?? false
-    iconName: hasConnectedDevice ? "bluetooth-paired-symbolic" : "preferences-system-bluetooth-symbolic"
+    iconName: hasConnectedDevice ? "blueman-device-paired-symbolic" : "blueman-device-symbolic"
     interactive: true
+    iconSize: 16
     onClicked: ShellActions.launchOrFocus("bluetui", "bluetui", "bluetooth")
 }

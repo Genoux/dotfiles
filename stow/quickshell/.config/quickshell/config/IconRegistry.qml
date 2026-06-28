@@ -56,10 +56,6 @@ Singleton {
     }
 
     readonly property var legacyBarIcons: ({
-        "audio-volume-high-symbolic": { domain: "audio", name: "high" },
-        "audio-volume-medium-symbolic": { domain: "audio", name: "medium" },
-        "audio-volume-low-symbolic": { domain: "audio", name: "low" },
-        "audio-volume-muted-symbolic": { domain: "audio", name: "muted" },
         "bluetooth-active-symbolic": { domain: "bluetooth", name: "active" },
         "bluetooth-symbolic": { domain: "bluetooth", name: "idle" },
         "camera-video-symbolic": { domain: "privacy", name: "camera" },
@@ -72,9 +68,6 @@ Singleton {
         "media-skip-backward-symbolic": { domain: "media", name: "skip-backward" },
         "media-skip-forward-symbolic": { domain: "media", name: "skip-forward" },
         "mic-on": { domain: "privacy", name: "mic" },
-        "network-idle-symbolic": { domain: "network", name: "wired" },
-        "network-offline-symbolic": { domain: "network", name: "offline" },
-        "network-wireless-symbolic": { domain: "network", name: "wireless" },
         "system-search-symbolic": { domain: "launcher", name: "search" },
         "system-shutdown-symbolic": { domain: "menu", name: "shutdown" },
         "utilities-terminal-symbolic": { domain: "shell", name: "terminal" },

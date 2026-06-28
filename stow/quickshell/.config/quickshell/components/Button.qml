@@ -22,12 +22,12 @@ Rectangle {
     property int paddingRight: paddingHorizontal
     property int paddingVertical: StyleControl.buttonPaddingVertical
     property int iconTextSpacing: StyleControl.iconTextSpacing
-    property int minimumWidth: 0
-    property int minimumHeight: 0
+    property int minimumWidth: 18
+    property int minimumHeight: 20
     property color foreground: Colors.base05
     property color background: StyleTokens.transparent
     property color hoverBackground: StyleTokens.alphaLight
-    property int borderWidth: 0
+    property int borderWidth: 1
     property color borderColor: StyleTokens.transparent
     property bool interactive: false
     property bool animateColor: true
@@ -73,6 +73,7 @@ Rectangle {
         anchors.leftMargin: root.trailEnabled ? root.paddingHorizontal : 0
         anchors.horizontalCenter: root.trailEnabled ? undefined : parent.horizontalCenter
         spacing: iconTextSpacing
+        Layout.fillHeight: true
 
         Item {
             id: iconSlot

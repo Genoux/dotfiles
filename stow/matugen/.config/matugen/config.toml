@@ -34,6 +34,13 @@ output_path = "~/.config/ags/styles/abstracts/_theme.scss"
 input_path = "~/.config/matugen/templates/quickshell-colors.qml"
 output_path = "~/.config/quickshell/Colors.qml"
 
+# Waylandar calendar widget — Theme.qml is read as a quickshell singleton by the
+# widget/dashboard, which hot-reload on file change, so no post_hook is needed.
+# The input template is auto-extracted to ~/.config/waylandar on each launch.
+[templates.waylandar]
+input_path = "~/.config/waylandar/theme_template.qml"
+output_path = "~/.config/waylandar/frontend/Theme.qml"
+
 # Starship - matugen renders the full config (replaces the previous static stow copy)
 [templates.starship]
 input_path = "~/.config/matugen/templates/starship.toml"

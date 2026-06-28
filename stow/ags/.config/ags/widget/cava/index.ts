@@ -1,1 +1,0 @@
-export { CavaVisualizer } from "./components/CavaVisualizer";

@@ -18,7 +18,7 @@ Button {
         "args": "region"
     }, {
         "label": "Region + audio",
-        "script": "system-screenrecord",
+        "script": "system-record",
         "args": "region audio"
     }, {
         "label": "Fullscreen",
@@ -31,17 +31,12 @@ Button {
     }]
     readonly property bool expanded: root.hovered && recording
     readonly property color trailForeground: "#ffffff"
-    readonly property color iconForeground: !recording ? Colors.base05 : mixColor(recordingColor, trailForeground, trailReveal)
+    readonly property color iconForeground: !recording ? Colors.base05 : trailForeground
     property bool menuVisible: false
     property real menuX: 0
     property real menuY: 0
     property color recordingColor: StyleRecording.fill
     property int elapsedSeconds: 0
-
-    function mixColor(from, to, amount) {
-        const t = Math.max(0, Math.min(1, amount));
-        return Qt.rgba(from.r + (to.r - from.r) * t, from.g + (to.g - from.g) * t, from.b + (to.b - from.b) * t, from.a + (to.a - from.a) * t);
-    }
 
     function runRecordAction(index) {
         const entry = recordMenuEntries[index];
@@ -94,9 +89,9 @@ Button {
         setExpanded(false);
     }
 
-    iconName: "record-screen-symbolic"
+    iconName: "camera-video"
     foreground: iconForeground
-    background: recording ? Qt.rgba(recordingColor.r, recordingColor.g, recordingColor.b, recordingColor.a * trailReveal) : StyleTokens.transparent
+    background: recording ? recordingColor : StyleTokens.transparent
     hoverBackground: StyleTokens.alphaLight
     interactive: true
     animateColor: false
@@ -154,8 +149,11 @@ Button {
 
             active: root.menuVisible
             entries: root.recordMenuEntries
-            onSelected: (index) => root.runRecordAction(index)
+            onSelected: (index) => {
+                return root.runRecordAction(index);
+            }
         }
+
     }
 
     NumberAnimation {

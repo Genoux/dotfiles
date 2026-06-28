@@ -1,18 +1,22 @@
-import Quickshell
 import QtQuick
+import Quickshell
 import qs
-import qs.config
 import qs.components
+import qs.config
 
 Button {
-    SystemClock {
-        id: clock
-        precision: SystemClock.Minutes
-    }
-
     text: Qt.formatDateTime(clock.date, "ddd dd MMM HH:mm")
     fontSize: StyleTokens.fontSizeSm
     foreground: Colors.base05
     interactive: true
-    onClicked: ShellActions.launchOrFocus("org.gnome.Calendar", "gnome-calendar", "org.gnome.Calendar")
+    paddingHorizontal: 6
+    // ponytail: plain launch — repeated clicks stack dashboard instances; upgrade to a pkill-toggle if that annoys
+    onClicked: ShellActions.run("waylandar-dashboard")
+
+    SystemClock {
+        id: clock
+
+        precision: SystemClock.Minutes
+    }
+
 }
