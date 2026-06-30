@@ -1,0 +1,4 @@
+module qs.lock
+LockContext 1.0 LockContext.qml
+LockSurface 1.0 LockSurface.qml
+singleton StyleLock 1.0 StyleLock.qml

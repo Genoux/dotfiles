@@ -81,7 +81,16 @@
       "Bash(bat -p package.json)",
       "Bash(rg -n 'updatedAt.*\\\\$onUpdate' /home/john/Desktop/@inbeat/proof-agent/src/db/schema/clients.ts /home/john/Desktop/@inbeat/proof-agent/src/db/schema/products.ts)",
       "Bash(bat /home/john/Desktop/@inbeat/proof-agent/src/db/schema/workflow-runs.ts /home/john/Desktop/@inbeat/proof-agent/src/db/schema/assets.ts /home/john/Desktop/@inbeat/proof-agent/src/db/schema/sessions.ts /home/john/Desktop/@inbeat/proof-agent/src/db/schema/app-users.ts --plain)",
-      "Bash(git -C /home/john/Desktop/@inbeat/proof-agent log -27 --pretty=format:\"%h %s\")"
+      "Bash(git -C /home/john/Desktop/@inbeat/proof-agent log -27 --pretty=format:\"%h %s\")",
+      "Bash(rg -n \"WorkflowCheckFindingsList|bg-card|bg-muted\" /home/john/Desktop/@inbeat/proof-agent/src/features/sessions/components/session-workspace/_components/workflow-run-card*.tsx /home/john/Desktop/@inbeat/proof-agent/src/features/sessions/components/session-workspace/_components/workflow-check-*.tsx)",
+      "Bash(sd 'from \"./_components/workflow-run-card\"' 'from \"./_components/workflow-run/card\"' /home/john/Desktop/@inbeat/proof-agent/src/features/sessions/components/session-workspace/session-workspace.tsx)",
+      "Bash(sd 'from \"./workflow-run-card-header\"' 'from \"./card-header\"' /home/john/Desktop/@inbeat/proof-agent/src/features/sessions/components/session-workspace/_components/workflow-run/card.tsx)",
+      "Bash(sd 'from \"./workflow-run-context\"' 'from \"./context\"' /home/john/Desktop/@inbeat/proof-agent/src/features/sessions/components/session-workspace/_components/workflow-run/card.tsx)",
+      "Bash(sd 'from \"./workflow-run-state\"' 'from \"./state\"' /home/john/Desktop/@inbeat/proof-agent/src/features/sessions/components/session-workspace/_components/workflow-run/card.tsx)",
+      "Bash(sd 'from \"./workflow-result-view\"' 'from \"../workflow-result/result-view\"' /home/john/Desktop/@inbeat/proof-agent/src/features/sessions/components/session-workspace/_components/workflow-run/state.tsx)",
+      "Bash(rm src/shared/components/blocks/combobox.tsx src/shared/components/blocks/combobox.test.ts)",
+      "Bash(rg -rln \"blocks/combobox|from.*combobox\" src)",
+      "mcp__plugin_context7_context7__query-docs"
     ],
     "deny": [
       "Bash(rm -rf /)",
@@ -109,7 +118,10 @@
       "Read(**/secrets/*)",
       "Edit(**/secrets/*)"
     ],
-    "defaultMode": "bypassPermissions"
+    "defaultMode": "bypassPermissions",
+    "additionalDirectories": [
+      "/home/john/Desktop/@inbeat/proof-agent/src/app/api/sessions/[id]/events"
+    ]
   },
   "model": "opus[1m]",
   "enableAllProjectMcpServers": true,
@@ -163,7 +175,7 @@
   },
   "outputStyle": "Gentleman",
   "effortLevel": "medium",
+  "tui": "fullscreen",
   "skipDangerousModePermissionPrompt": true,
-  "theme": "auto",
-  "tui": "fullscreen"
+  "theme": "auto"
 }

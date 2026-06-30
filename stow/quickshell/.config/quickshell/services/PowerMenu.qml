@@ -14,7 +14,7 @@ Singleton {
             id: "lock",
             label: "Lock",
             icon: "system-lock-screen-symbolic",
-            command: ["sh", "-c", "pkill -x hyprlock 2>/dev/null; sleep 0.1; hyprlock"],
+            command: ["system-lock"],
         },
         {
             id: "sleep",

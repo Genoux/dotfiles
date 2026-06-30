@@ -47,7 +47,7 @@ hl.bind(mainMod .. " + SHIFT + g", hl.dsp.group.lock_active("toggle"))
 hl.bind(mainMod .. " + a", hl.dsp.exec_cmd(appLauncher))
 hl.bind(mainMod .. " + TAB", hl.dsp.focus({ last = true }))
 hl.bind(mainMod .. " + d", launchers.openDotfilesManager)
-hl.bind(mainMod .. " + l", hl.dsp.exec_cmd("pkill -x hyprlock 2>/dev/null; sleep 0.1; hyprlock"))
+hl.bind(mainMod .. " + l", hl.dsp.exec_cmd("system-lock"))
 
 hl.bind(mainMod .. " + left", hl.dsp.focus({ direction = "left" }))
 hl.bind(mainMod .. " + right", hl.dsp.focus({ direction = "right" }))
@@ -90,7 +90,7 @@ hl.bind("XF86MonBrightnessUp", hl.dsp.exec_cmd("brightnessctl set 10%+"), { repe
 hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("brightnessctl set 10%-"), { repeating = true })
 
 hl.bind("switch:on:Lid Switch", function()
-  hl.dsp.exec_cmd("pkill -x hyprlock 2>/dev/null; hyprlock --immediate & sleep 0.1")
+  hl.dsp.exec_cmd("system-lock")
   hl.dispatch(hl.dsp.dpms({ action = "off" }))
   hl.dsp.exec_cmd("brightnessctl set 0")
 end, { locked = true })

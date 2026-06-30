@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# Launch the Quickshell session lock as an isolated instance (separate from the bar shell).
+set -euo pipefail
+
+LOCK_CONFIG="${HOME}/.config/quickshell/lock.qml"
+
+if [[ ! -f "$LOCK_CONFIG" ]]; then
+    echo "system-lock: missing config at $LOCK_CONFIG" >&2
+    exit 1
+fi
+
+if quickshell list 2>/dev/null | grep -Fq "$LOCK_CONFIG"; then
+    exit 0
+fi
+
+if pgrep -af "quickshell.*lock\.qml" >/dev/null 2>&1; then
+    exit 0
+fi
+
+exec quickshell -p "$LOCK_CONFIG" -n

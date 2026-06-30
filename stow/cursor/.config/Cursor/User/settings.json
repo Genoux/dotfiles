@@ -87,5 +87,6 @@
   },
   "[qml]": {
     "editor.defaultFormatter": "Delgan.qml-format"
-  }
+  },
+  "diffEditor.useInlineViewWhenSpaceIsLimited": false
 }

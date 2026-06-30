@@ -74,7 +74,7 @@ input_path = "~/.config/matugen/templates/terax-theme.json"
 output_path = "~/.config/app.crynta.terax/themes/my-theme-6edc8f0c.terax-theme"
 
 
-# Hyprland borders + (optional) hyprlock — require from hyprland.lua if enabled
+# Hyprland borders — require from hyprland.lua if enabled
 # Uncomment to enable
 # [templates.hyprland]
 # input_path = "~/.config/matugen/templates/hyprland-colors.lua"

@@ -11,7 +11,7 @@ hl.config({
     enable_swallow = false,
     swallow_regex = "(foot|kitty|alacritty|Alacritty)",
     on_focus_under_fullscreen = 2,
-    allow_session_lock_restore = true,
+    allow_session_lock_restore = false,
     session_lock_xray = true,
     initial_workspace_tracking = false,
     focus_on_activate = true,

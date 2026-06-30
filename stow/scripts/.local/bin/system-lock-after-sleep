@@ -7,6 +7,8 @@ if [[ -z "${DBUS_SESSION_BUS_ADDRESS:-}" && -S "${XDG_RUNTIME_DIR}/bus" ]]; then
     export DBUS_SESSION_BUS_ADDRESS="unix:path=${XDG_RUNTIME_DIR}/bus"
 fi
 
+LOCK_CONFIG="${HOME}/.config/quickshell/lock.qml"
+
 wait_for_hyprland() {
     local _
 
@@ -20,17 +22,23 @@ wait_for_hyprland() {
     return 1
 }
 
+lock_running() {
+    if quickshell list 2>/dev/null | grep -Fq "$LOCK_CONFIG"; then
+        return 0
+    fi
+
+    pgrep -af "quickshell.*lock\.qml" >/dev/null 2>&1
+}
+
 wait_for_hyprland || sleep 2
 hyprctl dispatch 'hl.dsp.dpms("on")' >/dev/null 2>&1 || true
 
-# Never kill an existing hyprlock: it is the active Wayland session-lock client,
-# and killing it makes Hyprland throw the OOPSI "lockscreen died" screen on resume.
-# The lock client started by before_sleep_cmd survives suspend, so only start one
-# if it is somehow missing (e.g. lock failed before sleep).
-if ! pgrep -x hyprlock >/dev/null 2>&1; then
-    hyprlock >/dev/null 2>&1 &
+# Never kill an existing session-lock client: killing it makes Hyprland throw the
+# OOPSI "lockscreen died" screen on resume. The lock started by before_sleep_cmd
+# should survive suspend; only start one if it is somehow missing.
+if ! lock_running; then
+    "$HOME/.local/bin/system-lock" >/dev/null 2>&1 &
 fi
 
 sleep 1
 bash "$HOME/.local/bin/system-awww-wallpaper" >/dev/null 2>&1 || true
-# systemctl --user restart ags.service >/dev/null 2>&1 || true

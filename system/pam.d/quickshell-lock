@@ -1,0 +1,7 @@
+# PAM configuration for the Quickshell session lock.
+# Mirrors the hyprlock config — delegates to the login stack.
+
+auth        include     login
+account     include     login
+password    include     login
+session     include     login

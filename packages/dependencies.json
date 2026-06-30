@@ -28,7 +28,7 @@
     "compositor": {
       "priority": 6,
       "depends_on": ["display_server"],
-      "packages": ["hyprland", "hyprlock", "hypridle", "hyprpicker"]
+      "packages": ["hyprland", "hypridle", "hyprpicker"]
     },
     "shell_ui": {
       "priority": 7,

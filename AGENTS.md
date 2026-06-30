@@ -95,7 +95,7 @@ Hyprland ownership guide:
 - Startup services and session bootstrap: `autostart.lua`.
 - Wallpaper rotation: `system-pick-wallpaper` reads `~/.config/hypr/wallpapers/saves/`.
 - awww transitions: `wallpaper-awww.conf`.
-- Lock and idle behavior: `hyprlock.conf` and `hypridle.conf`.
+- Lock and idle behavior: Quickshell `lock.qml` via `system-lock`, `hypridle.conf`.
 
 Use current Hyprland Lua syntax. Do not collapse the modular Lua files back into
 legacy hyprlang one-line rule sprawl unless the user asks.

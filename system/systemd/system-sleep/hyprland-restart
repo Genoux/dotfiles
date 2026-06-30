@@ -1,18 +1,15 @@
 #!/bin/bash
-# Manage Hyprland/hyprlock state across sleep/resume cycles
+# Manage Hyprland state across sleep/resume cycles.
 #
-# Fix: Kills hyprlock BEFORE sleep to prevent "OOPS" GPU context error on wake.
-# Root cause: hyprlock wakes with a dead EGL/GPU context after suspend → shows "OOPS".
-# Solution: kill it cleanly before sleep; hypridle's after_sleep_cmd restarts it on resume.
+# The session lock (Quickshell ext-session-lock-v1 client) must NOT be killed before
+# sleep — killing the lock client causes the Hyprland "OOPSI" compositor fallback screen.
+# Unlike the old hyprlock EGL workaround, the Quickshell lock survives suspend without
+# GPU context corruption, so no pre-sleep kill is needed.
 
 HYPR_USER=$(ps aux | grep "[H]yprland" | grep -v grep | awk '{print $1}' | head -1)
 
 case "$1" in
     pre)
-        # Kill hyprlock before any sleep type to prevent GPU context corruption.
-        if [ -n "$HYPR_USER" ]; then
-            pkill -u "$HYPR_USER" -x hyprlock 2>/dev/null || true
-        fi
         ;;
     post)
         if [ "$2" = "hibernate" ]; then
@@ -21,6 +18,6 @@ case "$1" in
                 pkill -u "$HYPR_USER" Hyprland
             fi
         fi
-        # Regular suspend: hypridle's after_sleep_cmd handles hyprlock restart.
+        # Regular suspend: hypridle's after_sleep_cmd handles lock restart if needed.
         ;;
 esac
