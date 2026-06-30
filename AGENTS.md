@@ -248,14 +248,10 @@ persona live under `.cursor/` and `.atl/` at the repo root (not in global
 
 Setup and refresh:
 
-- `system-gentle-ai` or `system-gentle-ai setup` — Cursor workspace install, skill registry, GGA
+- `system-gentle-ai` or `system-gentle-ai setup` — Cursor workspace install, skill registry
 - `system-gentle-ai sync claude-code` — sync Claude after upgrades (stow-aware)
 - `gentle-ai skill-registry refresh --force` — after adding/removing skills
 - `/sdd-init` in Cursor — initialize SDD project context
 
 Claude settings live in stow; gentle-ai cannot sync symlinked files directly.
 `system-gentle-ai sync claude-code` materializes, syncs, and re-stows automatically.
-
-GGA pre-commit review is enabled via `.gga` + `AGENTS.md`. Use
-`/home/john/.local/bin/gga` explicitly — the shell may alias `gga` to
-`git gui citool`.

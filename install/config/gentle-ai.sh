@@ -15,7 +15,6 @@ if [[ -z "${DOTFILES_HELPERS_LOADED:-}" ]]; then
 fi
 
 GENTLE_AI_BIN="${GENTLE_AI_BIN:-$HOME/.local/bin/gentle-ai}"
-GGA_BIN="${GGA_BIN:-$HOME/.local/bin/gga}"
 
 ensure_gentle_ai() {
     if command -v gentle-ai &>/dev/null; then
@@ -106,19 +105,6 @@ ensure_cursor_gentle_ai_prereqs() {
     fi
 }
 
-setup_gga() {
-    if [[ ! -x "$GGA_BIN" ]]; then
-        log_info "Skipping GGA hooks (binary not found at $GGA_BIN)"
-        return 0
-    fi
-
-    if [[ ! -f "$DOTFILES_DIR/.gga" ]]; then
-        "$GGA_BIN" init
-    fi
-
-    (cd "$DOTFILES_DIR" && "$GGA_BIN" install)
-}
-
 gentle_ai_setup() {
     log_info "Setting up Gentle AI (workspace scope, Cursor)..."
 
@@ -133,7 +119,6 @@ gentle_ai_setup() {
     fi
 
     (cd "$DOTFILES_DIR" && "$GENTLE_AI_BIN" skill-registry refresh)
-    setup_gga
 
     log_success "Gentle AI workspace setup complete"
     log_info "Run '/sdd-init' in Cursor when you want SDD project context initialized"
@@ -157,7 +142,7 @@ gentle_ai_usage() {
 Usage: gentle-ai.sh [command]
 
 Commands:
-  setup                 Cursor workspace install + skill registry + GGA (default)
+  setup                 Cursor workspace install + skill registry (default)
   sync claude-code      Sync Claude Code via stowed settings.json
 EOF
 }
