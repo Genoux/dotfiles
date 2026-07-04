@@ -321,27 +321,27 @@ is_config_linked() {
             ;;
         "applications")
             if [[ -d "$HOME/.local/share/applications" ]]; then
-                find "$HOME/.local/share/applications" -type l -exec readlink {} \; 2>/dev/null | grep -q "dotfiles/stow/applications"
+                find "$HOME/.local/share/applications" -type l -exec readlink {} \; 2>/dev/null | grep "dotfiles/stow/applications" >/dev/null
             else
                 return 1
             fi
             ;;
         "scripts")
             if [[ -d "$HOME/.local/bin" ]]; then
-                find "$HOME/.local/bin" -type l -exec readlink {} \; 2>/dev/null | grep -q "dotfiles/stow/scripts"
+                find "$HOME/.local/bin" -type l -exec readlink {} \; 2>/dev/null | grep "dotfiles/stow/scripts" >/dev/null
             else
                 return 1
             fi
             ;;
         "quickshell")
             if [[ -d "$HOME/.config/quickshell" ]]; then
-                find "$HOME/.config/quickshell" -maxdepth 1 -type l -exec readlink {} \; 2>/dev/null | grep -q "dotfiles/stow/quickshell"
+                find "$HOME/.config/quickshell" -maxdepth 1 -type l -exec readlink {} \; 2>/dev/null | grep "dotfiles/stow/quickshell" >/dev/null
             else
                 return 1
             fi
             ;;
         *)
-            [[ -L "$HOME/.config/$config" ]] || find "$HOME/.config" "$HOME/.local" -maxdepth 3 -type l 2>/dev/null | xargs readlink 2>/dev/null | grep -q "dotfiles/stow/$config"
+            [[ -L "$HOME/.config/$config" ]] || find "$HOME/.config" "$HOME/.local" -maxdepth 3 -type l 2>/dev/null | xargs readlink 2>/dev/null | grep "dotfiles/stow/$config" >/dev/null
             ;;
     esac
 }
@@ -721,7 +721,7 @@ config_status() {
                 ;;
             "applications")
                 if [[ -d "$HOME/.local/share/applications" ]]; then
-                    if find "$HOME/.local/share/applications" -type l -exec readlink {} \; 2>/dev/null | grep -q "dotfiles/stow/applications"; then
+                    if find "$HOME/.local/share/applications" -type l -exec readlink {} \; 2>/dev/null | grep "dotfiles/stow/applications" >/dev/null; then
                         is_linked=true
                         # Check for broken symlinks
                         while IFS= read -r symlink; do
@@ -735,7 +735,7 @@ config_status() {
                 ;;
             "scripts")
                 if [[ -d "$HOME/.local/bin" ]]; then
-                    if find "$HOME/.local/bin" -type l -exec readlink {} \; 2>/dev/null | grep -q "dotfiles/stow/scripts"; then
+                    if find "$HOME/.local/bin" -type l -exec readlink {} \; 2>/dev/null | grep "dotfiles/stow/scripts" >/dev/null; then
                         is_linked=true
                         # Check for broken symlinks
                         while IFS= read -r symlink; do
@@ -753,15 +753,16 @@ config_status() {
                     if is_symlink_broken "$HOME/.config/$config"; then
                         is_broken=true
                     fi
-                elif find "$HOME/.config" "$HOME/.local" -maxdepth 3 -type l 2>/dev/null | xargs readlink 2>/dev/null | grep -q "dotfiles/stow/$config"; then
+                elif find "$HOME/.config" "$HOME/.local" -maxdepth 3 -type l 2>/dev/null | xargs readlink 2>/dev/null | grep "dotfiles/stow/$config" >/dev/null; then
                     is_linked=true
-                    # Check for broken symlinks
+                    # Check for broken symlinks (filter by link target, not path)
                     while IFS= read -r symlink; do
+                        [[ "$(readlink "$symlink" 2>/dev/null)" == *"dotfiles/stow/$config"* ]] || continue
                         if is_symlink_broken "$symlink"; then
                             is_broken=true
                             break
                         fi
-                    done < <(find "$HOME/.config" "$HOME/.local" -maxdepth 3 -type l 2>/dev/null | grep -q "dotfiles/stow/$config" || true)
+                    done < <(find "$HOME/.config" "$HOME/.local" -maxdepth 3 -type l 2>/dev/null || true)
                 fi
                 ;;
         esac

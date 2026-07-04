@@ -117,10 +117,16 @@ check_pacman_db() {
 
     # Check if database is locked
     if [[ -f /var/lib/pacman/db.lck ]]; then
-        log_error "Pacman database is locked"
-        log_info "Another package manager may be running"
-        log_info "If not, remove: sudo rm /var/lib/pacman/db.lck"
-        return 1
+        if pgrep -x "pacman|yay|paru" &>/dev/null; then
+            log_error "Pacman database is locked (package manager running)"
+            log_info "Wait for it to finish, then retry"
+            return 1
+        fi
+        log_warning "Stale pacman lock detected (no package manager running), removing"
+        sudo rm /var/lib/pacman/db.lck || {
+            log_error "Failed to remove stale lock: sudo rm /var/lib/pacman/db.lck"
+            return 1
+        }
     fi
 
     # Check if database is outdated (more than 7 days)

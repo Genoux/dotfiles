@@ -30,7 +30,6 @@ verify_critical_packages() {
     local critical_packages=(
         "hyprland"
         "kitty"
-        "waybar"
         "quickshell"
         "stow"
         "gum"
@@ -59,7 +58,6 @@ verify_config_links() {
     local expected_configs=(
         "hypr"
         "kitty"
-        "waybar"
         "quickshell"
         "shell"
     )
@@ -86,8 +84,7 @@ verify_config_links() {
 # Verify theme setup
 verify_theme_setup() {
     local theme_files=(
-        "$HOME/.config/quickshell/config/theme.qml"
-        "$HOME/.config/ags/styles/abstracts/_theme.scss"
+        "$HOME/.config/quickshell/Colors.qml"
     )
 
     local missing=()
