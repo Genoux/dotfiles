@@ -123,7 +123,7 @@
       "/home/john/Desktop/@inbeat/proof-agent/src/app/api/sessions/[id]/events"
     ]
   },
-  "model": "opus[1m]",
+  "model": "claude-fable-5[1m]",
   "enableAllProjectMcpServers": true,
   "hooks": {
     "UserPromptSubmit": [
