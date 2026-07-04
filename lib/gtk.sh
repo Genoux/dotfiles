@@ -10,18 +10,49 @@ source "$DOTFILES_DIR/install/helpers/all.sh" 2>/dev/null || {
     exit 1
 }
 
+# Theme repos are cloned on demand (themes/*/ is gitignored, no submodules)
+declare -A THEME_REPOS=(
+    [MacTahoe-gtk-theme]="https://github.com/vinceliuice/MacTahoe-gtk-theme"
+    [WhiteSur-gtk-theme]="https://github.com/vinceliuice/WhiteSur-gtk-theme"
+    [Colloid-gtk-theme]="https://github.com/vinceliuice/Colloid-gtk-theme"
+)
+
 list_themes() {
     local themes=()
-    
+    local theme_name
+
+    # Locally cloned themes
     for theme_path in "$THEMES_DIR"/*; do
         [[ -d "$theme_path" ]] || continue
         [[ -x "$theme_path/install.sh" ]] || continue
-        
-        local theme_name=$(basename "$theme_path")
-        themes+=("$theme_name")
+        themes+=("$(basename "$theme_path")")
     done
-    
-    printf '%s\n' "${themes[@]}"
+
+    # Known themes not yet cloned
+    for theme_name in "${!THEME_REPOS[@]}"; do
+        [[ -d "$THEMES_DIR/$theme_name" ]] || themes+=("$theme_name")
+    done
+
+    printf '%s\n' "${themes[@]}" | sort
+}
+
+ensure_theme() {
+    local theme_name="$1"
+
+    [[ -d "$THEMES_DIR/$theme_name" ]] && return 0
+
+    local url="${THEME_REPOS[$theme_name]:-}"
+    if [[ -z "$url" ]]; then
+        log_error "Unknown theme: $theme_name (no local copy, no known repo)"
+        return 1
+    fi
+
+    log_info "Fetching $theme_name..."
+    mkdir -p "$THEMES_DIR"
+    if ! git clone --depth 1 "$url" "$THEMES_DIR/$theme_name"; then
+        log_error "Failed to clone $url"
+        return 1
+    fi
 }
 
 cursor_theme_has_cursors() {
@@ -134,7 +165,9 @@ apply_cursor_theme() {
 install_theme() {
     local theme_name="$1"
     local theme_path="$THEMES_DIR/${theme_name}"
-    
+
+    ensure_theme "$theme_name" || return 1
+
     if [[ ! -d "$theme_path" ]]; then
         log_error "Theme not found: $theme_name"
         return 1
