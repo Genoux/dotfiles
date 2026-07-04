@@ -10,7 +10,6 @@ battop
 caprine-bin
 ch34x-dkms-git
 claude-desktop-bin
-clickup
 clipse
 codex-desktop
 codex-desktop-linux
@@ -28,15 +27,12 @@ gnome-shell-extension-blur-my-shell
 gnu-netcat
 google-breakpad
 google-chrome
-gpu-screen-recorder
 grimblast-git
 gtk-engine-murrine
-heroic-games-launcher-bin
 http-parser
 hyprfloat
 hyprshotgun
 hypruler-bin
-hytale-launcher-bin
 lazyjournal
 libastal-4-git
 libastal-apps-git
@@ -70,7 +66,6 @@ opencode-bin
 opencode-desktop
 phonon-qt5
 phonon-qt5-vlc
-postman-bin
 protonup-qt
 python310
 python-gevent-eventemitter

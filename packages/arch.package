@@ -2,14 +2,12 @@
 # ===========================
 alsa-utils
 amd-ucode
-aubio
 awww
 base
 base-devel
 bat
 bc
 bind
-blender
 bluetui
 brightnessctl
 btop
@@ -142,8 +140,6 @@ noto-fonts-emoji
 noto-fonts-extra
 npm
 nss-mdns
-nvidia-open-dkms
-nvidia-utils
 nwg-look
 obsidian
 obs-studio
@@ -166,8 +162,6 @@ polkit-gnome
 postgresql
 power-profiles-daemon
 prismlauncher
-pybind11
-python-build
 python-pip
 python-pipx
 python-protobuf
@@ -217,10 +211,6 @@ waybar
 wayvnc
 wf-recorder
 wget
-wine
-wine-gecko
-wine-mono
-winetricks
 wireless_tools
 wiremix
 wireplumber
