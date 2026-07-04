@@ -5,7 +5,10 @@ import QtQuick
 
 Singleton {
     function barIcon(domain, name) {
-        return Quickshell.shellPath(`assets/icons/${domain}/${name}.svg`)
+        // shellPath returns a bare filesystem path on some quickshell versions;
+        // without a scheme it resolves against qrc: inside IconImage and fails
+        const path = String(Quickshell.shellPath(`assets/icons/${domain}/${name}.svg`))
+        return path.startsWith("/") ? "file://" + path : path
     }
 
     function isBarIcon(url) {
@@ -56,8 +59,6 @@ Singleton {
     }
 
     readonly property var legacyBarIcons: ({
-        "bluetooth-active-symbolic": { domain: "bluetooth", name: "active" },
-        "bluetooth-symbolic": { domain: "bluetooth", name: "idle" },
         "camera-video-symbolic": { domain: "privacy", name: "camera" },
         "emblem-favorite-symbolic": { domain: "shell", name: "info" },
         "media-optical-symbolic": { domain: "media", name: "optical" },
