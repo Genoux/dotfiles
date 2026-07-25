@@ -1,8 +1,6 @@
-pragma Singleton
-
-import Quickshell
-
 import QtQuick
+import Quickshell
+pragma Singleton
 
 Singleton {
     readonly property int displayBars: 4

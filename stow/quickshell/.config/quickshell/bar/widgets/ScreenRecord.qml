@@ -32,9 +32,6 @@ Button {
     readonly property bool expanded: root.hovered && recording
     readonly property color trailForeground: "#ffffff"
     readonly property color iconForeground: !recording ? Colors.base05 : trailForeground
-    property bool menuVisible: false
-    property real menuX: 0
-    property real menuY: 0
     property color recordingColor: StyleRecording.fill
     property int elapsedSeconds: 0
 
@@ -47,7 +44,7 @@ Button {
         const args = rawArgs.length > 0 ? rawArgs.split(/\s+/) : [];
         console.log(`ScreenRecord action: ${entry.script} ${rawArgs}`);
         ShellActions.runLocalScript(String(entry.script), args);
-        menuVisible = false;
+        recordPopover.open = false;
     }
 
     function pad2(value) {
@@ -78,7 +75,6 @@ Button {
         pulseAnimation.start();
         if (root.expanded)
             setExpanded(true);
-
     }
 
     function endRecording() {
@@ -94,6 +90,7 @@ Button {
     background: recording ? recordingColor : StyleTokens.transparent
     hoverBackground: StyleTokens.alphaLight
     interactive: true
+    active: recordPopover.open
     animateColor: false
     manageHoverColor: !recording
     clipContent: true
@@ -105,16 +102,12 @@ Button {
             ShellActions.runLocalScript("system-screenrecord");
             return ;
         }
-        const point = root.mapToItem(null, mouse.x, mouse.y);
-        menuX = point.x;
-        menuY = point.y;
-        menuVisible = !menuVisible;
+        recordPopover.open = !recordPopover.open;
     }
     onExpandedChanged: setExpanded(expanded)
     Component.onCompleted: {
         if (Privacy.recording)
             root.beginRecording();
-
     }
 
     Text {
@@ -129,31 +122,19 @@ Button {
         verticalAlignment: Text.AlignVCenter
     }
 
-    PopupWindow {
-        id: recordMenuWindow
+    BarPopover {
+        id: recordPopover
 
-        anchor.window: root.barWindow
-        anchor.rect.x: Math.round(root.menuX - recordMenuWindow.implicitWidth / 2)
-        anchor.rect.y: Math.round(root.menuY - recordMenuWindow.implicitHeight - StylePopover.anchorGap)
-        anchor.rect.width: 1
-        anchor.rect.height: 1
-        grabFocus: true
-        color: StyleTokens.transparent
-        visible: root.menuVisible
-        implicitWidth: recordMenu.implicitWidth
-        implicitHeight: recordMenu.implicitHeight
-        onClosed: root.menuVisible = false
+        barWindow: root.barWindow
+        anchorItem: root
 
         PopoverMenu {
-            id: recordMenu
-
-            active: root.menuVisible
+            active: recordPopover.open
             entries: root.recordMenuEntries
             onSelected: (index) => {
                 return root.runRecordAction(index);
             }
         }
-
     }
 
     NumberAnimation {

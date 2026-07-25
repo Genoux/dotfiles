@@ -86,7 +86,7 @@ BarGroup {
         prunePlayerState();
         const active = activePlayers;
         if (!active.length)
-            return Mpris.players.values.length > 0 ? Mpris.players.values[0] : null;
+            return null;
 
         const playing = active.filter((candidate) => {
             return candidate.isPlaying;

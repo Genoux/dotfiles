@@ -44,6 +44,7 @@ PanelWindow {
 
             Widgets.SystemTray {
                 Layout.alignment: Qt.AlignVCenter
+                barWindow: bar
             }
 
         }
@@ -111,6 +112,7 @@ PanelWindow {
 
             Widgets.Weather {
                 Layout.alignment: Qt.AlignVCenter
+                barWindow: bar
             }
 
             Widgets.Temperature {
@@ -119,6 +121,7 @@ PanelWindow {
 
             Widgets.Clock {
                 Layout.alignment: Qt.AlignVCenter
+                barWindow: bar
             }
 
             Widgets.Info {

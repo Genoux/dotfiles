@@ -26,6 +26,7 @@ Button {
 
     iconName: volumeIconName
     interactive: true
+    iconSize: 14
     onClicked: ShellActions.launchOrFocus("wiremix", "wiremix", "multimedia-volume-control")
 
     PwObjectTracker {

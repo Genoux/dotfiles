@@ -30,6 +30,8 @@ Rectangle {
     property int borderWidth: 1
     property color borderColor: StyleTokens.transparent
     property bool interactive: false
+    // When true, holds the hover background persistently (e.g. while its popover is open).
+    property bool active: false
     property bool animateColor: true
     property bool manageHoverColor: true
     property bool clipContent: false
@@ -60,7 +62,7 @@ Rectangle {
     width: implicitWidth
     height: implicitHeight
     radius: StyleTokens.radiusSm
-    color: root.manageHoverColor && mouseArea.containsMouse && interactive ? hoverBackground : background
+    color: root.manageHoverColor && (mouseArea.containsMouse || root.active) && interactive ? hoverBackground : background
     border.width: borderWidth
     border.color: borderColor
     clip: clipContent

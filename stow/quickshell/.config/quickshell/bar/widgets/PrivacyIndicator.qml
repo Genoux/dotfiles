@@ -11,14 +11,12 @@ Row {
     property var barWindow: null
     property string tooltipText: ""
     property bool tooltipVisible: false
-    property real tooltipAnchorX: 0
-    property real tooltipAnchorY: 0
+    property real _centerX: 0
 
     function showTooltip(button, source, fallback) {
         const label = source.length > 0 ? source : fallback;
-        const point = button.mapToItem(null, button.width / 2, 0);
-        root.tooltipAnchorX = point.x;
-        root.tooltipAnchorY = point.y;
+        const pt = button.mapToItem(null, button.width / 2, 0);
+        root._centerX = pt.x;
         root.tooltipText = label;
         root.tooltipVisible = true;
     }
@@ -30,7 +28,6 @@ Row {
     function hideTooltipIfNeeded() {
         if (!webcamButton.hovered && !micButton.hovered && !screenButton.hovered)
             root.hideTooltip();
-
     }
 
     visible: Privacy.anyActive
@@ -44,12 +41,17 @@ Row {
         onCleared: root.hideTooltip()
     }
 
+    // Tooltip uses PopupWindow directly — it is hover-driven (not a toggle),
+    // does not grab focus, and needs custom HyprlandFocusGrab for dismissal.
     PopupWindow {
         id: tooltipWindow
 
+        readonly property real popW: implicitWidth
+        readonly property real popH: implicitHeight
+
         anchor.window: root.barWindow
-        anchor.rect.x: Math.round(root.tooltipAnchorX - tooltipPanel.implicitWidth / 2)
-        anchor.rect.y: Math.round(root.tooltipAnchorY - tooltipPanel.implicitHeight - StylePopover.anchorGap)
+        anchor.rect.x: Math.round(Math.max(0, root._centerX - popW / 2))
+        anchor.rect.y: Math.round(-popH)
         anchor.rect.width: 1
         anchor.rect.height: 1
         grabFocus: false
@@ -68,9 +70,7 @@ Row {
             PopoverLabel {
                 text: root.tooltipText
             }
-
         }
-
     }
 
     Button {
@@ -123,5 +123,4 @@ Row {
                 root.hideTooltipIfNeeded();
         }
     }
-
 }

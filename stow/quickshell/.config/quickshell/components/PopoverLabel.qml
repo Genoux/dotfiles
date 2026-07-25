@@ -5,7 +5,7 @@ import qs.config
 Text {
     id: label
 
-    property int horizontalPadding: 10
+    property int horizontalPadding: StylePopover.contentPaddingH
 
     width: implicitWidth + horizontalPadding * 2
     height: StylePopover.rowHeight

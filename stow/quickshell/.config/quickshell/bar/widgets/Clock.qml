@@ -5,13 +5,17 @@ import qs.components
 import qs.config
 
 Button {
+    id: root
+
+    required property var barWindow
+
     text: Qt.formatDateTime(clock.date, "ddd dd MMM HH:mm")
     fontSize: StyleTokens.fontSizeSm
     foreground: Colors.base05
     interactive: true
     paddingHorizontal: 6
-    // ponytail: plain launch — repeated clicks stack dashboard instances; upgrade to a pkill-toggle if that annoys
-    onClicked: ShellActions.run("waylandar-dashboard")
+    active: popover.open
+    onClicked: popover.open = !popover.open
 
     SystemClock {
         id: clock
@@ -19,4 +23,14 @@ Button {
         precision: SystemClock.Minutes
     }
 
+    BarPopover {
+        id: popover
+
+        barWindow: root.barWindow
+        anchorItem: root
+
+        ClockPopover {
+            active: popover.open
+        }
+    }
 }

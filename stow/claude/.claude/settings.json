@@ -90,7 +90,23 @@
       "Bash(sd 'from \"./workflow-result-view\"' 'from \"../workflow-result/result-view\"' /home/john/Desktop/@inbeat/proof-agent/src/features/sessions/components/session-workspace/_components/workflow-run/state.tsx)",
       "Bash(rm src/shared/components/blocks/combobox.tsx src/shared/components/blocks/combobox.test.ts)",
       "Bash(rg -rln \"blocks/combobox|from.*combobox\" src)",
-      "mcp__plugin_context7_context7__query-docs"
+      "mcp__plugin_context7_context7__query-docs",
+      "Bash(bat --style=plain src/db/migrations/0047_graceful_bromley.sql)",
+      "Bash(bat --style=plain .github/workflows/production-release.yml)",
+      "Bash(bat --style=plain .github/workflows/ci.yml)",
+      "Bash(qmllint services/WeatherState.qml)",
+      "Bash(qmllint services/WeatherState.qml bar/widgets/Weather.qml)",
+      "Bash(git -C /home/john/dotfiles status --short)",
+      "Bash(qmllint /home/john/dotfiles/stow/quickshell/.config/quickshell/bar/widgets/WeatherPopover.qml /home/john/dotfiles/stow/quickshell/.config/quickshell/bar/widgets/TrayMenu.qml /home/john/dotfiles/stow/quickshell/.config/quickshell/bar/widgets/SystemTray.qml /home/john/dotfiles/stow/quickshell/.config/quickshell/bar/widgets/ClockPopover.qml /home/john/dotfiles/stow/quickshell/.config/quickshell/bar/widgets/Clock.qml /home/john/dotfiles/stow/quickshell/.config/quickshell/components/PopoverAction.qml /home/john/dotfiles/stow/quickshell/.config/quickshell/bar/Bar.qml)",
+      "Bash(rg -r \"Colors\" /home/john/dotfiles/stow/quickshell/.config/quickshell/ --files-with-matches -l)",
+      "Bash(rg -r \"Colors\\\\.\" /home/john/dotfiles/stow/quickshell/.config/quickshell/bar/widgets/WeatherPopover.qml)",
+      "Bash(qmllint --import-path . bar/widgets/WeatherPopover.qml)",
+      "Bash(find /home/john/dotfiles/stow/quickshell/.config/quickshell -name \"*.qmldir\" -o -name \"qmldir\" | xargs grep -l \"BarPopover\\\\|PopoverPanel\\\\|components\" 2>/dev/null | head -10; echo \"---\"; cat /home/john/dotfiles/stow/quickshell/.config/quickshell/bar/widgets/../../../components/../shell.qml 2>/dev/null | head -5; echo \"---components qmldir:\"; find /home/john/dotfiles/stow/quickshell/.config/quickshell -maxdepth 2 -name \"qmldir\" | xargs grep -l \".\" 2>/dev/null)",
+      "Read(//home/john/dotfiles/stow/quickshell/.config/**)",
+      "Bash(qmllint components/BarPopover.qml components/PopoverPanel.qml config/StyleBar.qml)",
+      "Bash(echo \"lint: $?\")",
+      "Bash(rg -rn \"layerrule\" /home/john/dotfiles/)",
+      "Bash(ps -o lstart= -p 3008848)"
     ],
     "deny": [
       "Bash(rm -rf /)",
@@ -123,7 +139,7 @@
       "/home/john/Desktop/@inbeat/proof-agent/src/app/api/sessions/[id]/events"
     ]
   },
-  "model": "claude-fable-5[1m]",
+  "model": "sonnet",
   "enableAllProjectMcpServers": true,
   "hooks": {
     "UserPromptSubmit": [
@@ -145,7 +161,8 @@
     "frontend-design@claude-plugins-official": true,
     "gitkraken-hooks@gitkraken": true,
     "linear@claude-plugins-official": true,
-    "ponytail@ponytail": true
+    "ponytail@ponytail": true,
+    "rust-analyzer-lsp@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
     "engram": {
@@ -174,7 +191,7 @@
     }
   },
   "outputStyle": "Gentleman",
-  "effortLevel": "medium",
+  "effortLevel": "high",
   "tui": "fullscreen",
   "skipDangerousModePermissionPrompt": true,
   "theme": "auto"

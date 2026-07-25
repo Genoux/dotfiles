@@ -19,6 +19,9 @@ hl.window_rule({
   match = { class = "^$", title = "^$" },
 })
 
+-- Keep Idleon's game loop alive on hidden workspaces (browser rAF needs frame callbacks)
+hl.window_rule({ name = "idleon-render-unfocused", render_unfocused = true, match = { class = "^(chrome-www\\.legendsofidleon\\.com.*)$" } })
+
 hl.window_rule({ name = "slack", float = true, size = "1200 800", match = { class = "^(slack)$" } })
 hl.window_rule({ name = "nautilus", float = true, center = true, size = "(monitor_w*0.65) (monitor_h*0.65)", opacity = "0.90 0.90", match = { class = "^(org.gnome.Nautilus)$" } })
 hl.window_rule({ name = "file-picker-portal", float = true, size = "(monitor_w*0.6) (monitor_h*0.7)", center = true, opacity = "0.90 0.90", match = { class = "^(xdg-desktop-portal-gtk)$" } })

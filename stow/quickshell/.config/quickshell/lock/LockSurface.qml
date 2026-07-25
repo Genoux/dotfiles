@@ -227,7 +227,8 @@ Item {
                 anchors.centerIn: parent
                 width: StyleLock.inputWidth - StyleLock.inputOutline * 2
                 height: StyleLock.inputHeight - StyleLock.inputOutline * 2
-                visible: opacity > 0
+                // Stays visible (opacity handles hiding) so the TextInput can
+                // hold keyboard focus while the pill is collapsed.
                 opacity: (root.inputExpanded && !widthAnim.running) ? 1 : 0
 
                 Row {
@@ -268,7 +269,11 @@ Item {
                     cursorVisible: false
                     onTextChanged: root.context.currentText = text
                     onAccepted: root.context.tryUnlock()
-                    onActiveFocusChanged: cursorVisible = false
+                    onActiveFocusChanged: {
+                        cursorVisible = false;
+                        if (!activeFocus)
+                            forceActiveFocus();
+                    }
 
                     Connections {
                         function onCurrentTextChanged() {

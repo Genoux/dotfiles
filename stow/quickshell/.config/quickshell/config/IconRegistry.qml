@@ -35,10 +35,6 @@ Singleton {
         return barIcon("audio", "low")
     }
 
-    function networkIcon(key) {
-        return barIcon("network", key)
-    }
-
     function temperatureIcon(status) {
         return barIcon("temperature", status)
     }
@@ -62,12 +58,8 @@ Singleton {
         "camera-video-symbolic": { domain: "privacy", name: "camera" },
         "emblem-favorite-symbolic": { domain: "shell", name: "info" },
         "media-optical-symbolic": { domain: "media", name: "optical" },
-        "media-playback-pause-symbolic": { domain: "media", name: "pause" },
-        "media-playback-start-symbolic": { domain: "media", name: "play" },
         "media-playback-stop-symbolic": { domain: "media", name: "stop" },
         "media-record-symbolic": { domain: "media", name: "record" },
-        "media-skip-backward-symbolic": { domain: "media", name: "skip-backward" },
-        "media-skip-forward-symbolic": { domain: "media", name: "skip-forward" },
         "mic-on": { domain: "privacy", name: "mic" },
         "system-search-symbolic": { domain: "launcher", name: "search" },
         "system-shutdown-symbolic": { domain: "menu", name: "shutdown" },

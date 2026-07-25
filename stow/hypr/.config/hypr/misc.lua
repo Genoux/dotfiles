@@ -15,6 +15,7 @@ hl.config({
     session_lock_xray = true,
     initial_workspace_tracking = false,
     focus_on_activate = true,
+    render_unfocused_fps = 60,
   },
 
   xwayland = {

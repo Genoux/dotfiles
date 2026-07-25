@@ -10,7 +10,7 @@ PopoverPanel {
 
     Column {
         spacing: 2
-        width: StylePopover.minWidth
+        width: StylePopover.panelWidth
 
         Repeater {
             model: menu.entries
@@ -19,7 +19,7 @@ PopoverPanel {
                 required property var modelData
                 required property int index
 
-                width: StylePopover.minWidth
+                width: StylePopover.panelWidth
                 label: modelData?.label ?? ""
                 separator: modelData?.separator ?? false
                 onActivated: menu.selected(index)

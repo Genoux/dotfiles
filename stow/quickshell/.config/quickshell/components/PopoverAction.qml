@@ -7,10 +7,11 @@ Rectangle {
 
     required property string label
     property bool separator: false
+    property bool actionEnabled: true
 
     signal activated()
 
-    implicitWidth: StylePopover.minWidth
+    implicitWidth: StylePopover.panelWidth
     implicitHeight: separator ? StylePopover.separatorHeight : StylePopover.rowHeight
     width: implicitWidth
     height: implicitHeight
@@ -22,12 +23,13 @@ Rectangle {
     Text {
         visible: !action.separator
         anchors.left: parent.left
-        anchors.leftMargin: 10
+        anchors.leftMargin: StylePopover.contentPaddingH
         anchors.right: parent.right
-        anchors.rightMargin: 10
+        anchors.rightMargin: StylePopover.contentPaddingH
         anchors.verticalCenter: parent.verticalCenter
         text: action.label
         color: Colors.base05
+        opacity: action.actionEnabled ? 1.0 : 0.4
         font.family: StyleTokens.fontSans
         font.pixelSize: StyleTokens.fontSizeSm
         elide: Text.ElideRight
@@ -37,7 +39,7 @@ Rectangle {
         id: mouseArea
 
         anchors.fill: parent
-        visible: !action.separator
+        visible: !action.separator && action.actionEnabled
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
         onClicked: action.activated()
