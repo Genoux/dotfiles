@@ -219,7 +219,9 @@ IFS=$'\n'	# delimit by newline
 
 # define colors - using bright theme colors
 BOLD="$(tput bold)"
-RESET="$(tput sgr0)"
+# tput sgr0 emits "ESC ( B ESC [ m"; fastfetch counts the non-CSI charset-designation
+# prefix as 3 printable columns and under-pads the logo, so keep the reset pure CSI.
+RESET=$'\e[0m'
 if ((termColors)); then
 	# ANSI blue (4) / bright blue (12) — matches matugen Kitty primary on color4/color12 (accent)
 	BROWN="$BOLD$(tput setaf 12)"

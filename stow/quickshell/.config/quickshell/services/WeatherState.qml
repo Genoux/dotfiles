@@ -17,6 +17,9 @@ Singleton {
     // Bar display
     property string icon: "unknown"
     property string temperature: "--°C"
+    // Numeric form of the above, for plotting the "now" marker on the forecast
+    // range bars. NaN while there is no data.
+    property real currentTemp: NaN
 
     // Popover detail — current conditions
     property string description: ""
@@ -115,6 +118,7 @@ Singleton {
                 const code = parseInt(cc.weatherCode ?? "113")
                 root.icon = root.iconForCode(code)
                 root.temperature = (cc.temp_C ?? "--") + "°C"
+                root.currentTemp = parseFloat(cc.temp_C ?? "NaN")
                 root.description = cc.weatherDesc?.[0]?.value ?? ""
                 root.feelsLike = (cc.FeelsLikeC ?? "--") + "°C"
                 root.humidity = (cc.humidity ?? "--") + "%"

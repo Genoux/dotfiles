@@ -10,11 +10,11 @@ Button {
     required property var barWindow
 
     iconSource: IconRegistry.weatherIcon(WeatherState.icon)
-    iconColored: true
     text: WeatherState.temperature
     interactive: true
+    iconTextSpacing: 0
     active: popover.open
-    onClicked: popover.open = !popover.open
+    onClicked: popover.toggle()
 
     BarPopover {
         id: popover

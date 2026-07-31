@@ -6,6 +6,8 @@ import qs.config
 import qs.services
 
 BarGroup {
+    id: root
+
     required property var barWindow
 
     visible: SystemTray.items.values.length > 0
@@ -41,7 +43,7 @@ BarGroup {
                     onClicked: (mouse) => {
                         if (mouse.button === Qt.RightButton) {
                             if (trayDelegate.modelData.hasMenu) {
-                                trayPopover.open = !trayPopover.open
+                                trayPopover.toggle()
                             } else {
                                 trayDelegate.modelData.secondaryActivate()
                             }
@@ -51,14 +53,26 @@ BarGroup {
                             trayDelegate.modelData.secondaryActivate()
                             return
                         }
+                        // Items with no primary action of their own — only a menu —
+                        // must show it here rather than fall through to activate():
+                        // apps that pop their own window on Activate() have no
+                        // reliable way to learn our icon's screen position, so it
+                        // lands wherever they default to (often top-left of screen).
+                        if (trayDelegate.modelData.onlyMenu && trayDelegate.modelData.hasMenu) {
+                            trayPopover.toggle()
+                            return
+                        }
                         TrayFocus.activate(trayDelegate.modelData)
                     }
                 }
 
-                BarPopover {
+                ContextMenuPopup {
                     id: trayPopover
 
-                    barWindow: barWindow
+                    // Must be qualified: an unqualified `barWindow` here resolves
+                    // against the popup's own property of that name, not this
+                    // widget's, and silently binds to undefined.
+                    barWindow: root.barWindow
                     anchorItem: btn
 
                     TrayMenu {

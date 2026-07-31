@@ -12,12 +12,35 @@ PopoverPanel {
     readonly property int popoverWidth: StylePopover.panelWidth
     readonly property int padH: StylePopover.contentPaddingH
 
-    // Formats "2026-07-04" → "Fri"
+    // Shared column geometry — the axis labels in the section header must land
+    // exactly on the ends of the track in the rows below, or the scale they
+    // describe reads as decoration instead of an axis.
+    readonly property int dayLabelWidth: 38
+    readonly property int columnGap: 8
+    readonly property int tempLabelWidth: 32
+    readonly property int trackLeft: padH + dayLabelWidth + columnGap + forecastIconSize + columnGap + tempLabelWidth + columnGap
+    readonly property int trackRight: popoverWidth - padH - tempLabelWidth - columnGap
+    readonly property int trackWidth: Math.max(0, trackRight - trackLeft)
+    readonly property int minLabelX: trackLeft - columnGap - tempLabelWidth
+
+    readonly property string todayDate: Qt.formatDate(new Date(), "yyyy-MM-dd")
+
+    // Formats "2026-07-04" → "Fri", or "Today" for the current day
     function shortDayLabel(dateStr) {
         if (!dateStr)
             return ""
+        if (dateStr === root.todayDate)
+            return "Today"
         const d = new Date(dateStr + "T12:00:00")
         return d.toLocaleDateString(Qt.locale(), "ddd")
+    }
+
+    // Whole degrees only — the unit is stated once in the hero, so repeating
+    // "°C" on every bound just crowds the row.
+    function degreeLabel(value) {
+        if (value === null || value === undefined || isNaN(value))
+            return "--°"
+        return Math.round(value) + "°"
     }
 
     // Week-wide min/max across all forecast days with numeric temps, for bar normalization
@@ -131,7 +154,7 @@ PopoverPanel {
         // Stats row: FEELS / HUMIDITY / WIND in equal thirds
         Item {
             width: parent.width
-            height: 48
+            height: 52
 
             Row {
                 anchors.fill: parent
@@ -154,7 +177,7 @@ PopoverPanel {
 
                             anchors.horizontalCenter: parent.horizontalCenter
                             anchors.top: parent.top
-                            anchors.topMargin: 10
+                            anchors.topMargin: 11
                             text: modelData.label
                             color: Colors.base04
                             font.family: StyleTokens.fontSans
@@ -166,11 +189,14 @@ PopoverPanel {
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
                             anchors.top: statLabel.bottom
-                            anchors.topMargin: 3
+                            anchors.topMargin: 4
+                            width: parent.width - 8
                             text: modelData.value
                             color: Colors.base05
                             font.family: StyleTokens.fontSans
-                            font.pixelSize: StyleTokens.fontSizeSm
+                            font.pixelSize: StyleTokens.fontSizeMd
+                            horizontalAlignment: Text.AlignHCenter
+                            elide: Text.ElideRight
                         }
 
                     }
@@ -187,6 +213,57 @@ PopoverPanel {
             color: StyleOverlay.borderSubtle
         }
 
+        // Forecast axis header. Every row's bar is drawn against one shared
+        // scale, which is invisible without this: the two figures sit exactly
+        // on the ends of the track below, so the bars read as positions on a
+        // range rather than as free-floating widths.
+        Item {
+            width: parent.width
+            height: 30
+            visible: WeatherState.forecast.length > 0
+
+            Text {
+                anchors.left: parent.left
+                anchors.leftMargin: root.padH
+                anchors.verticalCenter: parent.verticalCenter
+                text: "FORECAST"
+                color: Colors.base04
+                font.family: StyleTokens.fontSans
+                font.pixelSize: StyleTokens.fontSizeXs
+                font.capitalization: Font.AllUppercase
+                font.letterSpacing: 0.8
+            }
+
+            Text {
+                x: root.trackLeft - width / 2
+                anchors.verticalCenter: parent.verticalCenter
+                text: root.degreeLabel(root.weekMin)
+                color: Colors.base04
+                font.family: StyleTokens.fontSans
+                font.pixelSize: StyleTokens.fontSizeXs
+            }
+
+            // Hairline spanning the exact width of the bars below, tying the
+            // two figures to the track they describe.
+            Rectangle {
+                x: root.trackLeft + 20
+                width: Math.max(0, root.trackWidth - 40)
+                anchors.verticalCenter: parent.verticalCenter
+                height: StylePopover.separatorHeight
+                color: StyleOverlay.borderSubtle
+            }
+
+            Text {
+                x: root.trackRight - width / 2
+                anchors.verticalCenter: parent.verticalCenter
+                text: root.degreeLabel(root.weekMax)
+                color: Colors.base04
+                font.family: StyleTokens.fontSans
+                font.pixelSize: StyleTokens.fontSizeXs
+            }
+
+        }
+
         // Forecast rows: day label + icon + temperature range bar
         Repeater {
             id: forecastRepeater
@@ -198,112 +275,110 @@ PopoverPanel {
 
                 required property var modelData
 
+                readonly property bool isToday: modelData.date === root.todayDate
+
                 width: root.popoverWidth
-                height: StylePopover.rowHeight
+                height: 38
 
                 Text {
-                    id: dayText
-
-                    anchors.left: parent.left
-                    anchors.leftMargin: root.padH
+                    x: root.padH
                     anchors.verticalCenter: parent.verticalCenter
-                    text: root.shortDayLabel(modelData.date)
+                    width: root.dayLabelWidth
+                    text: root.shortDayLabel(forecastRow.modelData.date)
                     color: Colors.base05
                     font.family: StyleTokens.fontSans
                     font.pixelSize: StyleTokens.fontSizeSm
-                    width: 28
+                    font.weight: forecastRow.isToday ? Font.DemiBold : Font.Normal
+                    elide: Text.ElideRight
                 }
 
                 // Weather SVGs carry embedded colors
                 Image {
-                    id: forecastIcon
-
-                    anchors.left: dayText.right
-                    anchors.leftMargin: 6
+                    x: root.padH + root.dayLabelWidth + root.columnGap
                     anchors.verticalCenter: parent.verticalCenter
-                    source: IconRegistry.weatherIcon(modelData.icon)
+                    source: IconRegistry.weatherIcon(forecastRow.modelData.icon)
                     width: root.forecastIconSize
                     height: root.forecastIconSize
                     fillMode: Image.PreserveAspectFit
                     sourceSize: Qt.size(root.forecastIconSize, root.forecastIconSize)
                 }
 
-                // Range bar lane
-                Item {
-                    id: barLane
-
-                    anchors.left: forecastIcon.right
-                    anchors.leftMargin: 8
-                    anchors.right: parent.right
-                    anchors.rightMargin: root.padH
+                Text {
+                    x: root.minLabelX
                     anchors.verticalCenter: parent.verticalCenter
-                    height: 24
+                    width: root.tempLabelWidth
+                    text: root.degreeLabel(forecastRow.modelData.minTemp)
+                    color: Colors.base04
+                    font.family: StyleTokens.fontSans
+                    font.pixelSize: StyleTokens.fontSizeSm
+                    horizontalAlignment: Text.AlignRight
+                }
 
-                    readonly property real barLaneWidth: width - minTempLabel.width - maxTempLabel.width - 8
+                // Track spans the whole forecast range; the fill is this day's slice of it
+                Rectangle {
+                    id: barTrack
 
-                    // Min temp label
-                    Text {
-                        id: minTempLabel
+                    x: root.trackLeft
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: root.trackWidth
+                    height: StylePopover.forecastBarHeight
+                    radius: StylePopover.forecastBarRadius
+                    color: Qt.rgba(Colors.base04.r, Colors.base04.g, Colors.base04.b, 0.15)
 
-                        anchors.left: parent.left
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: forecastRow.modelData.minC
-                        color: Colors.base05
-                        font.family: StyleTokens.fontSans
-                        font.pixelSize: StyleTokens.fontSizeXs
-                    }
+                    readonly property real fillStart: root.normalizeTemp(forecastRow.modelData.minTemp)
+                    readonly property real fillEnd: root.normalizeTemp(forecastRow.modelData.maxTemp)
+                    readonly property bool hasRange: forecastRow.modelData.minTemp !== null && forecastRow.modelData.maxTemp !== null
 
-                    // Track background
                     Rectangle {
-                        id: barTrack
+                        x: barTrack.fillStart * barTrack.width
+                        width: Math.max(0, (barTrack.fillEnd - barTrack.fillStart) * barTrack.width)
+                        height: parent.height
+                        radius: parent.radius
+                        visible: barTrack.hasRange
 
-                        anchors.left: minTempLabel.right
-                        anchors.leftMargin: 4
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: barLane.barLaneWidth
-                        height: StylePopover.forecastBarHeight
-                        radius: StylePopover.forecastBarRadius
-                        color: Qt.rgba(Colors.base04.r, Colors.base04.g, Colors.base04.b, 0.15)
+                        // Cool-to-warm across the segment: on a base16 palette
+                        // cyan and red are the cold and hot slots, so this still
+                        // reads correctly whatever matugen generates.
+                        gradient: Gradient {
+                            orientation: Gradient.Horizontal
 
-                        readonly property real fillStart: root.normalizeTemp(forecastRow.modelData.minTemp)
-                        readonly property real fillEnd: root.normalizeTemp(forecastRow.modelData.maxTemp)
-
-                        // Filled accent segment — sized/positioned by normalized progress
-                        Rectangle {
-                            x: barTrack.fillStart * barTrack.width
-                            y: 0
-                            width: Math.max(0, (barTrack.fillEnd - barTrack.fillStart) * barTrack.width)
-                            height: parent.height
-                            radius: parent.radius
-                            color: Colors.base0B
-                            visible: forecastRow.modelData.minTemp !== null && forecastRow.modelData.maxTemp !== null
+                            GradientStop { position: 0; color: Colors.base0C }
+                            GradientStop { position: 1; color: Colors.base08 }
                         }
 
                     }
 
-                    // Max temp label
-                    Text {
-                        id: maxTempLabel
+                    // "You are here" — current temperature on today's row only.
+                    // Overhanging the bar on both sides is what makes it read as
+                    // sitting on top; no ring is needed to separate it, which
+                    // avoids stroking a shape this small.
+                    Rectangle {
+                        readonly property real marker: root.normalizeTemp(WeatherState.currentTemp)
 
-                        anchors.right: parent.right
+                        visible: forecastRow.isToday && !isNaN(WeatherState.currentTemp) && barTrack.hasRange
+                        x: marker * barTrack.width - width / 2
                         anchors.verticalCenter: parent.verticalCenter
-                        text: forecastRow.modelData.maxC
+                        width: StylePopover.forecastMarkerWidth
+                        height: StylePopover.forecastMarkerHeight
+                        radius: width / 2
+                        antialiasing: true
                         color: Colors.base05
-                        font.family: StyleTokens.fontSans
-                        font.pixelSize: StyleTokens.fontSizeXs
                     }
 
                 }
 
+                Text {
+                    x: root.trackRight + root.columnGap
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: root.tempLabelWidth
+                    text: root.degreeLabel(forecastRow.modelData.maxTemp)
+                    color: Colors.base05
+                    font.family: StyleTokens.fontSans
+                    font.pixelSize: StyleTokens.fontSizeSm
+                }
+
             }
 
-        }
-
-        // Collapse gracefully when forecast is empty
-        Item {
-            visible: WeatherState.forecast.length === 0
-            width: parent.width
-            height: 0
         }
 
         Item { width: 1; height: 8 }

@@ -102,7 +102,7 @@ Button {
             ShellActions.runLocalScript("system-screenrecord");
             return ;
         }
-        recordPopover.open = !recordPopover.open;
+        recordPopover.toggle();
     }
     onExpandedChanged: setExpanded(expanded)
     Component.onCompleted: {

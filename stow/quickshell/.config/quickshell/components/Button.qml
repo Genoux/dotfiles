@@ -5,6 +5,7 @@ import Quickshell
 import Quickshell.Widgets
 import qs
 import qs.config
+import qs.services
 
 Rectangle {
     id: root
@@ -62,7 +63,14 @@ Rectangle {
     width: implicitWidth
     height: implicitHeight
     radius: StyleTokens.radiusSm
-    color: root.manageHoverColor && (mouseArea.containsMouse || root.active) && interactive ? hoverBackground : background
+    // An open popover holds the same light tint as hover, so the button reads
+    // as "still pressed" rather than switching to a different colour.
+    color: {
+        if (!root.manageHoverColor || !root.interactive)
+            return root.background;
+
+        return (mouseArea.containsMouse || root.active) ? root.hoverBackground : root.background;
+    }
     border.width: borderWidth
     border.color: borderColor
     clip: clipContent
@@ -166,6 +174,14 @@ Rectangle {
         cursorShape: root.interactive ? Qt.PointingHandCursor : Qt.ArrowCursor
         hoverEnabled: true
         onClicked: (mouse) => {
+            // Any interactive button dismisses an open popover, except the one
+            // that owns it and the controls inside it — PopoverCoordinator
+            // decides which by structure. Runs before the button's own handler
+            // so a widget opening its panel still hands off from the outgoing
+            // one rather than racing it.
+            if (root.interactive)
+                PopoverCoordinator.notifyInteraction(root);
+
             return root.clicked(mouse);
         }
     }

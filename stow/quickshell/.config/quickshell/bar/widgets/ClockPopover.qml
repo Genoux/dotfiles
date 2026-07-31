@@ -12,10 +12,13 @@ PopoverPanel {
     // -1 = prev (slide right-to-left), +1 = next (slide left-to-right)
     property int slideDirection: 1
 
+    // Debounces scroll-to-navigate so one trackpad swipe (many wheel deltas)
+    // moves a single month instead of flying through several.
+    property bool wheelLocked: false
+
     readonly property int cellSize: StylePopover.calendarCellSize
-    readonly property int cellHeight: StylePopover.calendarCellHeight
-    // calendarWidth matches panelWidth so cells fill it edge-to-edge with contentPaddingH on each side.
-    readonly property int calendarWidth: StylePopover.panelWidth
+    readonly property int calendarWidth: StylePopover.calendarWidth
+    readonly property int padH: StylePopover.calendarPaddingH
 
     // Reset display to current month and refresh today snapshot on open
     onActiveChanged: {
@@ -92,135 +95,59 @@ PopoverPanel {
         slideAnim.restart()
     }
 
+    function jumpToToday() {
+        if (root.viewingCurrentMonth)
+            return
+        root.slideDirection = root.displayYear < root.todayYear || (root.displayYear === root.todayYear && root.displayMonth < root.todayMonth) ? 1 : -1
+        root.displayYear = root.todayYear
+        root.displayMonth = root.todayMonth
+        slideAnim.restart()
+    }
+
     Column {
         spacing: 0
 
-        // Header: full human date anchor line + month/year nav row
+        // Hero row: today's full date is the glanceable anchor, so it gets the
+        // largest type here. The Today pill sits opposite it, out of the way of
+        // the centered month title below.
         Item {
             width: root.calendarWidth
-            height: 52
+            height: StylePopover.calendarHeroHeight
 
-            // Full date of today — anchor / orientation line
             Text {
-                id: fullDateLine
-
-                anchors.top: parent.top
-                anchors.topMargin: 10
-                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.left: parent.left
+                anchors.leftMargin: root.padH
+                anchors.right: todayButton.left
+                anchors.rightMargin: 8
+                anchors.verticalCenter: parent.verticalCenter
                 text: {
                     const loc = Qt.locale()
                     return loc.dayName(root.today.getDay(), Locale.LongFormat) + ", " + loc.monthName(root.today.getMonth(), Locale.LongFormat) + " " + root.todayDay
                 }
                 color: Colors.base05
                 font.family: StyleTokens.fontSans
-                font.pixelSize: StyleTokens.fontSizeSm
-                font.weight: Font.Medium
+                font.pixelSize: StyleTokens.fontSizeLg
+                font.weight: Font.DemiBold
+                elide: Text.ElideRight
             }
 
-            // Month/year nav row
-            Item {
-                anchors.top: fullDateLine.bottom
-                anchors.topMargin: 4
-                anchors.left: parent.left
+            // Explicit jump-back control — only meaningful while browsing away
+            Button {
+                id: todayButton
+
                 anchors.right: parent.right
-                height: 20
-
-                // Prev chevron with hover circle
-                Item {
-                    id: prevChevronArea
-
-                    anchors.left: parent.left
-                    anchors.leftMargin: StylePopover.contentPaddingH
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: 20
-                    height: 20
-
-                    Rectangle {
-                        anchors.fill: parent
-                        radius: width / 2
-                        color: prevHover.containsMouse ? StyleTokens.alphaLight : StyleTokens.transparent
-                    }
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: "‹"
-                        color: Colors.base04
-                        font.family: StyleTokens.fontSans
-                        font.pixelSize: StyleTokens.fontSizeSm
-                    }
-
-                    MouseArea {
-                        id: prevHover
-
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.navigatePrev()
-                    }
-
-                }
-
-                // Month + year label — clicking resets to current month when viewing a different month
-                Text {
-                    id: monthYearLabel
-
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: Qt.locale().standaloneMonthName(root.displayMonth - 1) + " " + root.displayYear
-                    color: root.viewingCurrentMonth ? Colors.base04 : Colors.base05
-                    font.family: StyleTokens.fontSans
-                    font.pixelSize: StyleTokens.fontSizeXs
-
-                    MouseArea {
-                        anchors.fill: parent
-                        // only active when browsing away from today's month
-                        enabled: !root.viewingCurrentMonth
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            root.slideDirection = root.displayYear < root.todayYear || (root.displayYear === root.todayYear && root.displayMonth < root.todayMonth) ? 1 : -1
-                            root.displayYear = root.todayYear
-                            root.displayMonth = root.todayMonth
-                            slideAnim.restart()
-                        }
-                    }
-
-                }
-
-                // Next chevron with hover circle
-                Item {
-                    id: nextChevronArea
-
-                    anchors.right: parent.right
-                    anchors.rightMargin: StylePopover.contentPaddingH
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: 20
-                    height: 20
-
-                    Rectangle {
-                        anchors.fill: parent
-                        radius: width / 2
-                        color: nextHover.containsMouse ? StyleTokens.alphaLight : StyleTokens.transparent
-                    }
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: "›"
-                        color: Colors.base04
-                        font.family: StyleTokens.fontSans
-                        font.pixelSize: StyleTokens.fontSizeSm
-                    }
-
-                    MouseArea {
-                        id: nextHover
-
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.navigateNext()
-                    }
-
-                }
-
+                anchors.rightMargin: root.padH
+                anchors.verticalCenter: parent.verticalCenter
+                visible: !root.viewingCurrentMonth
+                text: "Today"
+                fontSize: StyleTokens.fontSizeSm
+                foreground: Colors.base05
+                background: StyleTokens.alphaLight
+                paddingHorizontal: 10
+                paddingVertical: 6
+                radius: height / 2
+                interactive: true
+                onClicked: root.jumpToToday()
             }
 
         }
@@ -231,26 +158,74 @@ PopoverPanel {
             color: StyleOverlay.borderSubtle
         }
 
+        // Month nav: prev far left, title centered, next far right — the layout
+        // every desktop calendar converges on.
+        Item {
+            width: root.calendarWidth
+            height: StylePopover.calendarNavHeight
+
+            // Centers the nav button on the outermost grid column below it
+            readonly property int navMargin: root.padH + (root.cellSize - StylePopover.calendarNavSize) / 2
+
+            Button {
+                anchors.left: parent.left
+                anchors.leftMargin: parent.navMargin
+                anchors.verticalCenter: parent.verticalCenter
+                width: StylePopover.calendarNavSize
+                height: StylePopover.calendarNavSize
+                radius: width / 2
+                iconGlyph: "‹"
+                iconFont: StyleTokens.fontSans
+                iconSize: StyleControl.iconSizeMd
+                foreground: Colors.base05
+                interactive: true
+                onClicked: root.navigatePrev()
+            }
+
+            Text {
+                anchors.centerIn: parent
+                text: Qt.locale().standaloneMonthName(root.displayMonth - 1) + " " + root.displayYear
+                color: Colors.base05
+                font.family: StyleTokens.fontSans
+                font.pixelSize: StyleTokens.fontSizeMd
+                font.weight: Font.DemiBold
+            }
+
+            Button {
+                anchors.right: parent.right
+                anchors.rightMargin: parent.navMargin
+                anchors.verticalCenter: parent.verticalCenter
+                width: StylePopover.calendarNavSize
+                height: StylePopover.calendarNavSize
+                radius: width / 2
+                iconGlyph: "›"
+                iconFont: StyleTokens.fontSans
+                iconSize: StyleControl.iconSizeMd
+                foreground: Colors.base05
+                interactive: true
+                onClicked: root.navigateNext()
+            }
+
+        }
+
         // Grid container — clips the slide animation
         Item {
             id: gridContainer
 
             width: root.calendarWidth
-            height: (root.cellHeight * 7) + 4  // 1 header row + 6 day rows + bottom gap
+            height: StylePopover.calendarWeekdayRowHeight + root.cellSize * 6
             clip: true
 
-            // Grid column: day-name headers + 6 week rows
-            // This entire block slides + fades on month change
+            // Grid column: weekday headers + 6 week rows.
+            // This entire block slides + fades on month change.
             Column {
                 id: gridColumn
 
                 width: parent.width
                 spacing: 0
 
-                // Day-of-week column headers
                 Row {
-                    // center the 7-cell grid so floor() rounding slack splits evenly
-                    leftPadding: Math.floor((root.calendarWidth - root.cellSize * 7) / 2)
+                    x: root.padH
 
                     Repeater {
                         model: root.dayNames
@@ -259,11 +234,15 @@ PopoverPanel {
                             required property var modelData
 
                             width: root.cellSize
-                            height: root.cellHeight
+                            height: StylePopover.calendarWeekdayRowHeight
                             text: modelData
                             color: Colors.base04
+                            opacity: StylePopover.calendarWeekdayOpacity
                             font.family: StyleTokens.fontSans
-                            font.pixelSize: StyleTokens.fontSizeXs
+                            font.pixelSize: StyleTokens.fontSizeSm
+                            font.weight: Font.Medium
+                            font.capitalization: Font.AllUppercase
+                            font.letterSpacing: 0.6
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
                         }
@@ -274,8 +253,7 @@ PopoverPanel {
 
                 // Day grid — 6 rows × 7 cols
                 Column {
-                    // center the 7-cell grid so floor() rounding slack splits evenly
-                    leftPadding: Math.floor((root.calendarWidth - root.cellSize * 7) / 2)
+                    x: root.padH
                     spacing: 0
 
                     Repeater {
@@ -301,25 +279,25 @@ PopoverPanel {
                                         && root.displayYear === root.todayYear
 
                                     width: root.cellSize
-                                    height: root.cellHeight
+                                    height: root.cellSize
 
-                                    // Hover highlight — subtle rounded rect, not active for today
+                                    // Hover highlight — suppressed on today, which already has a fill
                                     Rectangle {
                                         anchors.centerIn: parent
-                                        width: root.cellHeight - 2
-                                        height: root.cellHeight - 2
-                                        radius: (root.cellHeight - 2) / 2
+                                        width: StylePopover.calendarDayCircle
+                                        height: StylePopover.calendarDayCircle
+                                        radius: width / 2
                                         visible: !dayCell.isToday && cellHover.containsMouse
                                         color: StyleTokens.alphaLight
                                     }
 
                                     // Today: filled accent circle
                                     Rectangle {
-                                        visible: dayCell.isToday
                                         anchors.centerIn: parent
-                                        width: root.cellHeight - 2
-                                        height: root.cellHeight - 2
-                                        radius: (root.cellHeight - 2) / 2
+                                        visible: dayCell.isToday
+                                        width: StylePopover.calendarDayCircle
+                                        height: StylePopover.calendarDayCircle
+                                        radius: width / 2
                                         color: Colors.base0D
                                     }
 
@@ -327,11 +305,11 @@ PopoverPanel {
                                         anchors.centerIn: parent
                                         text: dayCell.cell.day
                                         // today gets contrasting dark text over the accent fill
-                                        color: dayCell.isToday ? Colors.base00 : (dayCell.cell.currentMonth ? Colors.base05 : Colors.base04)
-                                        opacity: dayCell.cell.currentMonth ? 1.0 : 0.35
+                                        color: dayCell.isToday ? Colors.base00 : Colors.base05
+                                        opacity: dayCell.cell.currentMonth ? 1 : StylePopover.calendarOtherMonthOpacity
                                         font.family: StyleTokens.fontSans
-                                        font.pixelSize: StyleTokens.fontSizeXs
-                                        font.weight: dayCell.isToday ? Font.Medium : Font.Normal
+                                        font.pixelSize: StyleTokens.fontSizeMd
+                                        font.weight: dayCell.isToday ? Font.DemiBold : Font.Normal
                                         horizontalAlignment: Text.AlignHCenter
                                     }
 
@@ -354,10 +332,34 @@ PopoverPanel {
 
             }
 
+            // Wheel-only overlay: NoButton + hover disabled lets day-cell hover
+            // pass through underneath while still catching scroll.
+            MouseArea {
+                anchors.fill: parent
+                acceptedButtons: Qt.NoButton
+                onWheel: wheel => {
+                    if (root.wheelLocked)
+                        return
+                    if (wheel.angleDelta.y < 0)
+                        root.navigateNext()
+                    else if (wheel.angleDelta.y > 0)
+                        root.navigatePrev()
+                    root.wheelLocked = true
+                    wheelUnlockTimer.restart()
+                }
+            }
+
         }
 
-        Item { width: 1; height: 6 }
+        Item { width: 1; height: 8 }
 
+    }
+
+    Timer {
+        id: wheelUnlockTimer
+
+        interval: StylePopover.calendarWheelDebounce
+        onTriggered: root.wheelLocked = false
     }
 
     // Month slide animation — restarted explicitly by the navigation handlers

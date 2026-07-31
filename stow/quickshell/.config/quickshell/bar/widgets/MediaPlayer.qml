@@ -451,6 +451,7 @@ BarGroup {
                 opacity: root.controlsExpanded ? 1 : 0
 
                 Button {
+                    anchors.verticalCenter: parent.verticalCenter
                     iconName: "media-skip-backward-symbolic"
                     iconSize: StyleControl.iconSizeSm
                     interactive: root.controlsExpanded && root.canGoPrevious
@@ -458,6 +459,7 @@ BarGroup {
                 }
 
                 Button {
+                    anchors.verticalCenter: parent.verticalCenter
                     iconName: player && player.isPlaying ? "media-playback-pause-symbolic" : "media-playback-start-symbolic"
                     iconSize: StyleControl.iconSizeSm
                     interactive: root.controlsExpanded && root.canTogglePlayback
@@ -465,6 +467,7 @@ BarGroup {
                 }
 
                 Button {
+                    anchors.verticalCenter: parent.verticalCenter
                     iconName: "media-skip-forward-symbolic"
                     iconSize: StyleControl.iconSizeSm
                     interactive: root.controlsExpanded && root.canGoNext

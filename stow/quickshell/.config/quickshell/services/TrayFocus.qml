@@ -7,14 +7,11 @@ import QtQuick
 import qs.config
 
 Singleton {
+    // Callers must route onlyMenu items to the tray popover themselves —
+    // this is only reached for items with their own primary action.
     function activate(item) {
         if (!item)
             return
-
-        if (item.onlyMenu && item.hasMenu) {
-            item.secondaryActivate()
-            return
-        }
 
         item.activate()
         tryRaiseMprisPlayer(item)

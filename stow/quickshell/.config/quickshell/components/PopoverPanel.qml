@@ -1,6 +1,7 @@
 import Qt5Compat.GraphicalEffects
 import QtQuick
 import qs.config
+import qs.services
 
 // Popover panel surface — floats above the bar with all four corners rounded.
 // Uses the translucent overlay material: the Hyprland layer rule for the quickshell
@@ -10,11 +11,18 @@ Item {
 
     property bool active: false
     property bool fitContent: false
+    // Widget panels spring up from the bar; a context menu should just appear.
+    property bool springReveal: true
     default property alias content: contentLayer.data
     readonly property int chromePadding: StylePopover.padding
 
+    // fitContent opts out of the *width* floor, for panels that must hug their
+    // content (a context menu sized to its widest entry). The height floor
+    // still applies either way: it guards against a panel that is briefly
+    // empty while its content resolves, which is the tray menu — precisely a
+    // fitContent case — so tying the two together would defeat it.
     implicitWidth: (fitContent ? contentLayer.childrenRect.width : Math.max(StylePopover.minWidth, contentLayer.childrenRect.width)) + chromePadding * 2
-    implicitHeight: contentLayer.childrenRect.height + chromePadding * 2
+    implicitHeight: Math.max(StylePopover.minHeight, contentLayer.childrenRect.height) + chromePadding * 2
     width: implicitWidth
     height: implicitHeight
 
@@ -28,11 +36,16 @@ Item {
 
     onActiveChanged: {
         if (active) {
-            hideAnimation.stop()
-            showAnimation.start()
+            hideAnimation.stop();
+            // Arrive already at full size when springing is unwanted: either
+            // this is a context menu, or the panel is gliding over from the
+            // popover it replaced and should read as one panel moving rather
+            // than a new one popping up.
+            revealScale = (panel.springReveal && !PopoverCoordinator.handingOff) ? StylePopover.hiddenScale : 1;
+            showAnimation.start();
         } else {
-            showAnimation.stop()
-            hideAnimation.start()
+            showAnimation.stop();
+            hideAnimation.start();
         }
     }
 
@@ -81,7 +94,8 @@ Item {
             property: "revealScale"
             to: 1
             duration: StylePopover.showDuration
-            easing.type: Easing.OutCubic
+            easing.type: Easing.OutBack
+            easing.overshoot: StylePopover.showOvershoot
         }
     }
 

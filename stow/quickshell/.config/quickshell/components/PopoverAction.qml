@@ -9,23 +9,30 @@ Rectangle {
     property bool separator: false
     property bool actionEnabled: true
 
+    // Metrics default to the bar-panel row; a context menu overrides them for
+    // tighter rows and narrower gutters.
+    property int rowHeight: StylePopover.rowHeight
+    property int paddingH: StylePopover.contentPaddingH
+
     signal activated()
 
-    implicitWidth: StylePopover.panelWidth
-    implicitHeight: separator ? StylePopover.separatorHeight : StylePopover.rowHeight
-    width: implicitWidth
-    height: implicitHeight
+    // Natural content width, so a menu that sizes to its widest entry can read
+    // it off the column. Callers wanting a fixed slab set `width` explicitly.
+    implicitWidth: separator ? 0 : labelText.implicitWidth + paddingH * 2
+    implicitHeight: separator ? StylePopover.separatorHeight : rowHeight
     radius: separator ? 0 : StyleTokens.radiusSm
     color: separator
         ? StyleOverlay.borderSubtle
         : (mouseArea.containsMouse ? StyleTokens.alphaLight : StyleTokens.transparent)
 
     Text {
+        id: labelText
+
         visible: !action.separator
         anchors.left: parent.left
-        anchors.leftMargin: StylePopover.contentPaddingH
+        anchors.leftMargin: action.paddingH
         anchors.right: parent.right
-        anchors.rightMargin: StylePopover.contentPaddingH
+        anchors.rightMargin: action.paddingH
         anchors.verticalCenter: parent.verticalCenter
         text: action.label
         color: Colors.base05

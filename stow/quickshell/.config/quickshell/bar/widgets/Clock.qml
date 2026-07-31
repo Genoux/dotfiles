@@ -9,13 +9,12 @@ Button {
 
     required property var barWindow
 
+    iconName: "x-office-calendar-symbolic"
     text: Qt.formatDateTime(clock.date, "ddd dd MMM HH:mm")
-    fontSize: StyleTokens.fontSizeSm
-    foreground: Colors.base05
+    iconTextSpacing: 0
     interactive: true
-    paddingHorizontal: 6
     active: popover.open
-    onClicked: popover.open = !popover.open
+    onClicked: popover.toggle()
 
     SystemClock {
         id: clock

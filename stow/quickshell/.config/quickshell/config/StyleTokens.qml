@@ -11,6 +11,8 @@ Singleton {
     readonly property string fontEmoji: "Noto Color Emoji"
 
     readonly property int fontSizeXl: 32
+    readonly property int fontSizeLg: 16
+    readonly property int fontSizeMd: 14
     readonly property int fontSizeSm: 12
     readonly property int fontSizeXs: 10
     readonly property int fontSizeMedia: 11

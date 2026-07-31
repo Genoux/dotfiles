@@ -5,7 +5,9 @@ import Quickshell.Hyprland
 import Quickshell.Wayland
 import qs
 import qs.bar.widgets as Widgets
+import qs.components
 import qs.config
+import qs.services as Services
 
 PanelWindow {
     id: bar
@@ -21,6 +23,23 @@ PanelWindow {
         bottom: true
         left: true
         right: true
+    }
+
+    // Dismisses an open popover when the bar itself is clicked. The focus grab
+    // covers clicks outside the bar, but it deliberately treats the bar as
+    // inside the grab so other bar buttons keep working — leaving bar clicks
+    // unable to dismiss anything.
+    //
+    // Declared first so it sits *below* the widgets: an interactive widget
+    // consumes its own click and handles its own popover, while empty bar space
+    // and non-interactive widgets (which accept no buttons) fall through to
+    // here. Dismissing on `clicked` rather than `pressed` is essential — hiding
+    // a popover mid-press releases its focus grab while the pointer is still
+    // down, which cancels the press and swallows the click entirely.
+    MouseArea {
+        anchors.fill: parent
+        acceptedButtons: Qt.AllButtons
+        onClicked: Services.PopoverCoordinator.closeCurrent()
     }
 
     Item {
@@ -110,18 +129,20 @@ PanelWindow {
 
             }
 
-            Widgets.Weather {
-                Layout.alignment: Qt.AlignVCenter
-                barWindow: bar
-            }
+            RowLayout {
+                spacing: 4
 
-            Widgets.Temperature {
-                Layout.alignment: Qt.AlignVCenter
-            }
+                Widgets.Weather {
+                    barWindow: bar
+                }
 
-            Widgets.Clock {
-                Layout.alignment: Qt.AlignVCenter
-                barWindow: bar
+                Widgets.Temperature {
+                }
+
+                Widgets.Clock {
+                    barWindow: bar
+                }
+
             }
 
             Widgets.Info {
