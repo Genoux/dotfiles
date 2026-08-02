@@ -24,6 +24,7 @@ BarGroup {
                 id: trayDelegate
 
                 required property var modelData
+                property bool menuLoaded: false
 
                 width: btn.width
                 height: btn.height
@@ -74,6 +75,27 @@ BarGroup {
                     // widget's, and silently binds to undefined.
                     barWindow: root.barWindow
                     anchorItem: btn
+
+                    // QsMenuOpener fetches the item's DBus menu as soon as it binds
+                    // to trayItem, so build the menu only once first opened rather
+                    // than round-tripping DBus for every tray icon at startup.
+                    Loader {
+                        active: trayDelegate.menuLoaded
+                        sourceComponent: menuComponent
+                    }
+                }
+
+                Connections {
+                    target: trayPopover
+
+                    function onOpenChanged() {
+                        if (trayPopover.open)
+                            trayDelegate.menuLoaded = true;
+                    }
+                }
+
+                Component {
+                    id: menuComponent
 
                     TrayMenu {
                         active: trayPopover.open
