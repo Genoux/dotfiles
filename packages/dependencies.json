@@ -33,7 +33,7 @@
     "shell_ui": {
       "priority": 7,
       "depends_on": ["compositor"],
-      "packages": ["quickshell", "waybar", "ags", "swaync"]
+      "packages": ["quickshell", "waybar", "swaync"]
     },
     "terminal": {
       "priority": 8,

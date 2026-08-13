@@ -40,8 +40,8 @@ if [[ -f "$DOTFILES_DIR/system/greetd/preferences.json" ]]; then
 fi
 
 # Deploy greeter Hyprland config (watchdog warning suppression + sysc-greet autostart)
-if [[ -f "$DOTFILES_DIR/system/greetd/hyprland-greeter-config.conf" ]]; then
-    sudo cp "$DOTFILES_DIR/system/greetd/hyprland-greeter-config.conf" /etc/greetd/hyprland-greeter-config.conf 2>/dev/null
+if [[ -f "$DOTFILES_DIR/system/greetd/hyprland-greeter-config.lua" ]]; then
+    sudo cp "$DOTFILES_DIR/system/greetd/hyprland-greeter-config.lua" /etc/greetd/hyprland-greeter-config.lua 2>/dev/null
     log_success "Greeter Hyprland config deployed"
 fi
 
@@ -63,7 +63,7 @@ sudo tee /etc/greetd/config.toml > /dev/null <<'EOF'
 vt = 1
 
 [default_session]
-command = "Hyprland -c /etc/greetd/hyprland-greeter-config.conf"
+command = "Hyprland -c /etc/greetd/hyprland-greeter-config.lua"
 user = "greeter"
 EOF
 

@@ -237,3 +237,7 @@ export PATH="$BUN_INSTALL/bin:$PATH"
 export TMPDIR=/home/john/.claude/tmp
 export PATH="$HOME/.local/bin:$PATH"
 export PATH="$HOME/.cargo/bin:$PATH"
+
+# >>> Codex installer >>>
+export PATH="/home/john/.local/bin:$PATH"
+# <<< Codex installer <<<

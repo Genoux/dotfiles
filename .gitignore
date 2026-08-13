@@ -36,12 +36,6 @@ Thumbs.db
 .tmp/
 temp/
 
-# AGS specific
-stow/ags/.config/ags/node_modules/
-stow/ags/.config/ags/@girs/
-stow/ags/.config/ags/*.logmonitors.conf
-
-
 # Hyprland specific
 *.backup.*
 stow/hypr/.config/hypr/monitors.conf
@@ -90,5 +84,4 @@ themes/*/
 
 # Matugen-generated theme outputs (live under ~/.config, not stow)
 stow/quickshell/.config/quickshell/Colors.qml
-stow/ags/.config/ags/styles/abstracts/_theme.scss
 stow/btop/.config/btop/themes/matugen.theme

@@ -2,7 +2,7 @@
 """
 Animate system.txt banner using TerminalTextEffects.
 Uses TTE CLI via subprocess for reliability.
-Effect: beams — beam colors follow the matugen palette (same as AGS _theme.scss).
+Effect: beams — beam colors follow the matugen palette (via dotfiles-gum.env).
 """
 
 from __future__ import annotations

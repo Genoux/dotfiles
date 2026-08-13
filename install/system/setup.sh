@@ -37,6 +37,7 @@ trap cleanup_sudo EXIT
 # Run individual system configuration scripts
 run_logged "$DOTFILES_DIR/install/system/systemd-sleep.sh"
 run_logged "$DOTFILES_DIR/install/system/logind.sh"
+run_logged "$DOTFILES_DIR/install/system/journald.sh"
 run_logged "$DOTFILES_DIR/install/system/makepkg.sh"
 run_logged "$DOTFILES_DIR/install/system/timezone.sh"
 run_logged "$DOTFILES_DIR/install/system/systemd-resolved.sh"

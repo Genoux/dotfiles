@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository Overview
 
-Personal Arch Linux dotfiles with automated system configuration, Hyprland desktop environment, and QuickShell/AGS-based UI components. This is a chaotic, personal-use repository subject to frequent changes.
+Personal Arch Linux dotfiles with automated system configuration, Hyprland desktop environment, and QuickShell-based UI components. This is a chaotic, personal-use repository subject to frequent changes.
 
 ## Primary CLI Tool
 
@@ -48,7 +48,6 @@ Uses GNU Stow for symlinking dotfiles. Each subdirectory in `stow/` is a stow pa
 
 **Major packages:**
 - `quickshell/` - QuickShell UI (QML-based, primary shell)
-- `ags/` - AGS (Astal TypeScript, alternative shell)
 - `hypr/` - Hyprland compositor config
 - `shell/` - Zsh, shell configs
 - `kitty/` - Kitty terminal
@@ -109,11 +108,7 @@ QML-based Wayland shell components:
 - `components/` - Reusable UI components
 - `config/` - Style, icons, actions
 
-QuickShell is Qt6/QML-based, not the Astal/TypeScript framework described in `.cursor/rules/astal.mdc`.
-
-### AGS/Astal UI (`stow/ags/.config/ags/`)
-
-TypeScript/JSX-based alternative shell using Astal framework. See `.cursor/rules/astal.mdc` for detailed development rules.
+QuickShell is Qt6/QML-based (Qt6/QML, not TypeScript).
 
 ## Installation Flow
 
@@ -167,14 +162,6 @@ QuickShell files are QML (Qt6). Key patterns:
 
 Build/reload not typically needed - QuickShell watches files.
 
-### Working with AGS/Astal
-
-Follow rules in `.cursor/rules/astal.mdc`:
-- Use Context7 MCP to search AGS/Astal documentation
-- Use functional TypeScript components with JSX
-- Build: `meson setup build --wipe && meson install -C build`
-- Import libraries via GObject introspection: `import Battery from "gi://AstalBattery"`
-
 ## Logging
 
 All operations log to `~/.dotfiles-install.log` or `~/.dotfiles-daily.log`. Helpers in `install/helpers/logging.sh` provide:
@@ -193,7 +180,7 @@ All operations log to `~/.dotfiles-install.log` or `~/.dotfiles-daily.log`. Help
 **Runtime requirements:**
 - Arch Linux (pacman-based)
 - Hyprland compositor
-- QuickShell (primary) or AGS (alternative)
+- QuickShell
 
 ## Common Tasks
 

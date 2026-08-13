@@ -8,7 +8,6 @@ local modules = {
   "animations",
   "keybindings",
   "windowrules",
-  "hooks",
   "themes.common",
   "themes.theme",
   "smart-gaps",

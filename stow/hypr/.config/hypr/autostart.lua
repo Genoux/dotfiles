@@ -4,6 +4,7 @@ local sessionEnvironment =
 local desktopServices = {
   "awww-daemon.service",
   "hypridle.service",
+  "flow.service",
 }
 
 local portalServices = {
@@ -31,7 +32,6 @@ hl.on("hyprland.start", function()
     "systemctl --user reset-failed "
       .. table.concat(portalServices, " ")
       .. " "
-      .. "hyprsession.service "
       .. table.concat(desktopServices, " "),
     "systemctl --user start "
       .. table.concat(portalServices, " ")
@@ -43,22 +43,15 @@ hl.on("hyprland.start", function()
     hl.exec_cmd(command)
   end
 
-  -- Restore before the save loop; never block shutdown (that froze logout for seconds).
-  local home = os.getenv("HOME") or ""
-  local hyprsession = home .. "/.local/bin/system-hyprsession"
-  local restoreState = home .. "/.local/state/hyprsession"
-  hl.exec_cmd(
-    "rm -f '"
-      .. restoreState
-      .. "'/restored-*; sleep 8; '"
-      .. hyprsession
-      .. "' load; systemctl --user start hyprsession.service"
-  )
+  -- Restore first, then the save daemon; both self-guard (restore aborts on a
+  -- populated session, daemon waits 90s) so neither needs a marker file.
+  hl.exec_cmd("sleep 8; hypr-session-restore restore")
+  hl.exec_cmd("hypr-session-restore daemon")
 end)
 
 hl.on("hyprland.shutdown", function()
   hl.exec_cmd(
-    "systemctl --user stop hyprsession.service "
+    "systemctl --user stop "
       .. table.concat(desktopServices, " ")
       .. " "
       .. table.concat(portalServices, " ")

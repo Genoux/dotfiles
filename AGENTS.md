@@ -24,8 +24,6 @@ the existing layout, naming, and shell style.
   input, window rules, animations, plugins, and user preferences.
 - `stow/quickshell/.config/quickshell/`: Quickshell QML bottom bar, launcher,
   notifications, and shell services.
-- `stow/ags/.config/ags/`: Legacy AGS/Astal GTK4 shell (retained in repo, not
-  session-started).
 - `stow/scripts/.local/bin/`: User-facing helper commands used by Hyprland,
   Quickshell, menus, wallpaper, screenshots, packages, and system workflows.
 - `stow/*/.config/systemd/user/`: User services and timers started from the
@@ -111,8 +109,8 @@ legacy hyprlang one-line rule sprawl unless the user asks.
 - Awww handles wallpaper transitions.
 - Matugen generates theme assets. Do not reintroduce wallust or a dual
   matugen-plus-wallust terminal pipeline unless explicitly requested.
-- Legacy AGS config remains under `stow/ags/` for reference; it is not started
-  from Hyprland autostart and has no stowed `ags.service` unit.
+- AGS/Astal was fully removed (package, stow tree, matugen template, install
+  hooks, and 22 AUR packages). Quickshell is the only shell; do not reintroduce AGS.
 
 ## Learned User Preferences
 
@@ -134,29 +132,42 @@ legacy hyprlang one-line rule sprawl unless the user asks.
   Lua dispatcher API (`hl.dsp`, `hl.bind`), not legacy `hyprctl dispatch` strings.
 - Cursor theme should follow GTK/matugen theme install/switch, not stay hardcoded
   in `cursor.lua`.
-- Session restore (`hyprsession`) should stay enabled by default when possible.
+- Session restore (`hypr-session-restore`) should stay enabled by default when possible.
 
 ## Learned Workspace Facts
+
+- `idleon-desktop` is a LOCALLY BUILT package (`Packager: Unknown Packager`), not in
+  any repo or the AUR. Its PKGBUILD lives outside this repo at
+  `~/Desktop/@john/idleon-desktop/PKGBUILD`. Deliberately NOT listed in
+  `packages/aur.package` — adding it would make `./dotfiles install` fail trying to
+  fetch it. Rebuild with `makepkg -si` from that directory.
+- `nvidia-open-dkms` / `nvidia-utils` stay out of the flat manifests on purpose;
+  GPU packages are hardware-detected (`./dotfiles hardware setup`,
+  `packages/dependencies.json`). Do not "sync" them into `arch.package`.
 
 - `gpu.lua` and `monitors.lua` must stay at the Hypr config root; dotfiles
   detection and setup scripts expect those exact paths.
 - Hypr `layerrule` for layer animation uses `hl.layer_rule({ no_anim = true })`,
   not legacy one-line `layerrule = noanim, ...`.
-- Calcurse Google/iCal feed URLs live in gitignored
-  `stow/calcurse/.config/calcurse/ics-feeds`; imports run via `hooks/pre-load`.
-- Hypr `animations/` is kept with `.gitkeep` for Hyprdots layout parity; animation
-  presets still live in `animations.lua` until split into that folder.
+- Animation presets live in `animations.lua`. The empty `animations/` placeholder
+  directory was removed; recreate it only if presets are actually split out.
 - Hyprland 0.55+ Lua configs use `hl.bind("MOD + key", hl.dsp.*)`; use lowercase
   letter keysyms for plain letter binds (uppercase often fails to match).
 - On `hyprctl reload`, Lua `require()` is cached — clear affected `package.loaded`
   entries in `hyprland.lua` (especially `keybindings`) or binds can disappear.
-- `hyprsession` 0.2.0 restore is incompatible with `hyprland.lua` (upstream issue
-  #18); dotfiles use `system-hyprsession` to wrap restore as `hl.dsp.exec_cmd(...)`
-  and re-detect live `HYPRLAND_INSTANCE_SIGNATURE`.
-- `hyprsession.service` and `quickshell` start from Hyprland `autostart.lua`
-  (not `WantedBy=graphical-session.target`); Quickshell starts first, then hyprsession
-  restore runs asynchronously after an 8-second delay — this prevents the session save
-  loop from blocking logout.
+- Session restore is `hypr-session-restore` (vendored from
+  https://github.com/UpayanChatterjee/hypr-session-restore into
+  `stow/scripts/.local/bin/`): a single stdlib-Python script that emits 0.55 Lua
+  dispatches natively. Config (excluded classes, terminals, intervals) lives in
+  constants at the top of the script; re-apply them when pulling upstream changes.
+  It replaced `hyprsession` 0.2.0 + a ~540-line `system-hyprsession` bash wrapper,
+  which existed only because that binary's restore is incompatible with
+  `hyprland.lua` (upstream issue #18).
+- Session restore and its save daemon start from Hyprland `autostart.lua` as plain
+  `hl.exec_cmd` (no systemd unit): restore after an 8-second delay so Quickshell and
+  portals come up first, daemon alongside it. Restore self-aborts if the session
+  already has >3 windows and the daemon waits 90s before its first save, so no
+  marker file is needed and nothing blocks logout.
 - Cursor theme: `lib/gtk.sh` writes only `theme` to
   `~/.config/hypr/generated/cursor.lua` on GTK install; cursor size stays in
   `cursor.lua`. Set `XCURSOR_THEME` with expanded `XCURSOR_PATH` (not literal
@@ -165,7 +176,6 @@ legacy hyprlang one-line rule sprawl unless the user asks.
   `paths`, `screenshots`, `windows`, `workspaces`); trigger via
   `hyprctl dispatch 'function() require("actions.*").fn() end'`.
 - `config/workspaces.lua` drives workspace bind count and hyprexpo columns;
-  `hooks.lua` handles hyprsession post-restore fixes;
   `smart-gaps.lua` adjusts gaps by window count and special workspace state.
 - Window state cycle: `SUPER + u` via `actions.windows.cycleWindowState`.
 - Quickshell bar TUIs use `ShellActions.launchOrFocus()` / `ShellActions.run()`.
@@ -221,12 +231,6 @@ For Quickshell changes:
 - Use `Colors.base**` from matugen-generated `Colors.qml`.
 - Hyprland actions go through `config/ShellActions.qml`, not `hyprctl` subprocesses.
 
-For legacy AGS changes (if ever needed):
-
-- Run checks from `stow/ags/.config/ags/`.
-- Prefer `pnpm run format:check` for formatting verification.
-- Use current AGS/Astal GTK4 patterns and imports.
-
 For package/config changes:
 
 - Keep `install/`, `lib/`, `packages/`, and `stow/` consistent.
@@ -234,7 +238,7 @@ For package/config changes:
 
 ## Research Rules
 
-- For Hyprland, Hyprlock, AGS/Astal, and other fast-moving tools, check current
+- For Hyprland, Hyprlock, Quickshell, and other fast-moving tools, check current
   docs when syntax or API behavior matters.
 - Use MCP documentation servers when relevant and available.
 - Prefer repo-local patterns over examples copied directly from documentation.

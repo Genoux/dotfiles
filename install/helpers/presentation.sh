@@ -2,36 +2,14 @@
 # Presentation helpers - gum-powered UI components
 # Requires: gum (charmbracelet/gum)
 
-# Parse a $baseXX: #rrggbb line from the matugen AGS theme (SCSS) on stdout.
-# Usage: _matugen_hex_from_scss base0B [path]
-_matugen_hex_from_scss() {
-    local var="$1"
-    local f="${2:-$HOME/.config/ags/styles/abstracts/_theme.scss}"
-    [[ -f "$f" ]] || return 1
-    local line
-    line=$(grep -m1 "^\$${var}:" "$f" 2>/dev/null) || return 1
-    if [[ "$line" =~ \#([0-9a-fA-F]{6}) ]]; then
-        echo "#${BASH_REMATCH[1]}"
-        return 0
-    fi
-    return 1
-}
-
-# Configure gum from matugen (same pipeline as AGS/kitty).
+# Configure gum from matugen (same pipeline as kitty).
 # 1) Source ~/.config/matugen/dotfiles-gum.env (written by matugen)
-# 2) Else read hexes from AGS _theme.scss (stale env / first run)
-# 3) Else 256-color fallbacks
+# 2) Else 256-color fallbacks
 configure_gum_colors() {
     local gum_env="${HOME}/.config/matugen/dotfiles-gum.env"
     if [[ -f "$gum_env" ]]; then
         # shellcheck disable=SC1090
         source "$gum_env"
-    else
-        local p
-        p=$(_matugen_hex_from_scss base0B) && export MATUGEN_GUM_CURSOR="$p" MATUGEN_GUM_ACCENT="$p" MATUGEN_GUM_SELECTED="$p" || true
-        p=$(_matugen_hex_from_scss base05) && export MATUGEN_GUM_ITEM="$p" || true
-        p=$(_matugen_hex_from_scss base04) && export MATUGEN_GUM_MUTED="$p" || true
-        p=$(_matugen_hex_from_scss base0A) && export MATUGEN_GUM_BORDER="$p" || true
     fi
 
     export GUM_CHOOSE_CURSOR_FOREGROUND="${MATUGEN_GUM_CURSOR:-10}"

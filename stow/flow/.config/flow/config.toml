@@ -1,0 +1,8 @@
+# Only what differs from Flow's built-in defaults; see the shipped
+# packaging/config.template.toml for every key and what it does.
+
+# Nothing here: super+shift+d is now the built-in default and Flow watches it
+# natively, so the Hyprland binds in keybindings.lua are a redundant second path
+# rather than the only one. They can go whenever.
+
+duck = 50

@@ -28,105 +28,6 @@ check_stow() {
     return 0
 }
 
-# AGS does not hot-reload TS/SCSS; restart so disk config is picked up.
-# Ensures user session bus (menus often lack DBUS vars that gum subshells inherit unevenly).
-restart_ags_if_running() {
-    [[ -n "${XDG_RUNTIME_DIR:-}" ]] || export XDG_RUNTIME_DIR="/run/user/$(id -u)"
-    if [[ -z "${DBUS_SESSION_BUS_ADDRESS:-}" && -S "${XDG_RUNTIME_DIR}/bus" ]]; then
-        export DBUS_SESSION_BUS_ADDRESS="unix:path=${XDG_RUNTIME_DIR}/bus"
-    fi
-
-    local load_state
-    load_state=$(systemctl --user show ags.service --property=LoadState --value 2>/dev/null || true)
-    if [[ "$load_state" == "loaded" ]] && systemctl --user is-active --quiet ags.service 2>/dev/null; then
-        if systemctl --user restart ags.service; then
-            log_success "AGS user service restarted"
-            return 0
-        fi
-        log_warning "systemctl restart ags.service failed; trying process restart"
-    fi
-
-    # Current AGS often runs as gjs -m /run/user/UID/ags.js (no "ags" process name; service may be inactive).
-    local has_ags=false
-    if pgrep -f 'gjs -m /run/user/[0-9]+/ags\.js' >/dev/null 2>&1; then
-        has_ags=true
-    elif pgrep -x ags >/dev/null 2>&1 || pgrep -f '/usr/bin/ags run' >/dev/null 2>&1 || pgrep -f 'ags run --gtk' >/dev/null 2>&1; then
-        has_ags=true
-    fi
-
-    if ! $has_ags; then
-        log_info "AGS not running; skip restart"
-        return 0
-    fi
-
-    if ! command -v ags >/dev/null 2>&1; then
-        log_warning "AGS runtime found but ags is not in PATH; cannot restart"
-        return 1
-    fi
-
-    log_info "Restarting AGS..."
-    pkill -f 'gjs -m /run/user/[0-9]+/ags\.js' 2>/dev/null || true
-    pkill -x ags 2>/dev/null || true
-    pkill -f '/usr/bin/ags run' 2>/dev/null || true
-    sleep 0.5
-
-    if [[ "$load_state" == "loaded" ]] && systemctl --user start ags.service 2>/dev/null; then
-        log_success "AGS started via user service"
-        return 0
-    fi
-
-    ags run --gtk 4 --directory "$HOME/.config/ags" >/dev/null 2>&1 &
-    log_success "AGS restarted"
-    return 0
-}
-
-# Enable and start AGS via user service (dotfiles config link, not Hyprland autostart).
-start_ags_service() {
-    [[ -n "${XDG_RUNTIME_DIR:-}" ]] || export XDG_RUNTIME_DIR="/run/user/$(id -u)"
-    if [[ -z "${DBUS_SESSION_BUS_ADDRESS:-}" && -S "${XDG_RUNTIME_DIR}/bus" ]]; then
-        export DBUS_SESSION_BUS_ADDRESS="unix:path=${XDG_RUNTIME_DIR}/bus"
-    fi
-
-    if [[ ! -f "$HOME/.config/systemd/user/ags.service" ]]; then
-        log_info "ags.service not linked; skip AGS start"
-        return 0
-    fi
-
-    if ! command -v ags >/dev/null 2>&1; then
-        log_warning "ags not installed; skip AGS start"
-        return 0
-    fi
-
-    if [[ -f "$DOTFILES_DIR/lib/theme.sh" ]]; then
-        # shellcheck source=/dev/null
-        source "$DOTFILES_DIR/lib/theme.sh"
-        matugen_sync_stow_style_links
-        local ags_stow_theme="$DOTFILES_DIR/stow/ags/.config/ags/styles/abstracts/_theme.scss"
-        if [[ ! -e "$ags_stow_theme" ]]; then
-            matugen_ensure_outputs || true
-            matugen_sync_stow_style_links
-        fi
-    fi
-
-    systemctl --user daemon-reload 2>/dev/null || true
-    systemctl --user reset-failed ags.service 2>/dev/null || true
-    systemctl --user enable ags.service 2>/dev/null || true
-
-    if systemctl --user is-active --quiet ags.service 2>/dev/null; then
-        if systemctl --user restart ags.service; then
-            log_success "AGS service restarted"
-            return 0
-        fi
-    elif systemctl --user start ags.service; then
-        log_success "AGS service started"
-        return 0
-    fi
-
-    log_warning "systemctl start ags.service failed; trying direct launch"
-    ags run --gtk 4 --directory "$HOME/.config/ags" >/dev/null 2>&1 &
-    log_success "AGS started directly"
-}
-
 # Interactive config management with checkboxes
 config_manage_interactive() {
     check_stow || return 1
@@ -279,7 +180,6 @@ config_manage_interactive() {
     else
         log_success "Applied $changes changes"
         echo
-        restart_ags_if_running
     fi
 }
 
@@ -463,55 +363,15 @@ config_link() {
                     log_info "Updated desktop database"
                 fi
                 ;;
-            "ags"|"btop"|"matugen"|"quickshell")
+            "btop"|"matugen"|"quickshell")
                 if [[ -f "$DOTFILES_DIR/lib/theme.sh" ]]; then
                     # shellcheck source=/dev/null
                     source "$DOTFILES_DIR/lib/theme.sh"
                     matugen_ensure_outputs || true
                 fi
-
-                if [[ "$config" == "ags" ]]; then
-                    # Create symlink for AGS TypeScript types
-                    local ags_config_dir="$HOME/.config/ags"
-                    local ags_node_modules="$ags_config_dir/node_modules"
-                    local ags_symlink="$ags_node_modules/ags"
-                    local ags_source="/usr/share/ags/js"
-
-                    if [[ -d "$ags_config_dir" ]]; then
-                        # Ensure node_modules directory exists
-                        if [[ ! -d "$ags_node_modules" ]]; then
-                            mkdir -p "$ags_node_modules"
-                            log_info "Created node_modules directory for AGS"
-                        fi
-
-                        # Create symlink if it doesn't exist or is broken
-                        if [[ -L "$ags_symlink" ]]; then
-                            if [[ -e "$ags_symlink" ]]; then
-                                log_info "AGS types symlink already exists"
-                            else
-                                log_info "Removing broken symlink and recreating..."
-                                rm "$ags_symlink"
-                                ln -s "$ags_source" "$ags_symlink"
-                                log_success "AGS types symlink created"
-                            fi
-                        elif [[ -e "$ags_symlink" ]]; then
-                            log_warning "File exists at $ags_symlink (not a symlink), skipping"
-                        else
-                            if [[ -d "$ags_source" ]]; then
-                                ln -s "$ags_source" "$ags_symlink"
-                                log_success "AGS types symlink created"
-                            else
-                                log_warning "AGS source directory not found at $ags_source, skipping symlink"
-                            fi
-                        fi
-                    fi
-
-                    start_ags_service
-                fi
                 ;;
             "scripts")
                 systemctl --user daemon-reload 2>/dev/null || true
-                start_ags_service
                 ;;
             "xdg-desktop-portal")
                 systemctl --user daemon-reload 2>/dev/null || true
@@ -652,13 +512,11 @@ config_link_all() {
         log_warning "$failed config(s) failed to link"
     fi
 
-    # Restart systemd services after config changes (includes ags.service when active)
+    # Restart systemd services after config changes
     echo
     local install_root="${DOTFILES_INSTALL:-$DOTFILES_DIR/install}"
     if [[ -f "$install_root/config/services.sh" ]]; then
         bash "$install_root/config/services.sh"
-    else
-        restart_ags_if_running
     fi
 
     echo

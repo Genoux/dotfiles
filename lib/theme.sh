@@ -15,7 +15,6 @@ declare -a MATUGEN_OUTPUTS=(
     "$HOME/.config/kitty/matugen-theme.conf"
     "$HOME/.config/btop/themes/matugen.theme"
     "$HOME/.config/quickshell/Colors.qml"
-    "$HOME/.config/ags/styles/abstracts/_theme.scss"
     "$HOME/.config/starship.toml"
     "$HOME/.config/zsh/highlight-colors.zsh"
     "$HOME/.config/matugen/dotfiles-gum.env"
@@ -25,12 +24,7 @@ declare -a MATUGEN_OUTPUTS=(
 
 declare -a MATUGEN_STOW_SYMLINK_OUTPUTS=(
     "$HOME/.config/quickshell/Colors.qml"
-    "$HOME/.config/ags/styles/abstracts/_theme.scss"
     "$HOME/.config/btop/themes/matugen.theme"
-)
-
-declare -a MATUGEN_STOW_STYLE_LINKS=(
-    "$DOTFILES_DIR/stow/ags/.config/ags/styles/abstracts/_theme.scss|$HOME/.config/ags/styles/abstracts/_theme.scss"
 )
 
 matugen_wallpaper_scheme() {
@@ -58,20 +52,6 @@ matugen_migrate_output_symlinks() {
         [[ "$target" == *"dotfiles/stow/"* ]] || continue
         rm "$path"
         log_info "Removed stow symlink for matugen output: ${path/#$HOME/~}"
-    done
-}
-
-# AGS tokens.scss lives in stow; sass resolves @use relative to that path.
-matugen_sync_stow_style_links() {
-    local entry stow_path live_path stow_dir
-
-    for entry in "${MATUGEN_STOW_STYLE_LINKS[@]}"; do
-        stow_path="${entry%%|*}"
-        live_path="${entry##*|}"
-        [[ -f "$live_path" ]] || continue
-        stow_dir=$(dirname "$stow_path")
-        mkdir -p "$stow_dir"
-        ln -sf "$live_path" "$stow_path"
     done
 }
 
@@ -110,7 +90,6 @@ matugen_generate_from_wallpaper() {
     scheme=$(matugen_wallpaper_scheme "$wallpaper")
     # ponytail: removed --prefer and --source-color-index (not in matugen 3.1.0)
     if matugen image -t "$scheme" "$wallpaper"; then
-        matugen_sync_stow_style_links
         return 0
     fi
     return 1
@@ -131,8 +110,6 @@ matugen_ensure_outputs() {
             return 1
         fi
     done
-
-    matugen_sync_stow_style_links
 }
 
 get_current_gtk_theme() {

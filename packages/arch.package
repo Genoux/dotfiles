@@ -2,15 +2,22 @@
 # ===========================
 alsa-utils
 amd-ucode
+asar
+ast-grep
+aubio
 awww
 base
 base-devel
 bat
 bc
 bind
+blender
+bluez
+bluez-utils
 bluetui
 brightnessctl
 btop
+bun
 calcurse
 cava
 ccache
@@ -31,6 +38,7 @@ dotnet-sdk-8.0
 earlyoom
 efibootmgr
 electron41
+electron42
 ethtool
 extra-cmake-modules
 eza
@@ -120,7 +128,6 @@ libappindicator
 libc++
 libnotify
 libpulse
-libxmp
 linux
 linux-firmware
 linux-headers
@@ -140,6 +147,8 @@ noto-fonts-emoji
 noto-fonts-extra
 npm
 nss-mdns
+nvidia-open-dkms
+nvidia-utils
 nwg-look
 obsidian
 obs-studio
@@ -161,10 +170,14 @@ polkit-gnome
 postgresql
 power-profiles-daemon
 prismlauncher
+python-build
+python-installer
 python-pip
 python-pipx
 python-protobuf
+python-pytest
 python-pywal
+python-vcrpy
 qbittorrent
 qt5ct
 qt6ct
@@ -178,11 +191,11 @@ rust
 samba
 sassc
 satty
-sdl2_ttf
 seahorse
 socat
 solid5
 sox
+spirv-headers
 starship
 steam
 stow
@@ -210,6 +223,10 @@ waybar
 wayvnc
 wf-recorder
 wget
+wine
+wine-gecko
+wine-mono
+winetricks
 wireless_tools
 wiremix
 wireplumber
