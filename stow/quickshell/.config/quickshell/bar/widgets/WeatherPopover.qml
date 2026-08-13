@@ -11,6 +11,52 @@ PopoverPanel {
     readonly property int forecastIconSize: 20
     readonly property int popoverWidth: StylePopover.panelWidth
     readonly property int padH: StylePopover.contentPaddingH
+    readonly property int forecastRowCount: WeatherState.forecastDayCount
+    readonly property int popoverContentHeight: 80
+        + StylePopover.separatorHeight
+        + 52
+        + StylePopover.separatorHeight
+        + 30
+        + forecastRowCount * 38
+        + 8
+
+    property real dataOpacity: 0
+
+    function revealData() {
+        if (!active || !WeatherState.hasData || dataOpacity >= 1)
+            return
+
+        dataFade.restart()
+    }
+
+    onActiveChanged: {
+        if (active)
+            Qt.callLater(revealData)
+    }
+
+    onDismissFinished: {
+        if (!active)
+            dataOpacity = 0
+    }
+
+    Connections {
+        target: WeatherState
+
+        function onHasDataChanged() {
+            if (WeatherState.hasData)
+                Qt.callLater(root.revealData)
+        }
+    }
+
+    NumberAnimation {
+        id: dataFade
+
+        target: root
+        property: "dataOpacity"
+        to: 1
+        duration: 130
+        easing.type: Easing.OutCubic
+    }
 
     // Shared column geometry — the axis labels in the section header must land
     // exactly on the ends of the track in the rows below, or the scale they
@@ -73,9 +119,18 @@ PopoverPanel {
         return Math.max(0, Math.min(1, (value - root.weekMin) / range))
     }
 
-    Column {
+    Item {
         width: root.popoverWidth
-        spacing: 0
+        height: root.popoverContentHeight
+        implicitWidth: width
+        implicitHeight: height
+
+        Column {
+            id: weatherContent
+
+            width: root.popoverWidth
+            spacing: 0
+            opacity: root.dataOpacity
 
         // Hero: location eyebrow + big icon/temp block + condition
         Item {
@@ -381,8 +436,25 @@ PopoverPanel {
 
         }
 
-        Item { width: 1; height: 8 }
+            Item { width: 1; height: 8 }
 
+        }
+
+        Text {
+            anchors.centerIn: parent
+            text: "Loading weather…"
+            color: Colors.base04
+            font.family: StyleTokens.fontSans
+            font.pixelSize: StyleTokens.fontSizeSm
+            opacity: root.active && !WeatherState.hasData ? 1 : 0
+
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: 110
+                    easing.type: Easing.OutCubic
+                }
+            }
+        }
     }
 
 }

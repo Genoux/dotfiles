@@ -7,7 +7,7 @@ Item {
 
     property bool active: false
     property color surfaceColor: StyleOverlay.surface
-    property color surfaceBorderColor: StyleOverlay.borderSubtle
+    property color surfaceBorderColor: StyleOverlay.surfaceBorder
 
     default property alias content: contentLayer.data
 

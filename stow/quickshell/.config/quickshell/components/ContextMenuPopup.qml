@@ -9,16 +9,14 @@ import qs.services
 // right-click menu, not a bar widget panel.
 //
 // It deliberately does NOT reuse BarPopover. A widget panel is a piece of the
-// shell's own UI: it centres on its widget, springs up from the bar, and hands
-// off to sibling panels so switching between them reads as one panel moving.
+// shell's own UI: it centres on its widget and springs up from the bar.
 // A context menu belongs to the application that raised it and should behave
 // the way every other menu on the desktop does: pinned to the edge of the item
 // that spawned it, appearing at once with no travel, and never animating into
 // or out of an unrelated panel.
 //
-// It stays exclusive with the widget panels via PopoverCoordinator (a menu and
-// the calendar should never be open together) but declares itself ineligible
-// for the hand-off glide.
+// It stays exclusive with widget panels via PopoverCoordinator, so a menu and
+// the calendar are never open together.
 Item {
     id: root
 
@@ -27,9 +25,6 @@ Item {
 
     property bool open: false
     default property alias content: slot.data
-
-    // See PopoverCoordinator: exclusive, but never part of a glide.
-    readonly property bool handoffEligible: false
 
     // Root of the panel's own content, so PopoverCoordinator can tell a click
     // inside the open panel from a click on the bar behind it.

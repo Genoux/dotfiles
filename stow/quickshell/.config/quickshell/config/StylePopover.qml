@@ -16,19 +16,13 @@ Singleton {
     readonly property int rowHeight: 32
     readonly property int separatorHeight: 1
 
-    // Plain fade + subtle scale from the bar edge — a slight spring overshoot
-    // on the way in gives it some life without a jarring geometry morph.
-    readonly property int showDuration: 180
-    readonly property int hideDuration: 120
-    readonly property real hiddenScale: 0.94
-    readonly property real showOvershoot: 1.2
+    // A single reversible transition keeps reveal and dismissal visually
+    // identical and lets rapid toggles reverse from the current frame.
+    readonly property int transitionDuration: 160
+    readonly property real hiddenScale: 0.97
 
-    // Swapping popovers reads as one panel travelling along the bar, so the
-    // glide is slower than a plain reveal and skips the spring entirely.
-    readonly property int handoffDuration: 260
-    // A dismissal only counts as part of the same click as the next open if it
-    // lands within this window; anything slower is treated as a cold open.
-    readonly property int handoffGrace: 250
+    readonly property int shadowRadius: 8
+    readonly property int shadowSamples: 17
 
     // Tray context menu — a system right-click menu, not a bar widget panel.
     // It hugs its content instead of filling panelWidth, aligns to the icon's

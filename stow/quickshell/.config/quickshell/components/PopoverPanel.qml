@@ -1,7 +1,6 @@
 import Qt5Compat.GraphicalEffects
 import QtQuick
 import qs.config
-import qs.services
 
 // Popover panel surface — floats above the bar with all four corners rounded.
 // Uses the translucent overlay material: the Hyprland layer rule for the quickshell
@@ -13,39 +12,103 @@ Item {
     property bool fitContent: false
     // Widget panels spring up from the bar; a context menu should just appear.
     property bool springReveal: true
+
     default property alias content: contentLayer.data
     readonly property int chromePadding: StylePopover.padding
 
+    signal dismissFinished()
+
+    // Size from content children's *implicit* geometry, not childrenRect.
+    // childrenRect + anchors.fill closes a binding loop (quickshell
+    // size-position guide) that can drop chrome padding on the first layout.
+    //
+    // Take the max across children: tray menus declare QsMenuOpener before
+    // the Column, so indexing children[0] would size to an empty opener.
+    readonly property real contentImplicitWidth: {
+        let width = 0;
+        for (let i = 0; i < contentLayer.children.length; i++)
+            width = Math.max(width, contentLayer.children[i].implicitWidth);
+        return width;
+    }
+    readonly property real contentImplicitHeight: {
+        let height = 0;
+        for (let i = 0; i < contentLayer.children.length; i++)
+            height = Math.max(height, contentLayer.children[i].implicitHeight);
+        return height;
+    }
+
     // fitContent opts out of the *width* floor, for panels that must hug their
-    // content (a context menu sized to its widest entry). The height floor
-    // still applies either way: it guards against a panel that is briefly
-    // empty while its content resolves, which is the tray menu — precisely a
-    // fitContent case — so tying the two together would defeat it.
-    implicitWidth: (fitContent ? contentLayer.childrenRect.width : Math.max(StylePopover.minWidth, contentLayer.childrenRect.width)) + chromePadding * 2
-    implicitHeight: Math.max(StylePopover.minHeight, contentLayer.childrenRect.height) + chromePadding * 2
+    // content (a context menu sized to its widest entry). Prefer the child's
+    // actual width when set (tray menu clamps implicitWidth); fall back to
+    // implicit. The height floor still applies either way: it guards against
+    // a panel that is briefly empty while its content resolves.
+    readonly property real contentWidth: {
+        if (!fitContent)
+            return contentImplicitWidth;
+
+        let width = 0;
+        for (let i = 0; i < contentLayer.children.length; i++) {
+            const child = contentLayer.children[i];
+            width = Math.max(width, child.width || child.implicitWidth);
+        }
+        return width;
+    }
+    readonly property real contentHeight: contentImplicitHeight
+
+    implicitWidth: (fitContent ? contentWidth : Math.max(StylePopover.minWidth, contentWidth)) + chromePadding * 2
+    implicitHeight: Math.max(StylePopover.minHeight, contentHeight) + chromePadding * 2
     width: implicitWidth
     height: implicitHeight
 
-    property real revealOpacity: 0
-    property real revealScale: StylePopover.hiddenScale
-
-    // visual transform only — does not affect implicitWidth/Height or PopupWindow anchor math
-    opacity: revealOpacity
-    scale: revealScale
+    // One reversible state transition owns both directions. Qt reverses an
+    // interrupted transition from its current frame, so rapid toggles cannot
+    // reset opacity/scale or leave competing animations behind.
+    state: active ? "shown" : "hidden"
+    opacity: 0
+    scale: springReveal ? StylePopover.hiddenScale : 1
     transformOrigin: Item.Bottom
 
-    onActiveChanged: {
-        if (active) {
-            hideAnimation.stop();
-            // Arrive already at full size when springing is unwanted: either
-            // this is a context menu, or the panel is gliding over from the
-            // popover it replaced and should read as one panel moving rather
-            // than a new one popping up.
-            revealScale = (panel.springReveal && !PopoverCoordinator.handingOff) ? StylePopover.hiddenScale : 1;
-            showAnimation.start();
-        } else {
-            showAnimation.stop();
-            hideAnimation.start();
+    states: [
+        State {
+            name: "hidden"
+
+            PropertyChanges {
+                panel.opacity: 0
+                panel.scale: panel.springReveal ? StylePopover.hiddenScale : 1
+            }
+        },
+        State {
+            name: "shown"
+
+            PropertyChanges {
+                panel.opacity: 1
+                panel.scale: 1
+            }
+        }
+    ]
+
+    transitions: Transition {
+        id: visibilityTransition
+
+        from: "hidden"
+        to: "shown"
+        reversible: true
+
+        OpacityAnimator {
+            target: panel
+            duration: StylePopover.transitionDuration
+            easing.type: Easing.InOutCubic
+        }
+
+        ScaleAnimator {
+            target: panel
+            duration: StylePopover.transitionDuration
+            easing.type: Easing.InOutCubic
+        }
+
+        onRunningChanged: {
+            if (!running && panel.state === "hidden")
+                panel.dismissFinished();
         }
     }
 
@@ -54,10 +117,9 @@ Item {
         source: surface
         horizontalOffset: 0
         verticalOffset: 0
-        radius: 8
-        samples: 17
+        radius: StylePopover.shadowRadius
+        samples: StylePopover.shadowSamples
         color: StyleOverlay.shadow
-        opacity: panel.revealOpacity
         transparentBorder: true
     }
 
@@ -68,54 +130,18 @@ Item {
         radius: StyleTokens.radiusMd
         color: StyleOverlay.surface
         border.width: 1
-        border.color: StyleOverlay.borderSubtle
+        border.color: StyleOverlay.surfaceBorder
     }
 
     Item {
         id: contentLayer
 
-        anchors.fill: parent
-        anchors.margins: chromePadding
+        // Implicit size flows child → panel; actual size flows panel → child.
+        // Do not anchors.fill here — that is the childrenRect binding loop.
+        x: chromePadding
+        y: chromePadding
+        width: parent.width - chromePadding * 2
+        height: parent.height - chromePadding * 2
     }
 
-    ParallelAnimation {
-        id: showAnimation
-
-        NumberAnimation {
-            target: panel
-            property: "revealOpacity"
-            to: 1
-            duration: StylePopover.showDuration
-            easing.type: Easing.OutCubic
-        }
-
-        NumberAnimation {
-            target: panel
-            property: "revealScale"
-            to: 1
-            duration: StylePopover.showDuration
-            easing.type: Easing.OutBack
-            easing.overshoot: StylePopover.showOvershoot
-        }
-    }
-
-    ParallelAnimation {
-        id: hideAnimation
-
-        NumberAnimation {
-            target: panel
-            property: "revealOpacity"
-            to: 0
-            duration: StylePopover.hideDuration
-            easing.type: Easing.InCubic
-        }
-
-        NumberAnimation {
-            target: panel
-            property: "revealScale"
-            to: StylePopover.hiddenScale
-            duration: StylePopover.hideDuration
-            easing.type: Easing.InCubic
-        }
-    }
 }

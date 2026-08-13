@@ -105,6 +105,9 @@ PopoverPanel {
     }
 
     Column {
+        // Explicit width so PopoverPanel's implicitWidth is stable at build
+        // time rather than waiting on childrenRect of unloaded positioners.
+        width: root.calendarWidth
         spacing: 0
 
         // Hero row: today's full date is the glanceable anchor, so it gets the

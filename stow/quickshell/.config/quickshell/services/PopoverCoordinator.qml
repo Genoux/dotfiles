@@ -2,57 +2,42 @@ pragma Singleton
 
 import Quickshell
 import QtQuick
-import qs.config
 
 // Tracks which BarPopover is currently open. Popovers no longer share a
 // fullscreen click-catcher (see BarPopover.qml), so nothing else enforces
 // "opening one closes any other" — this does that instead.
 //
-// It also carries the hand-off position across a swap, so the incoming panel
-// can glide from where the outgoing one sat and the pair reads as one panel
-// moving along the bar rather than two panels blinking independently.
 Singleton {
     property Item current: null
 
-    // Centre of the popover being replaced; NaN on a cold open.
-    property real handoffCenterX: NaN
-    readonly property bool handingOff: !isNaN(handoffCenterX)
+    // The panel still fading out after dismissal. If another panel opens before
+    // that fade ends, its outgoing window is unmounted first so two large panel
+    // trees never overlap and read as merged content.
+    property Item exiting: null
 
-    // Where the most recently closed popover sat. Clicking a second widget
-    // while one is open dismisses the first via HyprlandFocusGrab, which fires
-    // before the second one opens — so by the time the incoming popover asks
-    // what it is replacing, `current` is already null. This remembers the
-    // outgoing position just long enough to bridge that gap, which also makes
-    // the hand-off work regardless of which of the two events lands first.
-    property real recentCenterX: NaN
-
-    // A popover opts out by declaring handoffEligible: false. Tray context
-    // menus do — they are still exclusive with everything else, but a menu
-    // should never appear to be the calendar sliding across the bar.
-    function eligible(popover) {
-        return popover !== null && popover.handoffEligible === true;
+    function notifyExiting(popover, isExiting) {
+        if (isExiting)
+            exiting = popover;
+        else if (exiting === popover)
+            exiting = null;
     }
 
     function requestOpen(popover) {
         const previous = current;
-        const replacing = previous !== null && previous !== popover;
 
-        if (!eligible(popover))
-            handoffCenterX = NaN;
-        else if (replacing)
-            handoffCenterX = eligible(previous) ? previous.centerX : NaN;
-        else if (handoffGrace.running)
-            handoffCenterX = recentCenterX;
-        else
-            handoffCenterX = NaN;
+        if (exiting !== null && exiting !== popover)
+            exiting.exiting = false;
 
         // Adopt the new popover *before* closing the old one: the close below
         // re-enters via notifyClosed, which must see that it is no longer
-        // current or it would overwrite the hand-off state we just resolved.
+        // current.
         current = popover;
 
-        if (replacing)
+        if (previous !== null && previous !== popover) {
             previous.open = false;
+            if (previous.exiting !== undefined)
+                previous.exiting = false;
+        }
     }
 
     // Click-away dismissal from bare bar surface; see the MouseArea in Bar.qml.
@@ -81,8 +66,7 @@ Singleton {
     //     Today pill are Buttons) must not dismiss the panel it lives in.
     //
     // Everything else — another widget, a widget with no popover of its own, a
-    // tray icon — dismisses. A replacement opening right after still glides,
-    // because notifyClosed leaves the hand-off grace running.
+    // tray icon — dismisses.
     function notifyInteraction(item) {
         if (current === null || current.anchorItem === item)
             return;
@@ -98,23 +82,5 @@ Singleton {
             return;
 
         current = null;
-
-        // A closing context menu must not seed a hand-off for whatever opens
-        // next, or a widget panel would glide out of where the menu stood.
-        if (!eligible(popover)) {
-            recentCenterX = NaN;
-            return;
-        }
-
-        recentCenterX = popover.centerX;
-        handoffGrace.restart();
-    }
-
-    // Only a dismissal that is part of the same click as the next open should
-    // count as a hand-off; anything slower is a cold open.
-    Timer {
-        id: handoffGrace
-
-        interval: StylePopover.handoffGrace
     }
 }

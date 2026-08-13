@@ -13,6 +13,7 @@ PanelWindow {
     id: bar
 
     readonly property var hyprMonitor: Hyprland.monitorFor(screen)
+
     readonly property int contentHeight: Math.max(StyleBar.estimatedContentHeight, leftRow.implicitHeight, windowTitle.implicitHeight, rightRow.implicitHeight)
 
     implicitHeight: contentHeight + StyleBar.topPadding + StyleBar.bottomPadding

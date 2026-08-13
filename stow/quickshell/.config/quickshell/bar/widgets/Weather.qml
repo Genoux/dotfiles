@@ -9,8 +9,6 @@ Button {
 
     required property var barWindow
 
-    property bool forecastLoaded: false
-
     iconSource: IconRegistry.weatherIcon(WeatherState.icon)
     text: WeatherState.temperature
     interactive: true
@@ -24,26 +22,8 @@ Button {
         barWindow: root.barWindow
         anchorItem: root
 
-        // Forecast layout is only worth building once the popover is actually
-        // opened; skips eager per-monitor instantiation at startup.
-        Loader {
-            active: root.forecastLoaded
-            sourceComponent: forecastComponent
-        }
-    }
-
-    Connections {
-        target: popover
-
-        function onOpenChanged() {
-            if (popover.open)
-                root.forecastLoaded = true;
-        }
-    }
-
-    Component {
-        id: forecastComponent
-
+        // Keep the forecast built so its window has settled geometry before
+        // the first reveal.
         WeatherPopover {
             active: popover.open
         }

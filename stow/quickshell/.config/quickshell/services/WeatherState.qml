@@ -9,6 +9,7 @@ Singleton {
 
     readonly property int refreshInterval: 600000
     readonly property int retryInterval: 30000
+    readonly property int forecastDayCount: 3
 
     // False until the first successful fetch; keeps the retry timer running
     // so a failed fetch at startup or resume doesn't strand "--°C" for 10 min.
@@ -95,16 +96,22 @@ Singleton {
 
         command: ["bash", "-lc", `
             location="\${WEATHER_CITY:-Montreal}"
-            location="\${location// /%20}"
-            curl -fsS --max-time 4 "https://wttr.in/\${location}?format=j1"
+            printf '%s\\n' "\${location}"
+            encoded_location="\${location// /%20}"
+            curl -fsS --max-time 4 "https://wttr.in/\${encoded_location}?format=j1"
         `]
         running: true
 
         stdout: StdioCollector {
             onStreamFinished: {
+                const separator = this.text.indexOf("\n")
+                if (separator < 0)
+                    return
+
+                const configuredLocation = this.text.slice(0, separator).trim()
                 let data
                 try {
-                    data = JSON.parse(this.text.trim())
+                    data = JSON.parse(this.text.slice(separator + 1).trim())
                 } catch (e) {
                     return
                 }
@@ -112,8 +119,6 @@ Singleton {
                 const cc = data?.current_condition?.[0]
                 if (!cc)
                     return
-
-                root.hasData = true
 
                 const code = parseInt(cc.weatherCode ?? "113")
                 root.icon = root.iconForCode(code)
@@ -124,11 +129,10 @@ Singleton {
                 root.humidity = (cc.humidity ?? "--") + "%"
                 root.wind = (cc.windspeedKmph ?? "--") + " km/h " + (cc.winddir16Point ?? "")
 
-                const na = data?.nearest_area?.[0]
-                root.locationName = na?.areaName?.[0]?.value ?? ""
+                root.locationName = configuredLocation
 
                 const days = data?.weather ?? []
-                root.forecast = days.map(day => {
+                root.forecast = days.slice(0, root.forecastDayCount).map(day => {
                     // use mid-day hourly slot for description
                     const mid = day.hourly?.[Math.floor((day.hourly?.length ?? 0) / 2)] ?? {}
                     const dayCode = parseInt(mid.weatherCode ?? "113")
@@ -145,6 +149,11 @@ Singleton {
                         description: mid.weatherDesc?.[0]?.value ?? "",
                     }
                 })
+
+                // Publish readiness only after every field and forecast row is
+                // populated, so consumers never reveal a partially updated
+                // weather model.
+                root.hasData = true
             }
         }
     }
