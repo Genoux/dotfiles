@@ -4,7 +4,6 @@ local sessionEnvironment =
 local desktopServices = {
   "awww-daemon.service",
   "hypridle.service",
-  "flow.service",
 }
 
 local portalServices = {
