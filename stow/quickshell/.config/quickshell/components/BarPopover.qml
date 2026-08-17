@@ -31,6 +31,15 @@ Item {
         open = !open;
     }
 
+    // Unmap immediately so a follow-up overlay (slurp, recorder) is not
+    // waiting on the panel's 160ms dismiss animation.
+    function dismissNow() {
+        if (open)
+            open = false;
+        exiting = false;
+        presented = false;
+    }
+
     readonly property int screenWidth: (root.barWindow && root.barWindow.screen) ? root.barWindow.screen.width : 0
 
     onExitingChanged: {

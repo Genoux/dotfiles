@@ -5,15 +5,43 @@ PopoverPanel {
     id: menu
 
     property var entries: []
+    // Compact bar of icon tiles with captions underneath, instead of a
+    // full-width text list. Record picker uses this; tray stays a list.
+    property bool iconRow: false
 
     signal selected(int index)
 
-    Column {
-        spacing: 2
-        width: StylePopover.panelWidth
+    fitContent: iconRow
+
+    Row {
+        visible: menu.iconRow
+        spacing: StylePopover.tileSpacing
 
         Repeater {
-            model: menu.entries
+            model: menu.iconRow ? menu.entries : []
+
+            PopoverAction {
+                required property var modelData
+                required property int index
+
+                stacked: true
+                label: modelData?.label ?? ""
+                iconName: modelData?.iconName ?? ""
+                badgeIconName: modelData?.badgeIconName ?? ""
+                separator: modelData?.separator ?? false
+                onActivated: menu.selected(index)
+            }
+        }
+    }
+
+    Column {
+        visible: !menu.iconRow
+        spacing: 2
+        width: visible ? StylePopover.panelWidth : 0
+        height: visible ? implicitHeight : 0
+
+        Repeater {
+            model: menu.iconRow ? [] : menu.entries
 
             PopoverAction {
                 required property var modelData
@@ -21,6 +49,8 @@ PopoverPanel {
 
                 width: StylePopover.panelWidth
                 label: modelData?.label ?? ""
+                iconName: modelData?.iconName ?? ""
+                badgeIconName: modelData?.badgeIconName ?? ""
                 separator: modelData?.separator ?? false
                 onActivated: menu.selected(index)
             }

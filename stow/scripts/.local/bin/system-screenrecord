@@ -8,181 +8,231 @@ if [[ ! -d "$OUTPUT_DIR" ]]; then
   exit 1
 fi
 
-# Selects region or output
 SCOPE="$1"
-
-# Temp files during recording
 TEMP_VIDEO="/tmp/screenrecord-video.mp4"
-MIC_RECORDING="/tmp/screenrecord-mic.wav"
-MIC_PID_FILE="/tmp/screenrecord-mic-pid"
-AUDIO_MONITOR=""
+STATE_FILE="/tmp/screenrecord.state"
+MODULE_FILE="/tmp/screenrecord-modules"
+MIX_SINK="screenrecord-mix"
+NOTIFY_ID=991100
+AUDIO_DEVICE=""
+RECORD_AUDIO=false
+RECORDER_PID=""
+
+[[ -f "$STATE_FILE" ]] || printf '0\n' >"$STATE_FILE"
+
+mark_active() {
+  printf '1\n' >"$STATE_FILE"
+}
+
+mark_inactive() {
+  printf '0\n' >"$STATE_FILE"
+}
+
+unload_mix() {
+  if [[ -f "$MODULE_FILE" ]]; then
+    while read -r id; do
+      [[ -n "$id" ]] && pactl unload-module "$id" 2>/dev/null
+    done <"$MODULE_FILE"
+    rm -f "$MODULE_FILE"
+  fi
+
+  pactl list modules short 2>/dev/null | awk -v n="$MIX_SINK" 'index($0, n) { print $1 }' | while read -r id; do
+    [[ -n "$id" ]] && pactl unload-module "$id" 2>/dev/null
+  done
+}
+
+wait_for_mix_ports() {
+  local _
+  for _ in 1 2 3 4 5 6 7 8 9 10; do
+    pw-link -i 2>/dev/null | grep -q "^${MIX_SINK}:playback_FL" && return 0
+    sleep 0.05
+  done
+  return 1
+}
+
+port_kind() {
+  local node="$1"
+  if pw-link -o 2>/dev/null | grep -Eq "^${node}:capture_(FL|MONO)"; then
+    printf 'capture'
+    return 0
+  fi
+  if pw-link -o 2>/dev/null | grep -Eq "^${node}:monitor_(FL|MONO)"; then
+    printf 'monitor'
+    return 0
+  fi
+  return 1
+}
+
+# module-loopback reports success but WirePlumber often never attaches a
+# hardware capture source to the null sink, so the file gets desktop audio
+# only. pw-link mixes both nodes onto the same playback ports.
+link_to_mix() {
+  local node="$1"
+  local kind
+  kind=$(port_kind "$node") || return 1
+
+  if pw-link "${node}:${kind}_FL" "${MIX_SINK}:playback_FL" 2>/dev/null; then
+    pw-link "${node}:${kind}_FR" "${MIX_SINK}:playback_FR" 2>/dev/null || true
+    return 0
+  fi
+  if pw-link "${node}:${kind}_MONO" "${MIX_SINK}:playback_FL" 2>/dev/null; then
+    pw-link "${node}:${kind}_MONO" "${MIX_SINK}:playback_FR" 2>/dev/null || true
+    return 0
+  fi
+  return 1
+}
 
 setup_audio() {
   [[ $1 != "audio" ]] && return 1
 
-  # Get the RUNNING monitor (active output), fallback to default sink's monitor
-  AUDIO_MONITOR=$(pactl list sources short | grep -i '\.monitor' | grep -i 'RUNNING' | head -1 | cut -f2)
-  if [[ -z "$AUDIO_MONITOR" ]]; then
-    local default_sink=$(pactl get-default-sink 2>/dev/null)
-    AUDIO_MONITOR="${default_sink}.monitor"
+  unload_mix
+
+  local default_sink default_source mix_id
+  default_sink=$(pactl get-default-sink 2>/dev/null)
+  default_source=$(pactl get-default-source 2>/dev/null)
+
+  mix_id=$(pactl load-module module-null-sink \
+    sink_name="$MIX_SINK" \
+    sink_properties=device.description=ScreenRecordMix 2>/dev/null) || return 1
+  printf '%s\n' "$mix_id" >"$MODULE_FILE"
+  wait_for_mix_ports || return 1
+
+  if [[ -n "$default_sink" ]]; then
+    link_to_mix "$default_sink" || true
   fi
 
-  # Get mic (non-monitor input source)
-  local mic=$(pactl get-default-source 2>/dev/null)
-  [[ "$mic" == *".monitor" ]] && mic=""
-
-  # Start separate mic recording if mic exists (no feedback this way)
-  if [[ -n "$mic" ]]; then
-    rm -f "$MIC_RECORDING" "$MIC_PID_FILE"
-    pw-record --target="$mic" "$MIC_RECORDING" &
-    echo $! > "$MIC_PID_FILE"
+  if [[ -n "$default_source" && "$default_source" != *".monitor" ]]; then
+    link_to_mix "$default_source" || true
   fi
+
+  AUDIO_DEVICE="${MIX_SINK}.monitor"
   return 0
 }
 
-# Different tools need different audio args
-wf_audio_args() {
-  [[ -n "$AUDIO_MONITOR" ]] && echo "--audio=$AUDIO_MONITOR" || echo "--audio"
-}
-
-wl_audio_args() {
-  [[ -n "$AUDIO_MONITOR" ]] && echo "--audio --audio-device $AUDIO_MONITOR" || echo "--audio"
-}
-
-merge_audio_tracks() {
-  local video_file="$1"
-  [[ -f "$MIC_RECORDING" && -f "$video_file" ]] || return
-
-  local merged="${video_file%.mp4}-merged.mp4"
-  # Mix desktop audio (from video) + mic audio into single track
-  ffmpeg -y -i "$video_file" -i "$MIC_RECORDING" \
-    -filter_complex "[0:a][1:a]amix=inputs=2:duration=shortest[aout]" \
-    -map 0:v -map "[aout]" -c:v copy -c:a aac -b:a 192k \
-    "$merged" 2>/dev/null && mv "$merged" "$video_file"
-  rm -f "$MIC_RECORDING"
-}
-
-cleanup_audio() {
-  # Kill by PID file
-  [[ -f "$MIC_PID_FILE" ]] && kill "$(cat "$MIC_PID_FILE")" 2>/dev/null
-  # Also kill any stray pw-record for our mic file
-  pkill -f "pw-record.*$MIC_RECORDING" 2>/dev/null
-  rm -f "$MIC_PID_FILE"
-}
-
-RECORD_AUDIO=false
-setup_audio "$2" && RECORD_AUDIO=true
-
 detect_encoder() {
-  # NVIDIA with nvidia drivers → NVENC
-  if lspci | grep -qi 'nvidia' && lsmod | grep -q '^nvidia'; then
+  if lsmod | grep -q '^nvidia'; then
     echo "nvenc"
-  # AMD/Intel with working VAAPI
-  elif command -v vainfo &>/dev/null && vainfo &>/dev/null; then
+  elif command -v vainfo >/dev/null && vainfo >/dev/null 2>&1; then
     echo "vaapi"
   else
     echo "software"
   fi
 }
 
+launch_recorder() {
+  local logfile="$1"
+  shift
+  "$@" >"$logfile" 2>&1 &
+  RECORDER_PID=$!
+}
+
+recorder_alive() {
+  kill -0 "$1" 2>/dev/null
+}
+
 start_screenrecording() {
   local logfile="/tmp/screenrecord-$$.log"
-  local pid
-  local encoder=$(detect_encoder)
-  
+  local pid encoder
+  local -a extra=("$@")
+  local -a wf_cmd wl_cmd
+
+  encoder=$(detect_encoder)
   rm -f "$TEMP_VIDEO"
 
-  try_record() {
-    "$@" 2>"$logfile" &
-    pid=$!
-    sleep 0.5
-    kill -0 "$pid" 2>/dev/null
-  }
-
-  local audio_args=""
+  wf_cmd=(wf-recorder -f "$TEMP_VIDEO")
+  wl_cmd=(wl-screenrec -f "$TEMP_VIDEO")
+  if $RECORD_AUDIO; then
+    if [[ -n "$AUDIO_DEVICE" ]]; then
+      wf_cmd+=("--audio=$AUDIO_DEVICE")
+      wl_cmd+=(--audio --audio-device "$AUDIO_DEVICE")
+    else
+      wf_cmd+=(--audio)
+      wl_cmd+=(--audio)
+    fi
+  fi
 
   case "$encoder" in
     nvenc)
-      $RECORD_AUDIO && audio_args=$(wf_audio_args)
-      if ! try_record wf-recorder $audio_args -f "$TEMP_VIDEO" -c h264_nvenc "$@"; then
+      launch_recorder "$logfile" "${wf_cmd[@]}" -c h264_nvenc "${extra[@]}"
+      pid=$RECORDER_PID
+      mark_active
+      sleep 0.12
+      if ! recorder_alive "$pid"; then
         notify-send "NVENC failed, using software" -t 2000
-        try_record wf-recorder $audio_args -f "$TEMP_VIDEO" "$@"
+        launch_recorder "$logfile" "${wf_cmd[@]}" "${extra[@]}"
+        pid=$RECORDER_PID
+        sleep 0.12
       fi
       ;;
     vaapi)
-      $RECORD_AUDIO && audio_args=$(wl_audio_args)
-      try_record wl-screenrec $audio_args -f "$TEMP_VIDEO" "$@"
+      launch_recorder "$logfile" "${wl_cmd[@]}" "${extra[@]}"
+      pid=$RECORDER_PID
+      mark_active
+      sleep 0.12
       ;;
     *)
-      $RECORD_AUDIO && audio_args=$(wf_audio_args)
-      try_record wf-recorder $audio_args -f "$TEMP_VIDEO" "$@"
+      launch_recorder "$logfile" "${wf_cmd[@]}" "${extra[@]}"
+      pid=$RECORDER_PID
+      mark_active
+      sleep 0.12
       ;;
   esac
 
-  # Check if recording actually started
-  if ! kill -0 "$pid" 2>/dev/null; then
-    local error=$(tail -5 "$logfile" 2>/dev/null | head -3)
+  if ! recorder_alive "$pid"; then
+    local error
+    error=$(tail -5 "$logfile" 2>/dev/null | head -3)
     notify-send "Screen recording failed" "${error:-Unknown error}" -u critical -t 5000
-    # Cleanup temp files on failure
-    rm -f "$logfile" "$TEMP_VIDEO" "$MIC_RECORDING" "$MIC_PID_FILE"
-    pkill -f "pw-record.*$MIC_RECORDING" 2>/dev/null
+    rm -f "$logfile" "$TEMP_VIDEO"
+    unload_mix
+    mark_inactive
     return 1
   fi
 
   rm -f "$logfile"
-  notify-send "Screen recording started" "Press the same keybind to stop" -t 2000
-  toggle_screenrecording_indicator
+  notify-send -r "$NOTIFY_ID" "Screen recording started" "Click the record button to stop" -t 2000
+}
+
+wait_for_recorders() {
+  local i
+  for i in 1 2 3 4 5; do
+    pgrep -x wl-screenrec >/dev/null || pgrep -x wf-recorder >/dev/null || return 0
+    sleep 0.05
+  done
 }
 
 stop_screenrecording() {
+  mark_inactive
   pkill -x wl-screenrec
   pkill -x wf-recorder
-  
-  # Stop mic recording but DON'T delete the file yet
-  [[ -f "$MIC_PID_FILE" ]] && kill "$(cat "$MIC_PID_FILE")" 2>/dev/null
-  pkill -f "pw-record.*$MIC_RECORDING" 2>/dev/null
-  rm -f "$MIC_PID_FILE"
-  
-  sleep 0.3  # Let files finalize
+  unload_mix
+  wait_for_recorders
+  sleep 0.05
 
-  # Merge mic audio if recorded (Loom-style)
-  merge_audio_tracks "$TEMP_VIDEO"
-  
-  # Move to final location only when done
   local final_file="$OUTPUT_DIR/screenrecording-$(date +'%Y-%m-%d_%H-%M-%S').mp4"
   mv "$TEMP_VIDEO" "$final_file" 2>/dev/null
-  
-  local filename=$(basename "$final_file")
+
+  local filename
+  filename=$(basename "$final_file")
 
   if [[ -f "$final_file" ]]; then
-    # Send notification with actions
-    notify-send "Screen recording saved" "Saved to: $filename" \
+    notify-send -r "$NOTIFY_ID" "Screen recording saved" "Saved to: $filename" \
       -t 5000 \
       -a "Screen Recorder" \
       --action="default=Open Folder" \
       --action="open-video=Play Video" | while read -r action; do
-        case "$action" in
-          "default")
-            xdg-open "$OUTPUT_DIR" &
-            ;;
-          "open-video")
-            xdg-open "$final_file" &
-            ;;
-        esac
-      done &
+      case "$action" in
+        default) xdg-open "$OUTPUT_DIR" & ;;
+        open-video) xdg-open "$final_file" & ;;
+      esac
+    done &
   else
-    # Cleanup any leftover temp files
-    rm -f "$TEMP_VIDEO" "$MIC_RECORDING"
+    rm -f "$TEMP_VIDEO"
     notify-send "Screen recording failed" "No video file created" -u critical -t 3000
   fi
-
-  sleep 0.2 # ensures the process is actually dead before we check
-  toggle_screenrecording_indicator
 }
 
-toggle_screenrecording_indicator() {
-  # Signal waybar if it exists, otherwise do nothing
-  pkill -RTMIN+8 waybar 2>/dev/null || true
+enable_audio() {
+  setup_audio audio && RECORD_AUDIO=true && sleep 0.05
 }
 
 screenrecording_active() {
@@ -191,16 +241,18 @@ screenrecording_active() {
 
 if screenrecording_active; then
   stop_screenrecording
+elif [[ -f "$STATE_FILE" ]] && grep -qx 1 "$STATE_FILE"; then
+  mark_inactive
+  unload_mix
 elif [[ "$SCOPE" == "fullscreen" ]]; then
-  # Record entire screen without selection
+  [[ "$2" == "audio" ]] && enable_audio
   start_screenrecording
 elif [[ "$SCOPE" == "output" ]]; then
-  # Select a specific display
   output=$(slurp -o) || exit 1
+  [[ "$2" == "audio" ]] && enable_audio
   start_screenrecording -g "$output"
 else
-  # Select a region
   region=$(slurp) || exit 1
+  [[ "$2" == "audio" ]] && enable_audio
   start_screenrecording -g "$region"
 fi
-

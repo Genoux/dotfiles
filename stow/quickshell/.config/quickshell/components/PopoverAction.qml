@@ -1,4 +1,7 @@
+import Qt5Compat.GraphicalEffects
 import QtQuick
+import Quickshell
+import Quickshell.Widgets
 import qs
 import qs.config
 
@@ -6,6 +9,9 @@ Rectangle {
     id: action
 
     required property string label
+    property string iconName: ""
+    property string badgeIconName: ""
+    property bool stacked: false
     property bool separator: false
     property bool actionEnabled: true
 
@@ -14,21 +20,122 @@ Rectangle {
     property int rowHeight: StylePopover.rowHeight
     property int paddingH: StylePopover.contentPaddingH
 
+    readonly property bool hasIcon: iconName.length > 0
+    readonly property var resolvedSource: hasIcon ? IconRegistry.source(iconName) : ""
+    readonly property bool usesBundledIcon: hasIcon && IconRegistry.hasOverride(iconName)
+    readonly property var badgeSource: badgeIconName.length > 0 ? IconRegistry.source(badgeIconName) : ""
+    readonly property bool badgeBundled: badgeIconName.length > 0 && IconRegistry.hasOverride(badgeIconName)
+
     signal activated()
 
-    // Natural content width, so a menu that sizes to its widest entry can read
-    // it off the column. Callers wanting a fixed slab set `width` explicitly.
-    implicitWidth: separator ? 0 : labelText.implicitWidth + paddingH * 2
-    implicitHeight: separator ? StylePopover.separatorHeight : rowHeight
+    implicitWidth: {
+        if (separator)
+            return 0;
+        if (stacked)
+            return StylePopover.tileWidth;
+        return labelText.implicitWidth + paddingH * 2;
+    }
+    implicitHeight: {
+        if (separator)
+            return StylePopover.separatorHeight;
+        if (stacked)
+            return StylePopover.tileHeight;
+        return rowHeight;
+    }
     radius: separator ? 0 : StyleTokens.radiusSm
     color: separator
         ? StyleOverlay.borderSubtle
         : (mouseArea.containsMouse ? StyleTokens.alphaLight : StyleTokens.transparent)
 
+    Column {
+        id: tileColumn
+
+        visible: action.stacked && !action.separator
+        anchors.centerIn: parent
+        spacing: 4
+        width: parent.width - StylePopover.tileCaptionPadding * 2
+
+        Item {
+            anchors.horizontalCenter: parent.horizontalCenter
+            width: StylePopover.tileIconSize
+            height: StylePopover.tileIconSize
+            visible: action.hasIcon
+
+            Image {
+                id: bundledIcon
+
+                anchors.fill: parent
+                visible: action.usesBundledIcon && action.resolvedSource.toString().length > 0
+                source: action.resolvedSource
+                fillMode: Image.PreserveAspectFit
+                sourceSize: Qt.size(StylePopover.tileIconSize, StylePopover.tileIconSize)
+            }
+
+            ColorOverlay {
+                anchors.fill: parent
+                visible: bundledIcon.visible
+                source: bundledIcon
+                color: Colors.base05
+            }
+
+            IconImage {
+                anchors.fill: parent
+                visible: !action.usesBundledIcon && action.resolvedSource.toString().length > 0
+                source: action.resolvedSource
+            }
+
+            Item {
+                visible: action.badgeIconName.length > 0
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
+                anchors.rightMargin: -3
+                anchors.bottomMargin: -3
+                width: StylePopover.tileBadgeSize
+                height: StylePopover.tileBadgeSize
+
+                Image {
+                    id: badgeBundledIcon
+
+                    anchors.fill: parent
+                    visible: action.badgeBundled && action.badgeSource.toString().length > 0
+                    source: action.badgeSource
+                    fillMode: Image.PreserveAspectFit
+                    sourceSize: Qt.size(StylePopover.tileBadgeSize, StylePopover.tileBadgeSize)
+                }
+
+                ColorOverlay {
+                    anchors.fill: parent
+                    visible: badgeBundledIcon.visible
+                    source: badgeBundledIcon
+                    color: Colors.base05
+                }
+
+                IconImage {
+                    anchors.fill: parent
+                    visible: !action.badgeBundled && action.badgeSource.toString().length > 0
+                    source: action.badgeSource
+                }
+            }
+        }
+
+        Text {
+            width: parent.width
+            text: action.label
+            color: Colors.base05
+            opacity: action.actionEnabled ? 1.0 : 0.4
+            font.family: StyleTokens.fontSans
+            font.pixelSize: StyleTokens.fontSizeXs
+            horizontalAlignment: Text.AlignHCenter
+            wrapMode: Text.WordWrap
+            maximumLineCount: 2
+            elide: Text.ElideRight
+        }
+    }
+
     Text {
         id: labelText
 
-        visible: !action.separator
+        visible: !action.separator && !action.stacked
         anchors.left: parent.left
         anchors.leftMargin: action.paddingH
         anchors.right: parent.right

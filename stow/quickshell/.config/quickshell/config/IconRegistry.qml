@@ -1,9 +1,17 @@
 pragma Singleton
 
 import Quickshell
+import QtQml
 import QtQuick
 
 Singleton {
+    // DesktopEntries.applications only populates once something binds it as a
+    // model; without this every lookup below sees an empty list
+    readonly property Instantiator desktopEntries: Instantiator {
+        model: DesktopEntries.applications
+        delegate: QtObject {}
+    }
+
     function barIcon(domain, name) {
         // shellPath returns a bare filesystem path on some quickshell versions;
         // without a scheme it resolves against qrc: inside IconImage and fails

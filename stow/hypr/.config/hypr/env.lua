@@ -35,7 +35,7 @@ hl.env("GTK_KEY_THEME_NAME", "Emacs")
 hl.env("MOZ_DISABLE_RDD_SANDBOX", "1")
 hl.env("MOZ_ENABLE_WAYLAND", "1")
 hl.env("MOZ_WEBRENDER", "1")
-hl.env("MOZ_GTK_TITLEBAR_DECORATION", "client")
+hl.env("MOZ_GTK_TITLEBAR_DECORATION", "system")
 
 hl.env("ELECTRON_OZONE_PLATFORM_HINT", "wayland")
 hl.env("ELECTRON_ENABLE_WAYLAND", "1")

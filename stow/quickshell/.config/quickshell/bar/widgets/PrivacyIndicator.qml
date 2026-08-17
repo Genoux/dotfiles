@@ -30,8 +30,35 @@ Row {
             root.hideTooltip();
     }
 
-    visible: Privacy.anyActive
+    visible: Privacy.anyActive || webcamSlot.width > 0 || micSlot.width > 0 || screenSlot.width > 0
     spacing: 1
+
+    component IndicatorSlot: Item {
+        id: slot
+
+        property bool active: false
+        default property alias content: slot.data
+
+        visible: active || width > 0
+        width: active ? StyleControl.buttonWidth : 0
+        height: StyleControl.buttonHeight
+        clip: true
+        opacity: active ? 1 : 0
+
+        Behavior on width {
+            NumberAnimation {
+                duration: StyleTokens.easeDurationNormal
+                easing.type: Easing.OutCubic
+            }
+        }
+
+        Behavior on opacity {
+            NumberAnimation {
+                duration: StyleTokens.easeDurationNormal
+                easing.type: Easing.OutCubic
+            }
+        }
+    }
 
     HyprlandFocusGrab {
         id: tooltipGrab
@@ -41,8 +68,6 @@ Row {
         onCleared: root.hideTooltip()
     }
 
-    // Tooltip uses PopupWindow directly — it is hover-driven (not a toggle),
-    // does not grab focus, and needs custom HyprlandFocusGrab for dismissal.
     PopupWindow {
         id: tooltipWindow
 
@@ -73,54 +98,69 @@ Row {
         }
     }
 
-    Button {
-        id: webcamButton
+    IndicatorSlot {
+        id: webcamSlot
 
-        visible: Privacy.webcam
-        iconName: "camera-video"
-        background: StylePrivacy.webcamFill
-        hoverBackground: StylePrivacy.webcamFill
-        borderWidth: 1
-        borderColor: StylePrivacy.webcamBorder
-        onHoveredChanged: {
-            if (hovered)
-                root.showTooltip(webcamButton, Privacy.webcamSource, "Camera");
-            else
-                root.hideTooltipIfNeeded();
+        active: Privacy.webcam
+
+        Button {
+            id: webcamButton
+
+            iconName: "camera-video"
+            background: StylePrivacy.webcamFill
+            hoverBackground: StylePrivacy.webcamFill
+            borderWidth: 1
+            borderColor: StylePrivacy.webcamBorder
+            onHoveredChanged: {
+                if (hovered)
+                    root.showTooltip(webcamButton, Privacy.webcamSource, "Camera");
+                else
+                    root.hideTooltipIfNeeded();
+            }
         }
     }
 
-    Button {
-        id: micButton
+    IndicatorSlot {
+        id: micSlot
 
-        visible: Privacy.mic
-        iconName: "mic-on"
-        background: StylePrivacy.micFill
-        hoverBackground: StylePrivacy.micFill
-        borderWidth: 1
-        borderColor: StylePrivacy.micBorder
-        onHoveredChanged: {
-            if (hovered)
-                root.showTooltip(micButton, Privacy.micSource, "Microphone");
-            else
-                root.hideTooltipIfNeeded();
+        active: Privacy.mic
+
+        Button {
+            id: micButton
+
+            iconName: "mic-on"
+            background: StylePrivacy.micFill
+            hoverBackground: StylePrivacy.micFill
+            borderWidth: 1
+            borderColor: StylePrivacy.micBorder
+            onHoveredChanged: {
+                if (hovered)
+                    root.showTooltip(micButton, Privacy.micSource, "Microphone");
+                else
+                    root.hideTooltipIfNeeded();
+            }
         }
     }
 
-    Button {
-        id: screenButton
+    IndicatorSlot {
+        id: screenSlot
 
-        visible: Privacy.screenAccess
-        iconName: "monitor-video"
-        background: StylePrivacy.screenFill
-        hoverBackground: StylePrivacy.screenFill
-        borderWidth: 1
-        borderColor: StylePrivacy.screenBorder
-        onHoveredChanged: {
-            if (hovered)
-                root.showTooltip(screenButton, Privacy.screenSource, "Screen sharing");
-            else
-                root.hideTooltipIfNeeded();
+        active: Privacy.screenAccess
+
+        Button {
+            id: screenButton
+
+            iconName: "monitor-video"
+            background: StylePrivacy.screenFill
+            hoverBackground: StylePrivacy.screenFill
+            borderWidth: 1
+            borderColor: StylePrivacy.screenBorder
+            onHoveredChanged: {
+                if (hovered)
+                    root.showTooltip(screenButton, Privacy.screenSource, Privacy.recording ? "Recording" : "Screen sharing");
+                else
+                    root.hideTooltipIfNeeded();
+            }
         }
     }
 }

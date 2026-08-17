@@ -69,4 +69,13 @@ Singleton {
     readonly property real calendarWeekdayOpacity: 0.6
     // One trackpad swipe emits many wheel deltas — debounce to one month per gesture.
     readonly property int calendarWheelDebounce: 220
+
+    // Icon-row menus (record picker): a compact tile with the glyph on top
+    // and a two-line caption under it, so four options fit in one bar.
+    readonly property int tileWidth: 72
+    readonly property int tileHeight: 58
+    readonly property int tileIconSize: 20
+    readonly property int tileBadgeSize: 10
+    readonly property int tileSpacing: 2
+    readonly property int tileCaptionPadding: 4
 }

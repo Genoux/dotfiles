@@ -86,7 +86,7 @@ hl.layer_rule({ name = "flow-island", blur = true, blur_popups = true, ignore_al
 
 hl.window_rule({
   name = "idleon-game",
-  size = "(monitor_w*0.79) (monitor_h*0.79)",
+  size = "(monitor_w-14) (monitor_h-52)",
   center = true,
   float = true,
   opacity = "1.0",

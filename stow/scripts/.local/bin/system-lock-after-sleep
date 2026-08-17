@@ -42,3 +42,4 @@ fi
 
 sleep 1
 bash "$HOME/.local/bin/system-awww-wallpaper" >/dev/null 2>&1 || true
+"$HOME/.local/bin/system-bluetooth-reconnect" >/dev/null 2>&1 &

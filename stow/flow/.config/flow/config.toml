@@ -6,3 +6,5 @@
 # rather than the only one. They can go whenever.
 
 duck = 50
+denoise = true
+record_debug = true

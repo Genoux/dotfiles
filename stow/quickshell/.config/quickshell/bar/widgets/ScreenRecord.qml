@@ -11,40 +11,56 @@ Button {
 
     required property var screen
     required property var barWindow
+    property bool collapsing: false
+    property bool hoverArmed: false
+    property color displayForeground: Colors.base05
     readonly property bool recording: Privacy.recording
+    readonly property bool visualRecording: recording || collapsing
     readonly property var recordMenuEntries: [{
         "label": "Region",
+        "iconName": "image-crop-symbolic",
         "script": "system-screenrecord",
         "args": "region"
     }, {
-        "label": "Region + audio",
-        "script": "system-record",
+        "label": "+ Audio",
+        "iconName": "image-crop-symbolic",
+        "badgeIconName": "mic-on",
+        "script": "system-screenrecord",
         "args": "region audio"
     }, {
-        "label": "Fullscreen",
+        "label": "Full",
+        "iconName": "view-fullscreen-symbolic",
         "script": "system-screenrecord",
         "args": "fullscreen"
     }, {
-        "label": "Fullscreen + audio",
+        "label": "+ Audio",
+        "iconName": "view-fullscreen-symbolic",
+        "badgeIconName": "mic-on",
         "script": "system-screenrecord",
         "args": "fullscreen audio"
     }]
-    readonly property bool expanded: root.hovered && recording
+    readonly property bool expanded: hoverArmed && recording
     readonly property color trailForeground: "#ffffff"
-    readonly property color iconForeground: !recording ? Colors.base05 : trailForeground
     property color recordingColor: StyleRecording.fill
     property int elapsedSeconds: 0
+
+    function recorderCommand(extraArgs) {
+        return [ShellActions.localBin + "system-screenrecord"].concat(extraArgs ?? []);
+    }
+
+    function runRecorder(extraArgs) {
+        Quickshell.execDetached(recorderCommand(extraArgs));
+    }
 
     function runRecordAction(index) {
         const entry = recordMenuEntries[index];
         if (!entry || !entry.script)
-            return ;
+            return;
 
         const rawArgs = String(entry.args ?? "").trim();
         const args = rawArgs.length > 0 ? rawArgs.split(/\s+/) : [];
-        console.log(`ScreenRecord action: ${entry.script} ${rawArgs}`);
-        ShellActions.runLocalScript(String(entry.script), args);
-        recordPopover.open = false;
+        recordPopover.dismissNow();
+        runRecorder(args);
     }
 
     function pad2(value) {
@@ -61,52 +77,69 @@ Button {
         return pad2(minutes) + ":" + pad2(seconds);
     }
 
-    function setExpanded(active) {
-        expandAnimation.stop();
-        expandAnimation.to = active ? 1 : 0;
-        expandAnimation.start();
-    }
-
     function beginRecording() {
+        hideAnimation.stop();
+        collapsing = false;
         elapsedSeconds = 0;
         elapsedTimer.restart();
         pulseAnimation.stop();
         recordingColor = StyleRecording.fill;
+        displayForeground = trailForeground;
         pulseAnimation.start();
-        if (root.expanded)
-            setExpanded(true);
+        hoverArmed = false;
+        revealTimer.stop();
+        if (root.hovered)
+            revealTimer.restart();
     }
 
     function endRecording() {
+        if (collapsing && hideAnimation.running)
+            return;
+        collapsing = true;
+        hoverArmed = false;
+        revealTimer.stop();
         elapsedSeconds = 0;
         elapsedTimer.stop();
         pulseAnimation.stop();
-        recordingColor = StyleRecording.fill;
-        setExpanded(false);
+        hideAnimation.restart();
     }
 
     iconName: "camera-video"
-    foreground: iconForeground
-    background: recording ? recordingColor : StyleTokens.transparent
+    foreground: displayForeground
+    background: visualRecording ? recordingColor : StyleTokens.transparent
     hoverBackground: StyleTokens.alphaLight
     interactive: true
     active: recordPopover.open
     animateColor: false
-    manageHoverColor: !recording
+    manageHoverColor: !visualRecording
     clipContent: true
     trailGap: 2
     trailPaddingRight: 3
     trailWidth: durationLabel.implicitWidth
     onClicked: (mouse) => {
-        if (Privacy.recording) {
-            ShellActions.runLocalScript("system-screenrecord");
-            return ;
+        if (root.recording || root.collapsing || Privacy.rawRecording) {
+            Privacy.stopping = true;
+            runRecorder([]);
+            return;
         }
         recordPopover.toggle();
     }
-    onExpandedChanged: setExpanded(expanded)
+    onRecordingChanged: {
+        if (root.recording)
+            root.beginRecording();
+        else
+            root.endRecording();
+    }
+    onHoveredChanged: {
+        if (hovered && recording) {
+            revealTimer.restart();
+            return;
+        }
+        revealTimer.stop();
+        hoverArmed = false;
+    }
     Component.onCompleted: {
-        if (Privacy.recording)
+        if (root.recording)
             root.beginRecording();
     }
 
@@ -116,6 +149,7 @@ Button {
         anchors.verticalCenter: parent.verticalCenter
         text: root.formatElapsed(root.elapsedSeconds)
         color: root.trailForeground
+        opacity: root.trailReveal
         font.family: StyleTokens.fontMono
         font.pixelSize: StyleTokens.fontSizeSm
         height: root.labelLineHeight
@@ -130,6 +164,7 @@ Button {
 
         PopoverMenu {
             active: recordPopover.open
+            iconRow: true
             entries: root.recordMenuEntries
             onSelected: (index) => {
                 return root.runRecordAction(index);
@@ -137,13 +172,60 @@ Button {
         }
     }
 
-    NumberAnimation {
-        id: expandAnimation
+    Timer {
+        id: revealTimer
 
+        interval: StyleMedia.controlsHoverDelay
+        onTriggered: root.hoverArmed = true
+    }
+
+    Binding {
         target: root
         property: "trailReveal"
-        duration: StyleRecording.expandDuration
-        easing.type: Easing.OutCubic
+        value: root.expanded ? 1 : 0
+        when: !hideAnimation.running
+    }
+
+    Behavior on trailReveal {
+        enabled: !hideAnimation.running
+
+        NumberAnimation {
+            duration: StyleMedia.controlsRevealDuration
+            easing.type: Easing.OutCubic
+        }
+    }
+
+    ParallelAnimation {
+        id: hideAnimation
+
+        NumberAnimation {
+            target: root
+            property: "trailReveal"
+            to: 0
+            duration: StyleMedia.controlsRevealDuration
+            easing.type: Easing.OutCubic
+        }
+
+        ColorAnimation {
+            target: root
+            property: "recordingColor"
+            to: Qt.rgba(StyleRecording.fill.r, StyleRecording.fill.g, StyleRecording.fill.b, 0)
+            duration: StyleMedia.controlsRevealDuration
+            easing.type: Easing.OutCubic
+        }
+
+        ColorAnimation {
+            target: root
+            property: "displayForeground"
+            to: Colors.base05
+            duration: StyleMedia.controlsRevealDuration
+            easing.type: Easing.OutCubic
+        }
+
+        onFinished: {
+            root.collapsing = false;
+            root.recordingColor = StyleRecording.fill;
+        }
     }
 
     SequentialAnimation {
@@ -173,21 +255,10 @@ Button {
         id: elapsedTimer
 
         interval: 1000
-        running: Privacy.recording
+        running: root.recording
         repeat: true
         triggeredOnStart: false
         onTriggered: root.elapsedSeconds++
-    }
-
-    Connections {
-        function onRecordingChanged() {
-            if (Privacy.recording)
-                root.beginRecording();
-            else
-                root.endRecording();
-        }
-
-        target: Privacy
     }
 
 }

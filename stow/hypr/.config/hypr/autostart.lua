@@ -17,7 +17,7 @@ local startupCommands = {
   "quickshell",
   "/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1",
   "hyprpm reload -n",
-  "gsettings set org.gnome.desktop.wm.preferences button-layout appmenu",
+  "gsettings set org.gnome.desktop.wm.preferences button-layout ':'",
   "xdg-settings set default-web-browser firefox.desktop",
   "system-pick-wallpaper",
   "system-bluetooth-reconnect",

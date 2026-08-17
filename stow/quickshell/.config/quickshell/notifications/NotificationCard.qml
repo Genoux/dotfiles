@@ -169,11 +169,15 @@ Rectangle {
     }
 
     function expiryMs() {
-        const requestedTimeout = notification?.expireTimeout ?? 0
-        if (requestedTimeout > 0)
-            return Math.max(1200, requestedTimeout * 1000)
+        const requestedTimeout = Number(notification?.expireTimeout ?? 0)
+        if (!Number.isFinite(requestedTimeout) || requestedTimeout <= 0)
+            return StyleNotification.timeout
 
-        return StyleNotification.timeout
+        // Quickshell documents seconds; DBus/notify-send use milliseconds.
+        // notify-send -t 1500 often arrives as 1500, which used to become a
+        // 25-minute timer after * 1000.
+        const asMs = requestedTimeout >= 100 ? requestedTimeout : requestedTimeout * 1000
+        return Math.max(1200, asMs)
     }
 
     function startExpireTimer() {

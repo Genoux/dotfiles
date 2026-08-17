@@ -128,19 +128,27 @@ check_portal_screencast() {
     ' >/dev/null 2>&1 && echo 1 || echo 0
 }
 
-check_local_recording() {
+check_session_recorder() {
     pgrep -x wl-screenrec >/dev/null 2>&1 && echo 1 && return
     pgrep -x wf-recorder >/dev/null 2>&1 && echo 1 && return
-    pgrep -x obs >/dev/null 2>&1 && echo 1 && return
-    pgrep -x gpu-screen-recorder >/dev/null 2>&1 && echo 1 && return
-    pgrep -x kooha >/dev/null 2>&1 && echo 1 && return
     pgrep -f "^[^ ]*wl-screenrec" >/dev/null 2>&1 && echo 1 && return
     pgrep -f "^[^ ]*wf-recorder" >/dev/null 2>&1 && echo 1 && return
     echo 0
 }
 
+check_external_recording() {
+    pgrep -x obs >/dev/null 2>&1 && echo 1 && return
+    pgrep -x gpu-screen-recorder >/dev/null 2>&1 && echo 1 && return
+    pgrep -x kooha >/dev/null 2>&1 && echo 1 && return
+    echo 0
+}
+
+check_local_recording() {
+    check_external_recording
+}
+
 check_screen_access() {
-    [ "$(check_local_recording)" = "1" ] && echo 1 && return
+    [ "$(check_external_recording)" = "1" ] && echo 1 && return
     check_portal_screencast
 }
 
