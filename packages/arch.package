@@ -2,8 +2,6 @@
 # ===========================
 alsa-utils
 amd-ucode
-asar
-ast-grep
 aubio
 awww
 base
@@ -17,7 +15,6 @@ bluez
 bluez-utils
 brightnessctl
 btop
-bun
 calcurse
 cava
 ccache
@@ -171,13 +168,10 @@ postgresql
 power-profiles-daemon
 prismlauncher
 python-build
-python-installer
 python-pip
 python-pipx
 python-protobuf
-python-pytest
 python-pywal
-python-vcrpy
 qbittorrent
 qt5ct
 qt6ct
@@ -244,6 +238,7 @@ xorg-server-xvfb
 xorg-xinit
 yad
 ydotool
+yt-dlp
 zed
 zenity
 zram-generator
