@@ -9,4 +9,3 @@
 # It cannot fix a word that sounds nothing like the target, so a name heard as
 # an unrelated everyday word will need correcting by hand.
 
-Miniz

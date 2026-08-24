@@ -82,6 +82,7 @@ hl.layer_rule({ name = "launcher-backdrop", no_anim = true, match = { namespace 
 hl.layer_rule({ name = "launcher", blur = true, ignore_alpha = 0.1, no_anim = true, match = { namespace = "^(launcher)$" } })
 hl.layer_rule({ name = "power-menu-backdrop", no_anim = true, match = { namespace = "^(power-menu-backdrop)$" } })
 hl.layer_rule({ name = "power-menu", blur = true, ignore_alpha = 0.1, no_anim = true, match = { namespace = "^(power-menu)$" } })
+hl.window_rule({ name = "flow-console", float = true, match = { class = "^(flow-console)$" } })
 hl.layer_rule({ name = "flow-island", blur = true, blur_popups = true, ignore_alpha = 0.1, animation = "fade", match = { namespace = "^(flow)$" } })
 
 hl.window_rule({
