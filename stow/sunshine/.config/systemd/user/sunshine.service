@@ -1,0 +1,16 @@
+[Unit]
+Description=Sunshine game stream host for Moonlight
+Documentation=https://docs.lizardbyte.dev/projects/sunshine
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/sunshine
+Restart=on-failure
+RestartSec=3
+KillMode=mixed
+TimeoutStopSec=10
+
+[Install]
+WantedBy=graphical-session.target

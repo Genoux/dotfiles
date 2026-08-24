@@ -370,10 +370,7 @@ config_link() {
                     matugen_ensure_outputs || true
                 fi
                 ;;
-            "scripts")
-                systemctl --user daemon-reload 2>/dev/null || true
-                ;;
-            "xdg-desktop-portal")
+            "scripts"|"sunshine"|"xdg-desktop-portal")
                 systemctl --user daemon-reload 2>/dev/null || true
                 ;;
         esac
