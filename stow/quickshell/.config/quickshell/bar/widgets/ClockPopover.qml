@@ -108,57 +108,32 @@ PopoverPanel {
         // Explicit width so PopoverPanel's implicitWidth is stable at build
         // time rather than waiting on childrenRect of unloaded positioners.
         width: root.calendarWidth
+        bottomPadding: StylePopover.contentPaddingV
         spacing: 0
 
         // Hero row: today's full date is the glanceable anchor, so it gets the
         // largest type here. The Today pill sits opposite it, out of the way of
         // the centered month title below.
-        Item {
+        PopoverHeader {
             width: root.calendarWidth
-            height: StylePopover.calendarHeroHeight
-
-            Text {
-                anchors.left: parent.left
-                anchors.leftMargin: root.padH
-                anchors.right: todayButton.left
-                anchors.rightMargin: 8
-                anchors.verticalCenter: parent.verticalCenter
-                text: {
-                    const loc = Qt.locale()
-                    return loc.dayName(root.today.getDay(), Locale.LongFormat) + ", " + loc.monthName(root.today.getMonth(), Locale.LongFormat) + " " + root.todayDay
-                }
-                color: Colors.base05
-                font.family: StyleTokens.fontSans
-                font.pixelSize: StyleTokens.fontSizeLg
-                font.weight: Font.DemiBold
-                elide: Text.ElideRight
+            implicitWidth: root.calendarWidth
+            title: {
+                const loc = Qt.locale()
+                return loc.dayName(root.today.getDay(), Locale.LongFormat) + ", " + loc.monthName(root.today.getMonth(), Locale.LongFormat) + " " + root.todayDay
             }
 
             // Explicit jump-back control — only meaningful while browsing away
-            Button {
-                id: todayButton
-
-                anchors.right: parent.right
-                anchors.rightMargin: root.padH
-                anchors.verticalCenter: parent.verticalCenter
+            PillButton {
                 visible: !root.viewingCurrentMonth
                 text: "Today"
-                fontSize: StyleTokens.fontSizeSm
-                foreground: Colors.base05
-                background: StyleTokens.alphaLight
-                paddingHorizontal: 10
-                paddingVertical: 6
-                radius: height / 2
-                interactive: true
                 onClicked: root.jumpToToday()
             }
 
         }
 
-        Rectangle {
+        PopoverSeparator {
             width: root.calendarWidth
-            height: StylePopover.separatorHeight
-            color: StyleOverlay.borderSubtle
+            implicitWidth: root.calendarWidth
         }
 
         // Month nav: prev far left, title centered, next far right — the layout
@@ -233,21 +208,14 @@ PopoverPanel {
                     Repeater {
                         model: root.dayNames
 
-                        Text {
+                        EyebrowLabel {
                             required property var modelData
 
                             width: root.cellSize
                             height: StylePopover.calendarWeekdayRowHeight
                             text: modelData
-                            color: Colors.base04
-                            opacity: StylePopover.calendarWeekdayOpacity
-                            font.family: StyleTokens.fontSans
                             font.pixelSize: StyleTokens.fontSizeSm
-                            font.weight: Font.Medium
-                            font.capitalization: Font.AllUppercase
-                            font.letterSpacing: 0.6
                             horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
                         }
 
                     }
@@ -353,8 +321,6 @@ PopoverPanel {
             }
 
         }
-
-        Item { width: 1; height: 8 }
 
     }
 

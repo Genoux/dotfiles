@@ -163,11 +163,10 @@ graph LR
     end
 
     subgraph qs.components
-        IconButton[IconButton.qml]
-        Pill[Pill.qml]
-        InfoPill[InfoPill.qml]
-        PrivacyButton[PrivacyButton.qml]
-        CavaVisualizer[CavaVisualizer.qml]
+        Button[Button.qml]
+        ThemedIcon[ThemedIcon.qml]
+        PopoverPanel[PopoverPanel.qml]
+        Primitives[Popover primitives:<br/>Header / Section / Eyebrow<br/>Separator / Message / Pill]
     end
 
     subgraph qs.bar.widgets
@@ -214,8 +213,11 @@ No `hyprctl` subprocess bridge — uses Quickshell's built-in Hyprland IPC.
 
 ### Icon Strategy (`config/IconRegistry.qml`)
 
-- **Bundled SVGs** in `assets/icons/` — themed via `ColorOverlay` in `IconButton.qml`
-- **Everything else** — `Quickshell.iconPath()` from Freedesktop icon theme
+- **Bundled SVGs** in `assets/icons/` — monochrome, tinted via `ColorOverlay`
+- **Everything else** — `Quickshell.iconPath()` from the Freedesktop icon theme
+- `ThemedIcon.qml` picks between the two; `IconRegistry.source()` maps a Freedesktop name to a bundled override where one exists
+
+Freedesktop lookup depends on `QT_QPA_PLATFORMTHEME=gtk3`, which reaches Quickshell only when Hyprland spawns it. Restart via `hyprctl dispatch 'hl.dsp.exec_cmd("quickshell")'` or theme icons all resolve to `image-missing`.
 
 ### Key Implementation Conventions
 
@@ -223,8 +225,9 @@ No `hyprctl` subprocess bridge — uses Quickshell's built-in Hyprland IPC.
 2. **`bar/widgets/` naming:** domain name for controls (`Volume`, `Clock`); compound name for composites (`MediaPlayer`, `PrivacyIndicator`) — no `Button` suffix; qualify services as `Services.Network` when names collide
 3. **`pragma Singleton`** for shared config/services
 4. **`Colors.base00`–`base0F`** base16 slots from matugen (same as AGS)
-5. **Process patterns:** long-running (`Privacy`, `CavaVisualizer`) vs one-shot polls vs `FileView` watches
-6. **No README in repo by default** — this file is the onboarding doc for the shell config
+5. **Process patterns:** long-running (`Privacy`) vs one-shot polls vs `FileView` watches
+6. **Popover panels** compose the `components/` primitives and take every metric from `config/StylePopover.qml` — see the Popover Composition section of `.cursor/rules/quickshell.mdc`
+7. **No README in repo by default** — this file is the onboarding doc for the shell config
 
 ### Dependencies
 
@@ -238,8 +241,8 @@ No `hyprctl` subprocess bridge — uses Quickshell's built-in Hyprland IPC.
 # Link config
 dotfiles config link quickshell
 
-# Manual run (if no systemd unit)
-quickshell
+# Restart (must inherit the session env for icon theming)
+hyprctl dispatch 'hl.dsp.exec_cmd("quickshell")'
 
 # Edit QML — Quickshell hot-reloads
 # Theme change — matugen regenerates Colors.qml; bar picks it up automatically

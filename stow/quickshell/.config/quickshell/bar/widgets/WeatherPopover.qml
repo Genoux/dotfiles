@@ -12,13 +12,17 @@ PopoverPanel {
     readonly property int popoverWidth: StylePopover.panelWidth
     readonly property int padH: StylePopover.contentPaddingH
     readonly property int forecastRowCount: WeatherState.forecastDayCount
-    readonly property int popoverContentHeight: 80
+    // Reserved up front from the same tokens the bands below are built from, so
+    // the panel does not resize as the forecast arrives. Deriving it from
+    // content instead would make it jump mid-reveal; hardcoding the figures
+    // would let it silently desync from the bands.
+    readonly property int popoverContentHeight: StylePopover.weatherHeroHeight
         + StylePopover.separatorHeight
-        + 52
+        + StylePopover.weatherStatsHeight
         + StylePopover.separatorHeight
-        + 30
-        + forecastRowCount * 38
-        + 8
+        + StylePopover.sectionHeight
+        + forecastRowCount * StylePopover.forecastRowHeight
+        + StylePopover.contentPaddingV
 
     property real dataOpacity: 0
 
@@ -129,16 +133,16 @@ PopoverPanel {
             id: weatherContent
 
             width: root.popoverWidth
+            bottomPadding: StylePopover.contentPaddingV
             spacing: 0
             opacity: root.dataOpacity
 
         // Hero: location eyebrow + big icon/temp block + condition
         Item {
             width: parent.width
-            height: 80
+            height: StylePopover.weatherHeroHeight
 
-            // Location eyebrow — decoration text uses fontSizeXs per design
-            Text {
+            EyebrowLabel {
                 id: locationLabel
 
                 anchors.top: parent.top
@@ -146,11 +150,6 @@ PopoverPanel {
                 anchors.horizontalCenter: parent.horizontalCenter
                 width: Math.min(implicitWidth, parent.width - root.padH * 2)
                 text: WeatherState.locationName.length > 0 ? WeatherState.locationName : "Weather"
-                color: Colors.base04
-                font.family: StyleTokens.fontSans
-                font.pixelSize: StyleTokens.fontSizeXs
-                font.capitalization: Font.AllUppercase
-                font.letterSpacing: 0.8
                 elide: Text.ElideRight
             }
 
@@ -200,25 +199,23 @@ PopoverPanel {
 
         }
 
-        Rectangle {
+        PopoverSeparator {
             width: parent.width
-            height: StylePopover.separatorHeight
-            color: StyleOverlay.borderSubtle
         }
 
         // Stats row: FEELS / HUMIDITY / WIND in equal thirds
         Item {
             width: parent.width
-            height: 52
+            height: StylePopover.weatherStatsHeight
 
             Row {
                 anchors.fill: parent
 
                 Repeater {
                     model: [
-                        { label: "FEELS", value: WeatherState.feelsLike },
-                        { label: "HUMIDITY", value: WeatherState.humidity },
-                        { label: "WIND", value: WeatherState.wind }
+                        { label: "Feels", value: WeatherState.feelsLike },
+                        { label: "Humidity", value: WeatherState.humidity },
+                        { label: "Wind", value: WeatherState.wind }
                     ]
 
                     Item {
@@ -227,18 +224,13 @@ PopoverPanel {
                         width: parent.width / 3
                         height: parent.height
 
-                        Text {
+                        EyebrowLabel {
                             id: statLabel
 
                             anchors.horizontalCenter: parent.horizontalCenter
                             anchors.top: parent.top
                             anchors.topMargin: 11
                             text: modelData.label
-                            color: Colors.base04
-                            font.family: StyleTokens.fontSans
-                            font.pixelSize: StyleTokens.fontSizeXs
-                            font.capitalization: Font.AllUppercase
-                            font.letterSpacing: 0.6
                         }
 
                         Text {
@@ -262,10 +254,8 @@ PopoverPanel {
 
         }
 
-        Rectangle {
+        PopoverSeparator {
             width: parent.width
-            height: StylePopover.separatorHeight
-            color: StyleOverlay.borderSubtle
         }
 
         // Forecast axis header. Every row's bar is drawn against one shared
@@ -274,19 +264,14 @@ PopoverPanel {
         // range rather than as free-floating widths.
         Item {
             width: parent.width
-            height: 30
+            height: StylePopover.sectionHeight
             visible: WeatherState.forecast.length > 0
 
-            Text {
+            EyebrowLabel {
                 anchors.left: parent.left
                 anchors.leftMargin: root.padH
                 anchors.verticalCenter: parent.verticalCenter
-                text: "FORECAST"
-                color: Colors.base04
-                font.family: StyleTokens.fontSans
-                font.pixelSize: StyleTokens.fontSizeXs
-                font.capitalization: Font.AllUppercase
-                font.letterSpacing: 0.8
+                text: "Forecast"
             }
 
             Text {
@@ -300,12 +285,10 @@ PopoverPanel {
 
             // Hairline spanning the exact width of the bars below, tying the
             // two figures to the track they describe.
-            Rectangle {
+            PopoverSeparator {
                 x: root.trackLeft + 20
                 width: Math.max(0, root.trackWidth - 40)
                 anchors.verticalCenter: parent.verticalCenter
-                height: StylePopover.separatorHeight
-                color: StyleOverlay.borderSubtle
             }
 
             Text {
@@ -333,7 +316,7 @@ PopoverPanel {
                 readonly property bool isToday: modelData.date === root.todayDate
 
                 width: root.popoverWidth
-                height: 38
+                height: StylePopover.forecastRowHeight
 
                 Text {
                     x: root.padH
@@ -435,8 +418,6 @@ PopoverPanel {
             }
 
         }
-
-            Item { width: 1; height: 8 }
 
         }
 

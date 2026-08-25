@@ -112,6 +112,7 @@ PanelWindow {
 
                 Widgets.Bluetooth {
                     Layout.alignment: Qt.AlignVCenter
+                    barWindow: bar
                 }
 
                 Widgets.ScreenRecord {

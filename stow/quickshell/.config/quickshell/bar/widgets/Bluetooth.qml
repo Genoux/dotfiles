@@ -1,8 +1,24 @@
+import QtQuick
 import qs.components
-import qs.config
 
 Button {
+    id: root
+
+    required property var barWindow
+
     iconName: "bluetooth-active-symbolic"
     interactive: true
-    onClicked: ShellActions.launchOrFocus("bluetui", "bluetui", "bluetooth")
+    active: popover.open
+    onClicked: popover.toggle()
+
+    BarPopover {
+        id: popover
+
+        barWindow: root.barWindow
+        anchorItem: root
+
+        BluetoothPopover {
+            active: popover.open
+        }
+    }
 }

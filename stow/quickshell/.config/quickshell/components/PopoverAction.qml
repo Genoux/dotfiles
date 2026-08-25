@@ -1,7 +1,4 @@
-import Qt5Compat.GraphicalEffects
 import QtQuick
-import Quickshell
-import Quickshell.Widgets
 import qs
 import qs.config
 
@@ -22,9 +19,7 @@ Rectangle {
 
     readonly property bool hasIcon: iconName.length > 0
     readonly property var resolvedSource: hasIcon ? IconRegistry.source(iconName) : ""
-    readonly property bool usesBundledIcon: hasIcon && IconRegistry.hasOverride(iconName)
     readonly property var badgeSource: badgeIconName.length > 0 ? IconRegistry.source(badgeIconName) : ""
-    readonly property bool badgeBundled: badgeIconName.length > 0 && IconRegistry.hasOverride(badgeIconName)
 
     signal activated()
 
@@ -55,66 +50,20 @@ Rectangle {
         spacing: 4
         width: parent.width - StylePopover.tileCaptionPadding * 2
 
-        Item {
+        ThemedIcon {
             anchors.horizontalCenter: parent.horizontalCenter
-            width: StylePopover.tileIconSize
-            height: StylePopover.tileIconSize
             visible: action.hasIcon
+            source: action.resolvedSource
+            size: StylePopover.tileIconSize
 
-            Image {
-                id: bundledIcon
-
-                anchors.fill: parent
-                visible: action.usesBundledIcon && action.resolvedSource.toString().length > 0
-                source: action.resolvedSource
-                fillMode: Image.PreserveAspectFit
-                sourceSize: Qt.size(StylePopover.tileIconSize, StylePopover.tileIconSize)
-            }
-
-            ColorOverlay {
-                anchors.fill: parent
-                visible: bundledIcon.visible
-                source: bundledIcon
-                color: Colors.base05
-            }
-
-            IconImage {
-                anchors.fill: parent
-                visible: !action.usesBundledIcon && action.resolvedSource.toString().length > 0
-                source: action.resolvedSource
-            }
-
-            Item {
+            ThemedIcon {
                 visible: action.badgeIconName.length > 0
                 anchors.right: parent.right
                 anchors.bottom: parent.bottom
                 anchors.rightMargin: -3
                 anchors.bottomMargin: -3
-                width: StylePopover.tileBadgeSize
-                height: StylePopover.tileBadgeSize
-
-                Image {
-                    id: badgeBundledIcon
-
-                    anchors.fill: parent
-                    visible: action.badgeBundled && action.badgeSource.toString().length > 0
-                    source: action.badgeSource
-                    fillMode: Image.PreserveAspectFit
-                    sourceSize: Qt.size(StylePopover.tileBadgeSize, StylePopover.tileBadgeSize)
-                }
-
-                ColorOverlay {
-                    anchors.fill: parent
-                    visible: badgeBundledIcon.visible
-                    source: badgeBundledIcon
-                    color: Colors.base05
-                }
-
-                IconImage {
-                    anchors.fill: parent
-                    visible: !action.badgeBundled && action.badgeSource.toString().length > 0
-                    source: action.badgeSource
-                }
+                source: action.badgeSource
+                size: StylePopover.tileBadgeSize
             }
         }
 

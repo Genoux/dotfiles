@@ -51,6 +51,10 @@ Singleton {
         return barIcon("weather", condition)
     }
 
+    function bluetoothIcon(enabled) {
+        return barIcon("bluetooth", enabled ? "active" : "idle")
+    }
+
     function hasOverride(iconName) {
         return isBarIcon(source(iconName))
     }
@@ -63,6 +67,8 @@ Singleton {
     }
 
     readonly property var legacyBarIcons: ({
+        "bluetooth-active-symbolic": { domain: "bluetooth", name: "active" },
+        "bluetooth-disabled-symbolic": { domain: "bluetooth", name: "idle" },
         "camera-video-symbolic": { domain: "privacy", name: "camera" },
         "emblem-favorite-symbolic": { domain: "shell", name: "info" },
         "media-optical-symbolic": { domain: "media", name: "optical" },
@@ -72,6 +78,7 @@ Singleton {
         "system-search-symbolic": { domain: "launcher", name: "search" },
         "system-shutdown-symbolic": { domain: "menu", name: "shutdown" },
         "utilities-terminal-symbolic": { domain: "shell", name: "terminal" },
+        "window-close-symbolic": { domain: "shell", name: "close" },
         "video-display-symbolic": { domain: "privacy", name: "display" },
     })
 

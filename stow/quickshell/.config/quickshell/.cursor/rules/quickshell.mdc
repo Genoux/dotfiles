@@ -26,7 +26,7 @@ Read `OVERVIEW.md` for architecture. Key paths:
 | `bar/widgets/` | Feature widgets (PascalCase filenames) |
 | `config/` | Singletons: `Style`, `ShellActions`, `IconRegistry` |
 | `services/` | Singletons: shared reactive state |
-| `components/` | Reusable UI: `IconButton`, `Pill`, `InfoPill` |
+| `components/` | Reusable UI: `Button`, `ThemedIcon`, popover primitives (below) |
 | `Colors.qml` | **Generated** by matugen — not in git |
 
 Quickshell maps directories to imports: `qs.bar.widgets`, `qs.config`, `qs.services`, `qs.components`.
@@ -36,6 +36,8 @@ Quickshell maps directories to imports: `qs.bar.widgets`, `qs.config`, `qs.servi
 - **Thin UI, thick platform:** widgets render state; Hyprland logic lives in Lua `actions/*` when dispatch is needed.
 - **Per-monitor scoping:** `Hyprland.monitorFor(screen)` in `Bar.qml`, pass `hyprMonitor` to widgets.
 - **No npm/build:** edit QML, Quickshell hot-reloads. Do not restart shell for theme/wallpaper changes.
+- **New files are the exception:** a newly created QML file needs `dotfiles config link quickshell` (stow only links files that existed at last run) and a restart before it resolves.
+- **Restart through the compositor:** `hyprctl dispatch 'hl.dsp.exec_cmd("quickshell")'`. `env.lua` sets `QT_QPA_PLATFORMTHEME=gtk3` via `hl.env`, which only reaches processes Hyprland spawns — launching from a plain shell gives Qt no platform theme, so every Freedesktop icon falls back to `image-missing` while bundled SVGs still render.
 - **Shell actions:** use `ShellActions.qml` — `Hyprland.dispatch`, `workspace.activate()`, `toplevel.wayland.activate()`, `Quickshell.execDetached`.
 
 ## Hyprland & App Actions (`config/ShellActions.qml`)
@@ -56,9 +58,39 @@ Follow [outfoxxed's shell](https://git.outfoxxed.me/outfoxxed/nixnew/src/branch/
 3. **Name collisions:** `import qs.bar.widgets as Widgets` in `Bar.qml`; `import qs.services as Services` inside widgets that share a service name
 4. **`pragma Singleton`** for `config/` and `services/`
 5. **Colors:** `Colors.base00`–`base0F` from matugen (same base16 as former AGS)
-6. **Icons:** bundled SVGs via `IconRegistry` + `ColorOverlay`; else `Quickshell.iconPath()`
+6. **Icons:** use `ThemedIcon` — it resolves bundled SVG (tinted via `ColorOverlay`) vs Freedesktop theme icon. Only reach for `IconRegistry` + `Quickshell.iconPath()` directly when resolving a name to a source
 7. **Polling tiers** from `Style.qml`: 1s / 5s / 30s — match existing intervals for new polls
 8. **Process patterns:** long-running daemon (`Privacy`), one-shot poll, or `FileView` watch
+
+## Popover Composition
+
+Every bar panel (Clock, Weather, Bluetooth) is built from the same primitives. Compose these instead of hand-rolling a `Text` or `Rectangle` — the tokens are the style guide, prose is not.
+
+| Component | Role |
+|-----------|------|
+| `PopoverPanel` | The floating surface. Sizes from its **direct child's** implicit geometry |
+| `PopoverHeader` | Title bar: subject left, one control in the trailing slot |
+| `PopoverSection` | Uppercase eyebrow titling a group, optional trailing control, `topGap` for air above |
+| `EyebrowLabel` | The uppercase micro-label itself, for spots where the section band does not fit |
+| `PopoverSeparator` | Hairline rule |
+| `PopoverMessage` | Muted centered line for empty/disabled states (fills width) |
+| `PopoverLabel` | Tooltip body text (hugs width, used with `fitContent: true`) |
+| `PillButton` | Round-ended panel toggle (Today, Bluetooth On/Off) |
+| `PopoverAction` | Menu row / icon tile |
+
+Metrics live in `config/StylePopover.qml`. Never inline a spacing, height, or letter-spacing literal:
+
+- Bands: `headerHeight`, `sectionHeight` + `sectionTopGap`, `listRowHeight`, `rowHeight`
+- Insets: `contentPaddingH`, `contentPaddingV`, `listRowInset`
+- Controls: `pillPaddingH/V`, `ghostPaddingH/V`, `iconButtonPadding`
+
+**Ghost controls** (no resting fill) must overhang the content margin by their own padding, or their glyph stops short of the line everything else aligns to. See the forget button in `BluetoothDeviceRow.qml`.
+
+### QML sizing traps
+
+- `Text`, `Column`, and `Row` have **read-only** `implicitWidth`/`implicitHeight`. To give a label a fixed band height, wrap it in an `Item` (see `PopoverMessage`)
+- A panel whose content must not resize mid-reveal reserves height from **tokens**, not literals — see `WeatherPopover.popoverContentHeight`
+- Centering a glyph with `anchors.centerIn` centers its *line box* (ascent + descent), not the glyph. Use a symmetric SVG for marks like `×`
 
 ## UX Policies (do not regress)
 
