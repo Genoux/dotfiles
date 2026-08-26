@@ -55,6 +55,10 @@ Singleton {
         return barIcon("bluetooth", enabled ? "active" : "idle")
     }
 
+    function networkIcon(name) {
+        return barIcon("network", name)
+    }
+
     function hasOverride(iconName) {
         return isBarIcon(source(iconName))
     }

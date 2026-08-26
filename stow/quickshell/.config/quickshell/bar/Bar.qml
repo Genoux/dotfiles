@@ -108,6 +108,7 @@ PanelWindow {
 
                 Widgets.Network {
                     Layout.alignment: Qt.AlignVCenter
+                    barWindow: bar
                 }
 
                 Widgets.Bluetooth {

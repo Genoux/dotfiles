@@ -13,6 +13,9 @@ Item {
     required property var barWindow
     required property Item anchorItem
 
+    // A panel that only shows state never takes the keyboard, so typing keeps
+    // going to the focused window. Raise this for the panels that hold a field.
+    property bool acceptsKeyboard: false
     property bool open: false
     property bool exiting: false
     property bool presented: false
@@ -80,7 +83,7 @@ Item {
         exclusionMode: ExclusionMode.Ignore
 
         WlrLayershell.layer: WlrLayer.Overlay
-        WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+        WlrLayershell.keyboardFocus: root.acceptsKeyboard ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
         // Must match the ^(quickshell)$ namespace in hypr windowrules.lua — this is what gets layer blur.
         WlrLayershell.namespace: "quickshell"
 

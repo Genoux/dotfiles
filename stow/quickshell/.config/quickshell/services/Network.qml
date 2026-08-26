@@ -10,6 +10,10 @@ Singleton {
 
     property bool isOnline: false
     property string linkType: "unknown"
+    // linkType names the one link traffic is taking; these say what else is up,
+    // so a panel can list every link rather than only the winner.
+    property bool hasWired: false
+    property bool hasWireless: false
 
     function iconForInterface(interfaceName) {
         if (!interfaceName)
@@ -39,9 +43,10 @@ Singleton {
         return match ? iconForInterface(match[1]) : "unknown"
     }
 
-    function linkTypeFromAddresses(output) {
-        let hasWireless = false
-        let hasWired = false
+    // An interface with a global address is a usable link; one that is merely UP
+    // is not. Both readings come from the same pass so they cannot disagree.
+    function addressedTypes(output) {
+        const types = { wired: false, wireless: false }
 
         for (const line of output.split("\n")) {
             const match = line.match(/^\d+:\s+(\w+)\s+inet\s/)
@@ -50,14 +55,19 @@ Singleton {
 
             const type = iconForInterface(match[1])
             if (type === "wireless")
-                hasWireless = true
+                types.wireless = true
             else if (type === "wired")
-                hasWired = true
+                types.wired = true
         }
 
-        if (hasWired)
+        return types
+    }
+
+    function linkTypeFromAddresses(output) {
+        const types = addressedTypes(output)
+        if (types.wired)
             return "wired"
-        if (hasWireless)
+        if (types.wireless)
             return "wireless"
         return "unknown"
     }
@@ -101,6 +111,10 @@ Singleton {
                 const addrPart = text.split("---ADDR---")[1] ?? ""
                 const addrOutput = addrPart.split("---LINK---")[0]?.trim() ?? ""
                 const linkOutput = addrPart.split("---LINK---")[1]?.trim() ?? ""
+
+                const present = root.addressedTypes(addrOutput)
+                root.hasWired = present.wired
+                root.hasWireless = present.wireless
 
                 root.isOnline = routeOutput.length > 0 && /dev\s+\w+/.test(routeOutput)
                 root.linkType = root.isOnline

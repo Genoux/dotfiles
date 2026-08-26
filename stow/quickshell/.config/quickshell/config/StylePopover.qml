@@ -110,6 +110,12 @@ Singleton {
     readonly property int listRowSpacing: StyleTokens.space2
     readonly property int listMaxHeight: 300
 
+    // A row that opens a field under its label. The field is a control rather
+    // than a caption, so the row grows by a control's height plus the gap that
+    // separates it from the two lines above.
+    readonly property int fieldHeight: 28
+    readonly property int listRowExpandedHeight: listRowHeight + fieldHeight + StyleTokens.space8
+
     readonly property int pillPaddingH: StyleTokens.space10
     readonly property int pillPaddingV: StyleTokens.space6
 

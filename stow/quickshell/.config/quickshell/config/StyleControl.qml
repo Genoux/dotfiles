@@ -13,4 +13,15 @@ Singleton {
     readonly property int iconTextSpacing: StyleTokens.space3
     readonly property int buttonWidth: iconSize + buttonPaddingHorizontal * 2
     readonly property int buttonHeight: iconSize + buttonPaddingVertical * 2
+
+    // Signal meter — four ascending bars read as a strength ramp rather than an
+    // icon's five named buckets. Sized to stand in an icon box so it aligns
+    // with the glyphs beside it in a list.
+    readonly property int signalBarCount: 4
+    readonly property int signalBarWidth: 3
+    // Shortest bar plus one step per rung lands the tallest on iconSize - 2,
+    // inside the box without touching its edge.
+    readonly property int signalBarBase: 5
+    readonly property int signalBarStep: 3
+    readonly property int signalBarSpacing: StyleTokens.space2
 }
