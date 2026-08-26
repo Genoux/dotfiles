@@ -60,16 +60,8 @@ Rectangle {
         }
     }
 
-    // Leaving the row drops the forget confirmation. Without this the button
-    // stays confirming behind opacity 0, so the next hover would forget on one
-    // click with no warning shown — worse than having no confirmation at all.
     HoverHandler {
         id: hover
-
-        onHoveredChanged: {
-            if (!hovered)
-                forgetButton.confirming = false
-        }
     }
 
     ThemedIcon {
@@ -84,7 +76,7 @@ Rectangle {
     Column {
         anchors.left: deviceIcon.right
         anchors.leftMargin: StyleTokens.space10
-        anchors.right: forgetButton.left
+        anchors.right: rowActions.left
         anchors.rightMargin: StyleTokens.space6
         anchors.verticalCenter: parent.verticalCenter
         spacing: StyleTokens.space1
@@ -109,54 +101,26 @@ Rectangle {
         }
     }
 
-    // Forgetting is destructive and rare, so it stays out of the row until the
-    // pointer is on it. Declared above the row's own MouseArea so its click
-    // lands here instead of toggling the connection underneath. The glyph keeps
-    // the resting row quiet; the confirm step spells the word out because
-    // removing the pairing also drops the trust flag and link keys, and getting
-    // the device back needs it put into pairing mode again.
-    PillButton {
-        id: forgetButton
+    RowActions {
+        id: rowActions
 
-        property bool confirming: false
-
-        z: 1
         anchors.right: parent.right
         anchors.rightMargin: StylePopover.contentPaddingH - StylePopover.listRowInset
         anchors.verticalCenter: parent.verticalCenter
-        visible: row.device.paired && !row.busy
-        opacity: hover.hovered ? 1 : 0
-        iconName: forgetButton.confirming ? "" : "window-close-symbolic"
-        iconSize: StyleControl.iconSizeSm
-        text: forgetButton.confirming ? "Forget" : ""
-        paddingHorizontal: forgetButton.confirming
-            ? StylePopover.pillPaddingH
-            : StylePopover.iconButtonPadding
-        paddingVertical: forgetButton.confirming
-            ? StylePopover.pillPaddingV
-            : StylePopover.iconButtonPadding
-        interactive: hover.hovered
-        onClicked: {
-            if (forgetButton.confirming)
-                BluetoothState.forgetDevice(row.device)
-            else
-                forgetButton.confirming = true
-        }
-
-        Behavior on opacity {
-            NumberAnimation {
-                duration: StyleTokens.easeDurationFast
-                easing.type: StyleTokens.easeStandard
-            }
-        }
+        hovered: hover.hovered
+        showDisconnect: row.device.connected
+        showRemove: row.device.paired
+        busy: row.busy
+        onDisconnectRequested: BluetoothState.disconnectDevice(row.device)
+        onRemoveRequested: BluetoothState.forgetDevice(row.device)
     }
 
     MouseArea {
         anchors.fill: parent
         acceptedButtons: Qt.LeftButton
-        cursorShape: row.busy ? Qt.ArrowCursor : Qt.PointingHandCursor
+        cursorShape: row.busy || row.device.connected ? Qt.ArrowCursor : Qt.PointingHandCursor
         onClicked: {
-            if (!row.busy)
+            if (!row.busy && !row.device.connected)
                 BluetoothState.activateDevice(row.device)
         }
     }

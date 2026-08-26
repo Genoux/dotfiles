@@ -233,11 +233,6 @@ Singleton {
         if (busy)
             return
 
-        if (device.connected) {
-            disconnectDevice(device)
-            return
-        }
-
         if (!device.paired) {
             pendingPairAddress = device.address
             device.trusted = true
