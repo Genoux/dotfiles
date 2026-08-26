@@ -47,7 +47,7 @@ Rectangle {
 
         visible: action.stacked && !action.separator
         anchors.centerIn: parent
-        spacing: 4
+        spacing: StyleTokens.space4
         width: parent.width - StylePopover.tileCaptionPadding * 2
 
         ThemedIcon {
@@ -60,8 +60,8 @@ Rectangle {
                 visible: action.badgeIconName.length > 0
                 anchors.right: parent.right
                 anchors.bottom: parent.bottom
-                anchors.rightMargin: -3
-                anchors.bottomMargin: -3
+                anchors.rightMargin: -StyleTokens.space3
+                anchors.bottomMargin: -StyleTokens.space3
                 source: action.badgeSource
                 size: StylePopover.tileBadgeSize
             }
@@ -71,7 +71,7 @@ Rectangle {
             width: parent.width
             text: action.label
             color: Colors.base05
-            opacity: action.actionEnabled ? 1.0 : 0.4
+            opacity: action.actionEnabled ? 1.0 : StyleTokens.opacityDisabled
             font.family: StyleTokens.fontSans
             font.pixelSize: StyleTokens.fontSizeXs
             horizontalAlignment: Text.AlignHCenter
@@ -92,7 +92,7 @@ Rectangle {
         anchors.verticalCenter: parent.verticalCenter
         text: action.label
         color: Colors.base05
-        opacity: action.actionEnabled ? 1.0 : 0.4
+        opacity: action.actionEnabled ? 1.0 : StyleTokens.opacityDisabled
         font.family: StyleTokens.fontSans
         font.pixelSize: StyleTokens.fontSizeSm
         elide: Text.ElideRight

@@ -13,7 +13,9 @@ Button {
     readonly property bool hasSink: !!sink
 
     readonly property string volumeIconName: {
-        if (!hasSink || muted)
+        if (!hasSink)
+            return "audio-card-symbolic"
+        if (muted)
             return "audio-volume-muted-symbolic"
         if (volume <= 0.25)
             return "audio-volume-low-symbolic"

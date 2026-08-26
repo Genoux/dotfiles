@@ -24,7 +24,7 @@ Item {
         anchors.left: parent.left
         anchors.leftMargin: StylePopover.contentPaddingH
         anchors.right: trailingSlot.left
-        anchors.rightMargin: 8
+        anchors.rightMargin: StyleTokens.space8
         anchors.verticalCenter: parent.verticalCenter
         anchors.verticalCenterOffset: section.topGap / 2
         text: section.label

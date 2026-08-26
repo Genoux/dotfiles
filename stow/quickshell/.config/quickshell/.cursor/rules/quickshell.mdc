@@ -17,7 +17,9 @@ Query Context7 before guessing types, properties, or module APIs (`PanelWindow`,
 
 ## Codebase Map
 
-Read `OVERVIEW.md` for architecture. Key paths:
+Read `OVERVIEW.md` for architecture and **`DESIGN.md` before touching any UI** — it owns the spacing/type/radius/motion scales, which component to reach for, and the three places the system deliberately diverges.
+
+Key paths:
 
 | Path | Role |
 |------|------|

@@ -3,8 +3,8 @@ import Quickshell
 pragma Singleton
 
 Singleton {
-    readonly property int padding: 4
-    readonly property int barGap: 4
+    readonly property int padding: StyleTokens.space4
+    readonly property int barGap: StyleTokens.space4
     readonly property int panelWidth: 320
     readonly property int minWidth: 184
     // Content like the tray menu populates asynchronously (QsMenuOpener is a
@@ -12,13 +12,13 @@ Singleton {
     // resolves has ~0 height and reads as hugging the bar rather than
     // floating above it.
     readonly property int minHeight: 32
-    readonly property int contentPaddingH: 16
+    readonly property int contentPaddingH: StyleTokens.space16
     readonly property int rowHeight: 32
-    readonly property int separatorHeight: 1
+    readonly property int separatorHeight: StyleTokens.borderWidth
 
     // A single reversible transition keeps reveal and dismissal visually
     // identical and lets rapid toggles reverse from the current frame.
-    readonly property int transitionDuration: 160
+    readonly property int transitionDuration: StyleTokens.easeDurationFast
     readonly property real hiddenScale: 0.97
 
     readonly property int shadowRadius: 8
@@ -31,8 +31,8 @@ Singleton {
     readonly property int contextMenuMinWidth: 160
     readonly property int contextMenuMaxWidth: 360
     readonly property int contextMenuRowHeight: 28
-    readonly property int contextMenuPaddingH: 12
-    readonly property int contextMenuPaddingV: 4
+    readonly property int contextMenuPaddingH: StyleTokens.space12
+    readonly property int contextMenuPaddingV: StyleTokens.space4
 
     // Weather popover — the hero and stats bands are taller than a list row
     // because each holds stacked figures rather than a single line.
@@ -60,10 +60,11 @@ Singleton {
     // full-width menu rows, but a day grid ends in circles that bulge toward
     // the border, so the outer columns need more clearance to sit inside the
     // panel rather than against it.
-    readonly property int calendarPaddingH: 20
+    readonly property int calendarPaddingH: StyleTokens.space20
     readonly property int calendarWidth: calendarCellSize * 7 + calendarPaddingH * 2
     // Day circle sits inside the cell pitch so adjacent circles never touch.
-    readonly property int calendarDayCircle: calendarCellSize - 4
+    // Leave one spacing step between each day circle and its cell edge.
+    readonly property int calendarDayCircle: calendarCellSize - StyleTokens.space4
     // The weekday initials are chrome, not content — a shorter row than the day
     // cells keeps them from reading as an eighth week.
     readonly property int calendarWeekdayRowHeight: 28
@@ -81,13 +82,13 @@ Singleton {
     readonly property int tileHeight: 58
     readonly property int tileIconSize: 20
     readonly property int tileBadgeSize: 10
-    readonly property int tileSpacing: 2
-    readonly property int tileCaptionPadding: 4
+    readonly property int tileSpacing: StyleTokens.space2
+    readonly property int tileCaptionPadding: StyleTokens.space4
 
     // Shared panel chrome — the vertical rhythm every popover is built from.
     // A panel is: header, separator, then sections of rows.
     readonly property int headerHeight: 48
-    readonly property int contentPaddingV: 8
+    readonly property int contentPaddingV: StyleTokens.space8
     // Empty-state body under a header (adapter off, no adapter). Tall enough
     // that the panel still reads as a surface rather than a title bar.
     readonly property int emptyStateHeight: 120
@@ -97,25 +98,25 @@ Singleton {
     readonly property int sectionHeight: 26
     // Air above a section that follows content, so groups read as separate
     // without needing a rule between them.
-    readonly property int sectionTopGap: 6
-    readonly property real sectionLabelOpacity: 0.6
+    readonly property int sectionTopGap: StyleTokens.space6
+    readonly property real sectionLabelOpacity: StyleTokens.opacityMuted
     readonly property real sectionLetterSpacing: 0.6
 
     // Two-line rows (name over status) need more height than the single-line
     // menu rowHeight, and inset so the hover fill floats inside the panel
     // instead of bleeding into its border.
     readonly property int listRowHeight: 44
-    readonly property int listRowInset: 4
-    readonly property int listRowSpacing: 2
+    readonly property int listRowInset: StyleTokens.space4
+    readonly property int listRowSpacing: StyleTokens.space2
     readonly property int listMaxHeight: 300
 
-    readonly property int pillPaddingH: 10
-    readonly property int pillPaddingV: 6
+    readonly property int pillPaddingH: StyleTokens.space10
+    readonly property int pillPaddingV: StyleTokens.space6
 
     // Ghost controls have no resting fill, so their padding is invisible and
     // must overhang the content margin — otherwise their glyph sits short of
     // the edge every other element aligns to.
-    readonly property int ghostPaddingH: 8
-    readonly property int ghostPaddingV: 4
+    readonly property int ghostPaddingH: StyleTokens.space8
+    readonly property int ghostPaddingV: StyleTokens.space4
     readonly property int iconButtonPadding: 5
 }

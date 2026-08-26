@@ -36,9 +36,10 @@ Item {
     DropShadow {
         anchors.fill: surface
         source: surface
-        horizontalOffset: 6
-        verticalOffset: 6
-        radius: 10
+        horizontalOffset: StyleTokens.space6
+        verticalOffset: StyleTokens.space6
+        radius: StyleTokens.space10
+        // Render-quality knob, not a design dimension.
         samples: 21
         color: StyleOverlay.shadow
         opacity: root.revealOpacityValue
@@ -51,7 +52,7 @@ Item {
         anchors.fill: parent
         radius: StyleTokens.radiusMd
         color: root.surfaceColor
-        border.width: 1
+        border.width: StyleTokens.borderWidth
         border.color: root.surfaceBorderColor
         opacity: root.revealOpacityValue
     }
@@ -71,7 +72,7 @@ Item {
             property: "revealOpacityValue"
             to: 1
             duration: StyleOverlay.showDuration
-            easing.type: Easing.OutCubic
+            easing.type: StyleTokens.easeStandard
         }
 
         NumberAnimation {
@@ -79,7 +80,7 @@ Item {
             property: "revealScaleValue"
             to: 1
             duration: StyleOverlay.showDuration
-            easing.type: Easing.OutCubic
+            easing.type: StyleTokens.easeStandard
         }
     }
 

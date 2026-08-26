@@ -36,7 +36,7 @@ Rectangle {
     implicitHeight: content.implicitHeight + StyleNotification.padding * 2
     radius: StyleTokens.radiusMd
     color: StyleNotification.surface
-    border.width: 1
+    border.width: StyleTokens.borderWidth
     border.color: StyleNotification.border
 
     Timer {
@@ -79,7 +79,7 @@ Rectangle {
 
         anchors.fill: parent
         anchors.margins: StyleNotification.padding
-        spacing: 10
+        spacing: StyleTokens.space10
 
         Item {
             Layout.alignment: Qt.AlignTop
@@ -99,7 +99,7 @@ Rectangle {
             // Regular notification image
             Image {
                 anchors.fill: parent
-                anchors.margins: 2
+                anchors.margins: StyleTokens.space2
                 visible: !root.hasClipboardImage && root.hasImage
                 source: root.notification?.image ?? ""
                 fillMode: Image.PreserveAspectCrop
@@ -118,7 +118,7 @@ Rectangle {
 
         ColumnLayout {
             Layout.fillWidth: true
-            spacing: 4
+            spacing: StyleTokens.space4
 
             Text {
                 Layout.fillWidth: true

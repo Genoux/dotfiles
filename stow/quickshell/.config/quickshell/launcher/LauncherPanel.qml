@@ -29,14 +29,14 @@ Item {
             Layout.preferredHeight: StyleLauncher.searchHeight
             radius: StyleTokens.radiusMd
             color: StyleLauncher.searchBg
-            border.width: 1
+            border.width: StyleTokens.borderWidth
             border.color: StyleOverlay.borderSubtle
 
             RowLayout {
                 anchors.fill: parent
-                anchors.leftMargin: 12
-                anchors.rightMargin: 12
-                spacing: 8
+                anchors.leftMargin: StyleTokens.space12
+                anchors.rightMargin: StyleTokens.space12
+                spacing: StyleTokens.space8
 
                 Item {
                     Layout.alignment: Qt.AlignVCenter
@@ -155,14 +155,28 @@ Item {
                     height: StyleLauncher.resultHeight
                     radius: StyleTokens.radiusMd
                     color: selected ? StyleLauncher.selectedBg : StyleTokens.transparent
-                    border.width: selected ? 1 : 0
-                    border.color: StyleOverlay.borderSubtle
+                    border.width: StyleTokens.borderWidth
+                    border.color: selected ? StyleOverlay.borderSubtle : StyleTokens.transparent
+
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: StyleTokens.easeDurationFast
+                            easing.type: StyleTokens.easeStandard
+                        }
+                    }
+
+                    Behavior on border.color {
+                        ColorAnimation {
+                            duration: StyleTokens.easeDurationFast
+                            easing.type: StyleTokens.easeStandard
+                        }
+                    }
 
                     RowLayout {
                         anchors.fill: parent
-                        anchors.leftMargin: 8
-                        anchors.rightMargin: 8
-                        spacing: 10
+                        anchors.leftMargin: StyleTokens.space8
+                        anchors.rightMargin: StyleTokens.space8
+                        spacing: StyleTokens.space10
 
                         IconImage {
                             Layout.alignment: Qt.AlignVCenter

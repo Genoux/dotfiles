@@ -55,7 +55,7 @@ PanelWindow {
 
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
-            spacing: 6
+            spacing: StyleTokens.space6
 
             Widgets.Workspaces {
                 Layout.alignment: Qt.AlignVCenter
@@ -83,7 +83,7 @@ PanelWindow {
             z: 1
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
-            spacing: 2
+            spacing: StyleTokens.space2
 
             Widgets.PrivacyIndicator {
                 Layout.alignment: Qt.AlignVCenter
@@ -94,12 +94,12 @@ PanelWindow {
                 id: mediaPlayer
 
                 Layout.alignment: Qt.AlignVCenter
-                Layout.leftMargin: mediaPlayer.visible ? 2 : 0
-                Layout.rightMargin: mediaPlayer.visible ? 2 : 0
+                Layout.leftMargin: mediaPlayer.visible ? StyleTokens.space2 : 0
+                Layout.rightMargin: mediaPlayer.visible ? StyleTokens.space2 : 0
             }
 
             RowLayout {
-                spacing: 2
+                spacing: StyleTokens.space2
                 Layout.rightMargin: 0
 
                 Widgets.Volume {
@@ -132,7 +132,7 @@ PanelWindow {
             }
 
             RowLayout {
-                spacing: 4
+                spacing: StyleTokens.space4
 
                 Widgets.Weather {
                     barWindow: bar

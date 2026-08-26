@@ -19,8 +19,22 @@ Rectangle {
     height: StylePowerMenu.itemHeight
     radius: StyleTokens.radiusMd
     color: selected ? StylePowerMenu.selectedBg : StyleTokens.transparent
-    border.width: selected ? 1 : 0
-    border.color: StyleOverlay.borderSubtle
+    border.width: StyleTokens.borderWidth
+    border.color: selected ? StyleOverlay.borderSubtle : StyleTokens.transparent
+
+    Behavior on color {
+        ColorAnimation {
+            duration: StyleTokens.easeDurationFast
+            easing.type: StyleTokens.easeStandard
+        }
+    }
+
+    Behavior on border.color {
+        ColorAnimation {
+            duration: StyleTokens.easeDurationFast
+            easing.type: StyleTokens.easeStandard
+        }
+    }
 
     ColumnLayout {
         anchors.centerIn: parent

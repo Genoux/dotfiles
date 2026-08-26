@@ -61,7 +61,7 @@ PanelWindow {
                 from: 0
                 to: 1
                 duration: StyleNotification.showDuration
-                easing.type: Easing.OutCubic
+                easing.type: StyleTokens.easeStandard
             }
         }
 

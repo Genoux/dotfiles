@@ -40,7 +40,7 @@ Button {
         "args": "fullscreen audio"
     }]
     readonly property bool expanded: hoverArmed && recording
-    readonly property color trailForeground: "#ffffff"
+    readonly property color trailForeground: Colors.base05
     property color recordingColor: StyleRecording.fill
     property int elapsedSeconds: 0
 
@@ -113,8 +113,8 @@ Button {
     animateColor: false
     manageHoverColor: !visualRecording
     clipContent: true
-    trailGap: 2
-    trailPaddingRight: 3
+    trailGap: StyleTokens.space2
+    trailPaddingRight: StyleTokens.space3
     trailWidth: durationLabel.implicitWidth
     onClicked: (mouse) => {
         if (root.recording || root.collapsing || Privacy.rawRecording) {
@@ -191,7 +191,7 @@ Button {
 
         NumberAnimation {
             duration: StyleMedia.controlsRevealDuration
-            easing.type: Easing.OutCubic
+            easing.type: StyleTokens.easeStandard
         }
     }
 
@@ -203,7 +203,7 @@ Button {
             property: "trailReveal"
             to: 0
             duration: StyleMedia.controlsRevealDuration
-            easing.type: Easing.OutCubic
+            easing.type: StyleTokens.easeStandard
         }
 
         ColorAnimation {
@@ -211,7 +211,7 @@ Button {
             property: "recordingColor"
             to: Qt.rgba(StyleRecording.fill.r, StyleRecording.fill.g, StyleRecording.fill.b, 0)
             duration: StyleMedia.controlsRevealDuration
-            easing.type: Easing.OutCubic
+            easing.type: StyleTokens.easeStandard
         }
 
         ColorAnimation {
@@ -219,7 +219,7 @@ Button {
             property: "displayForeground"
             to: Colors.base05
             duration: StyleMedia.controlsRevealDuration
-            easing.type: Easing.OutCubic
+            easing.type: StyleTokens.easeStandard
         }
 
         onFinished: {

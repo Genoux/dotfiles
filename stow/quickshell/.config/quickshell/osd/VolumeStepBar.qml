@@ -28,7 +28,7 @@ Row {
             Behavior on color {
                 ColorAnimation {
                     duration: StyleTokens.easeDurationFast
-                    easing.type: Easing.InOutQuad
+                    easing.type: StyleTokens.easeSymmetric
                 }
             }
         }

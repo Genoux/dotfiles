@@ -58,8 +58,8 @@ PopoverPanel {
         target: root
         property: "dataOpacity"
         to: 1
-        duration: 130
-        easing.type: Easing.OutCubic
+        duration: StyleTokens.easeDurationFast
+        easing.type: StyleTokens.easeStandard
     }
 
     // Shared column geometry — the axis labels in the section header must land
@@ -146,7 +146,7 @@ PopoverPanel {
                 id: locationLabel
 
                 anchors.top: parent.top
-                anchors.topMargin: 10
+                anchors.topMargin: StyleTokens.space10
                 anchors.horizontalCenter: parent.horizontalCenter
                 width: Math.min(implicitWidth, parent.width - root.padH * 2)
                 text: WeatherState.locationName.length > 0 ? WeatherState.locationName : "Weather"
@@ -158,7 +158,7 @@ PopoverPanel {
                 id: heroIcon
 
                 anchors.top: locationLabel.bottom
-                anchors.topMargin: 4
+                anchors.topMargin: StyleTokens.space4
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.horizontalCenterOffset: -36
                 source: IconRegistry.weatherIcon(WeatherState.icon)
@@ -173,7 +173,7 @@ PopoverPanel {
                 id: heroTemp
 
                 anchors.left: heroIcon.right
-                anchors.leftMargin: 8
+                anchors.leftMargin: StyleTokens.space8
                 anchors.verticalCenter: heroIcon.verticalCenter
                 anchors.verticalCenterOffset: -4
                 text: WeatherState.temperature
@@ -185,11 +185,12 @@ PopoverPanel {
 
             Text {
                 anchors.left: heroIcon.right
+                // Optical alignment for the temperature glyph; intentionally off-scale.
                 anchors.leftMargin: 9
                 anchors.right: parent.right
                 anchors.rightMargin: root.padH
                 anchors.top: heroTemp.bottom
-                anchors.topMargin: -2
+                anchors.topMargin: -StyleTokens.space2
                 text: WeatherState.description
                 color: Colors.base05
                 font.family: StyleTokens.fontSans
@@ -229,6 +230,7 @@ PopoverPanel {
 
                             anchors.horizontalCenter: parent.horizontalCenter
                             anchors.top: parent.top
+                            // Optical baseline correction for the weather mark; intentionally off-scale.
                             anchors.topMargin: 11
                             text: modelData.label
                         }
@@ -236,7 +238,7 @@ PopoverPanel {
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
                             anchors.top: statLabel.bottom
-                            anchors.topMargin: 4
+                            anchors.topMargin: StyleTokens.space4
                             width: parent.width - 8
                             text: modelData.value
                             color: Colors.base05
@@ -431,8 +433,8 @@ PopoverPanel {
 
             Behavior on opacity {
                 NumberAnimation {
-                    duration: 110
-                    easing.type: Easing.OutCubic
+                    duration: StyleTokens.easeDurationFast
+                    easing.type: StyleTokens.easeStandard
                 }
             }
         }

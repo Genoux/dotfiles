@@ -36,7 +36,7 @@ PopoverPanel {
 
     Column {
         visible: !menu.iconRow
-        spacing: 2
+        spacing: StylePopover.listRowSpacing
         width: visible ? StylePopover.panelWidth : 0
         height: visible ? implicitHeight : 0
 

@@ -20,7 +20,7 @@ Item {
         anchors.left: parent.left
         anchors.leftMargin: StylePopover.contentPaddingH
         anchors.right: trailingSlot.left
-        anchors.rightMargin: 8
+        anchors.rightMargin: StyleTokens.space8
         anchors.verticalCenter: parent.verticalCenter
         text: header.title
         color: Colors.base05

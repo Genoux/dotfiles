@@ -23,12 +23,13 @@ Rectangle {
     property int paddingRight: paddingHorizontal
     property int paddingVertical: StyleControl.buttonPaddingVertical
     property int iconTextSpacing: StyleControl.iconTextSpacing
-    property int minimumWidth: 18
-    property int minimumHeight: 20
+    property int minimumWidth: StyleControl.iconSizeMd
+    // Preserve the icon box plus its minimum vertical breathing room.
+    property int minimumHeight: StyleControl.iconSize + StyleTokens.space2 * 2
     property color foreground: Colors.base05
     property color background: StyleTokens.transparent
     property color hoverBackground: StyleTokens.alphaLight
-    property int borderWidth: 1
+    property int borderWidth: StyleTokens.borderWidth
     property color borderColor: StyleTokens.transparent
     property bool interactive: false
     // When true, holds the hover background persistently (e.g. while its popover is open).
@@ -191,7 +192,7 @@ Rectangle {
 
         ColorAnimation {
             duration: StyleTokens.easeDurationFast
-            easing.type: Easing.InOutQuad
+            easing.type: StyleTokens.easeSymmetric
         }
 
     }

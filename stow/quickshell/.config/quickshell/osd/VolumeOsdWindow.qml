@@ -30,7 +30,7 @@ PanelWindow {
         anchors.fill: parent
         radius: StyleTokens.radiusMd
         color: StyleOsd.background(Colors.base00)
-        border.width: 1
+        border.width: StyleTokens.borderWidth
         border.color: StyleOsd.border
 
         ColumnLayout {

@@ -51,7 +51,14 @@ Rectangle {
     height: implicitHeight
     radius: StyleTokens.radiusSm
     color: hover.hovered ? StyleTokens.alphaLight : StyleTokens.transparent
-    opacity: device.blocked ? 0.4 : 1
+    opacity: device.blocked ? StyleTokens.opacityDisabled : 1
+
+    Behavior on color {
+        ColorAnimation {
+            duration: StyleTokens.easeDurationFast
+            easing.type: StyleTokens.easeStandard
+        }
+    }
 
     // Leaving the row drops the forget confirmation. Without this the button
     // stays confirming behind opacity 0, so the next hover would forget on one
@@ -76,11 +83,11 @@ Rectangle {
 
     Column {
         anchors.left: deviceIcon.right
-        anchors.leftMargin: 10
+        anchors.leftMargin: StyleTokens.space10
         anchors.right: forgetButton.left
-        anchors.rightMargin: 6
+        anchors.rightMargin: StyleTokens.space6
         anchors.verticalCenter: parent.verticalCenter
-        spacing: 1
+        spacing: StyleTokens.space1
 
         Text {
             width: parent.width
@@ -139,7 +146,7 @@ Rectangle {
         Behavior on opacity {
             NumberAnimation {
                 duration: StyleTokens.easeDurationFast
-                easing.type: Easing.OutCubic
+                easing.type: StyleTokens.easeStandard
             }
         }
     }

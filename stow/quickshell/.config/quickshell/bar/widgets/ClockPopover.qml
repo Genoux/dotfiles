@@ -353,16 +353,16 @@ PopoverPanel {
                 target: gridColumn
                 property: "x"
                 to: 0
-                duration: 180
-                easing.type: Easing.OutCubic
+                duration: StyleTokens.easeDurationNormal
+                easing.type: StyleTokens.easeStandard
             }
 
             NumberAnimation {
                 target: gridColumn
                 property: "opacity"
                 to: 1
-                duration: 180
-                easing.type: Easing.OutCubic
+                duration: StyleTokens.easeDurationNormal
+                easing.type: StyleTokens.easeStandard
             }
 
         }

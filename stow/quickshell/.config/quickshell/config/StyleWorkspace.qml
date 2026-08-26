@@ -5,11 +5,11 @@ import Quickshell
 import QtQuick
 
 Singleton {
-    readonly property int rowSpacing: 3
+    readonly property int rowSpacing: StyleTokens.space3
 
     readonly property int inlineIconSize: StyleControl.iconSizeSm
-    readonly property int inlineIconPadding: 4
-    readonly property int inlineIconSpacing: 4
+    readonly property int inlineIconPadding: StyleTokens.space4
+    readonly property int inlineIconSpacing: StyleTokens.space4
     readonly property int inlineMaxIcons: 4
-    readonly property int revealDuration: 140
+    readonly property int revealDuration: StyleTokens.easeDurationFast
 }

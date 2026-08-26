@@ -14,8 +14,8 @@ Button {
         visible: Services.Dotfiles.updatesAvailable
         anchors.right: parent.right
         anchors.top: parent.top
-        anchors.rightMargin: 4
-        anchors.topMargin: 4
+        anchors.rightMargin: StyleTokens.space4
+        anchors.topMargin: StyleTokens.space4
         width: 5
         height: 5
         radius: width / 2

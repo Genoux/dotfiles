@@ -88,14 +88,14 @@ noise_reduction = ${StyleCava.noiseReduction}
                 Behavior on height {
                     NumberAnimation {
                         duration: StyleCava.animationDuration
-                        easing.type: Easing.OutCubic
+                        easing.type: StyleTokens.easeStandard
                     }
                 }
 
                 Behavior on opacity {
                     NumberAnimation {
                         duration: StyleTokens.easeDurationNormal
-                        easing.type: Easing.OutCubic
+                        easing.type: StyleTokens.easeStandard
                     }
                 }
             }

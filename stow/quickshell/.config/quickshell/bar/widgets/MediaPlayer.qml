@@ -288,15 +288,15 @@ BarGroup {
         id: contentRow
 
         height: StyleMedia.trackHeight
-        spacing: root.controlsExpanded ? 3 : 0
+        spacing: root.controlsExpanded ? StyleTokens.space3 : 0
 
         Rectangle {
             id: mediaInfo
 
             readonly property real textLeftInset: StyleMedia.textLeftInset
             readonly property real textRightInset: StyleMedia.textRightInset
-            readonly property real textViewportLeftMargin: textLeftInset + 2
-            readonly property real textViewportRightMargin: 6
+            readonly property real textViewportLeftMargin: textLeftInset + StyleTokens.space2
+            readonly property real textViewportRightMargin: StyleTokens.space6
             readonly property string scrollText: `${root.trackText} • `
             readonly property real singleTextWidth: mediaMeasure.advanceWidth
             readonly property real textViewportMaxWidth: StyleMedia.infoWidth - textLeftInset - textRightInset
@@ -313,7 +313,7 @@ BarGroup {
 
             CavaVisualizer {
                 anchors.left: parent.left
-                anchors.leftMargin: 6
+                anchors.leftMargin: StyleTokens.space6
                 anchors.verticalCenter: parent.verticalCenter
                 enabled: root.visible
                 active: root.player ? root.player.isPlaying : false
@@ -366,7 +366,8 @@ BarGroup {
 
                         GradientStop {
                             position: 0
-                            color: "#00000000"
+                            // Alpha-only mask stops are structural, not theme colours.
+                            color: StyleTokens.transparent
                         }
 
                         GradientStop {
@@ -381,7 +382,7 @@ BarGroup {
 
                         GradientStop {
                             position: 1
-                            color: "#00000000"
+                            color: StyleTokens.transparent
                         }
 
                     }
@@ -421,7 +422,7 @@ BarGroup {
             Behavior on color {
                 ColorAnimation {
                     duration: StyleMedia.controlsRevealDuration
-                    easing.type: Easing.OutCubic
+                    easing.type: StyleTokens.easeStandard
                 }
 
             }
@@ -429,7 +430,7 @@ BarGroup {
             Behavior on width {
                 NumberAnimation {
                     duration: StyleMedia.controlsRevealDuration
-                    easing.type: Easing.OutCubic
+                    easing.type: StyleTokens.easeStandard
                 }
 
             }
@@ -477,7 +478,7 @@ BarGroup {
                 Behavior on opacity {
                     NumberAnimation {
                         duration: StyleMedia.controlsRevealDuration
-                        easing.type: Easing.OutCubic
+                        easing.type: StyleTokens.easeStandard
                     }
 
                 }
@@ -487,7 +488,7 @@ BarGroup {
             Behavior on width {
                 NumberAnimation {
                     duration: StyleMedia.controlsRevealDuration
-                    easing.type: Easing.OutCubic
+                    easing.type: StyleTokens.easeStandard
                 }
 
             }
@@ -499,7 +500,7 @@ BarGroup {
     Behavior on color {
         ColorAnimation {
             duration: StyleMedia.controlsRevealDuration
-            easing.type: Easing.OutCubic
+            easing.type: StyleTokens.easeStandard
         }
 
     }

@@ -12,7 +12,7 @@ RowLayout {
     property var hyprMonitor
 
     visible: activeToplevel !== null
-    spacing: 6
+    spacing: StyleTokens.space6
 
     readonly property int visibleWorkspaceId: {
         const monitor = root.hyprMonitor ? root.hyprMonitor : Hyprland.focusedMonitor

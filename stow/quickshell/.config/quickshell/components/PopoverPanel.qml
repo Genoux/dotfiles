@@ -129,7 +129,7 @@ Item {
         anchors.fill: parent
         radius: StyleTokens.radiusMd
         color: StyleOverlay.surface
-        border.width: 1
+        border.width: StyleTokens.borderWidth
         border.color: StyleOverlay.surfaceBorder
     }
 

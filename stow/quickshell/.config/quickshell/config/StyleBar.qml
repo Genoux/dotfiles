@@ -5,9 +5,9 @@ import Quickshell
 import QtQuick
 
 Singleton {
-    readonly property int margin: 8
-    readonly property int topPadding: 1
-    readonly property int bottomPadding: 3
+    readonly property int margin: StyleTokens.space8
+    readonly property int topPadding: StyleTokens.space1
+    readonly property int bottomPadding: StyleTokens.space3
 
     readonly property int windowTitleMaxWidth: 420
     readonly property color background: Qt.rgba(0, 0, 0, 0)

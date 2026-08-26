@@ -81,6 +81,7 @@ Item {
 
         WlrLayershell.layer: WlrLayer.Overlay
         WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+        // Must match the ^(quickshell)$ namespace in hypr windowrules.lua — this is what gets layer blur.
         WlrLayershell.namespace: "quickshell"
 
         implicitWidth: slot.width

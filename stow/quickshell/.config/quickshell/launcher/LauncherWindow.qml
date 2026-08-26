@@ -93,7 +93,7 @@ PanelWindow {
         Behavior on height {
             NumberAnimation {
                 duration: StyleOverlay.showDuration
-                easing.type: Easing.OutCubic
+                easing.type: StyleTokens.easeStandard
             }
         }
 

@@ -150,14 +150,14 @@ Row {
                 Behavior on opacity {
                     NumberAnimation {
                         duration: StyleWorkspace.revealDuration
-                        easing.type: Easing.OutCubic
+                        easing.type: StyleTokens.easeStandard
                     }
                 }
 
                 Behavior on scale {
                     NumberAnimation {
                         duration: StyleWorkspace.revealDuration
-                        easing.type: Easing.OutCubic
+                        easing.type: StyleTokens.easeStandard
                     }
                 }
             }
@@ -177,14 +177,14 @@ Row {
             Behavior on color {
                 ColorAnimation {
                     duration: StyleTokens.easeDurationFast
-                    easing.type: Easing.InOutQuad
+                    easing.type: StyleTokens.easeSymmetric
                 }
             }
 
             Behavior on width {
                 NumberAnimation {
                     duration: StyleWorkspace.revealDuration
-                    easing.type: Easing.OutCubic
+                    easing.type: StyleTokens.easeStandard
                 }
             }
         }

@@ -31,7 +31,7 @@ Row {
     }
 
     visible: Privacy.anyActive || webcamSlot.width > 0 || micSlot.width > 0 || screenSlot.width > 0
-    spacing: 1
+    spacing: StyleTokens.space1
 
     component IndicatorSlot: Item {
         id: slot
@@ -48,14 +48,14 @@ Row {
         Behavior on width {
             NumberAnimation {
                 duration: StyleTokens.easeDurationNormal
-                easing.type: Easing.OutCubic
+                easing.type: StyleTokens.easeStandard
             }
         }
 
         Behavior on opacity {
             NumberAnimation {
                 duration: StyleTokens.easeDurationNormal
-                easing.type: Easing.OutCubic
+                easing.type: StyleTokens.easeStandard
             }
         }
     }
@@ -109,7 +109,7 @@ Row {
             iconName: "camera-video"
             background: StylePrivacy.webcamFill
             hoverBackground: StylePrivacy.webcamFill
-            borderWidth: 1
+            borderWidth: StyleTokens.borderWidth
             borderColor: StylePrivacy.webcamBorder
             onHoveredChanged: {
                 if (hovered)
@@ -131,7 +131,7 @@ Row {
             iconName: "mic-on"
             background: StylePrivacy.micFill
             hoverBackground: StylePrivacy.micFill
-            borderWidth: 1
+            borderWidth: StyleTokens.borderWidth
             borderColor: StylePrivacy.micBorder
             onHoveredChanged: {
                 if (hovered)
@@ -153,7 +153,7 @@ Row {
             iconName: "monitor-video"
             background: StylePrivacy.screenFill
             hoverBackground: StylePrivacy.screenFill
-            borderWidth: 1
+            borderWidth: StyleTokens.borderWidth
             borderColor: StylePrivacy.screenBorder
             onHoveredChanged: {
                 if (hovered)
