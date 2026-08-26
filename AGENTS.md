@@ -118,6 +118,7 @@ legacy hyprlang one-line rule sprawl unless the user asks.
   application. Secondary/right click opens the tray menu or popover.
 - For the Quickshell media player, update the displayed MPRIS source from explicit
   interaction and playback-driven ordering, not from Hyprland window focus alone.
+  Hide the player when nothing is playing or the artist/title is unknown.
 - Keep Hyprland visual tuning polished but practical: preserve the modular files,
   frosted-glass blur intent, rounded/bordered look, and readable grouping.
 - Hypr config section headers use the two-line block-letter glyph comment style,
@@ -133,6 +134,10 @@ legacy hyprlang one-line rule sprawl unless the user asks.
 - Cursor theme should follow GTK/matugen theme install/switch, not stay hardcoded
   in `cursor.lua`.
 - Session restore (`hypr-session-restore`) should stay enabled by default when possible.
+- Bluetooth is a native Quickshell popover, not a TUI. Always show the normal BT
+  icon on the bar; never the disabled/disconnected glyph.
+- Systemd user services are for daemons used often. One-shot login/boot tasks
+  (for example Bluetooth reconnect) should run once, not linger as units.
 
 ## Learned Workspace Facts
 
@@ -148,26 +153,19 @@ legacy hyprlang one-line rule sprawl unless the user asks.
 - `gpu.lua` and `monitors.lua` must stay at the Hypr config root; dotfiles
   detection and setup scripts expect those exact paths.
 - Hypr `layerrule` for layer animation uses `hl.layer_rule({ no_anim = true })`,
-  not legacy one-line `layerrule = noanim, ...`.
-- Animation presets live in `animations.lua`. The empty `animations/` placeholder
-  directory was removed; recreate it only if presets are actually split out.
+  not legacy one-line `layerrule = noanim, ...`. Animation presets live in
+  `animations.lua`; the empty `animations/` placeholder directory was removed.
 - Hyprland 0.55+ Lua configs use `hl.bind("MOD + key", hl.dsp.*)`; use lowercase
-  letter keysyms for plain letter binds (uppercase often fails to match).
-- On `hyprctl reload`, Lua `require()` is cached — clear affected `package.loaded`
-  entries in `hyprland.lua` (especially `keybindings`) or binds can disappear.
+  letter keysyms for plain letter binds. On `hyprctl reload`, clear affected
+  `package.loaded` entries in `hyprland.lua` (especially `keybindings`) or binds
+  vanish.
 - Session restore is `hypr-session-restore` (vendored from
   https://github.com/UpayanChatterjee/hypr-session-restore into
-  `stow/scripts/.local/bin/`): a single stdlib-Python script that emits 0.55 Lua
-  dispatches natively. Config (excluded classes, terminals, intervals) lives in
-  constants at the top of the script; re-apply them when pulling upstream changes.
-  It replaced `hyprsession` 0.2.0 + a ~540-line `system-hyprsession` bash wrapper,
-  which existed only because that binary's restore is incompatible with
-  `hyprland.lua` (upstream issue #18).
-- Session restore and its save daemon start from Hyprland `autostart.lua` as plain
-  `hl.exec_cmd` (no systemd unit): restore after an 8-second delay so Quickshell and
-  portals come up first, daemon alongside it. Restore self-aborts if the session
-  already has >3 windows and the daemon waits 90s before its first save, so no
-  marker file is needed and nothing blocks logout.
+  `stow/scripts/.local/bin/`): a stdlib-Python script that emits 0.55 Lua
+  dispatches. Config lives in constants at the top of the script. Starts from
+  `autostart.lua` as `hl.exec_cmd` (no systemd): restore after 8s, daemon waits
+  90s; self-aborts if the session already has >3 windows. Replaced `hyprsession`
+  0.2.0 + a bash wrapper (upstream issue #18).
 - Cursor theme: `lib/gtk.sh` writes only `theme` to
   `~/.config/hypr/generated/cursor.lua` on GTK install; cursor size stays in
   `cursor.lua`. Set `XCURSOR_THEME` with expanded `XCURSOR_PATH` (not literal
@@ -177,10 +175,13 @@ legacy hyprlang one-line rule sprawl unless the user asks.
   `hyprctl dispatch 'function() require("actions.*").fn() end'`.
 - `config/workspaces.lua` drives workspace bind count and hyprexpo columns;
   `smart-gaps.lua` adjusts gaps by window count and special workspace state.
-- Window state cycle: `SUPER + u` via `actions.windows.cycleWindowState`.
-- Quickshell bar TUIs use `ShellActions.launchOrFocus()` / `ShellActions.run()`.
-- Quickshell needs `PATH` including `~/.local/bin` when started from systemd or
-  Hyprland autostart.
+  Window state cycle: `SUPER + u` via `actions.windows.cycleWindowState`.
+- Quickshell is launched from Hyprland autostart, not a systemd user service.
+  Restart via `hl.dsp.exec_cmd("quickshell")` so `QT_QPA_PLATFORMTHEME` applies
+  (plain-shell launches make theme icons missing). Needs `PATH` including
+  `~/.local/bin`. New QML files need `dotfiles config link quickshell` before
+  they resolve. Remaining bar TUIs use `ShellActions.launchOrFocus()` /
+  `ShellActions.run()`.
 
 ## Shell And Script Style
 
