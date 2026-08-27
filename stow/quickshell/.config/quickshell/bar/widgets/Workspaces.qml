@@ -47,10 +47,13 @@ Row {
             return null
 
         const ipc = toplevel.lastIpcObject || {}
+        // Class only, for the reason spelled out in TrayFocus: a window title is
+        // content, so matching it against a tray item's name lends one app's
+        // icon to any window that mentions it. Without a tray match this falls
+        // through to IconRegistry below, which is the ordinary path anyway.
         const windowTokens = normalizedTokens([
             IconRegistry.className(toplevel),
-            ipc.initialClass,
-            toplevel.title
+            ipc.initialClass
         ])
 
         if (!windowTokens.length)

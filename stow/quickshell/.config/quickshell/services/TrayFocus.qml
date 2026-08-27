@@ -51,11 +51,21 @@ Singleton {
             title.slice(0, 24),
         ].filter(t => t && t.length > 2))]
 
+        // Matched on class only, never on the window title. A title is content
+        // the user controls, so substring-matching a short token against it
+        // raises whatever happens to mention the app: a terminal sitting in a
+        // directory called flow answered for Flow's tray icon, and a browser
+        // tab reading "Discord | web" would answer for Discord. A class is the
+        // app's own identity and is the only half of this worth trusting.
+        //
+        // Classes shorter than three characters are dropped for the same reason
+        // the tokens are: `t.includes(cls)` with a two-letter class matches
+        // almost everything.
         const match = Hyprland.toplevels.values.find(w => {
-            const cls = (w.wayland?.appId || w.lastIpcObject?.class || "").toLowerCase()
-            const initialClass = (w.lastIpcObject?.initialClass || "").toLowerCase()
-            const wTitle = (w.title || "").toLowerCase()
-            return tokens.some(t => cls.includes(t) || initialClass.includes(t) || t.includes(cls) || wTitle.includes(t))
+            const classes = [w.wayland?.appId, w.lastIpcObject?.class, w.lastIpcObject?.initialClass]
+                .map(c => String(c || "").toLowerCase())
+                .filter(c => c.length > 2)
+            return classes.some(cls => tokens.some(t => cls.includes(t) || t.includes(cls)))
         })
 
         if (match?.wayland) {
