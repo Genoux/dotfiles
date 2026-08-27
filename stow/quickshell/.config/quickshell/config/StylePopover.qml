@@ -116,6 +116,22 @@ Singleton {
     readonly property int fieldHeight: 28
     readonly property int listRowExpandedHeight: listRowHeight + fieldHeight + StyleTokens.space8
 
+    // Sound popover — a level band above the list of devices it applies to, with
+    // a segmented control choosing which domain the panel is showing. The band is
+    // taller than a menu row because it stacks a label over a full-width control.
+    readonly property int levelBandHeight: 52
+    readonly property int segmentBarHeight: 28
+    readonly property int segmentPaddingH: StyleTokens.space10
+    // A stream row carries a name line over its own slider, so it needs more than
+    // the two-line device row: a slider's hit area is taller than a caption.
+    readonly property int streamRowHeight: 44
+    // The body under the segmented control is a FIXED height, not content-fit.
+    // The panel hangs off the bar, so it grows upward — a content-fit body would
+    // move the header and the segments themselves on every tab switch, and a
+    // second click would land on a different tab than the one aimed at. Tabs that
+    // hold still are worth more than a panel that hugs its shortest tab.
+    readonly property int soundBodyHeight: 220
+
     readonly property int pillPaddingH: StyleTokens.space10
     readonly property int pillPaddingV: StyleTokens.space6
 

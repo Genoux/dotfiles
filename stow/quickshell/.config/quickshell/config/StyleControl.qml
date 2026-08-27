@@ -24,4 +24,14 @@ Singleton {
     readonly property int signalBarBase: 5
     readonly property int signalBarStep: 3
     readonly property int signalBarSpacing: StyleTokens.space2
+
+    // Level slider — a track thin enough to read as a scale rather than a filled
+    // bar, and a handle just wide enough to aim at. The 24px pointer floor is met
+    // by the slider's hit area, not by the handle's own size.
+    readonly property int sliderTrackHeight: 4
+    readonly property int sliderHandleSize: 12
+    readonly property int sliderHitHeight: 24
+    // One wheel notch. Coarse enough that a flick crosses the range, fine enough
+    // to land on a level you meant.
+    readonly property real sliderStep: 0.05
 }

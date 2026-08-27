@@ -135,6 +135,39 @@ Singleton {
         }) || null
     }
 
+    // A playback stream names the application that owns it but carries no icon,
+    // so resolve it through the same desktop-entry lookup a window class uses.
+    // Candidates run binary first: it is the stable identifier ("spotify"), while
+    // application.name is display text that can be translated or decorated.
+    function streamIcon(properties) {
+        const props = properties ?? ({})
+
+        const declared = String(props["application.icon_name"] ?? "").trim()
+        if (declared.length > 0) {
+            const themed = Quickshell.iconPath(declared, true)
+            if (String(themed).length > 0)
+                return themed
+        }
+
+        const candidates = [
+            props["application.process.binary"],
+            props["application.name"],
+            props["node.name"],
+        ]
+
+        for (const candidate of candidates) {
+            const entry = desktopEntryForClass(String(candidate ?? "").trim())
+            if (entry?.icon) {
+                const resolved = Quickshell.iconPath(entry.icon, true)
+                if (String(resolved).length > 0)
+                    return resolved
+            }
+        }
+
+        // Nothing identified it, but it is still audibly playing — say that much.
+        return barIcon("audio", "high")
+    }
+
     function iconNameForToplevel(toplevel) {
         const appClass = className(toplevel)
         const desktopEntry = desktopEntryForClass(appClass)

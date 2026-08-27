@@ -153,6 +153,26 @@ Every structural stroke is `StyleTokens.borderWidth` (1px). Create hierarchy thr
 - Hover and selection use `StyleTokens.alphaLight`, `easeDurationFast`, and the standard or symmetric curve as appropriate.
 - Disabled content uses `StyleTokens.opacityDisabled`, not a hardcoded grey.
 
+### Levels and continuous values
+
+- Use `Slider` for any continuous value. `Button`, `PillButton`, and `PopoverAction` are all discrete and own no scrub interaction.
+- A slider's shown position is local while the pointer is down and re-syncs from its bound value only when nobody is dragging. Do not bind the handle straight to a value that round-trips through a service — the handle stutters under the cursor and snaps back on release.
+- `VolumeStepBar` stays separate on purpose: it reports a level in the OSD, `Slider` sets one.
+- Track, fill, and handle read from `StyleControl.slider*`. The 24px pointer floor is met by the slider's hit area, not by the handle.
+
+### Segmented views
+
+- Use `SegmentedControl` when one popover covers several subjects that would otherwise stack into a single long scroll.
+- It is not a row of `PillButton`s: the segments share one recessed track so they read as one control with a current position, and only the selected segment carries `alphaLight`.
+- **A panel with segments must give its body a fixed height.** Bar popovers hang off the bar and grow upward, so a content-fit body moves the header and the segments themselves on every switch — and the next click lands on a different tab than the one aimed at. Absorb the slack with an empty state, not with a moving panel.
+- Where a list can run past the fold, scroll the current item into view when the segment opens. A selection the reader has to hunt for is not a selection.
+
+### Row actions
+
+- Use `RowActions` for a list row's trailing controls: the reversible action stated plainly, the destructive one behind a glyph that arms into a worded confirm.
+- Offer both at once. Requiring a disconnect before a forget becomes available reads as tidy and is not — desktop settings panels expose them together, and sequencing turns the common case into two confirmed operations.
+- A hover-revealed confirm keeps its word until the fade finishes, disarming from the opacity animation rather than on hover-out. Clearing on hover-out swaps the word back to the glyph at full opacity, which reads as a flicker rather than a fade.
+
 ### Popovers
 
 - `BarPopover` owns bar-panel positioning and lifecycle.

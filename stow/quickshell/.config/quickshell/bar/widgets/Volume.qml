@@ -1,37 +1,41 @@
-import Quickshell.Services.Pipewire
-import qs.config
+import QtQuick
 import qs.components
+import qs.config
 import qs.services as Services
 
 Button {
     id: root
 
-    readonly property var sink: Pipewire.defaultAudioSink
-    readonly property real volume: sink?.audio?.volume ?? 0
-    readonly property bool muted: sink?.audio?.muted ?? false
+    required property var barWindow
 
-    readonly property bool hasSink: !!sink
-
-    readonly property string volumeIconName: {
-        if (!hasSink)
-            return "audio-card-symbolic"
-        if (muted)
-            return "audio-volume-muted-symbolic"
-        if (volume <= 0.25)
-            return "audio-volume-low-symbolic"
-        if (volume <= 0.75)
-            return "audio-volume-medium-symbolic"
-        if (volume <= 1.0)
-            return "audio-volume-high-symbolic"
-        return "audio-volume-overamplified-symbolic"
-    }
-
-    iconName: volumeIconName
+    // Bundled marks rather than the icon theme's, so the glyph is tinted with the
+    // rest of the bar and matches the volume OSD's own icon.
+    iconSource: IconRegistry.volumeIcon(Services.AudioState.sinkVolume, Services.AudioState.sinkMuted, Services.AudioState.hasSink)
     interactive: true
     iconSize: 14
-    onClicked: ShellActions.launchOrFocus("wiremix", "wiremix", "multimedia-volume-control")
+    active: popover.open
+    onClicked: popover.toggle()
 
-    PwObjectTracker {
-        objects: root.sink ? [root.sink] : []
+    // Adjusting the level is the one thing worth doing without opening anything.
+    WheelHandler {
+        onWheel: (event) => {
+            const sink = Services.AudioState.sink;
+            if (!sink)
+                return;
+
+            const delta = event.angleDelta.y > 0 ? StyleControl.sliderStep : -StyleControl.sliderStep;
+            Services.AudioState.setVolume(sink, Services.AudioState.sinkVolume + delta);
+        }
+    }
+
+    BarPopover {
+        id: popover
+
+        barWindow: root.barWindow
+        anchorItem: root
+
+        VolumePopover {
+            active: popover.open
+        }
     }
 }

@@ -104,6 +104,7 @@ PanelWindow {
 
                 Widgets.Volume {
                     Layout.alignment: Qt.AlignVCenter
+                    barWindow: bar
                 }
 
                 Widgets.Network {
