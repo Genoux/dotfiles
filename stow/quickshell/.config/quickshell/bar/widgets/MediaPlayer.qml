@@ -13,7 +13,7 @@ BarGroup {
     property var recentPlayingKeys: []
     readonly property int recentPlayingMax: 12
     readonly property var activePlayers: Mpris.players.values.filter((candidate) => {
-        return candidate.playbackState !== MprisPlaybackState.Stopped;
+        return !isProxyPlayer(candidate) && candidate.playbackState !== MprisPlaybackState.Stopped;
     })
     readonly property var player: pickActivePlayer()
     readonly property string trackText: player ? `${player.trackTitle || player.identity || "Media"}${player.trackArtist ? " - " + player.trackArtist : ""}` : ""
@@ -22,6 +22,19 @@ BarGroup {
     readonly property bool canTogglePlayback: player ? (player.isPlaying ? player.canPause : player.canPlay) : false
     property bool controlsExpanded: false
     property real scrollOffset: 0
+
+    // playerctld is a proxy, not a player: it re-exports whichever real player is
+    // current under its own bus name, so every player it can offer is already on
+    // this list directly and it only ever contributes a duplicate.
+    //
+    // The duplicate is not the problem — outliving its source is. playerctld
+    // stays registered after the last real player quits, and every property read
+    // then fails with NoActivePlayer, so its object keeps the final track,
+    // artist, and isPlaying state indefinitely. That is a bar still showing a
+    // song that stopped, with no player left anywhere to stop it.
+    function isProxyPlayer(candidate) {
+        return String(candidate?.dbusName ?? "").endsWith(".playerctld");
+    }
 
     function keysMatch(storedKey, candidate) {
         if (!storedKey || !candidate)
