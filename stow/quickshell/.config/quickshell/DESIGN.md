@@ -197,18 +197,11 @@ Every structural stroke is `StyleTokens.borderWidth` (1px). Create hierarchy thr
 
 ## Known divergences
 
-Four places do not follow the rules above. They are listed here so nobody copies them as precedent, and nobody "fixes" them without deciding to.
+Three places do not follow the rules above. They are listed here so nobody copies them as precedent, and nobody "fixes" them without deciding to.
 
 **The lock screen is a parallel design system.** `lock/StyleLock.qml` defines its own font (`SF Pro Display`), its own palette (raw white-alpha `Qt.rgba` values, not matugen `Colors`), and its own sizes (120px clock, 26px date, 10px input radius) — none of them on the shared scales. Only one line in the whole lock surface reaches into `Colors`. This may be deliberate: the lock screen renders in a session where the shell's theme is not guaranteed, and a wallpaper-derived palette on top of the wallpaper itself is a legibility risk. **Treat it as intentional until decided otherwise. Do not partially reconcile it** — half a lock screen on shared tokens is worse than none.
 
 **Panel reveal curves are not unified.** `PopoverPanel` reveals with `InOutCubic`; `OverlayPanel` (launcher) hides with `InCubic`. Same gesture, different curve family. `easeStandard` / `easeSymmetric` cover pointer feedback only — panel motion is still owned per-component. Unifying it is a perceptible change, so it is a decision, not a cleanup.
-
-**The capture popover centres its Shot tiles in a taller body.** The segmented
-body is fixed to the Record segment's height, which carries an audio row under
-its tiles; Shot has no such row and so runs one list row short. The guidance
-above is to absorb segment slack with an empty state, which assumes a list body
-— this one is a tile row, where centring reads as air and top-aligning reads as
-a hole. Do not copy this into a list body.
 
 **`PopoverLabel` and `PopoverMessage` overlap.** Near-identical `Text` wrappers on the same band height and inset, differing only in default colour (`base05` vs `base04`) and centring. `PopoverLabel` has exactly one call site. Prefer `PopoverMessage` for new work; `PopoverLabel` is a candidate for deletion.
 

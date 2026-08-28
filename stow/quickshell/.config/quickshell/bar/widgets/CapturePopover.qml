@@ -22,9 +22,13 @@ PopoverPanel {
         { "label": "Window", "icon": "shot-window", "mode": "window" },
         { "label": "Screen", "icon": "shot-screen", "mode": "output" }
     ]
+    // Audio rides in the tile row rather than a row of its own beneath it, so
+    // both tabs are exactly one row tall and neither pads out to match the
+    // other. It states its value with the glyph, like the mute button does.
     readonly property var recordEntries: [
         { "label": "Region", "icon": "record-region", "mode": "region" },
-        { "label": "Screen", "icon": "record-screen", "mode": "fullscreen" }
+        { "label": "Screen", "icon": "record-screen", "mode": "fullscreen" },
+        { "label": "Audio", "icon": "", "mode": "" }
     ]
 
     signal dismissRequested()
@@ -42,13 +46,20 @@ PopoverPanel {
 
         required property string label
         required property string iconKey
+        // A tile that holds a value rather than firing an action keeps a fill
+        // while that value is on, the way an open popover's bar button does.
+        property bool active: false
 
         signal activated()
 
         implicitHeight: StylePopover.tileHeight
         height: implicitHeight
         radius: StyleTokens.radiusSm
-        color: tileArea.containsMouse ? StyleTokens.alphaLight : StyleTokens.transparent
+        color: {
+            if (active)
+                return StyleTokens.alphaActive;
+            return tileArea.containsMouse ? StyleTokens.alphaLight : StyleTokens.transparent;
+        }
 
         Behavior on color {
             ColorAnimation {
@@ -65,6 +76,7 @@ PopoverPanel {
                 anchors.horizontalCenter: parent.horizontalCenter
                 source: IconRegistry.captureIcon(tile.iconKey)
                 size: StylePopover.tileIconSize
+                tint: tile.active ? Colors.base05 : Colors.base04
             }
 
             Text {
@@ -99,9 +111,6 @@ PopoverPanel {
 
             width: parent.width
             spacing: 0
-            // Every popover closes on contentPaddingV; the header band above
-            // bleeds to the top edge, so only the bottom carries an inset.
-            bottomPadding: StylePopover.contentPaddingV
 
             PopoverHeader {
                 width: parent.width
@@ -174,56 +183,34 @@ PopoverPanel {
                     }
                 }
 
-                Column {
+                Row {
                     anchors.centerIn: parent
                     visible: root.tab === root.recordTab
-                    width: root.tileRowWidth
-                    spacing: StyleTokens.space8
+                    spacing: StyleTokens.space4
 
-                    Row {
-                        width: parent.width
-                        spacing: StyleTokens.space4
+                    Repeater {
+                        model: root.recordEntries
 
-                        Repeater {
-                            model: root.recordEntries
+                        CaptureTile {
+                            required property var modelData
 
-                            CaptureTile {
-                                required property var modelData
+                            readonly property bool isAudio: modelData.mode.length === 0
 
-                                width: (root.tileRowWidth - StyleTokens.space4 * (root.recordEntries.length - 1))
-                                    / root.recordEntries.length
-                                label: modelData.label
-                                iconKey: modelData.icon
-                                onActivated: {
-                                    Services.CaptureState.record(modelData.mode)
-                                    root.dismissRequested()
+                            width: (root.tileRowWidth - StyleTokens.space4 * (root.recordEntries.length - 1))
+                                / root.recordEntries.length
+                            label: modelData.label
+                            iconKey: isAudio
+                                ? (Services.CaptureState.audioEnabled ? "audio-on" : "audio-off")
+                                : modelData.icon
+                            active: isAudio && Services.CaptureState.audioEnabled
+                            onActivated: {
+                                if (isAudio) {
+                                    Services.CaptureState.audioEnabled = !Services.CaptureState.audioEnabled
+                                    return
                                 }
+                                Services.CaptureState.record(modelData.mode)
+                                root.dismissRequested()
                             }
-                        }
-                    }
-
-                    // Remembered state, not a per-scope entry: two scopes with
-                    // one switch instead of the same two listed twice.
-                    Item {
-                        width: parent.width
-                        height: StylePopover.listRowHeight
-
-                        Text {
-                            anchors.left: parent.left
-                            anchors.leftMargin: StylePopover.contentPaddingH - StylePopover.listRowInset
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: "Include audio"
-                            color: Colors.base05
-                            font.family: StyleTokens.fontSans
-                            font.pixelSize: StyleTokens.fontSizeSm
-                        }
-
-                        Toggle {
-                            anchors.right: parent.right
-                            anchors.rightMargin: StylePopover.contentPaddingH - StylePopover.listRowInset
-                            anchors.verticalCenter: parent.verticalCenter
-                            checked: Services.CaptureState.audioEnabled
-                            onToggled: Services.CaptureState.audioEnabled = !Services.CaptureState.audioEnabled
                         }
                     }
                 }

@@ -21,10 +21,10 @@ Singleton {
     readonly property color scrim: Qt.rgba(0, 0, 0, 0.55)
     readonly property int actionPadding: StyleTokens.space10
 
-    // A bar popover grows upward, so a content-fit segmented body would move
-    // the segments themselves on every switch. Sized to the taller segment:
-    // Record carries an audio row under its tiles, Shot does not.
+    // Both segments hold one tile row, so the band needs no slack for either.
+    // It carries contentPaddingV above and below, the same air a list column
+    // gives its rows, which lands the last content the same distance from the
+    // panel edge as every other popover.
     readonly property int bodyHeight: StylePopover.tileHeight
-        + StylePopover.listRowHeight
-        + StyleTokens.space8
+        + StylePopover.contentPaddingV * 2
 }
