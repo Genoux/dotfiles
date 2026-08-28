@@ -49,6 +49,28 @@ Singleton {
         return icon ? materialIcon(icon) : ""
     }
 
+    readonly property var captureIcons: ({
+        "idle": "screenshot_frame",
+        "recording": "videocam",
+        "shot-region": "screenshot_region",
+        "shot-window": "select_window",
+        "shot-screen": "fullscreen",
+        "record-region": "screen_record",
+        "record-screen": "videocam",
+        "audio-on": "mic",
+        "audio-off": "mic_off",
+        "folder": "folder_open",
+        "copy": "content_copy",
+        "edit": "edit",
+        "play": "play_arrow",
+        "discard": "delete",
+    })
+
+    function captureIcon(name) {
+        const icon = captureIcons[name]
+        return icon ? materialIcon(icon) : ""
+    }
+
     function mediaIcon(name) {
         const icons = {
             "skip-backward": "skip_previous",

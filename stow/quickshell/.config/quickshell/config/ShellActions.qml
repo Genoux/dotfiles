@@ -7,7 +7,7 @@ import QtQuick
 
 Singleton {
     readonly property var tuiExecutables: ["bluetui", "btop", "impala", "wiremix", "fastfetch", "battop"]
-    readonly property var localScripts: ["launch-or-focus", "system-screenrecord", "launch-dotfiles-menu"]
+    readonly property var localScripts: ["launch-or-focus", "system-screenrecord", "system-screenshot", "launch-dotfiles-menu"]
     readonly property string homePath: String(StandardPaths.writableLocation(StandardPaths.HomeLocation)).replace(/^file:\/\//, "")
     readonly property string localBin: homePath + "/.local/bin/"
 

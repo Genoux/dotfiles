@@ -14,6 +14,13 @@ STATE_FILE="/tmp/screenrecord.state"
 MODULE_FILE="/tmp/screenrecord-modules"
 MIX_SINK="screenrecord-mix"
 NOTIFY_ID=991100
+
+# Best-effort on purpose: quickshell may be dead or restarting, and that must
+# not fail a recording. The state file below, not this, is what survives a
+# shell restart.
+announce() {
+  quickshell ipc call capture "$@" >/dev/null 2>&1 || true
+}
 AUDIO_DEVICE=""
 RECORD_AUDIO=false
 RECORDER_PID=""
@@ -189,7 +196,7 @@ start_screenrecording() {
   fi
 
   rm -f "$logfile"
-  notify-send -r "$NOTIFY_ID" "Screen recording started" "Click the record button to stop" -t 2000
+  announce started
 }
 
 wait_for_recorders() {
@@ -211,20 +218,8 @@ stop_screenrecording() {
   local final_file="$OUTPUT_DIR/screenrecording-$(date +'%Y-%m-%d_%H-%M-%S').mp4"
   mv "$TEMP_VIDEO" "$final_file" 2>/dev/null
 
-  local filename
-  filename=$(basename "$final_file")
-
   if [[ -f "$final_file" ]]; then
-    notify-send -r "$NOTIFY_ID" "Screen recording saved" "Saved to: $filename" \
-      -t 5000 \
-      -a "Screen Recorder" \
-      --action="default=Open Folder" \
-      --action="open-video=Play Video" | while read -r action; do
-      case "$action" in
-        default) xdg-open "$OUTPUT_DIR" & ;;
-        open-video) xdg-open "$final_file" & ;;
-      esac
-    done &
+    announce saved "$final_file"
   else
     rm -f "$TEMP_VIDEO"
     notify-send "Screen recording failed" "No video file created" -u critical -t 3000

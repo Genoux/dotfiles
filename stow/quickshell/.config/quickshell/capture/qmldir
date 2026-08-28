@@ -1,0 +1,3 @@
+module qs.capture
+CapturePreviewWindow 1.0 CapturePreviewWindow.qml
+CapturePreviewCard 1.0 CapturePreviewCard.qml

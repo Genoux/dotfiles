@@ -4,6 +4,36 @@
 OUTPUT_DIR="${SCREENSHOT_DIR:-${XDG_PICTURES_DIR:-$HOME/Pictures}}"
 FILENAME="$OUTPUT_DIR/screenshot-$(date +'%Y-%m-%d_%H-%M-%S').png"
 
+mkdir -p "$OUTPUT_DIR"
+
+# Default is to capture and be done with it: the file lands, the clipboard gets
+# it, and the shell is told so it can offer copy/edit/discard. --edit keeps the
+# old behaviour of opening the annotation editor before anything is saved.
+EDIT=false
+
+# Announce the capture to the shell. Best-effort on purpose: quickshell may be
+# dead or restarting, and that must not fail a capture or print noise.
+announce() {
+  quickshell ipc call capture saved "$1" >/dev/null 2>&1 || true
+}
+
+finish() {
+  wl-copy --type image/png <"$FILENAME" 2>/dev/null || true
+  announce "$FILENAME"
+}
+
+# grim writes the file itself, then the clipboard and the shell are updated.
+# With --edit the pixels go to satty instead and it owns the save.
+capture() {
+  if $EDIT; then
+    grim "$@" - | satty --filename - --output-filename "$FILENAME"
+    return
+  fi
+
+  grim "$@" "$FILENAME" || return 1
+  finish
+}
+
 # Trim geometry to ensure it fits within monitor bounds
 trim_geometry() {
     local geometry="${1}"
@@ -51,17 +81,18 @@ trim_geometry() {
     printf "%s,%s %sx%s" "${cropped_x}" "${cropped_y}" "${cropped_width}" "${cropped_height}"
 }
 
-case "${1:-region}" in
-  output)
-    MODE="output"
-    ;;
-  window)
-    MODE="window"
-    ;;
-  *)
-    MODE="region"
-    ;;
-esac
+MODE="region"
+
+for arg in "$@"; do
+  case "$arg" in
+    output | window | region)
+      MODE="$arg"
+      ;;
+    --edit)
+      EDIT=true
+      ;;
+  esac
+done
 
 
 case "$MODE" in
@@ -76,7 +107,7 @@ case "$MODE" in
 
         trimmed_geometry=$(trim_geometry "$geometry")
         if [[ -n "$trimmed_geometry" ]]; then
-            grim -g "$trimmed_geometry" - | satty --filename - --output-filename "$FILENAME"
+            capture -g "$trimmed_geometry"
         else
             echo "Error: No active window" >&2
             exit 1
@@ -88,7 +119,7 @@ case "$MODE" in
 
         if [[ -n "$geometry" ]]; then
             sleep 0.4
-            grim -g "$geometry" - | satty --filename - --output-filename "$FILENAME"
+            capture -g "$geometry"
         else
             exit 1
         fi
@@ -102,6 +133,6 @@ case "$MODE" in
         w=$(echo "$monitor" | jq -r '.width')
         h=$(echo "$monitor" | jq -r '.height')
 
-        grim -g "${x},${y} ${w}x${h}" - | satty --filename - --output-filename "$FILENAME"
+        capture -g "${x},${y} ${w}x${h}"
         ;;
 esac

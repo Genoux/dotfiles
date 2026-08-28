@@ -3,6 +3,7 @@
 import Quickshell
 import Quickshell.Io
 import qs.bar
+import qs.capture
 import qs.components
 // Loaded only when requested through the component-gallery IPC target.
 import qs.debug
@@ -25,6 +26,16 @@ ShellRoot {
 
         function toggle(): void {
             Services.PowerMenu.toggle()
+        }
+    }
+
+    // The capture scripts own grim, slurp, and the recorder; they report back
+    // here. Best-effort by design: a dead shell must not fail a capture.
+    IpcHandler {
+        target: "capture"
+
+        function saved(path: string): void {
+            Services.CaptureState.present(path)
         }
     }
 
@@ -89,6 +100,15 @@ ShellRoot {
         model: Quickshell.screens
 
         NotificationWindow {
+            required property var modelData
+            screen: modelData
+        }
+    }
+
+    Variants {
+        model: Quickshell.screens
+
+        CapturePreviewWindow {
             required property var modelData
             screen: modelData
         }

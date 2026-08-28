@@ -33,8 +33,20 @@ PanelWindow {
     }
 
     margins {
+        // The capture preview card owns this corner while it is up, so the
+        // stack sits above it rather than under it.
         bottom: StyleShellLayout.notificationBottomMargin
+            + (Services.CaptureState.previewVisible
+                ? StyleCapture.cardHeight + StyleNotification.gap
+                : 0)
         right: StyleShellLayout.notificationRightMargin
+    }
+
+    Behavior on margins.bottom {
+        NumberAnimation {
+            duration: StyleTokens.easeDurationFast
+            easing.type: StyleTokens.easeStandard
+        }
     }
 
     ListView {
