@@ -13,7 +13,6 @@ PopoverPanel {
     readonly property int shotTab: 0
     readonly property int recordTab: 1
     readonly property int tileRowWidth: popoverWidth - StylePopover.listRowInset * 2
-    readonly property int rowWidth: popoverWidth - StylePopover.contentPaddingH * 2
 
     property int tab: shotTab
 
@@ -141,8 +140,8 @@ PopoverPanel {
                 SegmentedControl {
                     anchors.left: parent.left
                     anchors.right: parent.right
-                    anchors.leftMargin: StylePopover.contentPaddingH
-                    anchors.rightMargin: StylePopover.contentPaddingH
+                    anchors.leftMargin: StylePopover.listRowInset
+                    anchors.rightMargin: StylePopover.listRowInset
                     anchors.top: parent.top
                     anchors.topMargin: StylePopover.segmentBandPaddingTop
                     labels: ["Shot", "Record"]

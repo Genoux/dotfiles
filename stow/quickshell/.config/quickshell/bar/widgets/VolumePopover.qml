@@ -86,9 +86,9 @@ PopoverPanel {
                     id: segments
 
                     anchors.left: parent.left
-                    anchors.leftMargin: StylePopover.contentPaddingH
+                    anchors.leftMargin: StylePopover.listRowInset
                     anchors.right: parent.right
-                    anchors.rightMargin: StylePopover.contentPaddingH
+                    anchors.rightMargin: StylePopover.listRowInset
                     anchors.top: parent.top
                     anchors.topMargin: StylePopover.segmentBandPaddingTop
                     labels: ["Output", "Input", "Apps"]

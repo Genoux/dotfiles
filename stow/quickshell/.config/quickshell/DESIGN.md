@@ -113,6 +113,22 @@ The base spacing unit is 4px, with a numeric scale in `StyleTokens`: 1, 2, 3, 4,
 - Bar groups use 2–6px internal spacing and the 8px outer margin from `StyleBar`.
 - Ordinary controls use 4px horizontal and vertical padding from `StyleControl`.
 - Popover content aligns to the 16px horizontal inset from `StylePopover`.
+
+**The Two Inset Rule.** A popover has one inset for its header and another for
+its content, and every band picks the right one.
+
+- **Header band** — the title and its trailing control — sits on
+  `contentPaddingH`.
+- **Content band** — anything that carries a fill: list rows, action tiles, and
+  the segment track — sits on `listRowInset`, so the fill floats inside the
+  panel rather than reaching its border.
+- **Text inside a fill** offsets by `contentPaddingH - listRowInset` from the
+  fill's own edge, which lands it back on `contentPaddingH` from the panel and
+  under the header title.
+
+Fills share one edge, text shares another. Insetting a segment track on
+`contentPaddingH` is the easy mistake: it is content, not chrome, so it belongs
+on the fill edge with the rows beneath it.
 - Popover sections use named bands: header, section, row, list row, and empty state. Do not reproduce their heights in a feature.
 - Use `RowLayout`/`ColumnLayout` when siblings negotiate space; use `Row`/`Column` for fixed implicit geometry.
 - Optical corrections may be off-scale only when the value is local, necessary, and commented.
