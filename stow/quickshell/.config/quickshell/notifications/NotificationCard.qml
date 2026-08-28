@@ -19,12 +19,41 @@ Rectangle {
 
     property bool hovered: false
 
+    // Cards rest at the left of a window widened by the drag runway, so x is
+    // free to travel right without an anchor fighting it.
+    readonly property real restingX: 0
+    readonly property real dragOffset: Math.max(0, x - restingX)
+    readonly property bool dragging: cardArea.drag.active
+
     width: StyleNotification.width
+    x: restingX
     implicitHeight: content.implicitHeight + StyleNotification.padding * 2
+    opacity: 1 - Math.min(1, dragOffset / StyleNotification.dragRunway)
     radius: StyleTokens.radiusMd
     color: StyleNotification.surface
     border.width: StyleTokens.borderWidth
     border.color: StyleNotification.border
+
+    NumberAnimation {
+        id: returnAnimation
+
+        target: root
+        property: "x"
+        to: root.restingX
+        duration: StyleTokens.easeDurationFast
+        easing.type: StyleTokens.easeStandard
+    }
+
+    NumberAnimation {
+        id: dismissAnimation
+
+        target: root
+        property: "x"
+        to: root.restingX + StyleNotification.dragRunway
+        duration: StyleTokens.easeDurationFast
+        easing.type: StyleTokens.easeStandard
+        onFinished: Services.Notifications.dismiss(root.notification)
+    }
 
     Timer {
         id: expireTimer
@@ -36,7 +65,7 @@ Rectangle {
     Component.onCompleted: root.startExpireTimer()
     onNotificationChanged: root.startExpireTimer()
     onHoveredChanged: {
-        if (hovered)
+        if (hovered || dragging)
             expireTimer.stop()
         else
             root.startExpireTimer()
@@ -111,10 +140,29 @@ Rectangle {
     }
 
     MouseArea {
+        id: cardArea
+
         anchors.fill: parent
         acceptedButtons: Qt.LeftButton | Qt.RightButton
         hoverEnabled: false
         cursorShape: Qt.PointingHandCursor
+        drag.target: root
+        drag.axis: Drag.XAxis
+        drag.minimumX: root.restingX
+        drag.maximumX: root.restingX + StyleNotification.dragRunway
+
+        onPressed: {
+            expireTimer.stop()
+            returnAnimation.stop()
+        }
+        onReleased: {
+            if (root.dragOffset >= StyleNotification.dragThreshold) {
+                dismissAnimation.restart()
+                return
+            }
+            returnAnimation.restart()
+            root.startExpireTimer()
+        }
 
         onClicked: (mouse) => {
             if (mouse.button === Qt.RightButton) {

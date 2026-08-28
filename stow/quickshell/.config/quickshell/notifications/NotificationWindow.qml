@@ -21,7 +21,7 @@ PanelWindow {
     color: StyleTokens.transparent
     exclusionMode: ExclusionMode.Ignore
 
-    implicitWidth: StyleNotification.width
+    implicitWidth: StyleNotification.width + StyleNotification.dragRunway
     implicitHeight: Math.max(1, notificationList.contentHeight)
 
     WlrLayershell.layer: WlrLayer.Overlay
@@ -36,10 +36,21 @@ PanelWindow {
         // The capture preview card owns this corner while it is up, so the
         // stack sits above it rather than under it.
         bottom: StyleShellLayout.notificationBottomMargin
-            + (Services.CaptureState.previewVisible
-                ? StyleCapture.cardHeight + StyleNotification.gap
-                : 0)
-        right: StyleShellLayout.notificationRightMargin
+            + Services.CaptureState.captures.length
+                * (StyleCapture.cardHeight + StyleNotification.gap)
+        // Negative by the runway so a dragged card has somewhere to go past the
+        // output edge. Cards still rest at the usual inset.
+        right: StyleShellLayout.notificationRightMargin - StyleNotification.dragRunway
+    }
+
+    // Only the resting card column takes pointer input; the runway beside it
+    // would otherwise sit over the desktop as an invisible trap. A drag keeps
+    // its pointer grab, so a card stays draggable out into the unmasked side.
+    mask: Region {
+        x: 0
+        y: 0
+        width: StyleNotification.width
+        height: root.height
     }
 
     Behavior on margins.bottom {
@@ -60,11 +71,20 @@ PanelWindow {
             values: root.shownNotifications
         }
 
-        delegate: NotificationCard {
+        // A plain Item takes the delegate slot so the ListView positions this
+        // rather than the card: a delegate's own x is owned by the view, and a
+        // drag written straight to it does not stick.
+        delegate: Item {
             required property var modelData
 
             width: notificationList.width
-            notification: modelData
+            height: card.height
+
+            NotificationCard {
+                id: card
+
+                notification: parent.modelData
+            }
         }
 
         add: Transition {
