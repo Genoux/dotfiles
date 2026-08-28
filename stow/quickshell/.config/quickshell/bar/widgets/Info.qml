@@ -2,7 +2,7 @@ import qs.config
 import qs.components
 
 Button {
-    iconName: "emblem-favorite-symbolic"
+    iconSource: IconRegistry.barControlIcon("info")
     interactive: true
     onClicked: ShellActions.launchOrFocus("system-info", "fastfetch", "system-info")
 }

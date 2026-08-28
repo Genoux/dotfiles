@@ -77,7 +77,9 @@ PopoverPanel {
 
             Item {
                 width: parent.width
-                implicitHeight: StylePopover.segmentBarHeight + StylePopover.contentPaddingV * 2
+                implicitHeight: StylePopover.segmentBarHeight
+                    + StylePopover.segmentBandPaddingTop
+                    + StylePopover.segmentBandPaddingBottom
                 height: implicitHeight
 
                 SegmentedControl {
@@ -87,7 +89,8 @@ PopoverPanel {
                     anchors.leftMargin: StylePopover.contentPaddingH
                     anchors.right: parent.right
                     anchors.rightMargin: StylePopover.contentPaddingH
-                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.top: parent.top
+                    anchors.topMargin: StylePopover.segmentBandPaddingTop
                     labels: ["Output", "Input", "Apps"]
                     currentIndex: root.tab
                     onSegmentSelected: (index) => root.tab = index
@@ -108,7 +111,7 @@ PopoverPanel {
                     anchors.leftMargin: StylePopover.contentPaddingH - StylePopover.ghostPaddingH
                     anchors.verticalCenter: parent.verticalCenter
                     iconSource: root.onInput
-                        ? IconRegistry.barIcon("privacy", "mic")
+                        ? IconRegistry.barControlIcon("microphone")
                         : IconRegistry.volumeIcon(root.bandVolume, root.bandMuted, AudioState.hasSink)
                     iconSize: StyleControl.iconSize
                     paddingHorizontal: StylePopover.ghostPaddingH

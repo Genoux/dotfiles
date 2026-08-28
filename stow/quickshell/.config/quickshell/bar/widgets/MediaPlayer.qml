@@ -466,7 +466,7 @@ BarGroup {
 
                 Button {
                     anchors.verticalCenter: parent.verticalCenter
-                    iconName: "media-skip-backward-symbolic"
+                    iconSource: IconRegistry.mediaIcon("skip-backward")
                     iconSize: StyleControl.iconSizeSm
                     interactive: root.controlsExpanded && root.canGoPrevious
                     onClicked: root.previous()
@@ -474,7 +474,7 @@ BarGroup {
 
                 Button {
                     anchors.verticalCenter: parent.verticalCenter
-                    iconName: player && player.isPlaying ? "media-playback-pause-symbolic" : "media-playback-start-symbolic"
+                    iconSource: IconRegistry.mediaIcon(player && player.isPlaying ? "pause" : "play")
                     iconSize: StyleControl.iconSizeSm
                     interactive: root.controlsExpanded && root.canTogglePlayback
                     onClicked: root.togglePlayback()
@@ -482,7 +482,7 @@ BarGroup {
 
                 Button {
                     anchors.verticalCenter: parent.verticalCenter
-                    iconName: "media-skip-forward-symbolic"
+                    iconSource: IconRegistry.mediaIcon("skip-forward")
                     iconSize: StyleControl.iconSizeSm
                     interactive: root.controlsExpanded && root.canGoNext
                     onClicked: root.next()

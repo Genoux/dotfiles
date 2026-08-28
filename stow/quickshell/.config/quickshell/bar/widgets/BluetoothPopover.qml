@@ -29,10 +29,10 @@ PopoverPanel {
                 width: parent.width
                 title: "Bluetooth"
 
-                PillButton {
-                    text: BluetoothState.enabled ? "On" : "Off"
+                Toggle {
+                    checked: BluetoothState.enabled
                     interactive: BluetoothState.available && !BluetoothState.blocked
-                    onClicked: BluetoothState.toggleAdapter()
+                    onToggled: BluetoothState.toggleAdapter()
                 }
             }
 

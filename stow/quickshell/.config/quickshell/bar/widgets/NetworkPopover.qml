@@ -40,10 +40,10 @@ PopoverPanel {
                 width: parent.width
                 title: "Wi-Fi"
 
-                PillButton {
-                    text: WifiState.powered ? "On" : "Off"
+                Toggle {
+                    checked: WifiState.powered
                     interactive: WifiState.available
-                    onClicked: WifiState.togglePowered()
+                    onToggled: WifiState.togglePowered()
                 }
             }
 

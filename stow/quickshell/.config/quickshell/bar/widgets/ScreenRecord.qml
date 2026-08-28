@@ -104,7 +104,7 @@ Button {
         hideAnimation.restart();
     }
 
-    iconName: "camera-video"
+    iconSource: IconRegistry.barControlIcon("recording")
     foreground: displayForeground
     background: visualRecording ? recordingColor : StyleTokens.transparent
     hoverBackground: StyleTokens.alphaLight
@@ -151,7 +151,7 @@ Button {
         color: root.trailForeground
         opacity: root.trailReveal
         font.family: StyleTokens.fontMono
-        font.pixelSize: StyleTokens.fontSizeSm
+        font.pixelSize: StyleBar.labelFontSize
         height: root.labelLineHeight
         verticalAlignment: Text.AlignVCenter
     }

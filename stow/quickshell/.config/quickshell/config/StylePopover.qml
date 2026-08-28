@@ -4,6 +4,9 @@ pragma Singleton
 
 Singleton {
     readonly property int padding: StyleTokens.space4
+    // EXPERIMENTAL — was space4, then space2. One pixel: enough that the panel's
+    // own hairline border still reads as its edge rather than merging into the
+    // bar, and nothing more.
     readonly property int barGap: StyleTokens.space4
     readonly property int panelWidth: 320
     readonly property int minWidth: 184
@@ -121,6 +124,11 @@ Singleton {
     // taller than a menu row because it stacks a label over a full-width control.
     readonly property int levelBandHeight: 52
     readonly property int segmentBarHeight: 28
+    // The header rule has ~16px of air above it, from the title centred in a 48px
+    // header. Matching that below stops the rule reading as the tab bar's own
+    // underline and lets it close the header instead.
+    readonly property int segmentBandPaddingTop: StyleTokens.space16
+    readonly property int segmentBandPaddingBottom: StyleTokens.space8
     readonly property int segmentPaddingH: StyleTokens.space10
     // A stream row carries a name line over its own slider, so it needs more than
     // the two-line device row: a slider's hit area is taller than a caption.

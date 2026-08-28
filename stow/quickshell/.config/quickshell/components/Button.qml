@@ -1,8 +1,6 @@
-import Qt5Compat.GraphicalEffects
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
-import Quickshell.Widgets
 import qs
 import qs.config
 import qs.services
@@ -13,8 +11,6 @@ Rectangle {
     default property alias trailContent: trailSlot.data
     property string iconName: ""
     property var iconSource: ""
-    property string iconGlyph: ""
-    property string iconFont: StyleTokens.fontIcon
     property int iconSize: StyleControl.iconSize
     property string text: ""
     property string fontFamily: StyleTokens.fontSans
@@ -29,6 +25,9 @@ Rectangle {
     property color foreground: Colors.base05
     property color background: StyleTokens.transparent
     property color hoverBackground: StyleTokens.alphaLight
+    // While this button's panel is open. Separate from hover so "open" reads
+    // louder than "pointed at".
+    property color activeBackground: StyleTokens.alphaActive
     property int borderWidth: StyleTokens.borderWidth
     property color borderColor: StyleTokens.transparent
     property bool interactive: false
@@ -46,13 +45,10 @@ Rectangle {
     readonly property bool hasText: text.length > 0
     readonly property bool hasImageSource: iconSource !== "" && iconSource !== null
     readonly property var resolvedSource: hasImageSource ? iconSource : IconRegistry.source(iconName)
-    readonly property bool usesBundledIcon: hasImageSource ? IconRegistry.isBarIcon(iconSource) : IconRegistry.hasOverride(iconName)
     readonly property bool hasImageIcon: hasImageSource || iconName.length > 0
-    readonly property bool showGlyph: iconGlyph.length > 0 && !hasImageIcon
     readonly property bool trailEnabled: trailWidth > 0
     readonly property bool iconOnly: !hasText && trailReveal <= 0 && !trailEnabled
     readonly property int effectiveTrailWidth: trailWidth > 0 ? trailWidth + trailPaddingRight : trailSlot.childrenRect.width
-    readonly property int iconDrawSize: Math.round(iconSize * StyleControl.iconVisualScale)
     readonly property int effectiveButtonWidth: iconSize + paddingHorizontal * 2
     readonly property int effectiveButtonHeight: iconSize + paddingVertical * 2
     readonly property int labelLineHeight: iconSize
@@ -70,7 +66,10 @@ Rectangle {
         if (!root.manageHoverColor || !root.interactive)
             return root.background;
 
-        return (mouseArea.containsMouse || root.active) ? root.hoverBackground : root.background;
+        if (root.active)
+            return root.activeBackground;
+
+        return mouseArea.containsMouse ? root.hoverBackground : root.background;
     }
     border.width: borderWidth
     border.color: borderColor
@@ -89,54 +88,19 @@ Rectangle {
         Item {
             id: iconSlot
 
-            visible: root.showGlyph || (root.usesBundledIcon && root.resolvedSource.toString().length > 0) || (!root.usesBundledIcon && root.hasImageIcon && root.resolvedSource.toString().length > 0)
+            visible: root.hasImageIcon && root.resolvedSource.toString().length > 0
             Layout.preferredWidth: root.iconSize
             Layout.preferredHeight: root.iconSize
             Layout.alignment: Qt.AlignVCenter
 
-            Item {
-                id: iconDrawBox
-
-                anchors.centerIn: parent
-                width: root.iconDrawSize
-                height: root.iconDrawSize
-
-                Text {
-                    visible: root.showGlyph
-                    anchors.centerIn: parent
-                    text: root.iconGlyph
-                    color: root.foreground
-                    font.family: root.iconFont
-                    font.pixelSize: root.iconDrawSize
-                }
-
-                Image {
-                    id: bundledIcon
-
-                    anchors.fill: parent
-                    visible: root.usesBundledIcon && root.resolvedSource.toString().length > 0
-                    source: root.resolvedSource
-                    fillMode: Image.PreserveAspectFit
-                    sourceSize: Qt.size(root.iconDrawSize, root.iconDrawSize)
-                }
-
-                ColorOverlay {
-                    anchors.fill: parent
-                    visible: bundledIcon.visible && !root.iconColored
-                    source: bundledIcon
-                    color: root.foreground
-                }
-
-                IconImage {
-                    id: symbolicIcon
-
-                    anchors.fill: parent
-                    visible: !root.usesBundledIcon && root.hasImageIcon && root.resolvedSource.toString().length > 0
-                    source: root.resolvedSource
-                }
-
+            ThemedIcon {
+                anchors.fill: parent
+                visible: root.hasImageIcon
+                source: root.resolvedSource
+                tint: root.foreground
+                size: root.iconSize
+                colored: root.iconColored
             }
-
         }
 
         Text {

@@ -153,8 +153,7 @@ PopoverPanel {
                 elide: Text.ElideRight
             }
 
-            // Weather SVGs carry embedded colors — render without overlay
-            Image {
+            ThemedIcon {
                 id: heroIcon
 
                 anchors.top: locationLabel.bottom
@@ -162,10 +161,7 @@ PopoverPanel {
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.horizontalCenterOffset: -36
                 source: IconRegistry.weatherIcon(WeatherState.icon)
-                width: root.heroIconSize
-                height: root.heroIconSize
-                fillMode: Image.PreserveAspectFit
-                sourceSize: Qt.size(root.heroIconSize, root.heroIconSize)
+                size: root.heroIconSize
             }
 
             // Temperature — the glanceable number
@@ -332,15 +328,11 @@ PopoverPanel {
                     elide: Text.ElideRight
                 }
 
-                // Weather SVGs carry embedded colors
-                Image {
+                ThemedIcon {
                     x: root.padH + root.dayLabelWidth + root.columnGap
                     anchors.verticalCenter: parent.verticalCenter
                     source: IconRegistry.weatherIcon(forecastRow.modelData.icon)
-                    width: root.forecastIconSize
-                    height: root.forecastIconSize
-                    fillMode: Image.PreserveAspectFit
-                    sourceSize: Qt.size(root.forecastIconSize, root.forecastIconSize)
+                    size: root.forecastIconSize
                 }
 
                 Text {

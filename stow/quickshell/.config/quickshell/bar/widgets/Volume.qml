@@ -12,7 +12,6 @@ Button {
     // rest of the bar and matches the volume OSD's own icon.
     iconSource: IconRegistry.volumeIcon(Services.AudioState.sinkVolume, Services.AudioState.sinkMuted, Services.AudioState.hasSink)
     interactive: true
-    iconSize: 14
     active: popover.open
     onClicked: popover.toggle()
 

@@ -106,7 +106,7 @@ Row {
         Button {
             id: webcamButton
 
-            iconName: "camera-video"
+            iconSource: IconRegistry.barControlIcon("camera")
             background: StylePrivacy.webcamFill
             hoverBackground: StylePrivacy.webcamFill
             borderWidth: StyleTokens.borderWidth
@@ -128,7 +128,7 @@ Row {
         Button {
             id: micButton
 
-            iconName: "mic-on"
+            iconSource: IconRegistry.barControlIcon("microphone")
             background: StylePrivacy.micFill
             hoverBackground: StylePrivacy.micFill
             borderWidth: StyleTokens.borderWidth
@@ -150,7 +150,7 @@ Row {
         Button {
             id: screenButton
 
-            iconName: "monitor-video"
+            iconSource: IconRegistry.barControlIcon("display")
             background: StylePrivacy.screenFill
             hoverBackground: StylePrivacy.screenFill
             borderWidth: StyleTokens.borderWidth

@@ -6,6 +6,6 @@ Button {
     required property var screen
 
     interactive: true
-    iconName: "edit-find-symbolic"
+    iconSource: IconRegistry.barControlIcon("launcher")
     onClicked: Services.Launcher.toggleFor(screen)
 }

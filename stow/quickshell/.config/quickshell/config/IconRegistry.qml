@@ -19,44 +19,120 @@ Singleton {
         return path.startsWith("/") ? "file://" + path : path
     }
 
+    // First-party controls use Material Symbols Rounded, which is installed by
+    // this repo and uses one consistent 24px design grid. The prefix lets the
+    // shared renderer distinguish font glyphs from app/theme image sources.
+    function materialIcon(name) {
+        return `material-symbols:${name}`
+    }
+
+    // Application and tray icons remain application-owned.
+    function themeIcon(name) {
+        return Quickshell.iconPath(name, "image-missing")
+    }
+
+    readonly property var barControlIcons: ({
+        bluetooth: "bluetooth",
+        components: "widgets",
+        dotfiles: "terminal",
+        info: "favorite",
+        launcher: "search",
+        power: "power_settings_new",
+        camera: "videocam",
+        microphone: "mic",
+        display: "desktop_windows",
+        recording: "videocam",
+    })
+
+    function barControlIcon(name) {
+        const icon = barControlIcons[name]
+        return icon ? materialIcon(icon) : ""
+    }
+
+    function mediaIcon(name) {
+        const icons = {
+            "skip-backward": "skip_previous",
+            "play": "play_arrow",
+            "pause": "pause",
+            "skip-forward": "skip_next",
+        }
+        return materialIcon(icons[name] ?? "stop_circle")
+    }
+
+    function shellIcon(name) {
+        const icons = {
+            "chevron-left": "chevron_left",
+            "chevron-right": "chevron_right",
+        }
+        return materialIcon(icons[name] ?? name)
+    }
+
     function isBarIcon(url) {
         const path = url?.toString?.() ?? String(url ?? "")
         return path.includes("assets/icons/")
     }
 
+    // Material Symbols share a 24px design grid, so they get one mathematical
+    // inset rather than subjective per-widget sizes. App/theme icons retain
+    // their native canvas because their geometry is not under shell control.
+    function opticalScale(url) {
+        const path = String(url ?? "")
+        if (path.startsWith("material-symbols:"))
+            return 0.94
+        return 1
+    }
+
     function batteryIcon(percent, charging) {
-        const step = Math.min(Math.floor(percent / 10) * 10, 100)
-        if (charging && step === 100)
-            return barIcon("battery", "charged")
         if (charging)
-            return barIcon("battery", `charging-${step}`)
-        return barIcon("battery", `${step}`)
+            return materialIcon("battery_charging_full")
+        const level = Math.max(0, Math.min(7, Math.round(percent / 100 * 7)))
+        return materialIcon(level === 7 ? "battery_full" : `battery_${level}_bar`)
     }
 
     function volumeIcon(level, isMuted, hasSink) {
         if (!hasSink || isMuted)
-            return barIcon("audio", "muted")
+            return materialIcon("volume_off")
         if (level > 0.66)
-            return barIcon("audio", "high")
+            return materialIcon("volume_up")
         if (level > 0.33)
-            return barIcon("audio", "medium")
-        return barIcon("audio", "low")
+            return materialIcon("volume_down")
+        return materialIcon("volume_mute")
     }
 
     function temperatureIcon(status) {
-        return barIcon("temperature", status)
+        return materialIcon("device_thermostat")
     }
 
     function weatherIcon(condition) {
-        return barIcon("weather", condition)
+        const icons = {
+            "clear": "☀️",
+            "clear-night": "🌙",
+            "few-clouds": "🌤️",
+            "few-clouds-night": "☁️",
+            "fog": "🌫️",
+            "overcast": "☁️",
+            "showers-scattered": "🌦️",
+            "showers": "🌧️",
+            "snow": "🌨️",
+            "storm": "⛈️",
+            "windy": "💨",
+        }
+        return `emoji:${icons[condition] ?? "❔"}`
     }
 
     function bluetoothIcon(enabled) {
-        return barIcon("bluetooth", enabled ? "active" : "idle")
+        return materialIcon("bluetooth")
     }
 
     function networkIcon(name) {
-        return barIcon("network", name)
+        const icons = {
+            "wireless": "wifi",
+            "wireless-offline": "wifi_off",
+            "wired": "lan",
+            "wired-offline": "signal_wifi_bad",
+            "offline": "signal_wifi_bad",
+        }
+        return materialIcon(icons[name] ?? "signal_wifi_bad")
     }
 
     function hasOverride(iconName) {
@@ -64,26 +140,20 @@ Singleton {
     }
 
     function source(iconName) {
-        const mapped = legacyBarIcons[iconName]
-        if (mapped)
-            return barIcon(mapped.domain, mapped.name)
-        return Quickshell.iconPath(iconName, "image-missing")
+        const glyph = symbolicAliases[iconName]
+        return glyph ? materialIcon(glyph) : themeIcon(iconName)
     }
 
-    readonly property var legacyBarIcons: ({
-        "bluetooth-active-symbolic": { domain: "bluetooth", name: "active" },
-        "bluetooth-disabled-symbolic": { domain: "bluetooth", name: "idle" },
-        "camera-video-symbolic": { domain: "privacy", name: "camera" },
-        "emblem-favorite-symbolic": { domain: "shell", name: "info" },
-        "media-optical-symbolic": { domain: "media", name: "optical" },
-        "media-playback-stop-symbolic": { domain: "media", name: "stop" },
-        "media-record-symbolic": { domain: "media", name: "record" },
-        "mic-on": { domain: "privacy", name: "mic" },
-        "system-search-symbolic": { domain: "launcher", name: "search" },
-        "system-shutdown-symbolic": { domain: "menu", name: "shutdown" },
-        "utilities-terminal-symbolic": { domain: "shell", name: "terminal" },
-        "window-close-symbolic": { domain: "shell", name: "close" },
-        "video-display-symbolic": { domain: "privacy", name: "display" },
+    readonly property var symbolicAliases: ({
+        "mic-on": "mic",
+        "monitor-video": "desktop_windows",
+        "camera-video": "videocam",
+        "bluetooth-active-symbolic": "bluetooth",
+        "media-playback-stop-symbolic": "stop_circle",
+        "media-record-symbolic": "radio_button_checked",
+        "system-search-symbolic": "search",
+        "utilities-terminal-symbolic": "terminal",
+        "window-close-symbolic": "close",
     })
 
     function className(toplevel) {
@@ -165,7 +235,7 @@ Singleton {
         }
 
         // Nothing identified it, but it is still audibly playing — say that much.
-        return barIcon("audio", "high")
+        return volumeIcon(1, false, true)
     }
 
     function iconNameForToplevel(toplevel) {

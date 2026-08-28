@@ -23,9 +23,9 @@ Singleton {
     readonly property int fontSizeXs: 10
     readonly property int fontSizeMedia: 11
 
-    readonly property int radiusXs: 2
-    readonly property int radiusSm: 4
-    readonly property int radiusMd: 8
+    readonly property int radiusXs: 4
+    readonly property int radiusSm: 8
+    readonly property int radiusMd: 12
 
     // Spacing is numeric, not t-shirt sized: a bar this dense needs ten steps,
     // and Sm/Md/Lg stops being readable past four. The step IS the pixel value,
@@ -75,6 +75,12 @@ Singleton {
     readonly property color alphaLight: Qt.rgba(1, 1, 1, 0.05)
     // The structural hairline: separators, internal borders, selected chrome.
     readonly property color alphaHairline: Qt.rgba(1, 1, 1, 0.02)
+    // EXPERIMENTAL — a bar control whose panel is OPEN. Deliberately heavier than
+    // the hover tint: hover says "you are pointing at this", open says "this is
+    // the thing on screen right now", and at 5% those two were indistinguishable.
+    // Still a light tint, not the panel's own dark material — wearing that made
+    // the icon read as a patch stuck under the panel rather than a lit control.
+    readonly property color alphaActive: Qt.rgba(1, 1, 1, 0.12)
 
     // Disabled is opacity, never a greyed colour — the palette is wallpaper
     // derived, so a hardcoded grey would drift out of theme on every wallpaper.

@@ -152,8 +152,7 @@ PopoverPanel {
                 width: StylePopover.calendarNavSize
                 height: StylePopover.calendarNavSize
                 radius: width / 2
-                iconGlyph: "‹"
-                iconFont: StyleTokens.fontSans
+                iconSource: IconRegistry.shellIcon("chevron-left")
                 iconSize: StyleControl.iconSizeMd
                 foreground: Colors.base05
                 interactive: true
@@ -176,8 +175,7 @@ PopoverPanel {
                 width: StylePopover.calendarNavSize
                 height: StylePopover.calendarNavSize
                 radius: width / 2
-                iconGlyph: "›"
-                iconFont: StyleTokens.fontSans
+                iconSource: IconRegistry.shellIcon("chevron-right")
                 iconSize: StyleControl.iconSizeMd
                 foreground: Colors.base05
                 interactive: true

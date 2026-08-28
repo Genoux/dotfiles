@@ -6,6 +6,6 @@ Button {
     required property var screen
 
     interactive: true
-    iconSource: IconRegistry.barIcon("menu", "shutdown")
+    iconSource: IconRegistry.barControlIcon("power")
     onClicked: Services.PowerMenu.toggleFor(screen)
 }

@@ -11,8 +11,9 @@ Button {
 
     iconSource: IconRegistry.weatherIcon(WeatherState.icon)
     text: WeatherState.temperature
+    fontSize: StyleBar.labelFontSize
     interactive: true
-    iconTextSpacing: 0
+    iconTextSpacing: StyleControl.iconTextSpacing
     active: popover.open
     onClicked: popover.toggle()
 

@@ -26,7 +26,6 @@ Button {
 
     iconSource: networkIconSource
     interactive: true
-    iconSize: 14
     active: popover.open
     onClicked: popover.toggle()
 

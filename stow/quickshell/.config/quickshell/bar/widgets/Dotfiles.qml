@@ -7,7 +7,7 @@ import qs.services as Services
 
 Button {
     interactive: true
-    iconName: "terminal-symbolic"
+    iconSource: IconRegistry.barControlIcon("dotfiles")
     onClicked: ShellActions.openDotfilesMenu()
 
     Rectangle {

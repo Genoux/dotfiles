@@ -3,14 +3,14 @@ import Quickshell
 pragma Singleton
 
 Singleton {
-    readonly property int iconSizeMd: 18
-    readonly property int iconSize: 16
-    readonly property int iconSizeSm: 13
+    readonly property int iconSizeMd: 20
+    readonly property int iconSize: 18
+    readonly property int iconSizeSm: 14
     // Symbolic SVGs and font glyphs use uneven intrinsic padding — draw inside a scaled inner box.
     readonly property real iconVisualScale: 0.86
-    readonly property int buttonPaddingHorizontal: StyleTokens.space4
+    readonly property int buttonPaddingHorizontal: StyleTokens.space6
     readonly property int buttonPaddingVertical: StyleTokens.space4
-    readonly property int iconTextSpacing: StyleTokens.space3
+    readonly property int iconTextSpacing: StyleTokens.space4
     readonly property int buttonWidth: iconSize + buttonPaddingHorizontal * 2
     readonly property int buttonHeight: iconSize + buttonPaddingVertical * 2
 
@@ -34,4 +34,12 @@ Singleton {
     // One wheel notch. Coarse enough that a flick crosses the range, fine enough
     // to land on a level you meant.
     readonly property real sliderStep: 0.05
+
+    // Toggle — a real switch rather than a pill reading "On"/"Off". Track height
+    // sits between the eyebrow and body type sizes so it reads as a control in a
+    // header without outweighing the title beside it.
+    readonly property int toggleWidth: 34
+    readonly property int toggleHeight: 18
+    // Breathing room around the knob inside the track.
+    readonly property int toggleInset: 2
 }

@@ -8,6 +8,7 @@ Singleton {
     readonly property int margin: StyleTokens.space8
     readonly property int topPadding: StyleTokens.space1
     readonly property int bottomPadding: StyleTokens.space3
+    readonly property int labelFontSize: StyleTokens.fontSizeSm + 1
 
     readonly property int windowTitleMaxWidth: 420
     readonly property color background: Qt.rgba(0, 0, 0, 0)

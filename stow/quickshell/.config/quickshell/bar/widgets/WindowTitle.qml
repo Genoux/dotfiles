@@ -56,7 +56,7 @@ RowLayout {
         text: activeToplevel ? activeToplevel.title : ""
         color: Colors.base05
         font.family: StyleTokens.fontSans
-        font.pixelSize: StyleTokens.fontSizeSm
+        font.pixelSize: StyleBar.labelFontSize
         elide: Text.ElideRight
         Layout.maximumWidth: StyleBar.windowTitleMaxWidth
     }

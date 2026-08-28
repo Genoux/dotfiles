@@ -10,6 +10,7 @@ Button {
     required property var barWindow
 
     text: Qt.formatDateTime(clock.date, "ddd dd MMM HH:mm")
+    fontSize: StyleBar.labelFontSize
     interactive: true
     active: popover.open
     onClicked: popover.toggle()

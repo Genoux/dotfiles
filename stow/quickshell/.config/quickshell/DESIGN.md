@@ -133,11 +133,12 @@ Depth is a hybrid of compositor blur, translucent QML surfaces, a quiet border, 
 
 ## Shapes
 
-The radius scale is deliberately small:
+The radius scale keeps compact controls crisp while giving larger surfaces a
+softer silhouette:
 
-- **2px (`radiusXs`):** tiny fills such as volume steps.
-- **4px (`radiusSm`):** bar buttons, list rows, compact actions.
-- **8px (`radiusMd`):** groups, popovers, notifications, launcher, and power surfaces.
+- **4px (`radiusXs`):** tiny fills such as volume steps.
+- **8px (`radiusSm`):** bar buttons, list rows, compact actions.
+- **12px (`radiusMd`):** groups, popovers, notifications, launcher, and power surfaces.
 - **Pills:** use `height / 2` only for explicit pill controls such as `PillButton`.
 
 Every structural stroke is `StyleTokens.borderWidth` (1px). Create hierarchy through alpha rather than thicker borders. Preserve full rounding on floating panels so all four edges read cleanly over compositor blur.
