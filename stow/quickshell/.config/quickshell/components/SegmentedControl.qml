@@ -33,7 +33,10 @@ Item {
     }
 
     Row {
+        id: segmentRow
+
         anchors.fill: parent
+        spacing: StyleTokens.space4
 
         Repeater {
             model: control.labels
@@ -46,7 +49,8 @@ Item {
 
                 readonly property bool selected: segment.index === control.currentIndex
 
-                width: control.width / Math.max(1, control.labels.length)
+                width: (control.width - segmentRow.spacing * Math.max(0, control.labels.length - 1))
+                    / Math.max(1, control.labels.length)
                 height: control.height
                 radius: StyleTokens.radiusSm
                 color: {
