@@ -1,4 +1,5 @@
 import Quickshell
+import Quickshell.Io
 import Quickshell.Wayland
 import QtQuick
 import qs
@@ -23,8 +24,13 @@ PanelWindow {
     property bool toggleValue: true
     property real sliderValue: 0.62
     property int segmentIndex: 1
-    property int signalStrength: 3
     property int galleryPage: 0
+    property var iconNames: []
+    property string iconFilter: ""
+
+    readonly property var filteredIconNames: iconFilter.length === 0
+        ? iconNames
+        : iconNames.filter((name) => name.includes(iconFilter))
     property string lastAction: "Nothing selected yet"
 
     onGalleryPageChanged: {
@@ -39,7 +45,10 @@ PanelWindow {
 
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
-    WlrLayershell.namespace: "quickshell"
+    // Not "quickshell": that layer rule animates the surface itself, so a
+    // fullscreen window gets the compositor's fade on top of the panel's own
+    // reveal. Overlay surfaces own their motion, like the launcher.
+    WlrLayershell.namespace: "component-gallery"
 
     anchors {
         top: true
@@ -168,6 +177,12 @@ PanelWindow {
         }
     }
 
+    MouseArea {
+        anchors.fill: parent
+        acceptedButtons: Qt.LeftButton
+        onClicked: Services.ComponentGallery.close()
+    }
+
     OverlayPanel {
         id: surface
 
@@ -218,11 +233,11 @@ PanelWindow {
                     }
 
                     SegmentedControl {
-                        width: 220
+                        width: 300
                         anchors.right: parent.right
                         anchors.rightMargin: StyleTokens.space16 + StyleControl.buttonWidth + StyleTokens.space8
                         anchors.verticalCenter: parent.verticalCenter
-                        labels: ["Components", "Widgets"]
+                        labels: ["Components", "Widgets", "Icons"]
                         currentIndex: root.galleryPage
                         onSegmentSelected: (index) => root.galleryPage = index
                     }
@@ -235,6 +250,7 @@ PanelWindow {
                 Flickable {
                     id: galleryFlick
 
+                    visible: root.galleryPage < 2
                     width: parent.width
                     height: parent.height - 69
                     contentWidth: width
@@ -339,43 +355,6 @@ PanelWindow {
                         }
 
                         GalleryCard {
-                            title: "Signal bars"
-
-                            Row {
-                                spacing: StyleTokens.space20
-
-                                Repeater {
-                                    model: 5
-
-                                    SignalBars {
-                                        required property int index
-                                        filled: index
-                                    }
-                                }
-                            }
-                        }
-
-                        GalleryCard {
-                            title: "Icon"
-
-                            Row {
-                                spacing: StyleTokens.space16
-
-                                ThemedIcon {
-                                    source: IconRegistry.source("system-search-symbolic")
-                                }
-
-                                ThemedIcon {
-                                    source: IconRegistry.volumeIcon(0.8, false, true)
-                                }
-
-                                ThemedIcon {
-                                    source: IconRegistry.source("bluetooth-active-symbolic")
-                                }
-                            }
-                        }
-
-                        GalleryCard {
                             title: "Bar group"
 
                             BarGroup {
@@ -445,6 +424,19 @@ PanelWindow {
 
                         GalleryCard {
                             page: 1
+                            title: "Icon menu"
+
+                            PopoverMenu {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                active: true
+                                springReveal: false
+                                iconRow: true
+                                entries: Services.PowerMenu.entries
+                            }
+                        }
+
+                        GalleryCard {
+                            page: 1
                             title: "Weather"
 
                             Widgets.WeatherPopover {
@@ -455,7 +447,119 @@ PanelWindow {
                         }
                     }
                 }
+
+                Column {
+                    visible: root.galleryPage === 2
+                    width: parent.width
+                    height: parent.height - 69
+
+                    Item {
+                        width: parent.width
+                        height: 52
+
+                        EyebrowLabel {
+                            anchors.left: parent.left
+                            anchors.leftMargin: StyleTokens.space20
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: "Material Symbols Rounded · " + root.filteredIconNames.length + " icons"
+                        }
+
+                        Rectangle {
+                            anchors.right: parent.right
+                            anchors.rightMargin: StyleTokens.space20
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: 240
+                            height: StyleControl.buttonHeight
+                            radius: height / 2
+                            color: StyleTokens.alphaLight
+
+                            ThemedIcon {
+                                id: searchGlyph
+
+                                anchors.left: parent.left
+                                anchors.leftMargin: StyleTokens.space10
+                                anchors.verticalCenter: parent.verticalCenter
+                                source: IconRegistry.materialIcon("search")
+                                tint: Colors.base04
+                            }
+
+                            TextInput {
+                                anchors.left: searchGlyph.right
+                                anchors.leftMargin: StyleTokens.space8
+                                anchors.right: parent.right
+                                anchors.rightMargin: StyleTokens.space10
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: root.iconFilter
+                                color: Colors.base05
+                                selectionColor: StyleOverlay.borderSubtle
+                                selectedTextColor: Colors.base05
+                                font.family: StyleTokens.fontSans
+                                font.pixelSize: StyleTokens.fontSizeSm
+                                clip: true
+                                cursorVisible: activeFocus
+                                onTextChanged: root.iconFilter = text
+
+                                Text {
+                                    anchors.fill: parent
+                                    visible: parent.text.length === 0
+                                    text: "Filter icons"
+                                    color: Colors.base04
+                                    font: parent.font
+                                    verticalAlignment: Text.AlignVCenter
+                                }
+                            }
+                        }
+                    }
+
+                    GridView {
+                        width: parent.width
+                        height: parent.height - 52
+                        leftMargin: StyleTokens.space16
+                        rightMargin: StyleTokens.space16
+                        topMargin: StyleTokens.space16
+                        bottomMargin: StyleTokens.space16
+                        cellWidth: 116
+                        cellHeight: 92
+                        clip: true
+                        boundsBehavior: Flickable.StopAtBounds
+                        model: root.filteredIconNames
+
+                        delegate: Column {
+                            id: iconCell
+
+                            required property string modelData
+
+                            width: 116
+                            spacing: StyleTokens.space4
+
+                            ThemedIcon {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                source: IconRegistry.materialIcon(iconCell.modelData)
+                                size: StyleControl.iconSize * 1.5
+                            }
+
+                            Text {
+                                width: parent.width
+                                text: iconCell.modelData
+                                color: Colors.base04
+                                font.family: StyleTokens.fontMono
+                                font.pixelSize: StyleTokens.fontSizeXs
+                                horizontalAlignment: Text.AlignHCenter
+                                elide: Text.ElideRight
+                            }
+                        }
+                    }
+                }
             }
         }
+    }
+
+    // Material Symbols is a ligature font: QML cannot enumerate its glyphs, so
+    // the name list is generated from the installed TTF. Regenerate after a
+    // ttf-material-symbols-variable update.
+    FileView {
+        path: Quickshell.shellPath("assets/material-symbols.txt")
+        printErrors: false
+        onLoaded: root.iconNames = text().split("\n").filter((name) => name.length > 0)
     }
 }
