@@ -160,7 +160,8 @@ PopoverPanel {
                 // Shot has no audio row, so its tiles centre in the taller
                 // body rather than top-aligning against a hole beneath them.
                 Row {
-                    anchors.centerIn: parent
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.top: parent.top
                     visible: root.tab === root.shotTab
                     spacing: StyleTokens.space4
 
@@ -183,7 +184,8 @@ PopoverPanel {
                 }
 
                 Row {
-                    anchors.centerIn: parent
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.top: parent.top
                     visible: root.tab === root.recordTab
                     spacing: StyleTokens.space4
 

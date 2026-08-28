@@ -22,9 +22,9 @@ Singleton {
     readonly property int actionPadding: StyleTokens.space10
 
     // Both segments hold one tile row, so the band needs no slack for either.
-    // It carries contentPaddingV above and below, the same air a list column
-    // gives its rows, which lands the last content the same distance from the
-    // panel edge as every other popover.
+    // Bottom padding only: the segment band above already closes on
+    // segmentBandPaddingBottom, and adding air on this side of the same seam
+    // would make the gap under the tabs twice the padding beside the tiles.
     readonly property int bodyHeight: StylePopover.tileHeight
-        + StylePopover.contentPaddingV * 2
+        + StylePopover.contentPaddingV
 }
