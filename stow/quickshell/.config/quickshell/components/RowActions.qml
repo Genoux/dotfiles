@@ -53,6 +53,7 @@ Row {
     // confirm step. It yields the row while the destructive action is armed:
     // once the question is "forget this?", a second button is just noise.
     PillButton {
+        anchors.verticalCenter: parent.verticalCenter
         visible: actions.showDisconnect && !actions.confirming
         text: "Disconnect"
         interactive: actions.hovered
@@ -60,6 +61,7 @@ Row {
     }
 
     PillButton {
+        anchors.verticalCenter: parent.verticalCenter
         visible: actions.showRemove
         iconName: actions.confirming ? "" : "window-close-symbolic"
         iconSize: StyleControl.iconSizeSm
