@@ -25,9 +25,13 @@ Item {
     readonly property Item panelItem: slot.children.length > 0 ? slot.children[0] : null
 
     property real centerX: 0
+    // The button's top edge within the bar window, so the gap below can be
+    // measured from the button rather than from the bar's outer edge.
+    property real anchorTop: 0
 
     function resolveCenterX() {
         centerX = anchorItem.mapToItem(null, anchorItem.width / 2, 0).x;
+        anchorTop = anchorItem.mapToItem(null, 0, 0).y;
     }
 
     function toggle() {
@@ -44,6 +48,18 @@ Item {
     }
 
     readonly property int screenWidth: (root.barWindow && root.barWindow.screen) ? root.barWindow.screen.width : 0
+
+    // Measured from the BUTTON's top edge, not the bar's. The bar carries its own
+    // padding above the button, so a gap measured from the bar's edge silently
+    // included that padding — barGap could be taken to 1 and 7px of air would
+    // remain, because the token was never in charge of the distance anyone
+    // actually sees. Declared `int` because anchorTop is a real: assigning the
+    // rounded expression straight to margins.bottom trips a double-to-int warning
+    // on every evaluation.
+    readonly property int panelBottomMargin: {
+        const barHeight = root.barWindow ? root.barWindow.height : 0;
+        return Math.round(Math.max(0, barHeight - root.anchorTop + StylePopover.barGap));
+    }
 
     onExitingChanged: {
         PopoverCoordinator.notifyExiting(root, exiting);
@@ -103,10 +119,10 @@ Item {
         margins {
             left: {
                 const centred = root.centerX - slot.width / 2;
-                const rightLimit = root.screenWidth > 0 ? root.screenWidth - slot.width : centred;
-                return Math.round(Math.max(0, Math.min(centred, rightLimit)));
+                const limit = root.screenWidth > 0 ? root.screenWidth - slot.width : centred;
+                return Math.round(Math.max(0, Math.min(centred, limit)));
             }
-            bottom: (root.barWindow ? root.barWindow.height : 0) + StylePopover.barGap
+            bottom: root.panelBottomMargin
         }
 
         HyprlandFocusGrab {
