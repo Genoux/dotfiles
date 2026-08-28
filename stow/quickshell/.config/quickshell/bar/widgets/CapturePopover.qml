@@ -5,14 +5,14 @@ import qs.config
 import qs.services as Services
 
 // Two subjects — what to shoot, what to record — so they segment rather than
-// stacking into one scroll. "What I just captured" is not a third subject
-// competing with them; it is a footer that stays put while you switch.
+// stacking into one scroll.
 PopoverPanel {
     id: root
 
     readonly property int popoverWidth: StylePopover.panelWidth
     readonly property int shotTab: 0
     readonly property int recordTab: 1
+    readonly property int rowWidth: popoverWidth - StylePopover.contentPaddingH * 2
 
     property int tab: shotTab
 
@@ -33,6 +33,60 @@ PopoverPanel {
             tab = shotTab
     }
 
+    // PopoverAction's stacked tile is a fixed 72px built for a compact icon row
+    // of four, which leaves this panel's two or three modes huddled in the
+    // middle. These are the panel's primary actions, so they divide its width.
+    component CaptureTile: Rectangle {
+        id: tile
+
+        required property string label
+        required property string iconKey
+
+        signal activated()
+
+        implicitHeight: StylePopover.tileHeight
+        height: implicitHeight
+        radius: StyleTokens.radiusSm
+        color: tileArea.containsMouse ? StyleTokens.alphaLight : StyleTokens.transparent
+
+        Behavior on color {
+            ColorAnimation {
+                duration: StyleTokens.easeDurationFast
+                easing.type: StyleTokens.easeSymmetric
+            }
+        }
+
+        Column {
+            anchors.centerIn: parent
+            spacing: StyleTokens.space4
+
+            ThemedIcon {
+                anchors.horizontalCenter: parent.horizontalCenter
+                source: IconRegistry.captureIcon(tile.iconKey)
+                size: StylePopover.tileIconSize
+            }
+
+            Text {
+                width: tile.width
+                text: tile.label
+                color: Colors.base05
+                font.family: StyleTokens.fontSans
+                font.pixelSize: StyleTokens.fontSizeXs
+                horizontalAlignment: Text.AlignHCenter
+                elide: Text.ElideRight
+            }
+        }
+
+        MouseArea {
+            id: tileArea
+
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: tile.activated()
+        }
+    }
+
     Item {
         implicitWidth: root.popoverWidth
         implicitHeight: content.implicitHeight
@@ -44,6 +98,9 @@ PopoverPanel {
 
             width: parent.width
             spacing: 0
+            // Every popover closes on contentPaddingV; the header band above
+            // bleeds to the top edge, so only the bottom carries an inset.
+            bottomPadding: StylePopover.contentPaddingV
 
             PopoverHeader {
                 width: parent.width
@@ -92,17 +149,18 @@ PopoverPanel {
                 Row {
                     anchors.centerIn: parent
                     visible: root.tab === root.shotTab
-                    spacing: StylePopover.tileSpacing
+                    spacing: StyleTokens.space4
 
                     Repeater {
                         model: root.shotEntries
 
-                        PopoverAction {
+                        CaptureTile {
                             required property var modelData
 
-                            stacked: true
+                            width: (root.rowWidth - StyleTokens.space4 * (root.shotEntries.length - 1))
+                                / root.shotEntries.length
                             label: modelData.label
-                            iconSource: IconRegistry.captureIcon(modelData.icon)
+                            iconKey: modelData.icon
                             onActivated: {
                                 Services.CaptureState.shoot(modelData.mode)
                                 root.dismissRequested()
@@ -112,23 +170,25 @@ PopoverPanel {
                 }
 
                 Column {
-                    anchors.fill: parent
+                    anchors.centerIn: parent
                     visible: root.tab === root.recordTab
+                    width: root.rowWidth
                     spacing: StyleTokens.space8
 
                     Row {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        spacing: StylePopover.tileSpacing
+                        width: parent.width
+                        spacing: StyleTokens.space4
 
                         Repeater {
                             model: root.recordEntries
 
-                            PopoverAction {
+                            CaptureTile {
                                 required property var modelData
 
-                                stacked: true
+                                width: (root.rowWidth - StyleTokens.space4 * (root.recordEntries.length - 1))
+                                    / root.recordEntries.length
                                 label: modelData.label
-                                iconSource: IconRegistry.captureIcon(modelData.icon)
+                                iconKey: modelData.icon
                                 onActivated: {
                                     Services.CaptureState.record(modelData.mode)
                                     root.dismissRequested()
@@ -145,7 +205,6 @@ PopoverPanel {
 
                         Text {
                             anchors.left: parent.left
-                            anchors.leftMargin: StylePopover.contentPaddingH
                             anchors.verticalCenter: parent.verticalCenter
                             text: "Include audio"
                             color: Colors.base05
@@ -155,51 +214,11 @@ PopoverPanel {
 
                         Toggle {
                             anchors.right: parent.right
-                            anchors.rightMargin: StylePopover.contentPaddingH
                             anchors.verticalCenter: parent.verticalCenter
                             checked: Services.CaptureState.audioEnabled
                             onToggled: Services.CaptureState.audioEnabled = !Services.CaptureState.audioEnabled
                         }
                     }
-                }
-            }
-
-            PopoverSeparator {
-                width: parent.width
-            }
-
-            PopoverMessage {
-                width: parent.width
-                visible: Services.CaptureState.latestPath.length === 0
-                text: "No captures yet"
-            }
-
-            Item {
-                width: parent.width
-                height: visible ? StylePopover.listRowHeight : 0
-                visible: Services.CaptureState.latestPath.length > 0
-
-                Text {
-                    anchors.left: parent.left
-                    anchors.leftMargin: StylePopover.contentPaddingH
-                    anchors.right: copyLatest.left
-                    anchors.rightMargin: StyleTokens.space8
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: Services.CaptureState.latestName
-                    color: Colors.base05
-                    font.family: StyleTokens.fontSans
-                    font.pixelSize: StyleTokens.fontSizeSm
-                    elide: Text.ElideMiddle
-                }
-
-                PillButton {
-                    id: copyLatest
-
-                    anchors.right: parent.right
-                    anchors.rightMargin: StylePopover.contentPaddingH
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: "Copy"
-                    onClicked: Services.CaptureState.copyLatest()
                 }
             }
         }

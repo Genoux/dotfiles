@@ -106,29 +106,6 @@ Singleton {
         Quickshell.execDetached(command);
     }
 
-    // Singletons reset on every config reload, so without this the LATEST band
-    // would claim you have no captures on a machine full of them. Asks the
-    // filesystem once at startup rather than persisting state of its own.
-    Process {
-        id: latestProcess
-
-        running: true
-        command: ["sh", "-c",
-            `ls -1t "${ShellActions.homePath}"/Pictures/screenshot-*.png `
-            + `"${ShellActions.homePath}"/Videos/screenrecording-*.mp4 2>/dev/null | head -1`]
-
-        stdout: SplitParser {
-            splitMarker: "\n"
-            onRead: (line) => {
-                const path = line.trim();
-                // Adopt it silently: this is what exists on disk, not something
-                // that just happened, so it must not raise the preview card.
-                if (path.length > 0 && root.latestPath.length === 0)
-                    root.latestPath = path;
-            }
-        }
-    }
-
     Process {
         id: copyProcess
 
