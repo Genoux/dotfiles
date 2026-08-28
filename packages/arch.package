@@ -22,6 +22,7 @@ chrpath
 cmatrix
 cpio
 cpupower
+curl
 ddcutil
 dfu-util
 dhcpcd
@@ -165,6 +166,7 @@ pipewire
 pipewire-alsa
 pipewire-jack
 pipewire-pulse
+playerctl
 plymouth
 pnpm
 polkit-gnome
