@@ -4,6 +4,8 @@ import Quickshell
 import Quickshell.Io
 import qs.bar
 import qs.components
+// Loaded only when requested through the component-gallery IPC target.
+import qs.debug
 import qs.launcher
 import qs.notifications
 import qs.osd
@@ -27,10 +29,27 @@ ShellRoot {
         }
     }
 
+    IpcHandler {
+        target: "components"
+
+        function toggle(): void {
+            Services.ComponentGallery.toggle()
+        }
+    }
+
     Variants {
         model: Quickshell.screens
 
         Bar {
+            required property var modelData
+            screen: modelData
+        }
+    }
+
+    Variants {
+        model: Quickshell.screens
+
+        ComponentGalleryWindow {
             required property var modelData
             screen: modelData
         }
