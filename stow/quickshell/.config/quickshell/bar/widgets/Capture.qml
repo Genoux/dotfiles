@@ -16,29 +16,6 @@ Button {
     property color displayForeground: Colors.base05
     readonly property bool recording: Privacy.recording
     readonly property bool visualRecording: recording || collapsing
-    readonly property var recordMenuEntries: [{
-        "label": "Region",
-        "iconName": "image-crop-symbolic",
-        "script": "system-screenrecord",
-        "args": "region"
-    }, {
-        "label": "+ Audio",
-        "iconName": "image-crop-symbolic",
-        "badgeIconName": "mic-on",
-        "script": "system-screenrecord",
-        "args": "region audio"
-    }, {
-        "label": "Full",
-        "iconName": "view-fullscreen-symbolic",
-        "script": "system-screenrecord",
-        "args": "fullscreen"
-    }, {
-        "label": "+ Audio",
-        "iconName": "view-fullscreen-symbolic",
-        "badgeIconName": "mic-on",
-        "script": "system-screenrecord",
-        "args": "fullscreen audio"
-    }]
     readonly property bool expanded: hoverArmed && recording
     readonly property color trailForeground: Colors.base05
     property color recordingColor: StyleRecording.fill
@@ -50,17 +27,6 @@ Button {
 
     function runRecorder(extraArgs) {
         Quickshell.execDetached(recorderCommand(extraArgs));
-    }
-
-    function runRecordAction(index) {
-        const entry = recordMenuEntries[index];
-        if (!entry || !entry.script)
-            return;
-
-        const rawArgs = String(entry.args ?? "").trim();
-        const args = rawArgs.length > 0 ? rawArgs.split(/\s+/) : [];
-        recordPopover.dismissNow();
-        runRecorder(args);
     }
 
     function pad2(value) {
@@ -104,7 +70,9 @@ Button {
         hideAnimation.restart();
     }
 
-    iconSource: IconRegistry.barControlIcon("recording")
+    iconSource: root.visualRecording
+        ? IconRegistry.captureIcon("recording")
+        : IconRegistry.captureIcon("idle")
     foreground: displayForeground
     background: visualRecording ? recordingColor : StyleTokens.transparent
     hoverBackground: StyleTokens.alphaLight
@@ -162,13 +130,9 @@ Button {
         barWindow: root.barWindow
         anchorItem: root
 
-        PopoverMenu {
+        CapturePopover {
             active: recordPopover.open
-            iconRow: true
-            entries: root.recordMenuEntries
-            onSelected: (index) => {
-                return root.runRecordAction(index);
-            }
+            onDismissRequested: recordPopover.dismissNow()
         }
     }
 

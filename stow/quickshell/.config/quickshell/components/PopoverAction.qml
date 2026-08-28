@@ -7,6 +7,9 @@ Rectangle {
 
     required property string label
     property string iconName: ""
+    // Mirrors Button: an alias name resolves through IconRegistry, a source is
+    // used as given. Capture glyphs are material sources with no alias.
+    property var iconSource: ""
     property string badgeIconName: ""
     property bool stacked: false
     property bool separator: false
@@ -17,8 +20,11 @@ Rectangle {
     property int rowHeight: StylePopover.rowHeight
     property int paddingH: StylePopover.contentPaddingH
 
-    readonly property bool hasIcon: iconName.length > 0
-    readonly property var resolvedSource: hasIcon ? IconRegistry.source(iconName) : ""
+    readonly property bool hasImageSource: iconSource !== "" && iconSource !== null
+    readonly property bool hasIcon: hasImageSource || iconName.length > 0
+    readonly property var resolvedSource: hasImageSource
+        ? iconSource
+        : (iconName.length > 0 ? IconRegistry.source(iconName) : "")
     readonly property var badgeSource: badgeIconName.length > 0 ? IconRegistry.source(badgeIconName) : ""
 
     signal activated()

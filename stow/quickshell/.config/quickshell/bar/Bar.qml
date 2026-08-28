@@ -117,7 +117,7 @@ PanelWindow {
                     barWindow: bar
                 }
 
-                Widgets.ScreenRecord {
+                Widgets.Capture {
                     Layout.alignment: Qt.AlignVCenter
                     screen: bar.screen
                     barWindow: bar
