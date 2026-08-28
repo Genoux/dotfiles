@@ -97,8 +97,19 @@ done
 
 case "$MODE" in
     window)
-        # Get active window geometry
-        active_window=$(hyprctl activewindow -j)
+        # Focus history, not activewindow: launching this from the capture
+        # popover means a layer surface holds focus, so activewindow is empty
+        # and the capture silently did nothing. focusHistoryID 0 is the window
+        # focused most recently, which is the one the user means either way.
+        active_window=$(hyprctl clients -j \
+            | jq -c '[.[] | select(.mapped and (.hidden | not))]
+                     | sort_by(.focusHistoryID) | first // empty')
+
+        if [[ -z "$active_window" ]]; then
+            notify-send "Screenshot failed" "No window to capture" -u critical -t 3000
+            exit 1
+        fi
+
         x=$(echo "$active_window" | jq -r '.at[0]')
         y=$(echo "$active_window" | jq -r '.at[1]')
         w=$(echo "$active_window" | jq -r '.size[0]')
@@ -109,7 +120,7 @@ case "$MODE" in
         if [[ -n "$trimmed_geometry" ]]; then
             capture -g "$trimmed_geometry"
         else
-            echo "Error: No active window" >&2
+            notify-send "Screenshot failed" "Window is off screen" -u critical -t 3000
             exit 1
         fi
         ;;
