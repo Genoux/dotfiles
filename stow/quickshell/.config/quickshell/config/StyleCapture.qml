@@ -14,6 +14,9 @@ Singleton {
     // actions live over the image and only appear on hover.
     readonly property int cardHeight: thumbnailHeight
     readonly property int previewTimeout: 8000
+    // Long enough to read the check as confirmation, short enough that the card
+    // is not still sitting there once you have believed it.
+    readonly property int copiedHold: 700
     // Stronger than the shared surface hairline on purpose. Every other panel
     // is a translucent dark surface, so 1-2% white reads against it. This card
     // is a photograph edge to edge, and a 2% stroke has nothing to sit against

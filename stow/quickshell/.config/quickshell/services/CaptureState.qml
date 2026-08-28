@@ -13,8 +13,11 @@ Singleton {
     id: root
 
     readonly property var videoExtensions: ["mp4", "mkv", "webm", "mov"]
+    readonly property int maxPreviews: 5
 
-    property string latestPath: ""
+    // Newest first. Consecutive captures stack rather than replacing one
+    // another; past the cap the oldest falls off the bottom.
+    property var captures: []
     property bool previewVisible: false
     // The scripts reach us over IPC and carry no screen context, so the card
     // lands wherever the pointer is, like the launcher and power menu do.
@@ -23,69 +26,68 @@ Singleton {
     // two scopes with one toggle, not four entries.
     property bool audioEnabled: false
 
-    readonly property string latestName: latestPath.split("/").pop()
-    readonly property bool latestIsVideo: videoExtensions.includes(latestName.split(".").pop().toLowerCase())
-    readonly property string posterPath: `/tmp/qs-capture-poster-${latestName}.jpg`
-    // A video needs a frame extracted before it can be shown; an image is its
-    // own thumbnail.
-    readonly property string thumbnailSource: {
-        if (latestPath.length === 0)
-            return "";
-        if (!latestIsVideo)
-            return `file://${latestPath}`;
-        return posterReady ? `file://${posterPath}` : "";
+    readonly property string latestPath: captures.length > 0 ? captures[0] : ""
+
+    function nameOf(path) {
+        return String(path ?? "").split("/").pop();
     }
 
-    property bool posterReady: false
+    function isVideo(path) {
+        return videoExtensions.includes(nameOf(path).split(".").pop().toLowerCase());
+    }
 
     function present(path) {
         const trimmed = String(path ?? "").trim();
         if (trimmed.length === 0)
             return;
 
-        posterReady = false;
-        latestPath = trimmed;
+        // Re-presenting a path already on the stack would show it twice.
+        const kept = captures.filter((entry) => entry !== trimmed);
+        captures = [trimmed].concat(kept).slice(0, maxPreviews);
         screen = ShellActions.focusedScreen();
         previewVisible = true;
+    }
 
-        if (latestIsVideo)
-            posterProcess.running = true;
+    function remove(path) {
+        captures = captures.filter((entry) => entry !== path);
+        if (captures.length === 0)
+            previewVisible = false;
     }
 
     function dismiss() {
+        captures = [];
         previewVisible = false;
     }
 
-    function copyLatest() {
-        if (latestPath.length === 0)
+    function copy(path) {
+        if (!path)
             return;
 
-        copyProcess.running = true;
+        Quickshell.execDetached(["sh", "-c", `wl-copy --type image/png < '${path}'`]);
     }
 
-    function editLatest() {
-        if (latestPath.length === 0)
+    function edit(path) {
+        if (!path)
             return;
 
-        Quickshell.execDetached(["satty", "--filename", latestPath, "--output-filename", latestPath]);
-        dismiss();
+        Quickshell.execDetached(["satty", "--filename", path, "--output-filename", path]);
+        remove(path);
     }
 
-    function openLatest() {
-        if (latestPath.length === 0)
+    function open(path) {
+        if (!path)
             return;
 
-        Quickshell.execDetached(["xdg-open", latestPath]);
-        dismiss();
+        Quickshell.execDetached(["xdg-open", path]);
+        remove(path);
     }
 
-    function discardLatest() {
-        if (latestPath.length === 0)
+    function discard(path) {
+        if (!path)
             return;
 
-        Quickshell.execDetached(["rm", "-f", latestPath]);
-        latestPath = "";
-        dismiss();
+        Quickshell.execDetached(["rm", "-f", path]);
+        remove(path);
     }
 
     function openFolder() {
@@ -106,22 +108,4 @@ Singleton {
         Quickshell.execDetached(command);
     }
 
-    Process {
-        id: copyProcess
-
-        command: ["sh", "-c", `wl-copy --type image/png < '${root.latestPath}'`]
-    }
-
-    Process {
-        id: posterProcess
-
-        command: [
-            "ffmpeg", "-y", "-i", root.latestPath,
-            "-vframes", "1",
-            "-vf", `scale=${StyleCapture.posterWidth}:-1`,
-            root.posterPath
-        ]
-
-        onExited: (code) => root.posterReady = code === 0
-    }
 }

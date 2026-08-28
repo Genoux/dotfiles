@@ -61,6 +61,8 @@ Singleton {
         "audio-off": "mic_off",
         "folder": "folder_open",
         "copy": "content_copy",
+        "copied": "check",
+        "view": "visibility",
         "edit": "edit",
         "play": "play_arrow",
         "discard": "delete",
