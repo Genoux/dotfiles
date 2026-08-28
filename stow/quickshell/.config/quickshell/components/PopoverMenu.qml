@@ -13,9 +13,12 @@ PopoverPanel {
 
     fitContent: iconRow
 
+    // One inset on all four sides: a tile is square-ish chrome, so unlike a
+    // full-width list row it reads as off-centre the moment x and y disagree.
     Row {
         visible: menu.iconRow
         spacing: StylePopover.tileSpacing
+        padding: StylePopover.contentPaddingV
 
         Repeater {
             model: menu.iconRow ? menu.entries : []
