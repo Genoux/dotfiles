@@ -14,6 +14,12 @@ Singleton {
     // actions live over the image and only appear on hover.
     readonly property int cardHeight: thumbnailHeight
     readonly property int previewTimeout: 8000
+    // Stronger than the shared surface hairline on purpose. Every other panel
+    // is a translucent dark surface, so 1-2% white reads against it. This card
+    // is a photograph edge to edge, and a 2% stroke has nothing to sit against
+    // — it vanishes into whatever was on screen. Still one pixel, per the
+    // border rule: the alpha carries it, not the width.
+    readonly property color border: Qt.rgba(1, 1, 1, 0.08)
     readonly property int posterWidth: cardWidth
 
     // Icons over a photograph need the photograph dimmed to stay legible. The

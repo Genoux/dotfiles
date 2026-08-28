@@ -23,7 +23,7 @@ Rectangle {
     radius: StyleTokens.radiusMd
     color: StyleNotification.surface
     border.width: StyleTokens.borderWidth
-    border.color: StyleNotification.border
+    border.color: StyleCapture.border
 
     onHoveredChanged: {
         if (hovered)
