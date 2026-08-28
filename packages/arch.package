@@ -128,6 +128,7 @@ libappindicator
 libc++
 libnotify
 libpulse
+libva-utils
 linux
 linux-firmware
 linux-headers
