@@ -38,10 +38,17 @@ Singleton {
     readonly property int contextMenuPaddingV: StyleTokens.space4
 
     // Weather popover — the hero and stats bands are taller than a list row
-    // because each holds stacked figures rather than a single line.
-    readonly property int weatherHeroHeight: 80
-    readonly property int weatherStatsHeight: 52
-    readonly property int forecastRowHeight: 38
+    // because each holds stacked figures rather than a single line. Both are
+    // sized so the stack sits centred with a full spacing step of air on either
+    // side: at the previous heights the type filled the band edge to edge and
+    // the separators read as walls rather than divisions.
+    readonly property int weatherHeroHeight: 96
+    readonly property int weatherStatsHeight: 60
+    readonly property int forecastRowHeight: 40
+    // The forecast axis opens a group, so it carries the section gap above it.
+    // Without that it reads as a caption hanging off the rule above rather than
+    // the header of the rows below.
+    readonly property int weatherAxisHeight: sectionHeight + sectionTopGap
 
     // Forecast range bar geometry
     readonly property int forecastBarHeight: 6

@@ -20,7 +20,7 @@ PopoverPanel {
         + StylePopover.separatorHeight
         + StylePopover.weatherStatsHeight
         + StylePopover.separatorHeight
-        + StylePopover.sectionHeight
+        + StylePopover.weatherAxisHeight
         + forecastRowCount * StylePopover.forecastRowHeight
         + StylePopover.contentPaddingV
 
@@ -137,61 +137,58 @@ PopoverPanel {
             spacing: 0
             opacity: root.dataOpacity
 
-        // Hero: location eyebrow + big icon/temp block + condition
+        // Hero: location eyebrow over the icon/temp pair over the condition.
+        // One centred stack — the icon and the number are a single mark, and
+        // hanging the condition off the number's left edge left the block
+        // sitting off-centre with nothing to align the panel to.
         Item {
             width: parent.width
             height: StylePopover.weatherHeroHeight
 
-            EyebrowLabel {
-                id: locationLabel
+            Column {
+                anchors.centerIn: parent
+                width: parent.width - root.padH * 2
+                spacing: StyleTokens.space4
 
-                anchors.top: parent.top
-                anchors.topMargin: StyleTokens.space10
-                anchors.horizontalCenter: parent.horizontalCenter
-                width: Math.min(implicitWidth, parent.width - root.padH * 2)
-                text: WeatherState.locationName.length > 0 ? WeatherState.locationName : "Weather"
-                elide: Text.ElideRight
-            }
+                EyebrowLabel {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    width: Math.min(implicitWidth, parent.width)
+                    text: WeatherState.locationName.length > 0 ? WeatherState.locationName : "Weather"
+                    elide: Text.ElideRight
+                }
 
-            ThemedIcon {
-                id: heroIcon
+                Row {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    spacing: StyleTokens.space8
 
-                anchors.top: locationLabel.bottom
-                anchors.topMargin: StyleTokens.space4
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.horizontalCenterOffset: -36
-                source: IconRegistry.weatherIcon(WeatherState.icon)
-                size: root.heroIconSize
-            }
+                    ThemedIcon {
+                        anchors.verticalCenter: parent.verticalCenter
+                        source: IconRegistry.weatherIcon(WeatherState.icon)
+                        size: root.heroIconSize
+                    }
 
-            // Temperature — the glanceable number
-            Text {
-                id: heroTemp
+                    // Temperature — the glanceable number
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: WeatherState.temperature
+                        color: Colors.base05
+                        font.family: StyleTokens.fontSans
+                        font.pixelSize: StyleTokens.fontSizeXl
+                        font.weight: Font.Light
+                    }
 
-                anchors.left: heroIcon.right
-                anchors.leftMargin: StyleTokens.space8
-                anchors.verticalCenter: heroIcon.verticalCenter
-                anchors.verticalCenterOffset: -4
-                text: WeatherState.temperature
-                color: Colors.base05
-                font.family: StyleTokens.fontSans
-                font.pixelSize: StyleTokens.fontSizeXl
-                font.weight: Font.Light
-            }
+                }
 
-            Text {
-                anchors.left: heroIcon.right
-                // Optical alignment for the temperature glyph; intentionally off-scale.
-                anchors.leftMargin: 9
-                anchors.right: parent.right
-                anchors.rightMargin: root.padH
-                anchors.top: heroTemp.bottom
-                anchors.topMargin: -StyleTokens.space2
-                text: WeatherState.description
-                color: Colors.base05
-                font.family: StyleTokens.fontSans
-                font.pixelSize: StyleTokens.fontSizeSm
-                elide: Text.ElideRight
+                Text {
+                    width: parent.width
+                    text: WeatherState.description
+                    color: Colors.base05
+                    font.family: StyleTokens.fontSans
+                    font.pixelSize: StyleTokens.fontSizeSm
+                    horizontalAlignment: Text.AlignHCenter
+                    elide: Text.ElideRight
+                }
+
             }
 
         }
@@ -221,27 +218,28 @@ PopoverPanel {
                         width: parent.width / 3
                         height: parent.height
 
-                        EyebrowLabel {
-                            id: statLabel
+                        Column {
+                            anchors.centerIn: parent
+                            // Wind is the widest value in the band; the inset
+                            // keeps it off the panel border and off its neighbour.
+                            width: parent.width - StyleTokens.space8 * 2
+                            spacing: StyleTokens.space6
 
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            anchors.top: parent.top
-                            // Optical baseline correction for the weather mark; intentionally off-scale.
-                            anchors.topMargin: 11
-                            text: modelData.label
-                        }
+                            EyebrowLabel {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                text: modelData.label
+                            }
 
-                        Text {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            anchors.top: statLabel.bottom
-                            anchors.topMargin: StyleTokens.space4
-                            width: parent.width - 8
-                            text: modelData.value
-                            color: Colors.base05
-                            font.family: StyleTokens.fontSans
-                            font.pixelSize: StyleTokens.fontSizeMd
-                            horizontalAlignment: Text.AlignHCenter
-                            elide: Text.ElideRight
+                            Text {
+                                width: parent.width
+                                text: modelData.value
+                                color: Colors.base05
+                                font.family: StyleTokens.fontSans
+                                font.pixelSize: StyleTokens.fontSizeMd
+                                horizontalAlignment: Text.AlignHCenter
+                                elide: Text.ElideRight
+                            }
+
                         }
 
                     }
@@ -262,40 +260,51 @@ PopoverPanel {
         // range rather than as free-floating widths.
         Item {
             width: parent.width
-            height: StylePopover.sectionHeight
+            // Taller than the band it draws: the extra sits above as the gap
+            // that opens the forecast group.
+            height: StylePopover.weatherAxisHeight
             visible: WeatherState.forecast.length > 0
 
-            EyebrowLabel {
+            Item {
                 anchors.left: parent.left
-                anchors.leftMargin: root.padH
-                anchors.verticalCenter: parent.verticalCenter
-                text: "Forecast"
-            }
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
+                height: StylePopover.sectionHeight
 
-            Text {
-                x: root.trackLeft - width / 2
-                anchors.verticalCenter: parent.verticalCenter
-                text: root.degreeLabel(root.weekMin)
-                color: Colors.base04
-                font.family: StyleTokens.fontSans
-                font.pixelSize: StyleTokens.fontSizeXs
-            }
+                EyebrowLabel {
+                    anchors.left: parent.left
+                    anchors.leftMargin: root.padH
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "Forecast"
+                }
 
-            // Hairline spanning the exact width of the bars below, tying the
-            // two figures to the track they describe.
-            PopoverSeparator {
-                x: root.trackLeft + 20
-                width: Math.max(0, root.trackWidth - 40)
-                anchors.verticalCenter: parent.verticalCenter
-            }
+                Text {
+                    x: root.trackLeft - width / 2
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: root.degreeLabel(root.weekMin)
+                    color: Colors.base04
+                    font.family: StyleTokens.fontSans
+                    font.pixelSize: StyleTokens.fontSizeXs
+                }
 
-            Text {
-                x: root.trackRight - width / 2
-                anchors.verticalCenter: parent.verticalCenter
-                text: root.degreeLabel(root.weekMax)
-                color: Colors.base04
-                font.family: StyleTokens.fontSans
-                font.pixelSize: StyleTokens.fontSizeXs
+                // Hairline spanning the track the bars are drawn against, tying
+                // the two figures to the scale they describe. It clears each
+                // figure by one column gap so the row reads as one axis.
+                PopoverSeparator {
+                    x: root.trackLeft + root.columnGap * 2
+                    width: Math.max(0, root.trackWidth - root.columnGap * 4)
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+
+                Text {
+                    x: root.trackRight - width / 2
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: root.degreeLabel(root.weekMax)
+                    color: Colors.base04
+                    font.family: StyleTokens.fontSans
+                    font.pixelSize: StyleTokens.fontSizeXs
+                }
+
             }
 
         }
