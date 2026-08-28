@@ -154,6 +154,11 @@ Singleton {
         "system-search-symbolic": "search",
         "utilities-terminal-symbolic": "terminal",
         "window-close-symbolic": "close",
+        "system-lock-screen-symbolic": "lock",
+        "system-suspend-symbolic": "bedtime",
+        "system-reboot-symbolic": "restart_alt",
+        "system-shutdown-symbolic": "power_settings_new",
+        "system-log-out-symbolic": "logout",
     })
 
     function className(toplevel) {

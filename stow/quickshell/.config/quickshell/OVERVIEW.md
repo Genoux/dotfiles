@@ -349,7 +349,6 @@ Click workspace pill → `ShellActions.switchWorkspace(modelData)` → `workspac
 ├── notifications/            # NotificationCard, NotificationWindow
 ├── osd/                      # VolumeOsdWindow (hardware key feedback)
 ├── launcher/                 # LauncherPanel, LauncherWindow
-├── power/                    # PowerMenuWindow, PowerMenuAction
 └── assets/
     ├── icons/                # 22 bundled SVG overrides
     └── scripts/

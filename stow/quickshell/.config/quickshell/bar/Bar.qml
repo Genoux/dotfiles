@@ -161,7 +161,7 @@ PanelWindow {
 
             Widgets.Menu {
                 Layout.alignment: Qt.AlignVCenter
-                screen: bar.screen
+                barWindow: bar
             }
 
             Widgets.Dotfiles {

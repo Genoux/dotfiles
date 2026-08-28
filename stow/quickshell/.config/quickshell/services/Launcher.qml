@@ -11,8 +11,7 @@ Singleton {
     property var screen: null
 
     function openFor(targetScreen) {
-        if (PowerMenu.visible)
-            PowerMenu.close()
+        PopoverCoordinator.closeCurrent()
 
         screen = targetScreen
         query = ""

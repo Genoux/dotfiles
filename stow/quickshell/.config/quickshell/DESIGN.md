@@ -124,7 +124,7 @@ The base spacing unit is 4px, with a numeric scale in `StyleTokens`: 1, 2, 3, 4,
 Depth is a hybrid of compositor blur, translucent QML surfaces, a quiet border, and a soft shadow. Hyprland applies blur to the `quickshell` layer namespace; that namespace is load-bearing and must match `windowrules.lua`.
 
 - `PopoverPanel` is the standard bar-attached elevated surface.
-- `OverlayPanel` is for centered launcher and power surfaces with their distinct reveal contract.
+- `OverlayPanel` is for the centered launcher surface with its distinct reveal contract.
 - Both use `StyleOverlay.surface`, `surfaceBorder`, and `shadow`.
 - Keep shadows ambient. They separate a floating surface from a varied wallpaper; they are not decoration.
 - Do not add nested card shadows inside a popover. Use spacing, muted text, or `PopoverSeparator` for internal hierarchy.
@@ -138,7 +138,7 @@ softer silhouette:
 
 - **4px (`radiusXs`):** tiny fills such as volume steps.
 - **8px (`radiusSm`):** bar buttons, list rows, compact actions.
-- **12px (`radiusMd`):** groups, popovers, notifications, launcher, and power surfaces.
+- **12px (`radiusMd`):** groups, popovers, notifications, and the launcher surface.
 - **Pills:** use `height / 2` only for explicit pill controls such as `PillButton`.
 
 Every structural stroke is `StyleTokens.borderWidth` (1px). Create hierarchy through alpha rather than thicker borders. Preserve full rounding on floating panels so all four edges read cleanly over compositor blur.
@@ -185,7 +185,6 @@ Every structural stroke is `StyleTokens.borderWidth` (1px). Create hierarchy thr
 ### Overlays, launcher, and notifications
 
 - Centered shell surfaces use `Backdrop` plus `OverlayPanel`.
-- Launcher and power-menu selection must animate the same faint fill and border treatment.
 - Notifications reuse the shared radius, border width, spacing, and surface material, but hover pauses expiry rather than pretending the whole card is a button.
 
 ### Interaction policy
@@ -202,7 +201,7 @@ Three places do not follow the rules above. They are listed here so nobody copie
 
 **The lock screen is a parallel design system.** `lock/StyleLock.qml` defines its own font (`SF Pro Display`), its own palette (raw white-alpha `Qt.rgba` values, not matugen `Colors`), and its own sizes (120px clock, 26px date, 10px input radius) — none of them on the shared scales. Only one line in the whole lock surface reaches into `Colors`. This may be deliberate: the lock screen renders in a session where the shell's theme is not guaranteed, and a wallpaper-derived palette on top of the wallpaper itself is a legibility risk. **Treat it as intentional until decided otherwise. Do not partially reconcile it** — half a lock screen on shared tokens is worse than none.
 
-**Panel reveal curves are not unified.** `PopoverPanel` reveals with `InOutCubic`; `OverlayPanel` (launcher, power menu) hides with `InCubic`. Same gesture, different curve family. `easeStandard` / `easeSymmetric` cover pointer feedback only — panel motion is still owned per-component. Unifying it is a perceptible change, so it is a decision, not a cleanup.
+**Panel reveal curves are not unified.** `PopoverPanel` reveals with `InOutCubic`; `OverlayPanel` (launcher) hides with `InCubic`. Same gesture, different curve family. `easeStandard` / `easeSymmetric` cover pointer feedback only — panel motion is still owned per-component. Unifying it is a perceptible change, so it is a decision, not a cleanup.
 
 **`PopoverLabel` and `PopoverMessage` overlap.** Near-identical `Text` wrappers on the same band height and inset, differing only in default colour (`base05` vs `base04`) and centring. `PopoverLabel` has exactly one call site. Prefer `PopoverMessage` for new work; `PopoverLabel` is a candidate for deletion.
 

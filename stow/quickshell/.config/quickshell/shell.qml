@@ -9,7 +9,6 @@ import qs.debug
 import qs.launcher
 import qs.notifications
 import qs.osd
-import qs.power
 import qs.services as Services
 
 ShellRoot {
@@ -90,28 +89,6 @@ ShellRoot {
         model: Quickshell.screens
 
         NotificationWindow {
-            required property var modelData
-            screen: modelData
-        }
-    }
-
-    Variants {
-        model: Quickshell.screens
-
-        Backdrop {
-            required property var modelData
-
-            screen: modelData
-            active: Services.PowerMenu.visible && Services.PowerMenu.screen === modelData
-            layerNamespace: "power-menu-backdrop"
-            onDismissed: Services.PowerMenu.close()
-        }
-    }
-
-    Variants {
-        model: Quickshell.screens
-
-        PowerMenuWindow {
             required property var modelData
             screen: modelData
         }
