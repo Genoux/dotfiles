@@ -138,7 +138,7 @@ Three zones mirror the former AGS `Bar.tsx`:
 |------|---------|
 | **Left** | Workspaces, SystemTray |
 | **Center** | WindowTitle |
-| **Right** | Privacy → Media → Volume → Network → Bluetooth → ScreenRecord → Keyboard → Battery → Weather → Temperature → Clock → Info → Menu → Dotfiles |
+| **Right** | Privacy → Media → Volume → Network → Bluetooth → Capture → Keyboard → Battery → Weather → Temperature → Clock → Info → Menu → Dotfiles |
 
 See `bar/Bar.qml` for the canonical widget order.
 
