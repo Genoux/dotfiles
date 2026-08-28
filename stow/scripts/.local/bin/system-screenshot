@@ -97,24 +97,32 @@ done
 
 case "$MODE" in
     window)
-        # Focus history, not activewindow: launching this from the capture
-        # popover means a layer surface holds focus, so activewindow is empty
-        # and the capture silently did nothing. focusHistoryID 0 is the window
-        # focused most recently, which is the one the user means either way.
-        active_window=$(hyprctl clients -j \
-            | jq -c '[.[] | select(.mapped and (.hidden | not))]
-                     | sort_by(.focusHistoryID) | first // empty')
+        # Point at the window you mean rather than inferring it. Focus cannot
+        # answer this: with focus-follows-mouse, reaching for the capture
+        # popover already changed which window is active, and a layer surface
+        # holding focus empties `hyprctl activewindow` outright. slurp -r snaps
+        # the selection to the boxes it is handed, so hovering highlights a
+        # whole window and one click takes it.
+        #
+        # Visible workspaces only — a window you cannot see is not one you are
+        # pointing at. Layer surfaces never appear in `clients`, so the shell's
+        # own panels are not offered as targets.
+        boxes=$(hyprctl clients -j \
+            | jq -r --argjson ws "$(hyprctl monitors -j | jq -c '[.[].activeWorkspace.id]')" \
+                '.[] | select(.mapped and (.hidden | not)
+                              and (.workspace.id as $w | $ws | index($w) != null))
+                 | "\(.at[0]),\(.at[1]) \(.size[0])x\(.size[1])"')
 
-        if [[ -z "$active_window" ]]; then
+        if [[ -z "$boxes" ]]; then
             notify-send "Screenshot failed" "No window to capture" -u critical -t 3000
             exit 1
         fi
 
-        x=$(echo "$active_window" | jq -r '.at[0]')
-        y=$(echo "$active_window" | jq -r '.at[1]')
-        w=$(echo "$active_window" | jq -r '.size[0]')
-        h=$(echo "$active_window" | jq -r '.size[1]')
-        geometry="$x,$y ${w}x$h"
+        geometry=$(printf '%s\n' "$boxes" | slurp -r) || exit 1
+        [[ -n "$geometry" ]] || exit 1
+
+        # Let slurp's overlay leave the screen before grim reads it.
+        sleep 0.4
 
         trimmed_geometry=$(trim_geometry "$geometry")
         if [[ -n "$trimmed_geometry" ]]; then
