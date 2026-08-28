@@ -12,6 +12,7 @@ PopoverPanel {
     readonly property int popoverWidth: StylePopover.panelWidth
     readonly property int shotTab: 0
     readonly property int recordTab: 1
+    readonly property int tileRowWidth: popoverWidth - StylePopover.listRowInset * 2
     readonly property int rowWidth: popoverWidth - StylePopover.contentPaddingH * 2
 
     property int tab: shotTab
@@ -117,24 +118,28 @@ PopoverPanel {
                 }
             }
 
+            PopoverSeparator {
+                width: parent.width
+            }
+
             Item {
                 width: parent.width
-                height: StylePopover.headerHeight - StyleTokens.space8
+                implicitHeight: StylePopover.segmentBarHeight
+                    + StylePopover.segmentBandPaddingTop
+                    + StylePopover.segmentBandPaddingBottom
+                height: implicitHeight
 
                 SegmentedControl {
                     anchors.left: parent.left
                     anchors.right: parent.right
                     anchors.leftMargin: StylePopover.contentPaddingH
                     anchors.rightMargin: StylePopover.contentPaddingH
-                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.top: parent.top
+                    anchors.topMargin: StylePopover.segmentBandPaddingTop
                     labels: ["Shot", "Record"]
                     currentIndex: root.tab
                     onSegmentSelected: (index) => root.tab = index
                 }
-            }
-
-            PopoverSeparator {
-                width: parent.width
             }
 
             // Fixed height, per the segments rule: a bar popover grows upward,
@@ -157,7 +162,7 @@ PopoverPanel {
                         CaptureTile {
                             required property var modelData
 
-                            width: (root.rowWidth - StyleTokens.space4 * (root.shotEntries.length - 1))
+                            width: (root.tileRowWidth - StyleTokens.space4 * (root.shotEntries.length - 1))
                                 / root.shotEntries.length
                             label: modelData.label
                             iconKey: modelData.icon
@@ -172,7 +177,7 @@ PopoverPanel {
                 Column {
                     anchors.centerIn: parent
                     visible: root.tab === root.recordTab
-                    width: root.rowWidth
+                    width: root.tileRowWidth
                     spacing: StyleTokens.space8
 
                     Row {
@@ -185,7 +190,7 @@ PopoverPanel {
                             CaptureTile {
                                 required property var modelData
 
-                                width: (root.rowWidth - StyleTokens.space4 * (root.recordEntries.length - 1))
+                                width: (root.tileRowWidth - StyleTokens.space4 * (root.recordEntries.length - 1))
                                     / root.recordEntries.length
                                 label: modelData.label
                                 iconKey: modelData.icon
@@ -205,6 +210,7 @@ PopoverPanel {
 
                         Text {
                             anchors.left: parent.left
+                            anchors.leftMargin: StylePopover.contentPaddingH - StylePopover.listRowInset
                             anchors.verticalCenter: parent.verticalCenter
                             text: "Include audio"
                             color: Colors.base05
@@ -214,6 +220,7 @@ PopoverPanel {
 
                         Toggle {
                             anchors.right: parent.right
+                            anchors.rightMargin: StylePopover.contentPaddingH - StylePopover.listRowInset
                             anchors.verticalCenter: parent.verticalCenter
                             checked: Services.CaptureState.audioEnabled
                             onToggled: Services.CaptureState.audioEnabled = !Services.CaptureState.audioEnabled

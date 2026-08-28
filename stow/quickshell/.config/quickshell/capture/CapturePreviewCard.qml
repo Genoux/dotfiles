@@ -1,4 +1,5 @@
 import QtQuick
+import Quickshell.Widgets
 import qs
 import qs.components
 import qs.config
@@ -23,7 +24,6 @@ Rectangle {
     color: StyleNotification.surface
     border.width: StyleTokens.borderWidth
     border.color: StyleNotification.border
-    clip: true
 
     onHoveredChanged: {
         if (hovered)
@@ -34,6 +34,14 @@ Rectangle {
 
     Component.onCompleted: expireTimer.restart()
 
+    component CardAction: Button {
+        iconSize: StyleControl.iconSizeMd
+        radius: height / 2
+        paddingHorizontal: StyleCapture.actionPadding
+        paddingVertical: StyleCapture.actionPadding
+        interactive: root.hovered
+    }
+
     Timer {
         id: expireTimer
 
@@ -42,15 +50,37 @@ Rectangle {
         onTriggered: Services.CaptureState.dismiss()
     }
 
-    Image {
+    ClippingRectangle {
         anchors.fill: parent
-        visible: root.thumbnail.length > 0
-        source: root.thumbnail
-        fillMode: Image.PreserveAspectCrop
-        asynchronous: true
-        // The poster path is derived from the file name, so a cached frame
-        // would outlive the capture it came from.
-        cache: false
+        anchors.margins: StyleTokens.borderWidth
+        radius: root.radius - StyleTokens.borderWidth
+        color: StyleTokens.transparent
+
+        Image {
+            anchors.fill: parent
+            visible: root.thumbnail.length > 0
+            source: root.thumbnail
+            fillMode: Image.PreserveAspectCrop
+            asynchronous: true
+            // The poster path is derived from the file name, so a cached frame
+            // would outlive the capture it came from.
+            cache: false
+        }
+
+        // Dimming the capture is what makes icons over a photograph legible at
+        // all; without it the glyphs compete with whatever was on screen.
+        Rectangle {
+            anchors.fill: parent
+            color: StyleCapture.scrim
+            opacity: root.hovered ? 1 : 0
+
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: StyleTokens.easeDurationFast
+                    easing.type: StyleTokens.easeStandard
+                }
+            }
+        }
     }
 
     // A recording's poster frame is extracted asynchronously, so the card
@@ -68,21 +98,6 @@ Rectangle {
         onHoveredChanged: root.hovered = hoverHandler.hovered
     }
 
-    // Dimming the capture is what makes icons over a photograph legible at all;
-    // without it the glyphs compete with whatever was on screen.
-    Rectangle {
-        anchors.fill: parent
-        color: StyleCapture.scrim
-        opacity: root.hovered ? 1 : 0
-
-        Behavior on opacity {
-            NumberAnimation {
-                duration: StyleTokens.easeDurationFast
-                easing.type: StyleTokens.easeStandard
-            }
-        }
-    }
-
     Row {
         anchors.centerIn: parent
         spacing: StyleTokens.space12
@@ -95,21 +110,15 @@ Rectangle {
             }
         }
 
-        PillButton {
+        CardAction {
             iconSource: IconRegistry.captureIcon("copy")
-            paddingHorizontal: StyleCapture.actionPadding
-            paddingVertical: StyleCapture.actionPadding
-            interactive: root.hovered
             onClicked: Services.CaptureState.copyLatest()
         }
 
-        PillButton {
+        CardAction {
             iconSource: root.isVideo
                 ? IconRegistry.captureIcon("play")
                 : IconRegistry.captureIcon("edit")
-            paddingHorizontal: StyleCapture.actionPadding
-            paddingVertical: StyleCapture.actionPadding
-            interactive: root.hovered
             onClicked: {
                 if (root.isVideo)
                     Services.CaptureState.openLatest();
@@ -121,16 +130,12 @@ Rectangle {
 
     // Dismisses the card and nothing else: the capture stays on disk. It sits
     // apart from the two actions because it acts on this card, not on the file.
-    PillButton {
+    CardAction {
         anchors.top: parent.top
         anchors.right: parent.right
         anchors.margins: StyleTokens.space8
         iconName: "window-close-symbolic"
-        iconSize: StyleControl.iconSizeSm
-        paddingHorizontal: StylePopover.iconButtonPadding
-        paddingVertical: StylePopover.iconButtonPadding
         opacity: root.hovered ? 1 : 0
-        interactive: root.hovered
         onClicked: Services.CaptureState.dismiss()
 
         Behavior on opacity {

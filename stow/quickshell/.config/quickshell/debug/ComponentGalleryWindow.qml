@@ -380,6 +380,17 @@ PanelWindow {
 
                         GalleryCard {
                             page: 1
+                            title: "Capture"
+
+                            Widgets.CapturePopover {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                active: true
+                                springReveal: false
+                            }
+                        }
+
+                        GalleryCard {
+                            page: 1
                             title: "Bluetooth"
 
                             Widgets.BluetoothPopover {
