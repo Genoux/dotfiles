@@ -5,11 +5,15 @@ import Quickshell
 import QtQuick
 
 Singleton {
-    // Preview card. Width borrows the notification width on purpose: the card
-    // shares the bottom-right column with the notification stack, and a
-    // different width would read as two misaligned surfaces rather than one.
-    readonly property int cardWidth: StyleNotification.width
-    readonly property int thumbnailHeight: 160
+    // Preview card. A tile, not a banner: at notification width the thumbnail
+    // stretched across the corner, and a capture is a picture, not text. The
+    // window is right-anchored, so the card's right edge still lands on the
+    // notification stack's inset — only the left edge moves in.
+    readonly property int cardWidth: 180
+    // 4:3, not 1:1. A square crops a 16:9 capture down to its middle third and
+    // stands too tall in the corner; this keeps the tile short and still reads
+    // as a picture.
+    readonly property int thumbnailHeight: 135
     // The thumbnail is the whole card: no filename band, no action strip. The
     // actions live over the image and only appear on hover.
     readonly property int cardHeight: thumbnailHeight
@@ -29,6 +33,13 @@ Singleton {
     // controls themselves are ordinary PillButtons on top of that.
     readonly property color scrim: Qt.rgba(0, 0, 0, 0.55)
     readonly property int actionPadding: StyleTokens.space10
+    // Same reason the border is stronger here: the shared hover tint is 3%
+    // white, which reads against a translucent panel and disappears against a
+    // photograph under a scrim. Local to this card so panel hovers stay quiet.
+    readonly property color actionHover: Qt.rgba(1, 1, 1, 0.16)
+    // Dismiss acts on the card, not on the capture, so it sits a size below the
+    // three actions rather than competing with them.
+    readonly property int dismissPadding: StyleTokens.space6
 
     // Both segments hold one tile row, so the band needs no slack for either.
     // Bottom padding only: the segment band above already closes on

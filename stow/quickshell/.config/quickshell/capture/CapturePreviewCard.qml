@@ -119,6 +119,7 @@ Rectangle {
         radius: height / 2
         paddingHorizontal: StyleCapture.actionPadding
         paddingVertical: StyleCapture.actionPadding
+        hoverBackground: StyleCapture.actionHover
         interactive: root.hovered
     }
 
@@ -230,6 +231,14 @@ Rectangle {
             }
         }
 
+        // Only for stills: a recording's Play below already opens it, and two
+        // buttons doing the same thing is worse than one.
+        CardAction {
+            visible: !root.isVideo
+            iconSource: IconRegistry.captureIcon("view")
+            onClicked: Services.CaptureState.open(root.path)
+        }
+
         CardAction {
             iconSource: IconRegistry.captureIcon(root.copied ? "copied" : "copy")
             onClicked: {
@@ -240,14 +249,6 @@ Rectangle {
                 expireTimer.stop();
                 copiedTimer.restart();
             }
-        }
-
-        // Only for stills: a recording's Play below already opens it, and two
-        // buttons doing the same thing is worse than one.
-        CardAction {
-            visible: !root.isVideo
-            iconSource: IconRegistry.captureIcon("view")
-            onClicked: Services.CaptureState.open(root.path)
         }
 
         CardAction {
@@ -270,6 +271,9 @@ Rectangle {
         anchors.right: parent.right
         anchors.margins: StyleTokens.space8
         iconName: "window-close-symbolic"
+        iconSize: StyleControl.iconSizeSm
+        paddingHorizontal: StyleCapture.dismissPadding
+        paddingVertical: StyleCapture.dismissPadding
         opacity: root.hovered ? 1 : 0
         onClicked: Services.CaptureState.remove(root.path)
 
