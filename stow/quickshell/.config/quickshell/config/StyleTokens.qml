@@ -72,15 +72,17 @@ Singleton {
     // The interaction tint. One value, everywhere: hover fill, resting pill
     // fill, selected row. Its faintness is the point — the bar sits over a
     // wallpaper and a heavier tint reads as a hole punched in the panel.
-    readonly property color alphaLight: Qt.rgba(1, 1, 1, 0.05)
+    readonly property color alphaLight: Qt.rgba(1, 1, 1, 0.03)
     // The structural hairline: separators, internal borders, selected chrome.
     readonly property color alphaHairline: Qt.rgba(1, 1, 1, 0.02)
-    // EXPERIMENTAL — a bar control whose panel is OPEN. Deliberately heavier than
-    // the hover tint: hover says "you are pointing at this", open says "this is
-    // the thing on screen right now", and at 5% those two were indistinguishable.
-    // Still a light tint, not the panel's own dark material — wearing that made
-    // the icon read as a patch stuck under the panel rather than a lit control.
-    readonly property color alphaActive: Qt.rgba(1, 1, 1, 0.12)
+    // A bar control whose panel is OPEN. Heavier than the hover tint, because
+    // hover says "you are pointing at this" and open says "this is the thing on
+    // screen right now" — at equal alpha the two are indistinguishable. It holds
+    // roughly 2.3x alphaLight, so move the pair together or the states merge.
+    // Both are deliberately faint: the bar sits over a wallpaper, and a tint
+    // heavy enough to hide it reads as a patch stuck on rather than a lit
+    // control. At 0.12 the wallpaper stopped dead at the pill's edge.
+    readonly property color alphaActive: Qt.rgba(1, 1, 1, 0.07)
 
     // Disabled is opacity, never a greyed colour — the palette is wallpaper
     // derived, so a hardcoded grey would drift out of theme on every wallpaper.
