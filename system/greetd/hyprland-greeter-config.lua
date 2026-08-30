@@ -58,7 +58,12 @@ hl.layer_rule({
   match = { namespace = "wallpaper" },
 })
 
-hl.exec_cmd("gslapper -f -I /tmp/sysc-greet-wallpaper.sock '*' /usr/share/sysc-greet/wallpapers/sysc-greet-default.png")
-hl.exec_cmd(
-  "XDG_CACHE_HOME=/tmp/greeter-cache HOME=/var/lib/greeter kitty --start-as=fullscreen --config=/etc/greetd/kitty.conf /usr/local/bin/sysc-greet && hyprctl dispatch exit"
-)
+-- exec_cmd runs while the config is parsed, before the compositor owns a
+-- Wayland socket, so children spawned here inherit no WAYLAND_DISPLAY and exit
+-- immediately. Wait for the socket, then start the greeter.
+hl.exec_cmd([[
+until set -- "$XDG_RUNTIME_DIR"/wayland-?; [ -S "$1" ]; do sleep 0.1; done
+export WAYLAND_DISPLAY=${1##*/}
+gslapper -f -I /tmp/sysc-greet-wallpaper.sock '*' /usr/share/sysc-greet/wallpapers/sysc-greet-default.png &
+XDG_CACHE_HOME=/tmp/greeter-cache HOME=/var/lib/greeter kitty --start-as=fullscreen --config=/etc/greetd/kitty.conf /usr/local/bin/sysc-greet && hyprctl dispatch "hl.dsp.exit()"
+]])
