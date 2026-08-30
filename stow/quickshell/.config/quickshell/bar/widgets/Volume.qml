@@ -33,6 +33,11 @@ Button {
         barWindow: root.barWindow
         anchorItem: root
 
+        // Owned by the bar's single live popover, not by the panel itself: the
+        // gallery instantiates a VolumePopover of its own, so a panel that wrote
+        // this on construction left the OSD suppressed for the whole session.
+        onOpenChanged: Services.VolumeOsd.suppressed = open
+
         VolumePopover {
             active: popover.open
         }

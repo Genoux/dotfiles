@@ -47,7 +47,6 @@ PopoverPanel {
     onTabChanged: Qt.callLater(root.revealSelected)
 
     onActiveChanged: {
-        VolumeOsd.suppressed = active
         if (active)
             Qt.callLater(root.revealSelected)
         else
