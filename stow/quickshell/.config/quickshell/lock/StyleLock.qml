@@ -8,9 +8,10 @@ Singleton {
     // lock surface fade out on unlock
 
     readonly property color transparent: "transparent"
-    // ── Wallpaper / dim ───────────────────────────────────────────────────────
-    readonly property string wallpaperPath: Quickshell.env("HOME") + "/.config/hypr/wallpapers/current/current_wallpaper.jpg"
-    readonly property real wallpaperDimOpacity: 0
+    // ── Dim ───────────────────────────────────────────────────────────────────
+    // The desktop behind is shown and blurred by Hyprland itself
+    // (misc:session_lock_xray + misc:session_lock_blur). This only darkens it.
+    readonly property real wallpaperDimOpacity: 0.2
     // full-screen dim overlay, 0 = none
     // ── Clock ─────────────────────────────────────────────────────────────────
     readonly property string fontDisplay: "SF Pro Display"
@@ -67,7 +68,7 @@ Singleton {
     readonly property int caretBlinkFadeDuration: 150 // ms; softens on/off transitions
     readonly property color failureColor: Qt.rgba(1, 0.18, 0.18, 0.9) // wrong-password border
     // ── Animation ─────────────────────────────────────────────────────────────
-    readonly property int fadeInDuration: 500
+    readonly property int fadeInDuration: 240
     // lock surface fade in over desktop
-    readonly property int fadeOutDuration: 300
+    readonly property int fadeOutDuration: 160
 }

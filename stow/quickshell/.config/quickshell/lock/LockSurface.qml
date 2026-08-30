@@ -80,15 +80,6 @@ Item {
         anchors.fill: parent
         opacity: 0
 
-        Image {
-            id: wallpaper
-
-            anchors.fill: parent
-            source: StyleLock.wallpaperPath
-            fillMode: Image.PreserveAspectCrop
-            asynchronous: true
-        }
-
         Rectangle {
             anchors.fill: parent
             color: Colors.base00
@@ -333,7 +324,7 @@ Item {
         property: "opacity"
         to: 1
         duration: StyleLock.fadeInDuration
-        easing.type: Easing.OutCubic
+        easing.type: Easing.InOutSine
     }
 
     NumberAnimation {
@@ -343,7 +334,7 @@ Item {
         property: "opacity"
         to: 0
         duration: StyleLock.fadeOutDuration
-        easing.type: Easing.InCubic
+        easing.type: Easing.InOutSine
     }
 
     Connections {
