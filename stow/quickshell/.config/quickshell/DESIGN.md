@@ -152,7 +152,7 @@ Depth is a hybrid of compositor blur, translucent QML surfaces, a quiet border, 
 The radius scale keeps compact controls crisp while giving larger surfaces a
 softer silhouette:
 
-- **4px (`radiusXs`):** tiny fills such as volume steps.
+- **4px (`radiusXs`):** tiny fills. The volume OSD's steps are the one documented exception — `StyleOsd.stepRadius` (2px) keeps them reading as meter ticks rather than dots, because radiusXs is half their height.
 - **8px (`radiusSm`):** bar buttons, list rows, compact actions.
 - **12px (`radiusMd`):** groups, popovers, notifications, and the launcher surface.
 - **Pills:** use `height / 2` only for explicit pill controls such as `PillButton`.

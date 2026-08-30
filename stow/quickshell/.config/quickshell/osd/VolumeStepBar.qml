@@ -18,7 +18,7 @@ Row {
 
             width: StyleOsd.stepWidth
             height: StyleOsd.stepHeight
-            radius: StyleTokens.radiusXs
+            radius: StyleOsd.stepRadius
 
             readonly property real threshold: ((index + 1) / root.steps) - 0.001
             readonly property bool filled: !root.muted && root.volume > threshold

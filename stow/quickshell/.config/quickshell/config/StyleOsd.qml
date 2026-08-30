@@ -12,6 +12,10 @@ Singleton {
     readonly property int stepWidth: 8
     readonly property int stepHeight: 6
     readonly property int stepSpacing: StyleTokens.space3
+    // Deliberately off the shared radius scale: radiusXs is half a step's
+    // height, which rounds a 8x6 mark into a dot. These read as ticks on a
+    // meter, so they keep square ends with the corners only knocked off.
+    readonly property int stepRadius: 2
     readonly property int contentSpacing: 18
     readonly property int hideDelay: 2000
     readonly property int initDelay: 250
