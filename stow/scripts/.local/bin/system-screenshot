@@ -17,12 +17,14 @@ announce() {
   quickshell ipc call capture saved "$1" >/dev/null 2>&1 || true
 }
 
+# Shell first, clipboard second: the card is what you are waiting to see, and
+# wl-copy's fork costs frames you would spend staring at nothing.
 finish() {
-  wl-copy --type image/png <"$FILENAME" 2>/dev/null || true
   announce "$FILENAME"
+  wl-copy --type image/png <"$FILENAME" 2>/dev/null || true
 }
 
-# grim writes the file itself, then the clipboard and the shell are updated.
+# grim writes the file itself, then the shell and the clipboard are updated.
 # With --edit the pixels go to satty instead and it owns the save.
 capture() {
   if $EDIT; then
@@ -121,8 +123,10 @@ case "$MODE" in
         geometry=$(printf '%s\n' "$boxes" | slurp -r) || exit 1
         [[ -n "$geometry" ]] || exit 1
 
-        # Let slurp's overlay leave the screen before grim reads it.
-        sleep 0.4
+        # Let slurp's overlay leave the screen before grim reads it. Long
+        # enough for the compositor to drop the layer surface, short enough not
+        # to be felt: grim itself already costs ~200ms on a full output.
+        sleep 0.15
 
         trimmed_geometry=$(trim_geometry "$geometry")
         if [[ -n "$trimmed_geometry" ]]; then
@@ -137,7 +141,7 @@ case "$MODE" in
         geometry=$(slurp)
 
         if [[ -n "$geometry" ]]; then
-            sleep 0.4
+            sleep 0.15
             capture -g "$geometry"
         else
             exit 1
