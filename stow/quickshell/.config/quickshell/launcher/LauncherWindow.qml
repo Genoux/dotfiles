@@ -1,5 +1,6 @@
 import Quickshell
 import Quickshell.Wayland
+import Quickshell.Hyprland
 import QtQuick
 import qs.components
 import qs.config
@@ -113,7 +114,21 @@ PanelWindow {
             return
 
         Services.LauncherHistory.record(entry)
-        entry.execute()
+        if (entry.runInTerminal)
+            root.launchInTerminal(entry)
+        else
+            entry.execute()
         Services.Launcher.close()
+    }
+
+    // TUI apps get one window each: a second launch raises the existing one
+    // instead of spawning a duplicate. cliamp writes an IPC socket but only
+    // warns on a second instance, so nothing else enforces this.
+    function launchInTerminal(entry) {
+        const existing = Hyprland.toplevels.values.find(w => w.wayland?.appId === entry.id || w.lastIpcObject?.class === entry.id)
+        if (existing?.wayland)
+            existing.wayland.activate()
+        else
+            Quickshell.execDetached(["kitty", "--class", entry.id, "-e", ...entry.command])
     }
 }
