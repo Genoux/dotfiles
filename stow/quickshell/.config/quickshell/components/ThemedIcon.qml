@@ -16,8 +16,8 @@ Item {
     property bool colored: false
 
     readonly property string sourceString: String(source ?? "")
-    readonly property bool materialSymbol: sourceString.startsWith("material-symbols:")
-    readonly property string materialGlyph: materialSymbol ? sourceString.slice(17) : ""
+    readonly property bool lucideSymbol: sourceString.startsWith("lucide:")
+    readonly property string lucideGlyph: lucideSymbol ? sourceString.slice(7) : ""
     readonly property bool emoji: sourceString.startsWith("emoji:")
     readonly property string emojiGlyph: emoji ? sourceString.slice(6) : ""
     readonly property bool bundled: IconRegistry.isBarIcon(source)
@@ -55,16 +55,18 @@ Item {
 
         IconImage {
             anchors.fill: parent
-            visible: !icon.bundled && !icon.materialSymbol && !icon.emoji && icon.hasSource
+            visible: !icon.bundled && !icon.lucideSymbol && !icon.emoji && icon.hasSource
             source: visible ? icon.source : ""
         }
 
         Text {
             anchors.fill: parent
-            visible: icon.materialSymbol
-            text: icon.materialGlyph
+            visible: icon.lucideSymbol
+            text: icon.lucideGlyph
             color: icon.tint
-            font.family: "Material Symbols Rounded"
+            // Lucide ligates: the icon's name IS the glyph. It ships one stroke
+            // weight by design, so there is no weight to set here.
+            font.family: "lucide"
             font.pixelSize: icon.drawSize
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter

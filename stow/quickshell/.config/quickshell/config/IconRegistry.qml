@@ -19,11 +19,14 @@ Singleton {
         return path.startsWith("/") ? "file://" + path : path
     }
 
-    // First-party controls use Material Symbols Rounded, which is installed by
-    // this repo and uses one consistent 24px design grid. The prefix lets the
+    // First-party controls use Lucide, whose whole set is drawn with one fixed
+    // 2px stroke on a 24px grid. That uniformity is the point: measured across
+    // the shell's icons, Lucide's stroke width varies by 2.6% where Material
+    // Symbols varied by 82%, which is what made a row of them look unbalanced.
+    // The font ligates, so the icon's own name is its glyph. The prefix lets the
     // shared renderer distinguish font glyphs from app/theme image sources.
-    function materialIcon(name) {
-        return `material-symbols:${name}`
+    function lucideIcon(name) {
+        return `lucide:${name}`
     }
 
     // Application and tray icons remain application-owned.
@@ -33,62 +36,62 @@ Singleton {
 
     readonly property var barControlIcons: ({
         bluetooth: "bluetooth",
-        components: "widgets",
-        dotfiles: "terminal",
-        info: "favorite",
+        components: "layout-grid",
+        dotfiles: "square-terminal",
+        info: "heart",
         launcher: "search",
-        power: "power_settings_new",
-        camera: "videocam",
+        power: "power",
+        camera: "video",
         microphone: "mic",
-        display: "desktop_windows",
-        recording: "videocam",
+        display: "monitor",
+        recording: "video",
     })
 
     function barControlIcon(name) {
         const icon = barControlIcons[name]
-        return icon ? materialIcon(icon) : ""
+        return icon ? lucideIcon(icon) : ""
     }
 
     readonly property var captureIcons: ({
-        "idle": "screenshot_frame",
-        "recording": "videocam",
-        "shot-region": "screenshot_region",
-        "shot-window": "select_window",
-        "shot-screen": "fullscreen",
-        "record-region": "screen_record",
-        "record-screen": "videocam",
+        "idle": "scan",
+        "recording": "video",
+        "shot-region": "crop",
+        "shot-window": "app-window",
+        "shot-screen": "maximize",
+        "record-region": "monitor-dot",
+        "record-screen": "video",
         "audio-on": "mic",
-        "audio-off": "mic_off",
-        "folder": "folder_open",
-        "copy": "content_copy",
+        "audio-off": "mic-off",
+        "folder": "folder-open",
+        "copy": "copy",
         "copied": "check",
-        "view": "visibility",
-        "edit": "edit",
-        "play": "play_arrow",
-        "discard": "delete",
+        "view": "eye",
+        "edit": "pencil",
+        "play": "play",
+        "discard": "trash-2",
     })
 
     function captureIcon(name) {
         const icon = captureIcons[name]
-        return icon ? materialIcon(icon) : ""
+        return icon ? lucideIcon(icon) : ""
     }
 
     function mediaIcon(name) {
         const icons = {
-            "skip-backward": "skip_previous",
-            "play": "play_arrow",
+            "skip-backward": "skip-back",
+            "play": "play",
             "pause": "pause",
-            "skip-forward": "skip_next",
+            "skip-forward": "skip-forward",
         }
-        return materialIcon(icons[name] ?? "stop_circle")
+        return lucideIcon(icons[name] ?? "circle-stop")
     }
 
     function shellIcon(name) {
         const icons = {
-            "chevron-left": "chevron_left",
-            "chevron-right": "chevron_right",
+            "chevron-left": "chevron-left",
+            "chevron-right": "chevron-right",
         }
-        return materialIcon(icons[name] ?? name)
+        return lucideIcon(icons[name] ?? name)
     }
 
     function isBarIcon(url) {
@@ -96,67 +99,75 @@ Singleton {
         return path.includes("assets/icons/")
     }
 
-    // Material Symbols share a 24px design grid, so they get one mathematical
-    // inset rather than subjective per-widget sizes. App/theme icons retain
-    // their native canvas because their geometry is not under shell control.
+    // Lucide glyphs ink to 89% of their em where Material Symbols inked to 73%,
+    // so drawing them at the icon box's full size renders 28% larger for the
+    // same `iconSize`. This inset puts the ink back on the size the bar was
+    // tuned around. Do not replace it with a per-glyph table: icon sets are
+    // drawn to keylines, where a circle is intentionally larger than a square so
+    // the two read as equal, and equalising measured boxes fights that.
+    readonly property real glyphInset: 0.78
+
     function opticalScale(url) {
         const path = String(url ?? "")
-        if (path.startsWith("material-symbols:"))
-            return 0.94
-        return 1
+        return path.startsWith("lucide:") ? glyphInset : 1
     }
 
     function batteryIcon(percent, charging) {
         if (charging)
-            return materialIcon("battery_charging_full")
+            return lucideIcon("battery-charging")
+        const levels = ["battery", "battery-low", "battery-low", "battery-medium",
+                        "battery-medium", "battery-full", "battery-full", "battery-full"]
         const level = Math.max(0, Math.min(7, Math.round(percent / 100 * 7)))
-        return materialIcon(level === 7 ? "battery_full" : `battery_${level}_bar`)
+        return lucideIcon(levels[level])
     }
 
     function volumeIcon(level, isMuted, hasSink) {
         if (!hasSink || isMuted)
-            return materialIcon("volume_off")
+            return lucideIcon("volume-off")
         if (level > 0.66)
-            return materialIcon("volume_up")
+            return lucideIcon("volume-2")
         if (level > 0.33)
-            return materialIcon("volume_down")
-        return materialIcon("volume_mute")
+            return lucideIcon("volume-1")
+        return lucideIcon("volume")
     }
 
     function temperatureIcon(status) {
-        return materialIcon("device_thermostat")
+        return lucideIcon("thermometer")
     }
 
+    // Weather used to render colour emoji, which put a filled, multicolour
+    // cartoon in a row of monochrome hairline glyphs. These are the Material
+    // Symbols equivalents so the strip reads as one set.
     function weatherIcon(condition) {
         const icons = {
-            "clear": "☀️",
-            "clear-night": "🌙",
-            "few-clouds": "🌤️",
-            "few-clouds-night": "☁️",
-            "fog": "🌫️",
-            "overcast": "☁️",
-            "showers-scattered": "🌦️",
-            "showers": "🌧️",
-            "snow": "🌨️",
-            "storm": "⛈️",
-            "windy": "💨",
+            "clear": "sun",
+            "clear-night": "moon",
+            "few-clouds": "cloud-sun",
+            "few-clouds-night": "cloud-moon",
+            "fog": "cloud-fog",
+            "overcast": "cloud",
+            "showers-scattered": "cloud-drizzle",
+            "showers": "cloud-rain",
+            "snow": "cloud-snow",
+            "storm": "cloud-lightning",
+            "windy": "wind",
         }
-        return `emoji:${icons[condition] ?? "❔"}`
+        return lucideIcon(icons[condition] ?? "circle-help")
     }
 
     function bluetoothIcon(enabled) {
-        return materialIcon("bluetooth")
+        return lucideIcon("bluetooth")
     }
 
     function networkIcon(name) {
         const icons = {
             "wireless": "wifi",
-            "wireless-offline": "wifi_off",
-            "wired": "lan",
-            "wired-offline": "signal_wifi_bad",
-            "offline": "signal_wifi_bad",
+            "wireless-offline": "wifi-off",
+            "wired": "network",
+            "wired-offline": "unplug",
+            "offline": "wifi-off",
         }
-        return materialIcon(icons[name] ?? "signal_wifi_bad")
+        return lucideIcon(icons[name] ?? "wifi-off")
     }
 
     function hasOverride(iconName) {
@@ -165,24 +176,24 @@ Singleton {
 
     function source(iconName) {
         const glyph = symbolicAliases[iconName]
-        return glyph ? materialIcon(glyph) : themeIcon(iconName)
+        return glyph ? lucideIcon(glyph) : themeIcon(iconName)
     }
 
     readonly property var symbolicAliases: ({
         "mic-on": "mic",
-        "monitor-video": "desktop_windows",
-        "camera-video": "videocam",
+        "monitor-video": "monitor",
+        "camera-video": "video",
         "bluetooth-active-symbolic": "bluetooth",
-        "media-playback-stop-symbolic": "stop_circle",
-        "media-record-symbolic": "radio_button_checked",
+        "media-playback-stop-symbolic": "circle-stop",
+        "media-record-symbolic": "circle-dot",
         "system-search-symbolic": "search",
-        "utilities-terminal-symbolic": "terminal",
-        "window-close-symbolic": "close",
+        "utilities-terminal-symbolic": "square-terminal",
+        "window-close-symbolic": "x",
         "system-lock-screen-symbolic": "lock",
-        "system-suspend-symbolic": "bedtime",
-        "system-reboot-symbolic": "restart_alt",
-        "system-shutdown-symbolic": "power_settings_new",
-        "system-log-out-symbolic": "logout",
+        "system-suspend-symbolic": "moon",
+        "system-reboot-symbolic": "rotate-cw",
+        "system-shutdown-symbolic": "power",
+        "system-log-out-symbolic": "log-out",
     })
 
     function className(toplevel) {

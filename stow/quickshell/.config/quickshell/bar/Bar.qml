@@ -83,7 +83,7 @@ PanelWindow {
             z: 1
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
-            spacing: StyleTokens.space2
+            spacing: StyleTokens.space1
 
             Widgets.PrivacyIndicator {
                 Layout.alignment: Qt.AlignVCenter
@@ -99,7 +99,7 @@ PanelWindow {
             }
 
             RowLayout {
-                spacing: StyleTokens.space2
+                spacing: StyleTokens.space1
                 Layout.rightMargin: 0
 
                 Widgets.Volume {

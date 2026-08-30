@@ -3,9 +3,9 @@ import Quickshell
 pragma Singleton
 
 Singleton {
-    readonly property int iconSizeMd: 20
-    readonly property int iconSize: 18
-    readonly property int iconSizeSm: 14
+    readonly property int iconSizeMd: 18
+    readonly property int iconSize: 16
+    readonly property int iconSizeSm: 13
     // Symbolic SVGs and font glyphs use uneven intrinsic padding — draw inside a scaled inner box.
     readonly property real iconVisualScale: 0.86
     readonly property int buttonPaddingHorizontal: StyleTokens.space6

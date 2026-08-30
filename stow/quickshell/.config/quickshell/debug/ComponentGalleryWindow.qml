@@ -472,7 +472,7 @@ PanelWindow {
                             anchors.left: parent.left
                             anchors.leftMargin: StyleTokens.space20
                             anchors.verticalCenter: parent.verticalCenter
-                            text: "Material Symbols Rounded · " + root.filteredIconNames.length + " icons"
+                            text: "Lucide · " + root.filteredIconNames.length + " icons"
                         }
 
                         Rectangle {
@@ -490,7 +490,7 @@ PanelWindow {
                                 anchors.left: parent.left
                                 anchors.leftMargin: StyleTokens.space10
                                 anchors.verticalCenter: parent.verticalCenter
-                                source: IconRegistry.materialIcon("search")
+                                source: IconRegistry.lucideIcon("search")
                                 tint: Colors.base04
                             }
 
@@ -545,7 +545,7 @@ PanelWindow {
 
                             ThemedIcon {
                                 anchors.horizontalCenter: parent.horizontalCenter
-                                source: IconRegistry.materialIcon(iconCell.modelData)
+                                source: IconRegistry.lucideIcon(iconCell.modelData)
                                 size: StyleControl.iconSize * 1.5
                             }
 
@@ -565,11 +565,11 @@ PanelWindow {
         }
     }
 
-    // Material Symbols is a ligature font: QML cannot enumerate its glyphs, so
-    // the name list is generated from the installed TTF. Regenerate after a
-    // ttf-material-symbols-variable update.
+    // Lucide is a ligature font: QML cannot enumerate its glyphs, so the name
+    // list is generated from the installed TTF. Regenerate after a
+    // ttf-lucide-font update.
     FileView {
-        path: Quickshell.shellPath("assets/material-symbols.txt")
+        path: Quickshell.shellPath("assets/lucide-icons.txt")
         printErrors: false
         onLoaded: root.iconNames = text().split("\n").filter((name) => name.length > 0)
     }
