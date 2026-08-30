@@ -306,6 +306,15 @@ PanelWindow {
                                     onDisconnectRequested: root.lastAction = "Disconnect requested"
                                     onRemoveRequested: root.lastAction = "Forget requested"
                                 }
+
+                                // The demoted stage, where the same glyph arms
+                                // into the worded confirm.
+                                RowActions {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    hovered: true
+                                    showRemove: true
+                                    onRemoveRequested: root.lastAction = "Forget requested"
+                                }
                             }
 
                         }

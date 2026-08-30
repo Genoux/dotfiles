@@ -133,7 +133,8 @@ Rectangle {
         anchors.fill: parent
         acceptedButtons: Qt.LeftButton
         // The connected row has nothing to activate — dropping the link is the
-        // pill's job, so a click meant to inspect this row cannot disconnect it.
+        // trailing X's job, so a click meant to inspect this row cannot
+        // disconnect it.
         cursorShape: row.network.inRange && !row.isConnected ? Qt.PointingHandCursor : Qt.ArrowCursor
         onClicked: {
             if (row.network.inRange && !row.isConnected)

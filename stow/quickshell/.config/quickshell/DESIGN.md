@@ -186,8 +186,10 @@ Every structural stroke is `StyleTokens.borderWidth` (1px). Create hierarchy thr
 
 ### Row actions
 
-- Use `RowActions` for a list row's trailing controls: the reversible action stated plainly, the destructive one behind a glyph that arms into a worded confirm.
-- Offer both at once. Requiring a disconnect before a forget becomes available reads as tidy and is not — desktop settings panels expose them together, and sequencing turns the common case into two confirmed operations.
+- Use `RowActions` for a list row's trailing control: one glyph that steps the row back a stage. On a connected row it disconnects, which demotes the row into the section below; on the demoted row the same glyph forgets outright.
+- One button, not two. The stages are a single retreat, not a pair of choices; showing Disconnect and Forget together asks the reader to rank two destructive-looking words before deciding anything.
+- Arm both stages, not just the irreversible one. A single glyph in a fixed position whose meaning tracks the row's state must cost the same everywhere — one that sometimes fires and sometimes asks cannot be learned. The glyph always asks; the word it becomes says which retreat is on offer.
+- Disarm when the row changes stage underneath an armed button. The word the reader was deciding about is no longer the word the click would act on, so drop the arm rather than swap the label out from under them.
 - A hover-revealed confirm keeps its word until the fade finishes, disarming from the opacity animation rather than on hover-out. Clearing on hover-out swaps the word back to the glyph at full opacity, which reads as a flicker rather than a fade.
 
 ### Popovers
