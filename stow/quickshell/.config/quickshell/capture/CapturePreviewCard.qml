@@ -18,6 +18,9 @@ Rectangle {
 
     required property string path
 
+    // Any card in the stack being pointed at holds the whole stack: expiring the
+    // neighbours while you reach across them moves the target under your hand.
+    property bool stackHovered: false
     property bool hovered: false
     property bool copied: false
     property bool posterReady: false
@@ -40,6 +43,7 @@ Rectangle {
 
     readonly property real dragOffset: Math.max(0, x - restingX)
     readonly property bool dragging: dragArea.drag.active
+    readonly property bool holding: stackHovered || copied || dragging
 
     width: StyleCapture.cardWidth
     implicitHeight: StyleCapture.thumbnailHeight
@@ -53,8 +57,8 @@ Rectangle {
     border.width: StyleTokens.borderWidth
     border.color: StyleCapture.border
 
-    onHoveredChanged: {
-        if (hovered || copied || dragging) {
+    onHoldingChanged: {
+        if (holding) {
             expireTimer.stop();
             return;
         }
@@ -74,7 +78,7 @@ Rectangle {
         target: Services.CaptureState
 
         function onCapturesChanged() {
-            if (!root.hovered && !root.copied && !root.dragging)
+            if (!root.holding)
                 expireTimer.restart();
         }
     }
@@ -188,7 +192,7 @@ Rectangle {
                 return;
             }
             returnAnimation.restart();
-            if (!root.hovered)
+            if (!root.holding)
                 expireTimer.restart();
         }
     }

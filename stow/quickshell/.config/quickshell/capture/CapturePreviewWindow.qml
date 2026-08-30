@@ -61,6 +61,12 @@ PanelWindow {
             values: Services.CaptureState.captures
         }
 
+        // Spans the gaps between cards too, so crossing from one to the next
+        // never drops the hold.
+        HoverHandler {
+            id: stackHover
+        }
+
         // A plain Item takes the delegate slot so the ListView positions this
         // rather than the card: a delegate's own x is owned by the view, and a
         // drag written straight to it does not stick.
@@ -74,6 +80,7 @@ PanelWindow {
                 id: card
 
                 path: parent.modelData
+                stackHovered: stackHover.hovered
             }
         }
 
