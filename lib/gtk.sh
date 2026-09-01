@@ -38,10 +38,26 @@ list_themes() {
 
 ensure_theme() {
     local theme_name="$1"
-
-    [[ -d "$THEMES_DIR/$theme_name" ]] && return 0
-
     local url="${THEME_REPOS[$theme_name]:-}"
+
+    if [[ -d "$THEMES_DIR/$theme_name" ]]; then
+        # User-provided themes have no registered upstream, so keep using their
+        # local copy. Known themes must update successfully before installation.
+        [[ -z "$url" ]] && return 0
+
+        if [[ ! -d "$THEMES_DIR/$theme_name/.git" ]]; then
+            log_error "Cannot update $theme_name: local theme is not a Git checkout"
+            return 1
+        fi
+
+        log_info "Updating $theme_name..."
+        if ! git -C "$THEMES_DIR/$theme_name" pull --ff-only; then
+            log_error "Failed to update $theme_name from $url"
+            return 1
+        fi
+        return 0
+    fi
+
     if [[ -z "$url" ]]; then
         log_error "Unknown theme: $theme_name (no local copy, no known repo)"
         return 1
@@ -420,4 +436,3 @@ main() {
 }
 
 main "$@"
-

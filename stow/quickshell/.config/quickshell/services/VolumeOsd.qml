@@ -10,10 +10,6 @@ Singleton {
 
     property bool visible: false
     property bool initializing: true
-    // Raised while a surface is already showing the level being changed. The OSD
-    // exists to report a change you cannot otherwise see; announcing one made on
-    // a slider the user is looking at is just a second copy in the way.
-    property bool suppressed: false
 
     readonly property var sink: Pipewire.defaultAudioSink
     readonly property real volume: Math.min(root.sink?.audio?.volume ?? 0, 1)
@@ -61,7 +57,7 @@ Singleton {
             : !settleTimer.running && root.sinkReady
                 && (nextVolume !== root._lastVolume || nextMuted !== root._lastMuted)
 
-        if (!root.initializing && !root.suppressed && worthShowing)
+        if (!root.initializing && worthShowing)
             root.show()
 
         root._lastVolume = nextVolume
@@ -121,13 +117,6 @@ Singleton {
 
     PwObjectTracker {
         objects: root.sink ? [root.sink] : []
-    }
-
-    // Suppression can be raised while the OSD is already up — opening the sound
-    // panel right after a media key, say.
-    onSuppressedChanged: {
-        if (root.suppressed)
-            root.hide()
     }
 
     onVolumeChanged: root.publishState()

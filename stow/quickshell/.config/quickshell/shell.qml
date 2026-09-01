@@ -37,6 +37,14 @@ ShellRoot {
         function saved(path: string): void {
             Services.CaptureState.present(path)
         }
+
+        function countdown(seconds: int): void {
+            Services.CaptureState.showCountdown(seconds)
+        }
+
+        function delay(): int {
+            return Services.CaptureState.delaySeconds
+        }
     }
 
     IpcHandler {
@@ -100,6 +108,15 @@ ShellRoot {
         model: Quickshell.screens
 
         NotificationWindow {
+            required property var modelData
+            screen: modelData
+        }
+    }
+
+    Variants {
+        model: Quickshell.screens
+
+        CaptureCountdownWindow {
             required property var modelData
             screen: modelData
         }

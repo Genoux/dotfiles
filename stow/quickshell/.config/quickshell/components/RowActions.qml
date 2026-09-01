@@ -25,16 +25,22 @@ Row {
     required property bool hovered
     property bool showDisconnect: false
     property bool showRemove: false
+    property string removeConfirmText: "Forget"
+    // A recycled list row may point at a different target after its model is
+    // resorted or refreshed. Never carry an armed destructive action across
+    // that identity change.
+    property var actionKey: undefined
     // An action already in flight has nothing useful to offer.
     property bool busy: false
 
     property bool confirming: false
-    readonly property string confirmText: showDisconnect ? "Disconnect" : "Forget"
+    readonly property string confirmText: showDisconnect ? "Disconnect" : removeConfirmText
 
     // The row changed stage underneath an armed button, so the word the reader
     // was deciding about is no longer the word this click would act on. Drop
     // the arm rather than swap the label out from under them.
     onShowDisconnectChanged: confirming = false
+    onActionKeyChanged: confirming = false
 
     signal disconnectRequested()
     signal removeRequested()

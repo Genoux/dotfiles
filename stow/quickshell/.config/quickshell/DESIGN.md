@@ -133,6 +133,20 @@ on the fill edge with the rows beneath it.
 - Use `RowLayout`/`ColumnLayout` when siblings negotiate space; use `Row`/`Column` for fixed implicit geometry.
 - Optical corrections may be off-scale only when the value is local, necessary, and commented.
 
+**The One Icon Box Rule.** Every icon-only button in the bar occupies the same
+square, `StyleControl.buttonWidth` x `buttonHeight`. Buttons carrying text grow
+past it on content — forcing a shared width on a label pads `US` and `9:41 AM`
+toward each other and reads worse than uneven boxes ever did.
+
+- Balance comes from the floor (`Button.minimumWidth` / `minimumHeight`), not
+  from per-widget padding. A glyph smaller than the standard one — an app's
+  full-colour tray pixmap, which reads optically larger than a symbolic icon —
+  shrinks the *icon* and keeps the *box*.
+- A widget that pads its way to a different size breaks the hover-pill rhythm of
+  every neighbour. Set the floor instead, and delete the padding override.
+- `minimumHeight` is the exception to raising a default: its 20px floor serves
+  dense popover rows on `paddingVertical: space2`. Raise it on the widget.
+
 **The Named Metric Rule.** Feature code references the domain meaning (`StylePopover.contentPaddingH`), not merely an equivalent primitive (`StyleTokens.space16`). Domain style files are where token values acquire intent.
 
 ## Elevation & Depth

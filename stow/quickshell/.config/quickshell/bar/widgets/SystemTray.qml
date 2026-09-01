@@ -36,8 +36,7 @@ BarGroup {
 
                     iconSource: trayDelegate.modelData.icon
                     iconSize: StyleTray.iconSize
-                    paddingHorizontal: StyleTray.buttonPaddingHorizontal
-                    paddingVertical: StyleTray.buttonPaddingVertical
+                    minimumHeight: StyleControl.buttonHeight
                     interactive: true
                     active: trayPopover.open
 

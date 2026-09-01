@@ -11,3 +11,5 @@
 
 Satty
 DuckDuckGo
+Wayland
+Vercel

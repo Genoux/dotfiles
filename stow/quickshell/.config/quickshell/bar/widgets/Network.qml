@@ -9,9 +9,8 @@ Button {
     required property var barWindow
 
     // The bar states which link is carrying traffic, not how strong it is —
-    // strength is a comparison, and comparing belongs in the panel. Bundled
-    // marks keep this button tinted with the rest of the bar rather than
-    // adopting an icon theme's own colours.
+    // strength is a comparison, and comparing belongs in the panel. The active
+    // icon theme supplies a purpose-drawn small symbolic mark.
     readonly property var networkIconSource: {
         const type = Services.Network.linkType;
         const online = Services.Network.isOnline;

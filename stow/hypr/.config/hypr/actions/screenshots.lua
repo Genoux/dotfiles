@@ -8,7 +8,8 @@ local M = {}
 -- script's grim/slurp/satty pipeline inline, which meant the keybinds and the
 -- script could drift and only the script's callers got the preview card.
 local function shoot(mode)
-  hl.dispatch(hl.dsp.exec_cmd(paths.shellQuote(paths.scripts.systemScreenshot) .. " " .. mode))
+  local command = paths.shellQuote(paths.scripts.systemScreenshot) .. " " .. paths.shellQuote(mode)
+  hl.dispatch(hl.dsp.exec_cmd(command .. " --widget-delay"))
 end
 
 function M.region()

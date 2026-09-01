@@ -12,188 +12,143 @@ Singleton {
         delegate: QtObject {}
     }
 
-    function barIcon(domain, name) {
-        // shellPath returns a bare filesystem path on some quickshell versions;
-        // without a scheme it resolves against qrc: inside IconImage and fails
-        const path = String(Quickshell.shellPath(`assets/icons/${domain}/${name}.svg`))
-        return path.startsWith("/") ? "file://" + path : path
-    }
-
-    // First-party controls use Lucide, whose whole set is drawn with one fixed
-    // 2px stroke on a 24px grid. That uniformity is the point: measured across
-    // the shell's icons, Lucide's stroke width varies by 2.6% where Material
-    // Symbols varied by 82%, which is what made a row of them look unbalanced.
-    // The font ligates, so the icon's own name is its glyph. The prefix lets the
-    // shared renderer distinguish font glyphs from app/theme image sources.
-    function lucideIcon(name) {
-        return `lucide:${name}`
-    }
-
+    // First-party shell symbols come from the active MacTahoe icon theme.
     // Application and tray icons remain application-owned.
     function themeIcon(name) {
         return Quickshell.iconPath(name, "image-missing")
     }
 
     readonly property var barControlIcons: ({
-        bluetooth: "bluetooth",
-        components: "layout-grid",
-        dotfiles: "square-terminal",
-        info: "heart",
-        launcher: "search",
-        power: "power",
-        camera: "video",
-        microphone: "mic",
-        display: "monitor",
-        recording: "video",
+        bluetooth: "bluetooth-active-symbolic",
+        components: "view-grid-symbolic",
+        dotfiles: "utilities-terminal-symbolic",
+        info: "emblem-favorite-symbolic",
+        launcher: "system-search-symbolic",
+        power: "system-shutdown-symbolic",
+        camera: "camera-video-symbolic",
+        microphone: "audio-input-microphone-symbolic",
+        display: "video-display-symbolic",
+        recording: "media-record-symbolic",
     })
 
     function barControlIcon(name) {
         const icon = barControlIcons[name]
-        return icon ? lucideIcon(icon) : ""
+        return icon ? themeIcon(icon) : ""
     }
 
     readonly property var captureIcons: ({
-        "idle": "scan",
-        "recording": "video",
-        "shot-region": "crop",
-        "shot-window": "app-window",
-        "shot-screen": "maximize",
-        "record-region": "monitor-dot",
-        "record-screen": "video",
-        "audio-on": "mic",
-        "audio-off": "mic-off",
-        "folder": "folder-open",
-        "copy": "copy",
-        "copied": "check",
-        "view": "eye",
-        "edit": "pencil",
-        "play": "play",
-        "discard": "trash-2",
+        "idle": "gnome-photos-symbolic",
+        "recording": "media-record-symbolic",
+        "shot-region": "crop-symbolic",
+        "shot-window": "window-symbolic",
+        "shot-screen": "video-display-symbolic",
+        "record-region": "media-record-symbolic",
+        "record-screen": "camera-video-symbolic",
+        "audio-on": "audio-input-microphone-symbolic",
+        "audio-off": "audio-input-microphone-muted-symbolic",
+        "delay": "tools-timer-symbolic",
+        "folder": "folder-symbolic",
+        "copy": "edit-copy-symbolic",
+        "copied": "emblem-ok-symbolic",
+        "view": "view-reveal-symbolic",
+        "edit": "edit-select-invert-symbolic",
+        "play": "media-playback-start-symbolic",
+        "discard": "user-trash-symbolic",
     })
 
     function captureIcon(name) {
         const icon = captureIcons[name]
-        return icon ? lucideIcon(icon) : ""
+        return icon ? themeIcon(icon) : ""
     }
 
     function mediaIcon(name) {
         const icons = {
-            "skip-backward": "skip-back",
-            "play": "play",
-            "pause": "pause",
-            "skip-forward": "skip-forward",
+            "skip-backward": "media-skip-backward-symbolic",
+            "play": "media-playback-start-symbolic",
+            "pause": "media-playback-pause-symbolic",
+            "skip-forward": "media-skip-forward-symbolic",
         }
-        return lucideIcon(icons[name] ?? "circle-stop")
+        return themeIcon(icons[name] ?? "media-playback-stop-symbolic")
     }
 
     function shellIcon(name) {
         const icons = {
-            "chevron-left": "chevron-left",
-            "chevron-right": "chevron-right",
+            "chevron-left": "go-previous-symbolic",
+            "chevron-right": "go-next-symbolic",
+            "navigation": "find-location-symbolic",
         }
-        return lucideIcon(icons[name] ?? name)
-    }
-
-    function isBarIcon(url) {
-        const path = url?.toString?.() ?? String(url ?? "")
-        return path.includes("assets/icons/")
-    }
-
-    // Lucide glyphs ink to 89% of their em where Material Symbols inked to 73%,
-    // so drawing them at the icon box's full size renders 28% larger for the
-    // same `iconSize`. This inset puts the ink back on the size the bar was
-    // tuned around. Do not replace it with a per-glyph table: icon sets are
-    // drawn to keylines, where a circle is intentionally larger than a square so
-    // the two read as equal, and equalising measured boxes fights that.
-    readonly property real glyphInset: 0.78
-
-    function opticalScale(url) {
-        const path = String(url ?? "")
-        return path.startsWith("lucide:") ? glyphInset : 1
+        return themeIcon(icons[name] ?? name)
     }
 
     function batteryIcon(percent, charging) {
         if (charging)
-            return lucideIcon("battery-charging")
-        const levels = ["battery", "battery-low", "battery-low", "battery-medium",
-                        "battery-medium", "battery-full", "battery-full", "battery-full"]
+            return themeIcon("battery-level-100-charged-symbolic")
+        const levels = ["battery-level-10-symbolic", "battery-level-20-symbolic",
+                        "battery-level-20-symbolic", "battery-level-40-symbolic",
+                        "battery-level-60-symbolic", "battery-level-80-symbolic",
+                        "battery-level-100-symbolic", "battery-level-100-symbolic"]
         const level = Math.max(0, Math.min(7, Math.round(percent / 100 * 7)))
-        return lucideIcon(levels[level])
+        return themeIcon(levels[level])
     }
 
     function volumeIcon(level, isMuted, hasSink) {
         if (!hasSink || isMuted)
-            return lucideIcon("volume-off")
+            return themeIcon("audio-volume-muted-symbolic")
         if (level > 0.66)
-            return lucideIcon("volume-2")
+            return themeIcon("audio-volume-high-symbolic")
         if (level > 0.33)
-            return lucideIcon("volume-1")
-        return lucideIcon("volume")
+            return themeIcon("audio-volume-medium-symbolic")
+        return themeIcon("audio-volume-low-symbolic")
     }
 
     function temperatureIcon(status) {
-        return lucideIcon("thermometer")
+        return themeIcon("temperature-symbolic")
     }
 
-    // Weather used to render colour emoji, which put a filled, multicolour
-    // cartoon in a row of monochrome hairline glyphs. These are the Material
-    // Symbols equivalents so the strip reads as one set.
+    // Use the theme's dedicated weather family so the bar, header, and forecast
+    // rows share the same small-size optical treatment.
     function weatherIcon(condition) {
         const icons = {
-            "clear": "sun",
-            "clear-night": "moon",
-            "few-clouds": "cloud-sun",
-            "few-clouds-night": "cloud-moon",
-            "fog": "cloud-fog",
-            "overcast": "cloud",
-            "showers-scattered": "cloud-drizzle",
-            "showers": "cloud-rain",
-            "snow": "cloud-snow",
-            "storm": "cloud-lightning",
-            "windy": "wind",
+            "clear": "weather-clear-symbolic",
+            "clear-night": "weather-clear-night-symbolic",
+            "few-clouds": "weather-few-clouds-symbolic",
+            "few-clouds-night": "weather-few-clouds-night-symbolic",
+            "fog": "weather-fog-symbolic",
+            "overcast": "weather-overcast-symbolic",
+            "showers-scattered": "weather-showers-scattered-symbolic",
+            "showers": "weather-showers-symbolic",
+            "snow": "weather-snow-symbolic",
+            "storm": "weather-storm-symbolic",
+            "windy": "weather-windy-symbolic",
         }
-        return lucideIcon(icons[condition] ?? "circle-help")
+        return themeIcon(icons[condition] ?? "weather-overcast-symbolic")
     }
 
     function bluetoothIcon(enabled) {
-        return lucideIcon("bluetooth")
+        return themeIcon("bluetooth-active-symbolic")
     }
 
     function networkIcon(name) {
         const icons = {
-            "wireless": "wifi",
-            "wireless-offline": "wifi-off",
-            "wired": "network",
-            "wired-offline": "unplug",
-            "offline": "wifi-off",
+            "wireless": "network-wireless-signal-excellent-symbolic",
+            "wireless-offline": "network-wireless-offline-symbolic",
+            // A Wi-Fi fan is now the universal shorthand for internet access;
+            // using it for Ethernet keeps the bar cleaner than a topology icon.
+            "wired": "network-wireless-signal-excellent-symbolic",
+            "wired-offline": "network-wireless-offline-symbolic",
+            "offline": "network-wireless-offline-symbolic",
         }
-        return lucideIcon(icons[name] ?? "wifi-off")
-    }
-
-    function hasOverride(iconName) {
-        return isBarIcon(source(iconName))
+        return themeIcon(icons[name] ?? "network-wireless-offline-symbolic")
     }
 
     function source(iconName) {
-        const glyph = symbolicAliases[iconName]
-        return glyph ? lucideIcon(glyph) : themeIcon(iconName)
+        return themeIcon(symbolicAliases[iconName] ?? iconName)
     }
 
     readonly property var symbolicAliases: ({
-        "mic-on": "mic",
-        "monitor-video": "monitor",
-        "camera-video": "video",
-        "bluetooth-active-symbolic": "bluetooth",
-        "media-playback-stop-symbolic": "circle-stop",
-        "media-record-symbolic": "circle-dot",
-        "system-search-symbolic": "search",
-        "utilities-terminal-symbolic": "square-terminal",
-        "window-close-symbolic": "x",
-        "system-lock-screen-symbolic": "lock",
-        "system-suspend-symbolic": "moon",
-        "system-reboot-symbolic": "rotate-cw",
-        "system-shutdown-symbolic": "power",
-        "system-log-out-symbolic": "log-out",
+        "mic-on": "audio-input-microphone-symbolic",
+        "monitor-video": "video-display-symbolic",
+        "camera-video": "camera-video-symbolic",
     })
 
     function className(toplevel) {

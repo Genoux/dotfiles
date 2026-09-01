@@ -6,13 +6,16 @@ import qs
 import qs.config
 import qs.components
 
-RowLayout {
+Item {
     id: root
 
     property var hyprMonitor
+    property real availableWidth: implicitWidth
 
     visible: activeToplevel !== null
-    spacing: StyleTokens.space6
+    implicitWidth: content.implicitWidth
+    implicitHeight: content.implicitHeight
+    clip: true
 
     readonly property int visibleWorkspaceId: {
         const monitor = root.hyprMonitor ? root.hyprMonitor : Hyprland.focusedMonitor
@@ -43,21 +46,39 @@ RowLayout {
     }
     readonly property string appIconName: IconRegistry.iconNameForToplevel(activeToplevel)
 
-    Button {
-        Layout.alignment: Qt.AlignVCenter
-        iconName: root.appIconName
-        iconSize: StyleControl.iconSizeMd
-        background: StyleTokens.transparent
-        hoverBackground: StyleTokens.transparent
-    }
+    RowLayout {
+        id: content
 
-    Text {
-        Layout.alignment: Qt.AlignVCenter
-        text: activeToplevel ? activeToplevel.title : ""
-        color: Colors.base05
-        font.family: StyleTokens.fontSans
-        font.pixelSize: StyleBar.labelFontSize
-        elide: Text.ElideRight
-        Layout.maximumWidth: StyleBar.windowTitleMaxWidth
+        anchors.left: parent.left
+        anchors.verticalCenter: parent.verticalCenter
+        width: Math.min(implicitWidth, root.availableWidth)
+        spacing: StyleTokens.space6
+
+        Behavior on width {
+            NumberAnimation {
+                duration: StyleTokens.easeDurationNormal
+                easing.type: StyleTokens.easeStandard
+            }
+        }
+
+        Button {
+            Layout.alignment: Qt.AlignVCenter
+            iconName: root.appIconName
+            iconSize: StyleControl.iconSizeMd
+            background: StyleTokens.transparent
+            hoverBackground: StyleTokens.transparent
+        }
+
+        Text {
+            Layout.alignment: Qt.AlignVCenter
+            Layout.fillWidth: true
+            Layout.minimumWidth: 0
+            Layout.maximumWidth: StyleBar.windowTitleMaxWidth
+            text: activeToplevel ? activeToplevel.title : ""
+            color: Colors.base05
+            font.family: StyleTokens.fontSans
+            font.pixelSize: StyleBar.labelFontSize
+            elide: Text.ElideRight
+        }
     }
 }

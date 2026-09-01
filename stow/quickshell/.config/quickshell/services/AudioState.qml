@@ -35,6 +35,8 @@ Singleton {
     // Bumped when a node's own properties change without the list length moving,
     // so the counts below re-evaluate.
     property int nodeRevision: 0
+    property int pendingVolumeNodeId: -1
+    property real pendingVolume: 0
 
     readonly property int outputCount: root.countMatching(root.isOutput)
     readonly property int inputCount: root.countMatching(root.isInput)
@@ -134,17 +136,26 @@ Singleton {
         if (!node?.audio)
             return
 
-        node.audio.volume = Math.max(0, Math.min(1, volume))
+        const next = Math.max(0, Math.min(1, volume))
+        pendingVolumeNodeId = node.id
+        pendingVolume = next
+
+        // Quickshell 0.3 echoes writes to some device nodes (notably BlueZ)
+        // without committing them to PipeWire. Send the real write through
+        // wpctl, coalesced so dragging does not spawn a process per pixel.
+        if (!volumeFlush.running)
+            volumeFlush.start()
+
         // Nudging the level of something muted is a request to hear it.
-        if (node.audio.muted && volume > 0)
-            node.audio.muted = false
+        if (node.audio.muted && next > 0)
+            Quickshell.execDetached(["wpctl", "set-mute", String(node.id), "0"])
     }
 
     function toggleMute(node) {
         if (!node?.audio)
             return
 
-        node.audio.muted = !node.audio.muted
+        Quickshell.execDetached(["wpctl", "set-mute", String(node.id), "toggle"])
     }
 
     function selectOutput(node) {
@@ -159,6 +170,24 @@ Singleton {
 
     PwObjectTracker {
         objects: root.trackedNodes
+    }
+
+    Timer {
+        id: volumeFlush
+
+        interval: 25
+        repeat: false
+        onTriggered: {
+            if (root.pendingVolumeNodeId < 0)
+                return
+
+            Quickshell.execDetached([
+                "wpctl",
+                "set-volume",
+                String(root.pendingVolumeNodeId),
+                String(root.pendingVolume),
+            ])
+        }
     }
 
     Instantiator {

@@ -13,7 +13,6 @@ hl.config({
     on_focus_under_fullscreen = 2,
     allow_session_lock_restore = false,
     session_lock_xray = true,
-    session_lock_blur = true,
     initial_workspace_tracking = false,
     focus_on_activate = true,
     render_unfocused_fps = 60,

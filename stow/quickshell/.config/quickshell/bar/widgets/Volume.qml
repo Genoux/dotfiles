@@ -8,8 +8,8 @@ Button {
 
     required property var barWindow
 
-    // Bundled marks rather than the icon theme's, so the glyph is tinted with the
-    // rest of the bar and matches the volume OSD's own icon.
+    // The active MacTahoe theme supplies a small-size symbolic speaker whose
+    // optical weight stays readable beside the other system indicators.
     iconSource: IconRegistry.volumeIcon(Services.AudioState.sinkVolume, Services.AudioState.sinkMuted, Services.AudioState.hasSink)
     interactive: true
     active: popover.open
@@ -32,11 +32,6 @@ Button {
 
         barWindow: root.barWindow
         anchorItem: root
-
-        // Owned by the bar's single live popover, not by the panel itself: the
-        // gallery instantiates a VolumePopover of its own, so a panel that wrote
-        // this on construction left the OSD suppressed for the whole session.
-        onOpenChanged: Services.VolumeOsd.suppressed = open
 
         VolumePopover {
             active: popover.open

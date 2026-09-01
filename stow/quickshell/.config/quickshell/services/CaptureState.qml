@@ -25,6 +25,15 @@ Singleton {
     // Remembered rather than duplicated per scope: the record segment offers
     // two scopes with one toggle, not four entries.
     property bool audioEnabled: false
+    // Countdown before the shutter, in seconds. Three values cycle on one
+    // button rather than opening a picker; 0 is off.
+    readonly property var delayChoices: [0, 3, 5]
+    property int delaySeconds: 0
+    // Runtime countdown state comes from the screenshot script after selection,
+    // not from the button press: slurp may remain open for any length of time.
+    property int countdownSeconds: 0
+    property bool countdownVisible: false
+    property var countdownScreen: null
 
     readonly property string latestPath: captures.length > 0 ? captures[0] : ""
 
@@ -97,8 +106,32 @@ Singleton {
         Quickshell.execDetached(["xdg-open", directory]);
     }
 
+    function cycleDelay() {
+        delaySeconds = delayChoices[(delayChoices.indexOf(delaySeconds) + 1) % delayChoices.length];
+    }
+
+    function showCountdown(seconds) {
+        const remaining = Math.max(0, Number(seconds));
+        if (remaining === 0) {
+            countdownFallback.stop();
+            countdownSeconds = 0;
+            countdownVisible = false;
+            return;
+        }
+
+        countdownSeconds = remaining;
+        countdownScreen = ShellActions.focusedScreen();
+        countdownVisible = true;
+        // Do not strand the OSD if the capture process is killed between ticks.
+        countdownFallback.restart();
+    }
+
     function shoot(mode) {
-        Quickshell.execDetached([ShellActions.localBin + "system-screenshot", mode]);
+        Quickshell.execDetached([
+            ShellActions.localBin + "system-screenshot",
+            mode,
+            "--widget-delay"
+        ]);
     }
 
     function record(scope) {
@@ -106,6 +139,17 @@ Singleton {
         if (audioEnabled)
             command.push("audio");
         Quickshell.execDetached(command);
+    }
+
+    Timer {
+        id: countdownFallback
+
+        interval: 1400
+        repeat: false
+        onTriggered: {
+            root.countdownSeconds = 0;
+            root.countdownVisible = false;
+        }
     }
 
 }

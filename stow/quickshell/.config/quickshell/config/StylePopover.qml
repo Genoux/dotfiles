@@ -42,7 +42,11 @@ Singleton {
     // sized so the stack sits centred with a full spacing step of air on either
     // side: at the previous heights the type filled the band edge to edge and
     // the separators read as walls rather than divisions.
-    readonly property int weatherHeroHeight: 96
+    readonly property int weatherHeroHeight: 104
+    // The current temperature is the hero's primary figure, matching the
+    // oversized reading in the macOS weather menu without promoting all XL
+    // typography across the shell.
+    readonly property int weatherTemperatureSize: 36
     readonly property int weatherStatsHeight: 60
     readonly property int forecastRowHeight: 40
     // The forecast axis opens a group, so it carries the section gap above it.
@@ -146,6 +150,20 @@ Singleton {
     // second click would land on a different tab than the one aimed at. Tabs that
     // hold still are worth more than a panel that hugs its shortest tab.
     readonly property int soundBodyHeight: 220
+
+    // System monitor — wide enough for three compact meters and aligned numeric
+    // process columns, while remaining a glanceable popover rather than a small
+    // dashboard. The process body reserves six stable rows so polling never
+    // shifts the panel or its anchor.
+    readonly property int systemMonitorWidth: 380
+    readonly property int systemHeaderPaddingH: StyleTokens.space12
+    readonly property int systemSummaryHeight: 100
+    readonly property int systemMetricHeight: 70
+    readonly property int systemMeterHeight: StyleTokens.space4
+    readonly property int systemProcessRowHeight: 30
+    readonly property int systemProcessRowCount: 6
+    readonly property int systemProcessValueWidth: 42
+    readonly property int systemProcessListHeight: systemProcessRowHeight * systemProcessRowCount + StyleTokens.space8
 
     readonly property int pillPaddingH: StyleTokens.space10
     readonly property int pillPaddingV: StyleTokens.space6

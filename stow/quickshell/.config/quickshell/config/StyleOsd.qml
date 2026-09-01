@@ -26,8 +26,11 @@ Singleton {
     readonly property color stepEmpty: Qt.rgba(1, 1, 1, 0.2)
     readonly property color stepFilled: Qt.rgba(1, 1, 1, 1)
     readonly property color border: StyleTokens.alphaLight
+    // Hyprland's blur radius is global, so OSDs temper it through their shared
+    // glass opacity rather than weakening blur for every shell surface.
+    readonly property real backgroundAlpha: 0.14
 
     function background(color) {
-        return StyleTokens.surfaceAlpha(color, 0.1)
+        return StyleTokens.surfaceAlpha(color, backgroundAlpha)
     }
 }

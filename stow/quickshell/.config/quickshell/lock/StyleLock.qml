@@ -3,15 +3,12 @@ import Quickshell
 pragma Singleton
 
 Singleton {
-    // extra dark overlay, 0 = none
-    // ms; slides off the top to reveal desktop
-    // lock surface fade out on unlock
-
     readonly property color transparent: "transparent"
-    // ── Dim ───────────────────────────────────────────────────────────────────
-    // The desktop behind is shown and blurred by Hyprland itself
-    // (misc:session_lock_xray + misc:session_lock_blur). This only darkens it.
-    readonly property real wallpaperDimOpacity: 0.2
+    // ── Wallpaper / dim ───────────────────────────────────────────────────────
+    readonly property string wallpaperPath: Quickshell.env("HOME") + "/.config/hypr/wallpapers/current/current_wallpaper.jpg"
+    readonly property real wallpaperBlur: 0.8
+    readonly property int wallpaperBlurMax: 32
+    readonly property real wallpaperDimOpacity: 0.08
     // full-screen dim overlay, 0 = none
     // ── Clock ─────────────────────────────────────────────────────────────────
     readonly property string fontDisplay: "SF Pro Display"
@@ -70,5 +67,5 @@ Singleton {
     // ── Animation ─────────────────────────────────────────────────────────────
     readonly property int fadeInDuration: 240
     // lock surface fade in over desktop
-    readonly property int fadeOutDuration: 160
+    readonly property int fadeOutDuration: 320
 }

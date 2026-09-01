@@ -75,6 +75,7 @@ PanelWindow {
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.verticalCenter: parent.verticalCenter
             hyprMonitor: bar.hyprMonitor
+            availableWidth: Math.max(0, rightRow.x - StyleTokens.space6 - windowTitle.x)
         }
 
         RowLayout {
@@ -141,6 +142,7 @@ PanelWindow {
                 }
 
                 Widgets.Temperature {
+                    barWindow: bar
                 }
 
                 Widgets.Clock {

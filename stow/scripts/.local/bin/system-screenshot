@@ -11,10 +11,34 @@ mkdir -p "$OUTPUT_DIR"
 # old behaviour of opening the annotation editor before anything is saved.
 EDIT=false
 
+# Countdown before the shutter, applied after any selection is made — you pick
+# the region, then the clock runs.
+DELAY=0
+USE_WIDGET_DELAY=false
+
 # Announce the capture to the shell. Best-effort on purpose: quickshell may be
 # dead or restarting, and that must not fail a capture or print noise.
 announce() {
   quickshell ipc call capture saved "$1" >/dev/null 2>&1 || true
+}
+
+# Each tick is shell-owned presentation, while this process remains the clock.
+# That keeps the selected-region-first timing correct and makes the overlay
+# best-effort just like the post-capture preview.
+countdown() {
+  local remaining
+
+  for ((remaining = DELAY; remaining > 0; remaining--)); do
+    quickshell ipc call capture countdown "$remaining" >/dev/null 2>&1 || true
+    sleep 1
+  done
+
+  quickshell ipc call capture countdown 0 >/dev/null 2>&1 || true
+
+  # Same wait, same reason as the one after slurp: the overlay is a layer
+  # surface and grim reads the framebuffer, so without this the last numeral
+  # is in the picture.
+  sleep 0.15
 }
 
 # Shell first, clipboard second: the card is what you are waiting to see, and
@@ -26,7 +50,23 @@ finish() {
 
 # grim writes the file itself, then the shell and the clipboard are updated.
 # With --edit the pixels go to satty instead and it owns the save.
+resolve_widget_delay() {
+  local widget_delay
+
+  $USE_WIDGET_DELAY || return
+
+  # Resolve this only once selection has closed. The widget and keybind paths
+  # therefore share the same select-first, countdown-second behavior.
+  widget_delay=$(quickshell ipc call capture delay 2>/dev/null) || return
+  if [[ "$widget_delay" =~ ^[0-9]+$ ]]; then
+    DELAY="$widget_delay"
+  fi
+}
+
 capture() {
+  resolve_widget_delay
+  ((DELAY > 0)) && countdown
+
   if $EDIT; then
     grim "$@" - | satty --filename - --output-filename "$FILENAME"
     return
@@ -93,9 +133,14 @@ for arg in "$@"; do
     --edit)
       EDIT=true
       ;;
+    --widget-delay)
+      USE_WIDGET_DELAY=true
+      ;;
+    [0-9] | [0-9][0-9])
+      DELAY="$arg"
+      ;;
   esac
 done
-
 
 case "$MODE" in
     window)

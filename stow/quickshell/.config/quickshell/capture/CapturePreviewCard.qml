@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Effects
 import Quickshell.Io
 import Quickshell.Widgets
 import qs
@@ -130,14 +131,33 @@ Rectangle {
         color: StyleTokens.transparent
 
         Image {
+            id: thumbnailImage
+
             anchors.fill: parent
-            visible: root.thumbnail.length > 0
+            visible: false
             source: root.thumbnail
             fillMode: Image.PreserveAspectCrop
             asynchronous: true
             // The poster path is derived from the file name, so a cached frame
             // would outlive the capture it came from.
             cache: false
+        }
+
+        MultiEffect {
+            anchors.fill: parent
+            visible: root.thumbnail.length > 0
+            source: thumbnailImage
+            blurEnabled: true
+            blur: root.hovered ? StyleCapture.previewBlur : 0
+            blurMax: StyleCapture.previewBlurMax
+            autoPaddingEnabled: false
+
+            Behavior on blur {
+                NumberAnimation {
+                    duration: StyleTokens.easeDurationFast
+                    easing.type: StyleTokens.easeStandard
+                }
+            }
         }
 
         // Dimming the capture is what makes icons over a photograph legible at

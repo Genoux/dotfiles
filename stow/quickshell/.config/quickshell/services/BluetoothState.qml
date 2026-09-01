@@ -67,6 +67,9 @@ Singleton {
     property int reconnectAttempts: 0
     property int powerAttempts: 0
     property string pendingAudioAddress: ""
+    property string busyAddress: ""
+    property string errorAddress: ""
+    property string errorText: ""
 
     function knownDevices() {
         if (!adapter)
@@ -76,6 +79,34 @@ Singleton {
 
     function bumpDevices() {
         deviceRevision++
+    }
+
+    function commandFailed(output) {
+        const text = String(output || "")
+        return text.includes("Failed to") || text.includes("not available")
+    }
+
+    function pairingError(output) {
+        const text = String(output || "")
+        if (text.includes("AuthenticationFailed"))
+            return "Pairing rejected by device"
+        if (text.includes("AuthenticationRejected"))
+            return "Pairing confirmation rejected"
+        if (text.includes("AuthenticationCanceled"))
+            return "Pairing canceled"
+        if (text.includes("AuthenticationTimeout") || text.includes("Timed out"))
+            return "Pairing timed out"
+        return "Could not pair"
+    }
+
+    function agentCapability(device) {
+        const icon = String(device?.icon || "")
+        return icon.startsWith("input-") ? "KeyboardDisplay" : "NoInputNoOutput"
+    }
+
+    function finishPairableWindow() {
+        if (adapter && !discovering && busyAddress.length === 0)
+            adapter.pairable = false
     }
 
     function isAudioDevice(device) {
@@ -206,14 +237,18 @@ Singleton {
     function startScan() {
         if (!adapter || !adapter.enabled)
             return
+        adapter.pairableTimeout = Math.ceil(scanTimeoutMs / 1000) + 45
+        adapter.pairable = true
         adapter.discovering = true
         scanStopTimer.restart()
     }
 
     function stopScan() {
         scanStopTimer.stop()
-        if (adapter)
+        if (adapter) {
             adapter.discovering = false
+            finishPairableWindow()
+        }
     }
 
     function toggleScan() {
@@ -230,17 +265,37 @@ Singleton {
         const busy = device.pairing
             || device.state === Bluez.BluetoothDeviceState.Connecting
             || device.state === Bluez.BluetoothDeviceState.Disconnecting
+            || busyAddress.length > 0
         if (busy)
             return
 
+        busyAddress = device.address
+        errorAddress = ""
+        errorText = ""
+
         if (!device.paired) {
             pendingPairAddress = device.address
-            device.trusted = true
-            device.pair()
+            adapter.pairableTimeout = 60
+            adapter.pairable = true
+            // Quickshell 0.3 exposes pair(), but does not provide the BlueZ
+            // agent that pairing needs. bluetoothctl supplies that agent while
+            // the native model continues to own the device state shown in QML.
+            pairProcess.exec([
+                "bash",
+                "-c",
+                `
+                bluetoothctl --agent "$2" --timeout 30 pair "$1" \
+                    && bluetoothctl trust "$1" \
+                    && bluetoothctl --timeout 15 connect "$1"
+                `,
+                "bluetooth-pair",
+                device.address,
+                root.agentCapability(device),
+            ])
             return
         }
 
-        device.connect()
+        connectProcess.exec(["bluetoothctl", "--timeout", "15", "connect", device.address])
     }
 
     function forgetDevice(device) {
@@ -391,6 +446,45 @@ Singleton {
     }
 
     Process {
+        id: connectProcess
+
+        stdout: StdioCollector {
+            id: connectOutput
+        }
+        stderr: StdioCollector {}
+
+        onExited: (exitCode) => {
+            // bluetoothctl returns zero for some BlueZ failures, including
+            // br-connection-create-socket, so its text is part of the result.
+            if (exitCode !== 0 || root.commandFailed(connectOutput.text)) {
+                root.errorAddress = root.busyAddress
+                root.errorText = "Could not connect"
+            }
+            root.busyAddress = ""
+            root.finishPairableWindow()
+        }
+    }
+
+    Process {
+        id: pairProcess
+
+        stdout: StdioCollector {
+            id: pairOutput
+        }
+        stderr: StdioCollector {}
+
+        onExited: (exitCode) => {
+            if (exitCode !== 0 || root.commandFailed(pairOutput.text)) {
+                root.errorAddress = root.busyAddress
+                root.errorText = root.pairingError(pairOutput.text)
+                root.pendingPairAddress = ""
+            }
+            root.busyAddress = ""
+            root.finishPairableWindow()
+        }
+    }
+
+    Process {
         command: ["mkdir", "-p", `${StandardPaths.writableLocation(StandardPaths.HomeLocation)}/.local/state/quickshell`]
         running: true
     }
@@ -436,6 +530,11 @@ Singleton {
             function onConnectedChanged() {
                 root.bumpDevices()
                 if (modelData.connected) {
+                    if (modelData.address === root.busyAddress)
+                        root.busyAddress = ""
+                    if (modelData.address === root.errorAddress)
+                        root.errorAddress = ""
+                    root.errorText = ""
                     root.persistLastConnected(modelData.address)
                     if (modelData.address === root.lastConnectedAddress) {
                         root.reconnectOnEnable = false
@@ -449,8 +548,6 @@ Singleton {
                 root.bumpDevices()
                 if (modelData.paired && modelData.address === root.pendingPairAddress) {
                     root.pendingPairAddress = ""
-                    if (!modelData.connected)
-                        modelData.connect()
                 }
             }
 
@@ -476,7 +573,10 @@ Singleton {
         onObjectRemoved: root.bumpDevices()
     }
 
-    Component.onCompleted: Qt.callLater(root.activateConnectedAudio)
+    Component.onCompleted: {
+        Qt.callLater(root.activateConnectedAudio)
+        root.finishPairableWindow()
+    }
 
     function activateConnectedAudio() {
         for (const device of root.knownDevices()) {

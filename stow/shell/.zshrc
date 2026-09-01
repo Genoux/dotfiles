@@ -241,3 +241,11 @@ export PATH="$HOME/.cargo/bin:$PATH"
 # >>> Codex installer >>>
 export PATH="/home/john/.local/bin:$PATH"
 # <<< Codex installer <<<
+
+# Run a command in a memory-capped cgroup scope, so one runaway dev server
+# cannot take the whole machine down. MemoryHigh throttles and forces reclaim;
+# MemoryMax is the hard wall. Usage: capdev bun dev
+# ponytail: fixed 3G/4G limits, parameterise if a project genuinely needs more.
+capdev() {
+  systemd-run --user --scope -q -p MemoryHigh=3G -p MemoryMax=4G -- "$@"
+}

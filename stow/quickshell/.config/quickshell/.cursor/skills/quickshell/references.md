@@ -65,9 +65,9 @@ Fonts: SF Pro Text (sans), JetBrainsMono Nerd Font (mono/icon).
 
 ## Icon Strategy (`config/IconRegistry.qml`)
 
-1. Check bundled override in `assets/icons/`
-2. Fall back to `Quickshell.iconPath()` from Freedesktop theme
-3. `IconButton` tints bundled SVGs via `ColorOverlay`
+1. Resolve first-party shell symbols from MacTahoe through `Quickshell.iconPath()`
+2. Keep application and tray artwork application-owned
+3. Apply the shared symbolic optical inset in `ThemedIcon`
 
 ## External Integrations
 

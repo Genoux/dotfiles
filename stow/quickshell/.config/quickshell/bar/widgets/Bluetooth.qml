@@ -7,7 +7,7 @@ Button {
 
     required property var barWindow
 
-    iconSource: IconRegistry.barControlIcon("bluetooth")
+    iconSource: IconRegistry.bluetoothIcon(true)
     interactive: true
     active: popover.open
     onClicked: popover.toggle()

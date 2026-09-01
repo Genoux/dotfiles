@@ -18,6 +18,10 @@ Item {
     // resetting the tab when the panel closes, say — would move the content while
     // leaving the segments showing the stale one.
     property int currentIndex: 0
+    // The track breathes by the same amount inside and between segments, so
+    // selected tabs sit on one consistent four-sided spacing grid.
+    readonly property int segmentGap: StyleTokens.space4
+    readonly property real segmentRadius: Math.max(0, StyleTokens.radiusSm - segmentGap)
 
     signal segmentSelected(int index)
 
@@ -36,7 +40,8 @@ Item {
         id: segmentRow
 
         anchors.fill: parent
-        spacing: StyleTokens.space4
+        anchors.margins: control.segmentGap
+        spacing: control.segmentGap
 
         Repeater {
             model: control.labels
@@ -49,10 +54,10 @@ Item {
 
                 readonly property bool selected: segment.index === control.currentIndex
 
-                width: (control.width - segmentRow.spacing * Math.max(0, control.labels.length - 1))
+                width: (segmentRow.width - segmentRow.spacing * Math.max(0, control.labels.length - 1))
                     / Math.max(1, control.labels.length)
-                height: control.height
-                radius: StyleTokens.radiusSm
+                height: segmentRow.height
+                radius: control.segmentRadius
                 color: {
                     if (segment.selected)
                         return StyleTokens.alphaLight

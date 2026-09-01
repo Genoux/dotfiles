@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls as Controls
 import qs
 import qs.config
 
@@ -20,7 +21,7 @@ Item {
     // dragging — which also stops the handle snapping backwards on release.
     property real shownValue: 0
 
-    readonly property bool scrubbing: hit.pressed
+    readonly property bool scrubbing: control.pressed
 
     signal moved(real value)
 
@@ -29,14 +30,8 @@ Item {
 
     // The handle's centre travels between the two ends rather than its left edge,
     // so clicking the far left reads exactly 0 and the far right exactly 1.
-    readonly property real travel: Math.max(1, width - StyleControl.sliderHandleSize)
-
     function clamped(v) {
         return Math.max(0, Math.min(1, v))
-    }
-
-    function valueAt(x) {
-        return clamped((x - StyleControl.sliderHandleSize / 2) / slider.travel)
     }
 
     function commit(v) {
@@ -46,63 +41,61 @@ Item {
     }
 
     onValueChanged: {
-        if (!hit.pressed)
+        if (!control.pressed)
             shownValue = clamped(value)
+    }
+
+    onShownValueChanged: {
+        if (!control.pressed && control.value !== shownValue)
+            control.value = shownValue
     }
 
     Component.onCompleted: shownValue = clamped(value)
 
-    Rectangle {
-        id: track
-
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.verticalCenter: parent.verticalCenter
-        height: StyleControl.sliderTrackHeight
-        radius: StyleTokens.radiusXs
-        color: StyleTokens.alphaLight
-
-        Rectangle {
-            // Ends at the handle's centre so fill and handle agree on where the
-            // current level is.
-            width: StyleControl.sliderHandleSize / 2 + slider.travel * slider.shownValue
-            height: parent.height
-            radius: parent.radius
-            color: Colors.base05
-        }
-    }
-
-    Rectangle {
-        width: StyleControl.sliderHandleSize
-        height: width
-        radius: width / 2
-        x: slider.travel * slider.shownValue
-        anchors.verticalCenter: parent.verticalCenter
-        color: Colors.base05
-        // The handle is the one thing that grows under the pointer, so the grab
-        // is legible without moving anything else.
-        scale: slider.scrubbing ? 1.15 : 1
-
-        Behavior on scale {
-            NumberAnimation {
-                duration: StyleTokens.easeDurationFast
-                easing.type: StyleTokens.easeStandard
-            }
-        }
-    }
-
-    MouseArea {
-        id: hit
+    Controls.Slider {
+        id: control
 
         anchors.fill: parent
-        // A slider inside a Flickable list must keep the drag it started, or a
-        // horizontal scrub gets stolen as a vertical flick.
-        preventStealing: true
-        cursorShape: Qt.PointingHandCursor
-        onPressed: (mouse) => slider.commit(slider.valueAt(mouse.x))
-        onPositionChanged: (mouse) => {
-            if (pressed)
-                slider.commit(slider.valueAt(mouse.x))
+        from: 0
+        to: 1
+        live: true
+        // Keep this imperative. Binding the control's writable value back to
+        // shownValue lets the handle move, but forces `value` back to the old
+        // server level before onMoved can publish the user's new position.
+        Component.onCompleted: value = slider.shownValue
+        onMoved: slider.commit(value)
+
+        background: Rectangle {
+            x: control.leftPadding
+            y: control.topPadding + control.availableHeight / 2 - height / 2
+            width: control.availableWidth
+            height: StyleControl.sliderTrackHeight
+            radius: StyleTokens.radiusXs
+            color: StyleTokens.alphaLight
+
+            Rectangle {
+                width: parent.width * control.visualPosition
+                height: parent.height
+                radius: parent.radius
+                color: Colors.base05
+            }
+        }
+
+        handle: Rectangle {
+            x: control.leftPadding + control.visualPosition * (control.availableWidth - width)
+            y: control.topPadding + control.availableHeight / 2 - height / 2
+            width: StyleControl.sliderHandleSize
+            height: width
+            radius: width / 2
+            color: Colors.base05
+            scale: slider.scrubbing ? 1.15 : 1
+
+            Behavior on scale {
+                NumberAnimation {
+                    duration: StyleTokens.easeDurationFast
+                    easing.type: StyleTokens.easeStandard
+                }
+            }
         }
     }
 

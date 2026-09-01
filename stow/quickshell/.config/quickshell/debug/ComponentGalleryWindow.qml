@@ -1,6 +1,7 @@
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
+import Qt5Compat.GraphicalEffects
 import QtQuick
 import qs
 import qs.bar.widgets as Widgets
@@ -177,6 +178,123 @@ PanelWindow {
         }
     }
 
+    // A like-for-like bar sample for evaluating installed icon packs. Every
+    // row uses glyphs or SVGs shipped by the named pack; this guide never
+    // redraws a missing icon or mixes in a substitute from another pack.
+    component IconPackBarPreview: Rectangle {
+        id: preview
+
+        property string fontFamily: ""
+        property var glyphs: []
+        property var iconSources: []
+        property bool materialAxes: false
+        property bool filled: false
+        property int iconWeight: Font.Normal
+
+        width: parent.width
+        height: 44
+        radius: StyleTokens.radiusMd
+        color: StyleBar.background
+        border.width: StyleTokens.borderWidth
+        border.color: StyleOverlay.surfaceBorder
+
+        Row {
+            anchors.left: parent.left
+            anchors.leftMargin: StyleTokens.space12
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: StyleTokens.space10
+
+            Repeater {
+                model: [1, 2, 3]
+
+                Text {
+                    required property int modelData
+
+                    text: modelData
+                    color: modelData === 2 ? Colors.base05 : Colors.base04
+                    font.family: StyleTokens.fontSans
+                    font.pixelSize: StyleTokens.fontSizeXs
+                    font.weight: modelData === 2 ? Font.DemiBold : Font.Normal
+                }
+            }
+        }
+
+        Row {
+            anchors.right: parent.right
+            anchors.rightMargin: StyleTokens.space12
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: StyleTokens.space8
+
+            Repeater {
+                model: preview.glyphs
+
+                Text {
+                    required property var modelData
+                    readonly property var glyphValue: typeof modelData === "object" ? modelData.glyph : modelData
+
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: typeof glyphValue === "number" ? String.fromCodePoint(glyphValue) : glyphValue
+                    color: Colors.base05
+                    font.family: typeof modelData === "object" ? modelData.family : preview.fontFamily
+                    font.pixelSize: StyleTokens.fontSizeLg
+                    font.weight: preview.iconWeight
+                    font.variableAxes: preview.materialAxes ? {
+                        "FILL": preview.filled ? 1 : 0,
+                        "wght": 400,
+                        "GRAD": 0,
+                        "opsz": 20
+                    } : {}
+                }
+            }
+
+            Repeater {
+                model: preview.iconSources
+
+                Item {
+                    id: themeGlyph
+
+                    required property string modelData
+
+                    width: StyleTokens.fontSizeLg
+                    height: StyleTokens.fontSizeLg
+
+                    Image {
+                        id: themeGlyphImage
+
+                        anchors.fill: parent
+                        source: themeGlyph.modelData
+                        sourceSize: Qt.size(width, height)
+                        fillMode: Image.PreserveAspectFit
+                        visible: false
+                    }
+
+                    ColorOverlay {
+                        anchors.fill: parent
+                        source: themeGlyphImage
+                        color: Colors.base05
+                    }
+                }
+            }
+
+            Text {
+                anchors.verticalCenter: parent.verticalCenter
+                text: "EN"
+                color: Colors.base05
+                font.family: StyleTokens.fontSans
+                font.pixelSize: StyleTokens.fontSizeXs
+                font.weight: Font.Medium
+            }
+
+            Text {
+                anchors.verticalCenter: parent.verticalCenter
+                text: "22°  14:59"
+                color: Colors.base05
+                font.family: StyleTokens.fontSans
+                font.pixelSize: StyleTokens.fontSizeXs
+            }
+        }
+    }
+
     MouseArea {
         anchors.fill: parent
         acceptedButtons: Qt.LeftButton
@@ -233,11 +351,11 @@ PanelWindow {
                     }
 
                     SegmentedControl {
-                        width: 300
+                        width: 400
                         anchors.right: parent.right
                         anchors.rightMargin: StyleTokens.space16 + StyleControl.buttonWidth + StyleTokens.space8
                         anchors.verticalCenter: parent.verticalCenter
-                        labels: ["Components", "Widgets", "Icons"]
+                        labels: ["Components", "Widgets", "Icon packs", "Icons"]
                         currentIndex: root.galleryPage
                         onSegmentSelected: (index) => root.galleryPage = index
                     }
@@ -250,7 +368,7 @@ PanelWindow {
                 Flickable {
                     id: galleryFlick
 
-                    visible: root.galleryPage < 2
+                    visible: root.galleryPage < 3
                     width: parent.width
                     height: parent.height - 69
                     contentWidth: width
@@ -465,11 +583,132 @@ PanelWindow {
                                 springReveal: false
                             }
                         }
+
+                        GalleryCard {
+                            page: 2
+                            title: "MacTahoe · current"
+
+                            IconPackBarPreview {
+                                iconSources: [
+                                    IconRegistry.weatherIcon("few-clouds"),
+                                    IconRegistry.volumeIcon(0.8, false, true),
+                                    IconRegistry.networkIcon("wireless"),
+                                    IconRegistry.bluetoothIcon(true),
+                                    IconRegistry.batteryIcon(100, false)
+                                ]
+                            }
+                        }
+
+                        GalleryCard {
+                            page: 2
+                            title: "Material Symbols Rounded"
+
+                            IconPackBarPreview {
+                                fontFamily: "Material Symbols Rounded"
+                                materialAxes: true
+                                glyphs: ["partly_cloudy_day", "volume_up", "wifi", "bluetooth", "battery_full"]
+                            }
+                        }
+
+                        GalleryCard {
+                            page: 2
+                            title: "Material Symbols Rounded · filled"
+
+                            IconPackBarPreview {
+                                fontFamily: "Material Symbols Rounded"
+                                materialAxes: true
+                                filled: true
+                                glyphs: ["partly_cloudy_day", "volume_up", "wifi", "bluetooth", "battery_full"]
+                            }
+                        }
+
+                        GalleryCard {
+                            page: 2
+                            title: "Material Symbols Sharp"
+
+                            IconPackBarPreview {
+                                fontFamily: "Material Symbols Sharp"
+                                materialAxes: true
+                                glyphs: ["partly_cloudy_day", "volume_up", "wifi", "bluetooth", "battery_full"]
+                            }
+                        }
+
+                        GalleryCard {
+                            page: 2
+                            title: "Material Design Icons"
+
+                            IconPackBarPreview {
+                                fontFamily: "Material Design Icons"
+                                glyphs: [0xF0595, 0xF057E, 0xF05A9, 0xF00AF, 0xF12A3]
+                            }
+                        }
+
+                        GalleryCard {
+                            page: 2
+                            title: "Font Awesome Solid"
+
+                            IconPackBarPreview {
+                                fontFamily: "Font Awesome 7 Free Solid"
+                                iconWeight: Font.Black
+                                glyphs: [
+                                    0xF6C4,
+                                    0xF028,
+                                    0xF1EB,
+                                    { glyph: 0xF294, family: "Font Awesome 7 Brands" },
+                                    0xF240
+                                ]
+                            }
+                        }
+
+                        GalleryCard {
+                            page: 2
+                            title: "Papirus"
+
+                            IconPackBarPreview {
+                                iconSources: [
+                                    "file:///usr/share/icons/Papirus/16x16/panel/weather-clear.svg",
+                                    "file:///usr/share/icons/Papirus/16x16/panel/audio-volume-high.svg",
+                                    "file:///usr/share/icons/Papirus/16x16/panel/network-wireless-signal-excellent.svg",
+                                    "file:///usr/share/icons/Papirus/16x16/panel/bluetooth-active.svg",
+                                    "file:///usr/share/icons/Papirus/16x16/panel/battery-100.svg"
+                                ]
+                            }
+                        }
+
+                        GalleryCard {
+                            page: 2
+                            title: "Breeze"
+
+                            IconPackBarPreview {
+                                iconSources: [
+                                    "file:///usr/share/icons/breeze/applets/48/weather-clear.svg",
+                                    "file:///usr/share/icons/breeze/status/16/audio-volume-high.svg",
+                                    "file:///usr/share/icons/breeze/devices/16/network-wireless-connected-100.svg",
+                                    "file:///usr/share/icons/breeze/devices/16/network-bluetooth.svg",
+                                    "file:///usr/share/icons/breeze/status/16/battery-100.svg"
+                                ]
+                            }
+                        }
+
+                        GalleryCard {
+                            page: 2
+                            title: "Adwaita"
+
+                            IconPackBarPreview {
+                                iconSources: [
+                                    "file:///usr/share/icons/Adwaita/symbolic/status/weather-clear-symbolic.svg",
+                                    "file:///usr/share/icons/Adwaita/symbolic/status/audio-volume-high-symbolic.svg",
+                                    "file:///usr/share/icons/Adwaita/symbolic/status/network-wireless-signal-excellent-symbolic.svg",
+                                    "file:///usr/share/icons/Adwaita/symbolic/status/bluetooth-active-symbolic.svg",
+                                    "file:///usr/share/icons/Adwaita/symbolic/legacy/battery-full-symbolic.svg"
+                                ]
+                            }
+                        }
                     }
                 }
 
                 Column {
-                    visible: root.galleryPage === 2
+                    visible: root.galleryPage === 3
                     width: parent.width
                     height: parent.height - 69
 
@@ -481,7 +720,7 @@ PanelWindow {
                             anchors.left: parent.left
                             anchors.leftMargin: StyleTokens.space20
                             anchors.verticalCenter: parent.verticalCenter
-                            text: "Lucide · " + root.filteredIconNames.length + " icons"
+                            text: "MacTahoe · " + root.filteredIconNames.length + " symbolic icons"
                         }
 
                         Rectangle {
@@ -499,7 +738,7 @@ PanelWindow {
                                 anchors.left: parent.left
                                 anchors.leftMargin: StyleTokens.space10
                                 anchors.verticalCenter: parent.verticalCenter
-                                source: IconRegistry.lucideIcon("search")
+                                source: IconRegistry.barControlIcon("launcher")
                                 tint: Colors.base04
                             }
 
@@ -554,7 +793,7 @@ PanelWindow {
 
                             ThemedIcon {
                                 anchors.horizontalCenter: parent.horizontalCenter
-                                source: IconRegistry.lucideIcon(iconCell.modelData)
+                                source: IconRegistry.themeIcon(iconCell.modelData)
                                 size: StyleControl.iconSize * 1.5
                             }
 
@@ -574,12 +813,25 @@ PanelWindow {
         }
     }
 
-    // Lucide is a ligature font: QML cannot enumerate its glyphs, so the name
-    // list is generated from the installed TTF. Regenerate after a
-    // ttf-lucide-font update.
-    FileView {
-        path: Quickshell.shellPath("assets/lucide-icons.txt")
-        printErrors: false
-        onLoaded: root.iconNames = text().split("\n").filter((name) => name.length > 0)
+    // The gallery follows the installed pack instead of carrying a generated
+    // catalog that drifts whenever MacTahoe adds or renames icons.
+    Process {
+        command: ["find", "/usr/share/icons/MacTahoe", "-path", "*/symbolic/*.svg", "-printf", "%f\n"]
+        running: true
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const seen = ({})
+                const names = []
+                for (const fileName of text.split("\n")) {
+                    const name = fileName.replace(/\.svg$/, "")
+                    if (name.length === 0 || seen[name])
+                        continue
+                    seen[name] = true
+                    names.push(name)
+                }
+                root.iconNames = names.sort()
+            }
+        }
     }
 }

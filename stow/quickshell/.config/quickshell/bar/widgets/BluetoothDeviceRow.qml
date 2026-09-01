@@ -14,6 +14,7 @@ Rectangle {
     readonly property bool busy: device.pairing
         || device.state === Bluez.BluetoothDeviceState.Connecting
         || device.state === Bluez.BluetoothDeviceState.Disconnecting
+        || BluetoothState.busyAddress === device.address
     readonly property string displayName: {
         const named = String(device.name || device.deviceName || "").trim()
         return named.length > 0 ? named : device.address
@@ -21,12 +22,16 @@ Rectangle {
     readonly property string statusText: {
         if (device.pairing)
             return "Pairing…"
+        if (BluetoothState.busyAddress === device.address)
+            return device.paired ? "Connecting…" : "Pairing…"
         if (device.state === Bluez.BluetoothDeviceState.Connecting)
             return "Connecting…"
         if (device.state === Bluez.BluetoothDeviceState.Disconnecting)
             return "Disconnecting…"
         if (device.blocked)
             return "Blocked"
+        if (BluetoothState.errorAddress === device.address)
+            return BluetoothState.errorText
         if (device.connected && device.batteryAvailable)
             return "Connected · " + Math.round(device.battery * 100) + "%"
         if (device.connected)
@@ -115,13 +120,11 @@ Rectangle {
         onRemoveRequested: BluetoothState.forgetDevice(row.device)
     }
 
-    MouseArea {
-        anchors.fill: parent
+    TapHandler {
         acceptedButtons: Qt.LeftButton
-        cursorShape: row.busy || row.device.connected ? Qt.ArrowCursor : Qt.PointingHandCursor
-        onClicked: {
-            if (!row.busy && !row.device.connected)
-                BluetoothState.activateDevice(row.device)
-        }
+        enabled: !row.busy && !row.device.connected
+        gesturePolicy: TapHandler.ReleaseWithinBounds
+        cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+        onTapped: BluetoothState.activateDevice(row.device)
     }
 }

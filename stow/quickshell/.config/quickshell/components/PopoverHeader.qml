@@ -8,9 +8,10 @@ Item {
     id: header
 
     property string title: ""
+    property int horizontalPadding: StylePopover.contentPaddingH
     default property alias trailing: trailingSlot.data
 
-    implicitWidth: titleText.implicitWidth + StylePopover.contentPaddingH * 2 + trailingSlot.width
+    implicitWidth: titleText.implicitWidth + horizontalPadding * 2 + trailingSlot.width
     implicitHeight: StylePopover.headerHeight
     height: implicitHeight
 
@@ -18,7 +19,7 @@ Item {
         id: titleText
 
         anchors.left: parent.left
-        anchors.leftMargin: StylePopover.contentPaddingH
+        anchors.leftMargin: header.horizontalPadding
         anchors.right: trailingSlot.left
         anchors.rightMargin: StyleTokens.space8
         anchors.verticalCenter: parent.verticalCenter
@@ -34,7 +35,7 @@ Item {
         id: trailingSlot
 
         anchors.right: parent.right
-        anchors.rightMargin: StylePopover.contentPaddingH
+        anchors.rightMargin: header.horizontalPadding
         anchors.verticalCenter: parent.verticalCenter
         width: childrenRect.width
         height: childrenRect.height

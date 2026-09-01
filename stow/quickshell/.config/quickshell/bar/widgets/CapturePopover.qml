@@ -115,13 +115,35 @@ PopoverPanel {
                 width: parent.width
                 title: "Capture"
 
-                PillButton {
-                    iconSource: IconRegistry.captureIcon("folder")
-                    paddingHorizontal: StylePopover.iconButtonPadding
-                    paddingVertical: StylePopover.iconButtonPadding
-                    onClicked: {
-                        Services.CaptureState.openFolder()
-                        root.dismissRequested()
+                Row {
+                    spacing: StyleTokens.space4
+
+                    // States its value with the label, like the audio tile
+                    // states its own with the glyph. Grows leftward, so the
+                    // folder button never moves under the pointer.
+                    PillButton {
+                        anchors.verticalCenter: parent.verticalCenter
+                        iconSource: IconRegistry.captureIcon("delay")
+                        text: Services.CaptureState.delaySeconds > 0
+                            ? Services.CaptureState.delaySeconds + "s"
+                            : ""
+                        active: Services.CaptureState.delaySeconds > 0
+                        paddingHorizontal: hasText
+                            ? StylePopover.pillPaddingH
+                            : StylePopover.iconButtonPadding
+                        paddingVertical: StylePopover.iconButtonPadding
+                        onClicked: Services.CaptureState.cycleDelay()
+                    }
+
+                    PillButton {
+                        anchors.verticalCenter: parent.verticalCenter
+                        iconSource: IconRegistry.captureIcon("folder")
+                        paddingHorizontal: StylePopover.iconButtonPadding
+                        paddingVertical: StylePopover.iconButtonPadding
+                        onClicked: {
+                            Services.CaptureState.openFolder()
+                            root.dismissRequested()
+                        }
                     }
                 }
             }

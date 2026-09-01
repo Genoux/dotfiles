@@ -30,8 +30,8 @@ ShellRoot {
         locked: true
 
         WlSessionLockSurface {
-            // Transparent so Hyprland composites the live desktop behind the
-            // lock UI, letting the opacity fade read against the real desktop.
+            // Transparent beneath LockSurface so its wallpaper-backed scene can
+            // fade directly into the live desktop on unlock.
             color: "transparent"
 
             LockSurface {

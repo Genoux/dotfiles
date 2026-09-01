@@ -5,6 +5,10 @@ import Quickshell
 import QtQuick
 
 Singleton {
+    // The countdown uses the same restrained OSD chrome as volume, but a
+    // smaller square: one changing numeral is all it needs to communicate.
+    readonly property int countdownSize: 72
+
     // Preview card. A tile, not a banner: at notification width the thumbnail
     // stretched across the corner, and a capture is a picture, not text. The
     // window is right-anchored, so the card's right edge still lands on the
@@ -28,6 +32,12 @@ Singleton {
     // border rule: the alpha carries it, not the width.
     readonly property color border: Qt.rgba(1, 1, 1, 0.08)
     readonly property int posterWidth: cardWidth
+
+    // Hover turns the thumbnail into a frosted backdrop for the actions. Keep
+    // the radius below the lock screen's: this is a small preview that should
+    // remain recognisable, not a privacy surface.
+    readonly property real previewBlur: 0.55
+    readonly property int previewBlurMax: 20
 
     // Icons over a photograph need the photograph dimmed to stay legible. The
     // controls themselves are ordinary PillButtons on top of that.

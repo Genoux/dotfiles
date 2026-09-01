@@ -7,7 +7,7 @@ import qs.services
 PopoverPanel {
     id: root
 
-    readonly property int heroIconSize: 44
+    readonly property int heroIconSize: 32
     readonly property int forecastIconSize: 20
     readonly property int popoverWidth: StylePopover.panelWidth
     readonly property int padH: StylePopover.contentPaddingH
@@ -74,6 +74,10 @@ PopoverPanel {
     readonly property int minLabelX: trackLeft - columnGap - tempLabelWidth
 
     readonly property string todayDate: Qt.formatDate(new Date(), "yyyy-MM-dd")
+    readonly property var todayForecast: WeatherState.forecast.length > 0 ? WeatherState.forecast[0] : null
+    readonly property string todayHighLow: todayForecast
+        ? "H:" + degreeLabel(todayForecast.maxTemp) + " L:" + degreeLabel(todayForecast.minTemp)
+        : "H:--° L:--°"
 
     // Formats "2026-07-04" → "Fri", or "Today" for the current day
     function shortDayLabel(dateStr) {
@@ -137,61 +141,89 @@ PopoverPanel {
             spacing: 0
             opacity: root.dataOpacity
 
-        // Hero: location eyebrow over the icon/temp pair over the condition.
-        // One centred stack — the icon and the number are a single mark, and
-        // hanging the condition off the number's left edge left the block
-        // sitting off-centre with nothing to align the panel to.
-        Item {
-            width: parent.width
-            height: StylePopover.weatherHeroHeight
+            // macOS-style weather hero: the location and glanceable temperature
+            // own the left edge, while condition detail forms a compact right-
+            // aligned block. Keeping the two columns independent prevents long
+            // descriptions from shifting the temperature away from the panel edge.
+            Item {
+                width: parent.width
+                height: StylePopover.weatherHeroHeight
 
-            Column {
-                anchors.centerIn: parent
-                width: parent.width - root.padH * 2
-                spacing: StyleTokens.space4
+                Column {
+                    anchors.left: parent.left
+                    anchors.leftMargin: root.padH
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: parent.width / 2 - root.padH
+                    spacing: StyleTokens.space2
 
-                EyebrowLabel {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    width: Math.min(implicitWidth, parent.width)
-                    text: WeatherState.locationName.length > 0 ? WeatherState.locationName : "Weather"
-                    elide: Text.ElideRight
+                    Row {
+                        width: parent.width
+                        spacing: StyleTokens.space4
+
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: Math.min(implicitWidth, parent.width - StyleTokens.fontSizeSm - StyleTokens.space4)
+                            text: WeatherState.locationName.length > 0 ? WeatherState.locationName : "Weather"
+                            color: Colors.base05
+                            font.family: StyleTokens.fontSans
+                            font.pixelSize: StyleTokens.fontSizeLg
+                            font.weight: Font.DemiBold
+                            elide: Text.ElideRight
+                        }
+
+                        ThemedIcon {
+                            anchors.verticalCenter: parent.verticalCenter
+                            source: IconRegistry.shellIcon("navigation")
+                            size: StyleTokens.fontSizeSm
+                        }
+                    }
+
+                    Text {
+                        width: parent.width
+                        text: root.degreeLabel(WeatherState.currentTemp)
+                        color: Colors.base05
+                        font.family: StyleTokens.fontSans
+                        font.pixelSize: StylePopover.weatherTemperatureSize
+                        font.weight: Font.Normal
+                        elide: Text.ElideRight
+                    }
                 }
 
-                Row {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    spacing: StyleTokens.space8
+                Column {
+                    anchors.right: parent.right
+                    anchors.rightMargin: root.padH
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: parent.width / 2
+                    spacing: StyleTokens.space2
 
                     ThemedIcon {
-                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.right: parent.right
                         source: IconRegistry.weatherIcon(WeatherState.icon)
                         size: root.heroIconSize
                     }
 
-                    // Temperature — the glanceable number
                     Text {
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: WeatherState.temperature
+                        width: parent.width
+                        text: WeatherState.description
                         color: Colors.base05
                         font.family: StyleTokens.fontSans
-                        font.pixelSize: StyleTokens.fontSizeXl
-                        font.weight: Font.Light
+                        font.pixelSize: StyleTokens.fontSizeSm
+                        font.weight: Font.Medium
+                        horizontalAlignment: Text.AlignRight
+                        elide: Text.ElideRight
                     }
 
+                    Text {
+                        width: parent.width
+                        text: root.todayHighLow
+                        color: Colors.base04
+                        font.family: StyleTokens.fontSans
+                        font.pixelSize: StyleTokens.fontSizeSm
+                        font.weight: Font.Medium
+                        horizontalAlignment: Text.AlignRight
+                    }
                 }
-
-                Text {
-                    width: parent.width
-                    text: WeatherState.description
-                    color: Colors.base05
-                    font.family: StyleTokens.fontSans
-                    font.pixelSize: StyleTokens.fontSizeSm
-                    horizontalAlignment: Text.AlignHCenter
-                    elide: Text.ElideRight
-                }
-
             }
-
-        }
 
         PopoverSeparator {
             width: parent.width

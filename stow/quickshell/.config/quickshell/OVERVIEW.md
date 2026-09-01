@@ -213,9 +213,9 @@ No `hyprctl` subprocess bridge — uses Quickshell's built-in Hyprland IPC.
 
 ### Icon Strategy (`config/IconRegistry.qml`)
 
-- **Bundled SVGs** in `assets/icons/` — monochrome, tinted via `ColorOverlay`
-- **Everything else** — `Quickshell.iconPath()` from the Freedesktop icon theme
-- `ThemedIcon.qml` picks between the two; `IconRegistry.source()` maps a Freedesktop name to a bundled override where one exists
+- **First-party shell symbols** — semantic MacTahoe names resolved through `Quickshell.iconPath()`
+- **Application and tray artwork** — application-owned names from the same Freedesktop lookup
+- `ThemedIcon.qml` gives symbolic assets a shared optical inset while leaving application artwork full-size
 
 Freedesktop lookup depends on `QT_QPA_PLATFORMTHEME=gtk3`, which reaches Quickshell only when Hyprland spawns it. Restart via `hyprctl dispatch 'hl.dsp.exec_cmd("quickshell")'` or theme icons all resolve to `image-missing`.
 

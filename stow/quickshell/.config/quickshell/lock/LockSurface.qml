@@ -1,13 +1,13 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Effects
 import Quickshell
 import qs
 import qs.config
 import qs.lock
 
-// Root is transparent. Everything lives in fadeLayer whose opacity animates
-// in/out. Because the WlSessionLockSurface is transparent, Hyprland's live
-// desktop shows through behind the fade.
+// Root stays transparent so the unlock fade can reveal the live desktop, while
+// fadeLayer provides a stable wallpaper-backed lock screen.
 Item {
     id: root
 
@@ -79,6 +79,35 @@ Item {
 
         anchors.fill: parent
         opacity: 0
+        // Composite the lock UI as one scene while it fades. Without a layer,
+        // the partially transparent text and dim overlay lose contrast at
+        // different rates and make the foreground appear to vanish first.
+        layer.enabled: fadeIn.running || fadeOut.running
+
+        Item {
+            anchors.fill: parent
+            clip: true
+
+            Image {
+                id: wallpaper
+
+                anchors.fill: parent
+                anchors.margins: -StyleLock.wallpaperBlurMax
+                source: StyleLock.wallpaperPath
+                fillMode: Image.PreserveAspectCrop
+                asynchronous: true
+                visible: false
+            }
+
+            MultiEffect {
+                anchors.fill: wallpaper
+                source: wallpaper
+                blurEnabled: true
+                blur: StyleLock.wallpaperBlur
+                blurMax: StyleLock.wallpaperBlurMax
+                autoPaddingEnabled: false
+            }
+        }
 
         Rectangle {
             anchors.fill: parent

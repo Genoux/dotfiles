@@ -10,7 +10,7 @@ Singleton {
     readonly property int bottomPadding: StyleTokens.space3
     readonly property int labelFontSize: StyleTokens.fontSizeSm + 1
 
-    readonly property int windowTitleMaxWidth: 420
+    readonly property int windowTitleMaxWidth: 320
     readonly property color background: Qt.rgba(0, 0, 0, 0)
 
     readonly property int estimatedContentHeight: StyleControl.iconSizeMd

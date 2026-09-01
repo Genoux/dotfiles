@@ -19,7 +19,7 @@ Rectangle {
     property int paddingRight: paddingHorizontal
     property int paddingVertical: StyleControl.buttonPaddingVertical
     property int iconTextSpacing: StyleControl.iconTextSpacing
-    property int minimumWidth: StyleControl.iconSizeMd
+    property int minimumWidth: StyleControl.buttonWidth
     // Preserve the icon box plus its minimum vertical breathing room.
     property int minimumHeight: StyleControl.iconSize + StyleTokens.space2 * 2
     property color foreground: Colors.base05
