@@ -6,5 +6,15 @@
 # rather than the only one. They can go whenever.
 
 duck = 50
-denoise = true
-record_debug = true
+denoise = false
+record_debug = false
+
+push_to_talk = true
+
+hotkey = super+shift+d
+
+cleanup = medium
+
+sound = true
+
+show_tray = false
