@@ -114,6 +114,10 @@ Singleton {
         return icon.startsWith("audio-")
     }
 
+    function notifyConnected(device) {
+        Quickshell.execDetached(["notify-send", "-a", "Bluetooth", "-i", String(device?.icon || "bluetooth-symbolic"), String(device?.name || device?.address || "Bluetooth device"), "Connected"])
+    }
+
     function cardIdFromAddress(address) {
         return String(address || "").replace(/:/g, "_")
     }
@@ -530,6 +534,7 @@ Singleton {
             function onConnectedChanged() {
                 root.bumpDevices()
                 if (modelData.connected) {
+                    root.notifyConnected(modelData)
                     if (modelData.address === root.busyAddress)
                         root.busyAddress = ""
                     if (modelData.address === root.errorAddress)
