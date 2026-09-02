@@ -1,7 +1,13 @@
 local mainMod = "SUPER"
-local browser = "zen-browser"
-local terminal = "kitty"
-local fileManager = "nautilus"
+
+-- Launch GUI apps through app2unit so each lands in its own app.slice scope.
+-- Launched bare they inherit the compositor's cgroup (session-5.scope), which
+-- systemd-oomd cannot reclaim without killing Hyprland along with them.
+local launchApp = "app2unit -- "
+
+local browser = launchApp .. "zen-browser"
+local terminal = launchApp .. "kitty"
+local fileManager = launchApp .. "nautilus"
 local appLauncher = "quickshell ipc call launcher toggle"
 
 local function requireAction(name)

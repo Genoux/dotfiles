@@ -117,7 +117,10 @@ PanelWindow {
         if (entry.runInTerminal)
             root.launchInTerminal(entry)
         else
-            entry.execute()
+            // app2unit rather than entry.execute(): it puts the app in its own
+            // app.slice scope, so systemd-oomd can reclaim it individually
+            // instead of it inheriting the compositor's session-5.scope.
+            Quickshell.execDetached(["app2unit", "--", `${entry.id}.desktop`])
         Services.Launcher.close()
     }
 
@@ -129,6 +132,6 @@ PanelWindow {
         if (existing?.wayland)
             existing.wayland.activate()
         else
-            Quickshell.execDetached(["kitty", "--class", entry.id, "-e", ...entry.command])
+            Quickshell.execDetached(["app2unit", "--", "kitty", "--class", entry.id, "-e", ...entry.command])
     }
 }
