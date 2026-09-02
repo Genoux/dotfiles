@@ -9,7 +9,7 @@
   "window.commandCenter": true,
   "editor.fontFamily": "JetBrainsMono Nerd Font Prono, JetBrainsMono Nerd Font",
   "window.titleBarStyle": "custom",
-  "window.controlsStyle": "hidden",
+  "window.controlsStyle": "custom",
   "window.customMenuBarAltFocus": false,
   "window.menuBarVisibility": "hidden",
   "terminal.integrated.allowMnemonics": false,
