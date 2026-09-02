@@ -15,6 +15,7 @@ bluez
 bluez-utils
 brightnessctl
 btop
+btrfs-progs
 calcurse
 cava
 ccache
@@ -22,6 +23,7 @@ chrpath
 cmatrix
 cpio
 cpupower
+cups
 curl
 ddcutil
 dfu-util
@@ -133,7 +135,6 @@ libva-utils
 linux
 linux-firmware
 linux-headers
-lutris
 mesa-utils
 mosquitto
 mpv
@@ -177,8 +178,8 @@ python-build
 python-pip
 python-pipx
 python-protobuf
+python-pyqt6
 python-pywal
-qbittorrent
 qt5ct
 qt6ct
 quickshell

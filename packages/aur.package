@@ -16,7 +16,6 @@ dragon-drop
 electron29-bin
 esp-idf
 fabric-ai
-figma-linux
 figma-linux-font-helper
 gitkraken
 gnome-shell-extension-blur-my-shell
@@ -24,7 +23,6 @@ google-breakpad
 google-chrome
 grimblast-git
 gtk-engine-murrine
-heroic-games-launcher-bin
 http-parser
 hyprfloat
 hyprshotgun
@@ -34,7 +32,6 @@ idleon-desktop
 lazyjournal
 localsend-bin
 matugen-bin
-minigalaxy
 ncurses5-compat-libs
 ngrok
 nordvpn-bin
@@ -45,7 +42,6 @@ opencode-desktop
 passmark-performancetest-bin
 phonon-qt5
 phonon-qt5-vlc
-postman-bin
 protonup-qt
 python310
 python-gevent-eventemitter
@@ -67,7 +63,6 @@ tinty-git
 ttf-material-design-icons-git
 ttf-rubik-vf
 tzupdate
-warp-terminal-bin
 waylandar-git
 weather
 witr-bin
