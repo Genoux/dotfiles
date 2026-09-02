@@ -1,14 +1,11 @@
 {
   "env": {
-    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
-    "DISABLE_AUTOUPDATER": "1"
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
   },
-  "autoUpdaterStatus": "disabled",
   "permissions": {
     "allow": [
       "WebFetch",
       "Bash(eza:*)",
-      "Bash(python3:*)",
       "Bash(curl:*)",
       "mcp__plugin_engram_engram__mem_save",
       "mcp__plugin_engram_engram__mem_search",
@@ -60,7 +57,6 @@
       "Bash(sed -n '275,282p' /home/john/Desktop/@inbeat/proof-agent/src/features/clients/components/_components/sst-custom-rules-list.tsx)",
       "Bash(sed -n '166,173p' /home/john/Desktop/@inbeat/proof-agent/src/features/clients/components/_components/sst-disclaimer-list.tsx)",
       "Bash(sd 'features/clients/components/_components/client-settings-pages' 'features/clients/lib/client-settings-pages' src/features/settings/components/settings-view.tsx src/features/settings/lib/settings-routes.ts src/features/clients/components/_components/sst-page-content.tsx src/features/clients/components/_components/product-overview-panel.tsx src/features/clients/components/client-detail-panel.tsx src/features/clients/components/_components/client-overview-panel.tsx)",
-      "Bash(bun run *)",
       "Bash(bunx tsc *)",
       "Bash(bunx vitest *)",
       "Bash(perl -i -pe 's{@/features/clients/lib/sst-merge}{@/shared/lib/sst-merge}g' src/features/sessions/server/workflow-run-submit-helpers.ts)",
@@ -108,7 +104,31 @@
       "Bash(qmllint components/BarPopover.qml components/PopoverPanel.qml config/StyleBar.qml)",
       "Bash(echo \"lint: $?\")",
       "Bash(rg -rn \"layerrule\" /home/john/dotfiles/)",
-      "Bash(ps -o lstart= -p 3008848)"
+      "Bash(ps -o lstart= -p 3008848)",
+      "Bash(xargs -I{} basename {})",
+      "Bash(qmllint components/BarPopover.qml config/StylePopover.qml)",
+      "Bash(echo \"exit $?\")",
+      "WebFetch(domain:deepwiki.com)",
+      "WebFetch(domain:github.com)",
+      "Bash(gh api *)",
+      "Bash(cd /home/john/dotfiles/stow/quickshell/.config/quickshell && echo \"=== stale refs to removed token ===\"; rg -n \"calendarCellHeight\" . || echo \"none - clean\"; echo; echo \"=== all calendar token refs resolve? ===\"; rg -no \"StylePopover\\\\.calendar\\\\w+\" . | sort -u; echo; echo \"=== defined in StylePopover ===\"; rg -no \"property \\\\w+ \\(calendar\\\\w+\\)\" -r '$1' config/StylePopover.qml | sort -u)",
+      "Bash(qmllint --help)",
+      "Bash(qmlformat -n services/WeatherState.qml)",
+      "Bash(echo \"weatherstate_format_exit=$?\")",
+      "Bash(qmlformat -n services/PopoverCoordinator.qml)",
+      "Bash(echo \"coordinator_format_exit=$?\")",
+      "Bash(qmlformat -n bar/widgets/ClockPopover.qml)",
+      "Bash(eza -la /home/john/.config/quickshell/)",
+      "Bash(find /tmp /home/john/.claude -maxdepth 4 -type f \\\\\\( -iname \"*.png\" -o -iname \"*.jpg\" -o -iname \"*.jpeg\" -o -iname \"*.webp\" \\\\\\) -newermt \"-2 hours\" 2>/dev/null)",
+      "Read(//tmp/**)",
+      "Bash(bat -pp public/grain.svg)",
+      "Bash(bat public/grain.svg)",
+      "Bash(command -v chromium-cli)",
+      "Read(//home/john/.claude/**)",
+      "Bash(npx eslint *)",
+      "Bash(npx tsc *)",
+      "Bash(sd ' number=\"0[1-4]\"' '' src/features/propos/components/propos-page.tsx src/features/ateliers/components/ateliers-page.tsx src/features/lectures/components/lectures-page.tsx src/features/team/components/team-page.tsx)",
+      "Bash(xargs ls)"
     ],
     "deny": [
       "Bash(rm -rf /)",
@@ -136,12 +156,11 @@
       "Read(**/secrets/*)",
       "Edit(**/secrets/*)"
     ],
-    "defaultMode": "bypassPermissions",
+    "defaultMode": "auto",
     "additionalDirectories": [
       "/home/john/Desktop/@inbeat/proof-agent/src/app/api/sessions/[id]/events"
     ]
   },
-  "model": "sonnet",
   "enableAllProjectMcpServers": true,
   "hooks": {
     "UserPromptSubmit": [
@@ -153,8 +172,175 @@
             "command": "gentle-ai skill-registry refresh --quiet --no-gitignore --cwd \"${CLAUDE_PROJECT_DIR:-$PWD}\" || true"
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -f '/home/john/.orca/agent-hooks/claude-hook.sh' ] && [ -r '/home/john/.orca/agent-hooks/claude-hook.sh' ] && [ -x '/home/john/.orca/agent-hooks/claude-hook.sh' ]; then /bin/sh '/home/john/.orca/agent-hooks/claude-hook.sh'; else { command -p cat 2>/dev/null || cat; } >/dev/null 2>&1 || :; fi",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"/home/john/.nvm/versions/node/v22.22.1/bin/node\" \"/home/john/.claude/.claude-manager/session-start-tap.js\""
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -f '/home/john/.orca/agent-hooks/claude-hook.sh' ] && [ -r '/home/john/.orca/agent-hooks/claude-hook.sh' ] && [ -x '/home/john/.orca/agent-hooks/claude-hook.sh' ]; then /bin/sh '/home/john/.orca/agent-hooks/claude-hook.sh'; else { command -p cat 2>/dev/null || cat; } >/dev/null 2>&1 || :; fi",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -f '/home/john/.orca/agent-hooks/claude-hook.sh' ] && [ -r '/home/john/.orca/agent-hooks/claude-hook.sh' ] && [ -x '/home/john/.orca/agent-hooks/claude-hook.sh' ]; then /bin/sh '/home/john/.orca/agent-hooks/claude-hook.sh'; else { command -p cat 2>/dev/null || cat; } >/dev/null 2>&1 || :; fi",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "StopFailure": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -f '/home/john/.orca/agent-hooks/claude-hook.sh' ] && [ -r '/home/john/.orca/agent-hooks/claude-hook.sh' ] && [ -x '/home/john/.orca/agent-hooks/claude-hook.sh' ]; then /bin/sh '/home/john/.orca/agent-hooks/claude-hook.sh'; else { command -p cat 2>/dev/null || cat; } >/dev/null 2>&1 || :; fi",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -f '/home/john/.orca/agent-hooks/claude-hook.sh' ] && [ -r '/home/john/.orca/agent-hooks/claude-hook.sh' ] && [ -x '/home/john/.orca/agent-hooks/claude-hook.sh' ]; then /bin/sh '/home/john/.orca/agent-hooks/claude-hook.sh'; else { command -p cat 2>/dev/null || cat; } >/dev/null 2>&1 || :; fi",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -f '/home/john/.orca/agent-hooks/claude-hook.sh' ] && [ -r '/home/john/.orca/agent-hooks/claude-hook.sh' ] && [ -x '/home/john/.orca/agent-hooks/claude-hook.sh' ]; then /bin/sh '/home/john/.orca/agent-hooks/claude-hook.sh'; else { command -p cat 2>/dev/null || cat; } >/dev/null 2>&1 || :; fi",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "TeammateIdle": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -f '/home/john/.orca/agent-hooks/claude-hook.sh' ] && [ -r '/home/john/.orca/agent-hooks/claude-hook.sh' ] && [ -x '/home/john/.orca/agent-hooks/claude-hook.sh' ]; then /bin/sh '/home/john/.orca/agent-hooks/claude-hook.sh'; else { command -p cat 2>/dev/null || cat; } >/dev/null 2>&1 || :; fi",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "rtk hook claude"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r \".tool_input.command\" | grep -qE \"(^|[;&|(]|[[:space:]])git[[:space:]]+([^|;&]*[[:space:]])?commit([[:space:]]|$)\" && printf \"%s\" \"{\\\"hookSpecificOutput\\\":{\\\"hookEventName\\\":\\\"PreToolUse\\\",\\\"permissionDecision\\\":\\\"ask\\\",\\\"permissionDecisionReason\\\":\\\"Commits are never automatic. Approve ONLY if you explicitly asked for this commit.\\\"}}\"",
+            "statusMessage": "Checking commit authorization"
+          }
+        ]
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -f '/home/john/.orca/agent-hooks/claude-hook.sh' ] && [ -r '/home/john/.orca/agent-hooks/claude-hook.sh' ] && [ -x '/home/john/.orca/agent-hooks/claude-hook.sh' ]; then /bin/sh '/home/john/.orca/agent-hooks/claude-hook.sh'; else { command -p cat 2>/dev/null || cat; } >/dev/null 2>&1 || :; fi",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -f '/home/john/.orca/agent-hooks/claude-hook.sh' ] && [ -r '/home/john/.orca/agent-hooks/claude-hook.sh' ] && [ -x '/home/john/.orca/agent-hooks/claude-hook.sh' ]; then /bin/sh '/home/john/.orca/agent-hooks/claude-hook.sh'; else { command -p cat 2>/dev/null || cat; } >/dev/null 2>&1 || :; fi",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -f '/home/john/.orca/agent-hooks/claude-hook.sh' ] && [ -r '/home/john/.orca/agent-hooks/claude-hook.sh' ] && [ -x '/home/john/.orca/agent-hooks/claude-hook.sh' ]; then /bin/sh '/home/john/.orca/agent-hooks/claude-hook.sh'; else { command -p cat 2>/dev/null || cat; } >/dev/null 2>&1 || :; fi",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -f '/home/john/.orca/agent-hooks/claude-hook.sh' ] && [ -r '/home/john/.orca/agent-hooks/claude-hook.sh' ] && [ -x '/home/john/.orca/agent-hooks/claude-hook.sh' ]; then /bin/sh '/home/john/.orca/agent-hooks/claude-hook.sh'; else { command -p cat 2>/dev/null || cat; } >/dev/null 2>&1 || :; fi",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -z \"${HOME-}\" ]; then { command -p cat 2>/dev/null || cat; } >/dev/null 2>&1 || :; printf '{}\\n'; else case \"${OSTYPE-}\" in msys*|cygwin*|win32*) if [ -f \"${HOME-}/.orca/agent-hooks/claude-hook.cmd\" ]; then case \"${HOME-}\" in *\\&*|*\\^*|*\\(*|*\\)*|*\\;*|*,*|*=*|*%*|*\\!*) if [ -f \"${SYSTEMROOT-}/System32/WindowsPowerShell/v1.0/powershell.exe\" ]; then \"${SYSTEMROOT-}/System32/WindowsPowerShell/v1.0/powershell.exe\" -NoProfile -EncodedCommand JABQAHIAbwBnAHIAZQBzAHMAUAByAGUAZgBlAHIAZQBuAGMAZQA9ACcAUwBpAGwAZQBuAHQAbAB5AEMAbwBuAHQAaQBuAHUAZQAnADsAIAB0AHIAeQAgAHsAIABTAGUAdAAtAEUAeABlAGMAdQB0AGkAbwBuAFAAbwBsAGkAYwB5ACAALQBTAGMAbwBwAGUAIABQAHIAbwBjAGUAcwBzACAALQBFAHgAZQBjAHUAdABpAG8AbgBQAG8AbABpAGMAeQAgAEIAeQBwAGEAcwBzACAALQBGAG8AcgBjAGUAIAAtAEUAcgByAG8AcgBBAGMAdABpAG8AbgAgAFMAaQBsAGUAbgB0AGwAeQBDAG8AbgB0AGkAbgB1AGUAIAB9ACAAYwBhAHQAYwBoACAAewB9ADsAIAAkAGgAbwBtAGUAUABhAHQAaAAgAD0AIAAkAGUAbgB2ADoASABPAE0ARQAgAC0AcgBlAHAAbABhAGMAZQAgACcAXgAvACgAWwBBAC0AWgBhAC0AegBdACkALwAnACwAIAAnACQAMQA6AC8AJwA7ACAAJABzAGMAcgBpAHAAdABQAGEAdABoACAAPQAgAEoAbwBpAG4ALQBQAGEAdABoACAAJABoAG8AbQBlAFAAYQB0AGgAIAAnAC4AbwByAGMAYQBcAGEAZwBlAG4AdAAtAGgAbwBvAGsAcwBcAGMAbABhAHUAZABlAC0AaABvAG8AawAuAGMAbQBkACcAOwAgAGkAZgAgACgAVABlAHMAdAAtAFAAYQB0AGgAIAAtAEwAaQB0AGUAcgBhAGwAUABhAHQAaAAgACQAcwBjAHIAaQBwAHQAUABhAHQAaAAgAC0AUABhAHQAaABUAHkAcABlACAATABlAGEAZgApACAAewAgACYAIAAkAHMAYwByAGkAcAB0AFAAYQB0AGgAOwAgAGUAeABpAHQAIAAkAEwAQQBTAFQARQBYAEkAVABDAE8ARABFACAAfQA7ACAAWwBDAG8AbgBzAG8AbABlAF0AOgA6AEkAbgAuAFIAZQBhAGQAVABvAEUAbgBkACgAKQAgAHwAIABPAHUAdAAtAE4AdQBsAGwAOwAgAFcAcgBpAHQAZQAtAE8AdQB0AHAAdQB0ACAAJwB7AH0AJwA7ACAAZQB4AGkAdAAgADAA; else { command -p cat 2>/dev/null || cat; } >/dev/null 2>&1 || :; printf '{}\\n'; fi ;; *) \"${HOME-}/.orca/agent-hooks/claude-hook.cmd\" ;; esac; else { command -p cat 2>/dev/null || cat; } >/dev/null 2>&1 || :; printf '{}\\n'; fi ;; *) if [ -f \"${HOME-}/.orca/agent-hooks/claude-hook.sh\" ] && [ -r \"${HOME-}/.orca/agent-hooks/claude-hook.sh\" ] && [ -x \"${HOME-}/.orca/agent-hooks/claude-hook.sh\" ]; then /bin/sh \"${HOME-}/.orca/agent-hooks/claude-hook.sh\"; else { command -p cat 2>/dev/null || cat; } >/dev/null 2>&1 || :; printf '{}\\n'; fi ;; esac; fi",
+            "timeout": 10
+          }
+        ]
       }
     ]
+  },
+  "enableWorkflows": true,
+  "statusLine": {
+    "type": "command",
+    "command": "\"/home/john/.nvm/versions/node/v22.22.1/bin/node\" \"/home/john/.claude/.claude-manager/statusline-tap.js\""
   },
   "enabledPlugins": {
     "context7@claude-plugins-official": true,
@@ -164,7 +350,12 @@
     "gitkraken-hooks@gitkraken": true,
     "linear@claude-plugins-official": true,
     "ponytail@ponytail": true,
-    "rust-analyzer-lsp@claude-plugins-official": true
+    "rust-analyzer-lsp@claude-plugins-official": true,
+    "vercel@claude-plugins-official": true,
+    "superpowers@claude-plugins-official": true,
+    "code-review@claude-plugins-official": true,
+    "code-simplifier@claude-plugins-official": true,
+    "serena@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
     "engram": {
@@ -196,5 +387,7 @@
   "effortLevel": "high",
   "tui": "fullscreen",
   "skipDangerousModePermissionPrompt": true,
-  "theme": "auto"
+  "theme": "auto",
+  "agentPushNotifEnabled": true,
+  "model": "opus[1m]"
 }
