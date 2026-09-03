@@ -160,8 +160,24 @@ if [ "$1" = "--self-check" ]; then
     exit 0
 fi
 
+# QuickShell does not reap its children when it exits, and this script only
+# writes on change — so a static privacy state never trips SIGPIPE and the
+# script would poll forever as an orphan. $PPID is cached at startup, so the
+# live parent has to come from /proc.
+launch_ppid=$PPID
+
+orphaned() {
+    local stat ppid
+    read -r stat < /proc/self/stat || return 1
+    ppid=${stat##*") "}     # comm may contain spaces; skip past its closing paren
+    ppid=${ppid#* }         # drop the state field
+    [ "${ppid%% *}" != "$launch_ppid" ]
+}
+
 last_state=""
 while true; do
+    orphaned && exit 0
+
     payload=$(build_payload)
 
     if [ "$payload" != "$last_state" ]; then

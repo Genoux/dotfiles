@@ -45,8 +45,9 @@ Singleton {
     }
 
     // Polls once per second because no kernel event exists for "a process opened
-    // the camera". The script keeps each probe to a single /proc pass; if it
-    // ever dies it stays dead until the config reloads.
+    // the camera". The script keeps each probe to a single /proc pass, and exits
+    // on its own if this shell dies, since QuickShell does not reap its
+    // children. It is not respawned if it exits while the shell is alive.
     Process {
         command: [Quickshell.shellPath("assets/scripts/privacy-monitor.sh")]
         running: true
