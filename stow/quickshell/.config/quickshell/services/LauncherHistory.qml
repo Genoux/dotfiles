@@ -3,7 +3,6 @@ pragma Singleton
 import Quickshell
 import Quickshell.Io
 import QtCore
-import QtQuick
 
 Singleton {
     id: root
@@ -11,11 +10,6 @@ Singleton {
     readonly property string historyPath: `${StandardPaths.writableLocation(StandardPaths.HomeLocation)}/.local/state/quickshell/launcher-history.json`
     readonly property int maxEntries: 200
     property int revision: 0
-
-    function localPath(value) {
-        const text = String(value ?? "")
-        return text.startsWith("file://") ? text.slice(7) : text
-    }
 
     function desktopId(entryId) {
         const text = String(entryId ?? "").trim()
@@ -25,7 +19,7 @@ Singleton {
         return text.endsWith(".desktop") ? text.slice(0, -".desktop".length) : text
     }
 
-    function parseDocument(text) {
+    function parseRecent(text) {
         try {
             const data = JSON.parse(String(text || "{}"))
             const seen = new Set()
@@ -42,28 +36,15 @@ Singleton {
                 }
             }
 
-            return {
-                recent,
-                importedLegacyHistory: Boolean(data.importedLegacyHistory || data.migratedFromElephant),
-            }
+            return recent
         } catch (error) {
-            return {
-                recent: [],
-                importedLegacyHistory: false,
-            }
+            return []
         }
     }
 
-    function historyDocument() {
-        const _ = revision
-        if (!historyFile.loaded)
-            return { recent: [], importedLegacyHistory: false }
-
-        return parseDocument(historyFile.text())
-    }
-
     function recentIds() {
-        return historyDocument().recent
+        const _ = revision
+        return historyFile.loaded ? parseRecent(historyFile.text()) : []
     }
 
     function recentRank(entryId) {
@@ -116,12 +97,11 @@ Singleton {
         return terms.every((term) => haystack.includes(term))
     }
 
-    function persistRecent(recent, importedLegacyHistory) {
+    function persistRecent(recent) {
         if (!historyFile.adapter)
             return
 
         historyFile.adapter.recent = recent
-        historyFile.adapter.importedLegacyHistory = importedLegacyHistory
         historyFile.writeAdapter()
         historyFile.reload()
         revision++
@@ -132,16 +112,8 @@ Singleton {
         if (!id)
             return
 
-        const document = historyDocument()
-        const recent = [id, ...document.recent.filter((existingId) => existingId !== id)].slice(0, maxEntries)
-        persistRecent(recent, true)
-    }
-
-    function tryImportLegacyHistory() {
-        if (!historyFile.loaded || historyDocument().importedLegacyHistory)
-            return
-
-        importProcess.running = true
+        const recent = [id, ...recentIds().filter((existingId) => existingId !== id)].slice(0, maxEntries)
+        persistRecent(recent)
     }
 
     Process {
@@ -149,27 +121,6 @@ Singleton {
 
         command: ["mkdir", "-p", `${StandardPaths.writableLocation(StandardPaths.HomeLocation)}/.local/state/quickshell`]
         running: true
-    }
-
-    Process {
-        id: importProcess
-
-        command: [
-            Quickshell.shellPath("assets/scripts/import-desktop-history.sh"),
-            root.localPath(root.historyPath),
-        ]
-
-        onExited: {
-            historyFile.reload()
-            root.revision++
-        }
-    }
-
-    Timer {
-        interval: 300
-        running: historyFile.loaded
-        repeat: false
-        onTriggered: root.tryImportLegacyHistory()
     }
 
     FileView {
@@ -187,7 +138,6 @@ Singleton {
 
         JsonAdapter {
             property list<string> recent: []
-            property bool importedLegacyHistory: false
         }
     }
 }
