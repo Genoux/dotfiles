@@ -2,6 +2,17 @@
 # Polls webcam, microphone, screen access, and local recording state.
 # Emits "webcam:mic:screenAccess:recording<TAB>webcamSrc<TAB>micSrc<TAB>screenSrc" on change.
 
+# Recorders whose presence means "actively writing a recording".
+EXTERNAL_RECORDERS=(obs gpu-screen-recorder kooha)
+# Superset also reported as a screen source, without implying a local recording.
+SCREEN_RECORDERS=(wl-screenrec wf-recorder "${EXTERNAL_RECORDERS[@]}")
+SCREEN_RECORDER_PATTERN=$(IFS='|'; printf '%s' "${SCREEN_RECORDERS[*]}")
+
+has_pactl=0
+command -v pactl >/dev/null 2>&1 && has_pactl=1
+has_pipewire=0
+command -v pw-dump >/dev/null 2>&1 && command -v jq >/dev/null 2>&1 && has_pipewire=1
+
 join_sources() {
     printf '%s' "$1" | tr ' ' '\n' | sed '/^$/d' | sort -u | paste -sd ','
 }
@@ -10,28 +21,27 @@ prettify_sources() {
     tr ',' '\n' | sed 's/-bin$//' | sed '/^$/d' | sort -u | paste -sd ','
 }
 
-get_webcam_sources() {
-    local apps="" name pid
+# fuser re-walks every process's whole fd table (~0.27s with ~900 procs); a
+# targeted symlink match is ~4x cheaper and yields the pids in the same pass.
+get_webcam_pids() {
+    find /proc/[0-9]*/fd -lname '/dev/video*' -printf '%h\n' 2>/dev/null |
+        sed 's#^/proc/##; s#/fd$##' | sort -u
+}
 
-    for dev in /dev/video*; do
-        [ -e "$dev" ] || continue
-        while read -r pid; do
-            [ -n "$pid" ] || continue
-            name=$(ps -p "$pid" -o comm= 2>/dev/null || true)
-            [ -n "$name" ] && apps="${apps}${apps:+,}${name}"
-        done < <(fuser "$dev" 2>/dev/null | tr ' ' '\n')
-    done
+webcam_sources_from_pids() {
+    local pid name apps=""
+
+    while read -r pid; do
+        [ -n "$pid" ] || continue
+        read -r name < "/proc/$pid/comm" 2>/dev/null || continue
+        [ -n "$name" ] && apps="${apps}${apps:+,}${name}"
+    done <<<"$1"
 
     join_sources "$apps"
 }
 
-get_mic_sources() {
-    if ! command -v pactl >/dev/null 2>&1; then
-        echo ""
-        return
-    fi
-
-    pactl list source-outputs 2>/dev/null | awk '
+mic_sources_from_outputs() {
+    printf '%s\n' "$1" | awk '
         /Source Output #/ { block = "" }
         { block = block $0 "\n" }
         /^$/ {
@@ -50,23 +60,36 @@ get_mic_sources() {
     ' | sort -u | paste -sd ','
 }
 
-get_recorder_sources() {
-    local apps=""
-
-    for app in wl-screenrec wf-recorder obs gpu-screen-recorder kooha; do
-        pgrep -x "$app" >/dev/null 2>&1 && apps="${apps}${apps:+,}${app}"
-    done
-
-    echo "$apps"
+# One pgrep over /proc, not one per name: five separate -x calls cost ~0.19s
+# here versus ~0.04s for a single alternation pattern.
+running_recorders() {
+    pgrep -x -l "$SCREEN_RECORDER_PATTERN" 2>/dev/null |
+        awk '{ print $2 }' | sort -u | paste -sd ','
 }
 
-get_portal_screencast_sources() {
-    if ! command -v pw-dump >/dev/null 2>&1 || ! command -v jq >/dev/null 2>&1; then
-        echo ""
-        return
-    fi
+is_external_recorder() {
+    local app
+    for app in "${EXTERNAL_RECORDERS[@]}"; do
+        case ",$1," in
+            *",$app,"*) return 0 ;;
+        esac
+    done
+    return 1
+}
 
-    pw-dump 2>/dev/null | jq -r '
+portal_screencast_active() {
+    [ -n "$1" ] || return 1
+    printf '%s' "$1" | jq -e '
+        [.[] | select(.info?.props?)
+         | select((.info.props["media.name"]? // "")
+           | test("^(xdph-streaming|gsr-default|game capture)"))]
+        | length > 0
+    ' >/dev/null 2>&1
+}
+
+portal_screencast_sources() {
+    [ -n "$1" ] || return 0
+    printf '%s' "$1" | jq -r '
         ([.[] | select(.type=="PipeWire:Interface:Client")
           | {key: (.id|tostring), value: (.info.props["application.name"] // .info.props["application.process.binary"] // "")}
          ] | from_entries) as $clients |
@@ -77,100 +100,69 @@ get_portal_screencast_sources() {
          | ($clients[(.info.props["client.id"] | tostring)] // .info.props["node.name"] // empty)
          | select(. != "")
         ] | unique | join(",")
-    '
+    ' 2>/dev/null
 }
 
-get_screen_sources() {
-    local recorders portal combined
+# A webcam that also registers as an audio source counts as an active mic.
+webcam_is_mic() {
+    [ "$1" = "1" ] && [ "$has_pactl" = "1" ] || return 1
+    pactl list sources short 2>/dev/null | grep -qi "webcam\|camera\|video"
+}
 
-    recorders=$(get_recorder_sources)
-    portal=$(get_portal_screencast_sources)
+build_payload() {
+    local webcam_pids source_outputs pw_state recorders
+    local webcam mic screen_access recording
+    local webcam_src mic_src screen_src
 
-    if [ -n "$recorders" ] && [ -n "$portal" ]; then
-        combined="${recorders},${portal}"
+    webcam_pids=$(get_webcam_pids)
+    [ -n "$webcam_pids" ] && webcam=1 || webcam=0
+
+    source_outputs=""
+    [ "$has_pactl" = "1" ] && source_outputs=$(pactl list source-outputs 2>/dev/null)
+    if printf '%s' "$source_outputs" | grep -q 'target.object = "alsa_input'; then
+        mic=1
+    elif webcam_is_mic "$webcam"; then
+        mic=1
     else
-        combined="${recorders}${portal}"
+        mic=0
     fi
 
-    join_sources "$combined" | prettify_sources
-}
+    pw_state=""
+    [ "$has_pipewire" = "1" ] && pw_state=$(pw-dump 2>/dev/null)
 
-check_webcam() {
-    fuser /dev/video* 2>/dev/null | grep -q . && echo 1 || echo 0
-}
-
-check_mic() {
-    if command -v pactl >/dev/null 2>&1; then
-        pactl list source-outputs 2>/dev/null | grep -q 'target.object = "alsa_input' && echo 1 && return
-    fi
-    echo 0
-}
-
-check_webcam_mic() {
-    local webcam_active="$1"
-    if [ "$webcam_active" = "1" ] && command -v pactl >/dev/null 2>&1; then
-        pactl list sources short 2>/dev/null | grep -qi "webcam\|camera\|video" && echo 1 && return
-    fi
-    echo 0
-}
-
-check_portal_screencast() {
-    if ! command -v pw-dump >/dev/null 2>&1 || ! command -v jq >/dev/null 2>&1; then
-        echo 0
-        return
+    recorders=$(running_recorders)
+    is_external_recorder "$recorders" && recording=1 || recording=0
+    if [ "$recording" = "1" ] || portal_screencast_active "$pw_state"; then
+        screen_access=1
+    else
+        screen_access=0
     fi
 
-    pw-dump 2>/dev/null | jq -e '
-        [.[] | select(.info?.props?)
-         | select((.info.props["media.name"]? // "")
-           | test("^(xdph-streaming|gsr-default|game capture)"))]
-        | length > 0
-    ' >/dev/null 2>&1 && echo 1 || echo 0
+    webcam_src=$(webcam_sources_from_pids "$webcam_pids" | prettify_sources)
+    mic_src=$(mic_sources_from_outputs "$source_outputs")
+    screen_src=$(join_sources "$recorders,$(portal_screencast_sources "$pw_state")" | prettify_sources)
+
+    printf '%s:%s:%s:%s\t%s\t%s\t%s' \
+        "$webcam" "$mic" "$screen_access" "$recording" \
+        "$webcam_src" "$mic_src" "$screen_src"
 }
 
-check_session_recorder() {
-    pgrep -x wl-screenrec >/dev/null 2>&1 && echo 1 && return
-    pgrep -x wf-recorder >/dev/null 2>&1 && echo 1 && return
-    pgrep -f "^[^ ]*wl-screenrec" >/dev/null 2>&1 && echo 1 && return
-    pgrep -f "^[^ ]*wf-recorder" >/dev/null 2>&1 && echo 1 && return
-    echo 0
-}
-
-check_external_recording() {
-    pgrep -x obs >/dev/null 2>&1 && echo 1 && return
-    pgrep -x gpu-screen-recorder >/dev/null 2>&1 && echo 1 && return
-    pgrep -x kooha >/dev/null 2>&1 && echo 1 && return
-    echo 0
-}
-
-check_local_recording() {
-    check_external_recording
-}
-
-check_screen_access() {
-    [ "$(check_external_recording)" = "1" ] && echo 1 && return
-    check_portal_screencast
-}
+if [ "$1" = "--self-check" ]; then
+    payload=$(build_payload)
+    state=${payload%%$'\t'*}
+    [ "$(printf '%s' "$payload" | awk -F'\t' '{print NF}')" = "4" ] ||
+        { echo "FAIL: expected 4 tab-separated fields, got: $payload" >&2; exit 1; }
+    [ "$(printf '%s' "$state" | awk -F: '{print NF}')" = "4" ] ||
+        { echo "FAIL: expected 4 state flags, got: $state" >&2; exit 1; }
+    printf '%s' "$state" | grep -Eq '^[01]:[01]:[01]:[01]$' ||
+        { echo "FAIL: state flags must be 0 or 1, got: $state" >&2; exit 1; }
+    echo "OK: $payload"
+    exit 0
+fi
 
 last_state=""
 while true; do
-    cur_webcam=$(check_webcam)
-    cur_mic=$(check_mic)
-    cur_webcam_mic=$(check_webcam_mic "$cur_webcam")
-    cur_screen_access=$(check_screen_access)
-    cur_recording=$(check_local_recording)
-
-    if [ "$cur_mic" = "1" ] || [ "$cur_webcam_mic" = "1" ]; then
-        final_mic=1
-    else
-        final_mic=0
-    fi
-
-    state="$cur_webcam:$final_mic:$cur_screen_access:$cur_recording"
-    webcam_src=$(get_webcam_sources | prettify_sources)
-    mic_src=$(get_mic_sources)
-    screen_src=$(get_screen_sources)
-    payload="${state}	${webcam_src}	${mic_src}	${screen_src}"
+    payload=$(build_payload)
 
     if [ "$payload" != "$last_state" ]; then
         printf '%s\n' "$payload"
