@@ -173,12 +173,13 @@ Singleton {
         if (!className)
             return null
 
-        const direct = DesktopEntries.heuristicLookup(className)
-        if (direct && direct.icon)
-            return direct
-
         const normalized = className.toLowerCase()
-        return DesktopEntries.applications.values.find((entry) => {
+        const exact = DesktopEntries.byId(className)
+            ?? DesktopEntries.applications.values.find((entry) => entry.id.toLowerCase() === normalized)
+        if (exact && exact.icon)
+            return exact
+
+        const matched = DesktopEntries.applications.values.find((entry) => {
             const startup = (entry.startupClass || "").toLowerCase()
             if (startup && (normalized === startup || normalized.includes(startup)))
                 return true
@@ -197,7 +198,12 @@ Singleton {
             } catch (_) {
                 return false
             }
-        }) || null
+        })
+        if (matched && matched.icon)
+            return matched
+
+        const heuristic = DesktopEntries.heuristicLookup(className)
+        return heuristic && heuristic.icon ? heuristic : null
     }
 
     // A playback stream names the application that owns it but carries no icon,
@@ -236,6 +242,7 @@ Singleton {
     function iconNameForToplevel(toplevel) {
         const appClass = className(toplevel)
         const desktopEntry = desktopEntryForClass(appClass)
+        console.info("window icon lookup", appClass, desktopEntry?.id ?? "none", desktopEntry?.icon ?? "none")
         if (desktopEntry && desktopEntry.icon)
             return desktopEntry.icon
 
