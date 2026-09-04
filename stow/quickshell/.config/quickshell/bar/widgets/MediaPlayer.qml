@@ -1,147 +1,20 @@
 import Qt5Compat.GraphicalEffects
 import QtQuick
 import Quickshell.Hyprland
-import Quickshell.Services.Mpris
 import qs
 import qs.components
 import qs.config
+import qs.services as Services
 
 BarGroup {
     id: root
 
-    property string explicitPlayerKey: ""
-    property var recentPlayingKeys: []
-    readonly property int recentPlayingMax: 12
-    readonly property var activePlayers: Mpris.players.values.filter((candidate) => {
-        return !isProxyPlayer(candidate) && candidate.playbackState !== MprisPlaybackState.Stopped;
-    })
-    readonly property var player: pickActivePlayer()
+    readonly property var player: Services.MediaPlayers.player
     readonly property string trackText: player ? `${player.trackTitle || player.identity || "Media"}${player.trackArtist ? " - " + player.trackArtist : ""}` : ""
-    readonly property bool canGoPrevious: player ? player.canGoPrevious : false
-    readonly property bool canGoNext: player ? player.canGoNext : false
-    readonly property bool canTogglePlayback: player ? (player.isPlaying ? player.canPause : player.canPlay) : false
+    readonly property bool canGoPrevious: Services.MediaPlayers.canGoPrevious
+    readonly property bool canGoNext: Services.MediaPlayers.canGoNext
+    readonly property bool canTogglePlayback: Services.MediaPlayers.canTogglePlayback
     property bool controlsExpanded: false
-    property real scrollOffset: 0
-
-    // playerctld is a proxy, not a player: it re-exports whichever real player is
-    // current under its own bus name, so every player it can offer is already on
-    // this list directly and it only ever contributes a duplicate.
-    //
-    // The duplicate is not the problem — outliving its source is. playerctld
-    // stays registered after the last real player quits, and every property read
-    // then fails with NoActivePlayer, so its object keeps the final track,
-    // artist, and isPlaying state indefinitely. That is a bar still showing a
-    // song that stopped, with no player left anywhere to stop it.
-    function isProxyPlayer(candidate) {
-        return String(candidate?.dbusName ?? "").endsWith(".playerctld");
-    }
-
-    function keysMatch(storedKey, candidate) {
-        if (!storedKey || !candidate)
-            return false;
-
-        const id = playerKey(candidate);
-        if (storedKey === id)
-            return true;
-
-        const left = storedKey.toLowerCase();
-        const right = id.toLowerCase();
-        return left.includes(right) || right.includes(left);
-    }
-
-    function pushRecentPlaying(candidate) {
-        const key = playerKey(candidate);
-        if (!key)
-            return ;
-
-        const rest = recentPlayingKeys.filter((storedKey) => {
-            return !keysMatch(storedKey, candidate);
-        });
-        recentPlayingKeys = [key].concat(rest).slice(0, recentPlayingMax);
-    }
-
-    function stackRank(candidate) {
-        for (let i = 0; i < recentPlayingKeys.length; i++) {
-            if (keysMatch(recentPlayingKeys[i], candidate))
-                return i;
-
-        }
-        return recentPlayingMax + 1;
-    }
-
-    function pickByStackOrder(candidates) {
-        if (!candidates.length)
-            return null;
-
-        return candidates.slice().sort((left, right) => {
-            return stackRank(left) - stackRank(right);
-        })[0];
-    }
-
-    function prunePlayerState() {
-        const active = activePlayers;
-        const pruned = recentPlayingKeys.filter((storedKey) => {
-            return active.some((candidate) => {
-                return keysMatch(storedKey, candidate);
-            });
-        });
-        if (pruned.length !== recentPlayingKeys.length)
-            recentPlayingKeys = pruned;
-
-        if (explicitPlayerKey.length > 0 && !active.some((candidate) => {
-            return keysMatch(explicitPlayerKey, candidate);
-        }))
-            explicitPlayerKey = "";
-
-    }
-
-    function pickActivePlayer() {
-        prunePlayerState();
-        const active = activePlayers;
-        if (!active.length)
-            return null;
-
-        const playing = active.filter((candidate) => {
-            return candidate.isPlaying;
-        });
-        if (playing.length > 0) {
-            if (explicitPlayerKey.length > 0) {
-                const explicitHit = playing.find((candidate) => {
-                    return keysMatch(explicitPlayerKey, candidate);
-                });
-                if (explicitHit)
-                    return explicitHit;
-
-            }
-            return pickByStackOrder(playing);
-        }
-        if (explicitPlayerKey.length > 0) {
-            const explicitHit = active.find((candidate) => {
-                return keysMatch(explicitPlayerKey, candidate);
-            });
-            if (explicitHit)
-                return explicitHit;
-
-        }
-        return pickByStackOrder(active);
-    }
-
-    function notePlayerPlaying(candidate) {
-        if (!candidate || !candidate.isPlaying)
-            return ;
-
-        pushRecentPlaying(candidate);
-    }
-
-    function playerKey(candidate) {
-        if (!candidate)
-            return "";
-
-        if (candidate.dbusName)
-            return candidate.dbusName;
-
-        return candidate.desktopEntry || candidate.identity || "";
-    }
 
     function playerMatchTokens(player) {
         const desktopEntry = String(player.desktopEntry || "").replace(/\.desktop$/i, "").toLowerCase();
@@ -192,67 +65,18 @@ BarGroup {
         return focusToplevel(titleMatch);
     }
 
-    function markPlayerInteracted() {
-        if (!root.player)
-            return ;
-
-        pushRecentPlaying(root.player);
-        explicitPlayerKey = playerKey(root.player);
-    }
-
     function focusPlayerWindow() {
         if (!root.player)
             return ;
 
-        markPlayerInteracted();
+        Services.MediaPlayers.markPlayerInteracted();
         if (root.player.canRaise)
             root.player.raise();
 
         focusPlayerHyprlandWindow(root.player);
     }
 
-    function raisePlayer() {
-        focusPlayerWindow();
-    }
-
-    function previous() {
-        markPlayerInteracted();
-        if (root.player && root.player.canGoPrevious)
-            root.player.previous();
-
-    }
-
-    function togglePlayback() {
-        if (!root.player)
-            return ;
-
-        markPlayerInteracted();
-        if (root.player.isPlaying) {
-            if (root.player.canPause)
-                root.player.pause();
-
-        } else if (root.player.canPlay) {
-            root.player.play();
-        }
-    }
-
-    function next() {
-        markPlayerInteracted();
-        if (root.player && root.player.canGoNext)
-            root.player.next();
-
-    }
-
     visible: player !== null && trackText.length > 0
-    Component.onCompleted: {
-        for (let i = 0; i < Mpris.players.values.length; i++) {
-            const candidate = Mpris.players.values[i];
-            if (candidate && candidate.isPlaying)
-                notePlayerPlaying(candidate);
-
-        }
-    }
-    onTrackTextChanged: scrollOffset = 0
 
     HoverHandler {
         id: hoverHandler
@@ -272,29 +96,6 @@ BarGroup {
 
         interval: StyleMedia.controlsHoverDelay
         onTriggered: root.controlsExpanded = true
-    }
-
-    Instantiator {
-        model: Mpris.players.values
-
-        delegate: Connections {
-            required property var modelData
-
-            function onIsPlayingChanged() {
-                if (modelData.isPlaying)
-                    root.notePlayerPlaying(modelData);
-
-            }
-
-            function onPlaybackStateChanged() {
-                if (modelData.isPlaying)
-                    root.notePlayerPlaying(modelData);
-
-            }
-
-            target: modelData
-        }
-
     }
 
     Row {
@@ -321,8 +122,7 @@ BarGroup {
             height: contentRow.height
             radius: StyleTokens.radiusSm
             color: hoverHandler.hovered ? StyleTokens.alphaLight : StyleTokens.transparent
-            onScrollTextChanged: root.scrollOffset = 0
-            onShouldScrollChanged: root.scrollOffset = 0
+            onScrollTextChanged: scrollAnimation.restart()
 
             CavaVisualizer {
                 anchors.left: parent.left
@@ -355,11 +155,39 @@ BarGroup {
                     Text {
                         id: mediaLabel
 
-                        x: mediaInfo.shouldScroll ? -root.scrollOffset : 0
+                        // The label holds two copies of the text, so sliding it
+                        // left by exactly one copy lands back where it started.
+                        readonly property real loopWidth: implicitWidth / 2
+                        property real scrollOffset: 0
+
+                        // Translate rather than x: the edge fade needs
+                        // layer.enabled, and inside a layer a child's x is
+                        // rasterized onto the texture's whole-pixel grid. At this
+                        // speed one pixel takes ~48ms, so the marquee visibly
+                        // stepped about twenty times a second. A transform is
+                        // applied to the node instead and keeps sub-pixel offsets.
+                        transform: Translate {
+                            x: mediaInfo.shouldScroll ? -mediaLabel.scrollOffset : 0
+                        }
                         text: mediaInfo.shouldScroll ? mediaInfo.scrollText + mediaInfo.scrollText : root.trackText
                         color: Colors.base05
                         font.family: StyleTokens.fontMono
                         font.pixelSize: StyleTokens.fontSizeMedia
+
+                        // A Timer is not tied to the frame clock: at 17ms against
+                        // a 144Hz panel it landed on every second or third frame in
+                        // turn. An animation is advanced once per frame at whatever
+                        // the refresh rate is, which is why the speed token is per
+                        // second rather than per tick.
+                        NumberAnimation on scrollOffset {
+                            id: scrollAnimation
+
+                            running: mediaInfo.shouldScroll && root.visible
+                            loops: Animation.Infinite
+                            from: 0
+                            to: mediaLabel.loopWidth
+                            duration: Math.max(1, mediaLabel.loopWidth / StyleMedia.scrollSpeed * 1000)
+                        }
                     }
 
                     layer.effect: OpacityMask {
@@ -422,16 +250,6 @@ BarGroup {
                 onClicked: root.focusPlayerWindow()
             }
 
-            Timer {
-                interval: 17
-                running: mediaInfo.shouldScroll && root.visible
-                repeat: true
-                onTriggered: {
-                    const loopWidth = mediaLabel.implicitWidth / 2;
-                    root.scrollOffset = root.scrollOffset >= loopWidth ? 0 : root.scrollOffset + 0.35;
-                }
-            }
-
             Behavior on color {
                 ColorAnimation {
                     duration: StyleMedia.controlsRevealDuration
@@ -469,7 +287,7 @@ BarGroup {
                     iconSource: IconRegistry.mediaIcon("skip-backward")
                     iconSize: StyleControl.iconSizeSm
                     interactive: root.controlsExpanded && root.canGoPrevious
-                    onClicked: root.previous()
+                    onClicked: Services.MediaPlayers.previous()
                 }
 
                 Button {
@@ -477,7 +295,7 @@ BarGroup {
                     iconSource: IconRegistry.mediaIcon(player && player.isPlaying ? "pause" : "play")
                     iconSize: StyleControl.iconSizeSm
                     interactive: root.controlsExpanded && root.canTogglePlayback
-                    onClicked: root.togglePlayback()
+                    onClicked: Services.MediaPlayers.togglePlayback()
                 }
 
                 Button {
@@ -485,7 +303,7 @@ BarGroup {
                     iconSource: IconRegistry.mediaIcon("skip-forward")
                     iconSize: StyleControl.iconSizeSm
                     interactive: root.controlsExpanded && root.canGoNext
-                    onClicked: root.next()
+                    onClicked: Services.MediaPlayers.next()
                 }
 
                 Behavior on opacity {
