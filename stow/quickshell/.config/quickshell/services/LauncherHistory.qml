@@ -2,12 +2,12 @@ pragma Singleton
 
 import Quickshell
 import Quickshell.Io
-import QtCore
+import qs.config
 
 Singleton {
     id: root
 
-    readonly property string historyPath: `${StandardPaths.writableLocation(StandardPaths.HomeLocation)}/.local/state/quickshell/launcher-history.json`
+    readonly property string historyPath: `${ShellActions.stateDir}/launcher-history.json`
     readonly property int maxEntries: 200
     property int revision: 0
 
@@ -119,7 +119,7 @@ Singleton {
     Process {
         id: ensureDir
 
-        command: ["mkdir", "-p", `${StandardPaths.writableLocation(StandardPaths.HomeLocation)}/.local/state/quickshell`]
+        command: ["mkdir", "-p", ShellActions.stateDir]
         running: true
     }
 
