@@ -13,3 +13,5 @@ Satty
 DuckDuckGo
 Wayland
 Vercel
+Gemini
+LLM
