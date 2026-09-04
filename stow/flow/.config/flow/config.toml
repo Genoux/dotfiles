@@ -5,7 +5,7 @@
 # natively, so the Hyprland binds in keybindings.lua are a redundant second path
 # rather than the only one. They can go whenever.
 
-duck = 50
+duck = 20
 denoise = false
 record_debug = false
 
@@ -13,7 +13,7 @@ push_to_talk = true
 
 hotkey = super+shift+d
 
-cleanup = medium
+cleanup = none
 
 sound = true
 
