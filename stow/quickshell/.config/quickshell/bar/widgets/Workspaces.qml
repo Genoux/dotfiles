@@ -25,13 +25,14 @@ Row {
     function normalizedTokens(values) {
         const seen = {}
         const tokens = []
+        const genericTokens = new Set(["chrome", "chromium", "default"])
 
         for (const value of values) {
             const normalized = String(value || "").toLowerCase().trim()
             const parts = [normalized].concat(normalized.split(/[._\s-]+/))
 
             for (const token of parts) {
-                if (token.length <= 2 || seen[token])
+                if (token.length <= 2 || genericTokens.has(token) || seen[token])
                     continue
 
                 seen[token] = true
