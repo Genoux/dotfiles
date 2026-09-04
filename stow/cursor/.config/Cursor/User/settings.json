@@ -89,5 +89,6 @@
   "[qml]": {
     "editor.defaultFormatter": "Delgan.qml-format"
   },
-  "diffEditor.useInlineViewWhenSpaceIsLimited": false
+  "diffEditor.useInlineViewWhenSpaceIsLimited": false,
+  "git.autofetch": true
 }
