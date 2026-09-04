@@ -242,7 +242,6 @@ Singleton {
     function iconNameForToplevel(toplevel) {
         const appClass = className(toplevel)
         const desktopEntry = desktopEntryForClass(appClass)
-        console.info("window icon lookup", appClass, desktopEntry?.id ?? "none", desktopEntry?.icon ?? "none")
         if (desktopEntry && desktopEntry.icon)
             return desktopEntry.icon
 
