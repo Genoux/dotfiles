@@ -101,10 +101,10 @@ hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_S
 hl.bind("XF86AudioMute", hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"))
 hl.bind("XF86AudioMicMute", hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"))
 
-hl.bind("XF86AudioNext", hl.dsp.exec_cmd("playerctl --player=playerctld next"), { locked = true })
-hl.bind("XF86AudioPause", hl.dsp.exec_cmd("playerctl --player=playerctld play-pause"), { locked = true })
-hl.bind("XF86AudioPlay", hl.dsp.exec_cmd("playerctl --player=playerctld play-pause"), { locked = true })
-hl.bind("XF86AudioPrev", hl.dsp.exec_cmd("playerctl --player=playerctld previous"), { locked = true })
+hl.bind("XF86AudioNext", hl.dsp.exec_cmd("quickshell ipc call media next"), { locked = true })
+hl.bind("XF86AudioPause", hl.dsp.exec_cmd("quickshell ipc call media playPause"), { locked = true })
+hl.bind("XF86AudioPlay", hl.dsp.exec_cmd("quickshell ipc call media playPause"), { locked = true })
+hl.bind("XF86AudioPrev", hl.dsp.exec_cmd("quickshell ipc call media previous"), { locked = true })
 
 hl.bind("XF86MonBrightnessUp", hl.dsp.exec_cmd("brightnessctl set 10%+"), { repeating = true })
 hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("brightnessctl set 10%-"), { repeating = true })

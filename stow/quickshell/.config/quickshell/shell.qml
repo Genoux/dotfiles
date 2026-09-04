@@ -47,6 +47,25 @@ ShellRoot {
         }
     }
 
+    // The media keys resolve their target here rather than through
+    // `playerctl --player=playerctld`, so a key press always acts on the
+    // player the bar is showing.
+    IpcHandler {
+        target: "media"
+
+        function playPause(): void {
+            Services.MediaPlayers.togglePlayback()
+        }
+
+        function next(): void {
+            Services.MediaPlayers.next()
+        }
+
+        function previous(): void {
+            Services.MediaPlayers.previous()
+        }
+    }
+
     IpcHandler {
         target: "components"
 
