@@ -3,7 +3,7 @@ pragma Singleton
 import Quickshell
 import Quickshell.Bluetooth as Bluez
 import Quickshell.Io
-import QtCore
+import qs.config
 import QtQuick
 
 Singleton {
@@ -14,7 +14,7 @@ Singleton {
     readonly property int maxReconnectAttempts: 6
     readonly property int powerVerifyDelayMs: 1000
     readonly property int maxPowerAttempts: 3
-    readonly property string statePath: `${StandardPaths.writableLocation(StandardPaths.HomeLocation)}/.local/state/quickshell/bluetooth.json`
+    readonly property string statePath: `${ShellActions.stateDir}/bluetooth.json`
 
     readonly property var adapter: Bluez.Bluetooth.defaultAdapter
     readonly property bool available: !!adapter
@@ -489,7 +489,7 @@ Singleton {
     }
 
     Process {
-        command: ["mkdir", "-p", `${StandardPaths.writableLocation(StandardPaths.HomeLocation)}/.local/state/quickshell`]
+        command: ["mkdir", "-p", ShellActions.stateDir]
         running: true
     }
 

@@ -2,12 +2,12 @@ pragma Singleton
 
 import Quickshell
 import Quickshell.Io
-import QtCore
+import qs.config
 
 Singleton {
     id: root
 
-    readonly property string stateFilePath: `${StandardPaths.writableLocation(StandardPaths.HomeLocation)}/.local/state/dotfiles/updates.state`
+    readonly property string stateFilePath: `${ShellActions.homePath}/.local/state/dotfiles/updates.state`
     property int revision: 0
     readonly property string rawState: {
         const _ = revision

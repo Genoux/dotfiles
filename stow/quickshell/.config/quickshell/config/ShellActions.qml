@@ -10,6 +10,7 @@ Singleton {
     readonly property var localScripts: ["launch-or-focus", "system-screenrecord", "system-screenshot", "launch-dotfiles-menu"]
     readonly property string homePath: String(StandardPaths.writableLocation(StandardPaths.HomeLocation)).replace(/^file:\/\//, "")
     readonly property string localBin: homePath + "/.local/bin/"
+    readonly property string stateDir: homePath + "/.local/state/quickshell"
 
     function normalize(value) {
         return String(value || "").toLowerCase().trim()
