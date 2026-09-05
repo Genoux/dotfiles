@@ -1,7 +1,6 @@
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
-import Qt5Compat.GraphicalEffects
 import QtQuick
 import qs
 import qs.bar.widgets as Widgets
@@ -17,22 +16,23 @@ PanelWindow {
     readonly property bool active: Services.ComponentGallery.visible
         && Services.ComponentGallery.screen === root.screen
     readonly property int galleryMargin: StyleTokens.space20 * 2
-    readonly property int surfaceWidth: Math.min(1080, Math.max(640, root.screen.width - galleryMargin * 2))
+    readonly property int surfaceWidth: Math.min(1000, Math.max(640, root.screen.width - galleryMargin * 2))
     readonly property int availableHeight: Math.max(480, root.screen.height - galleryMargin * 2)
-    readonly property int surfaceHeight: Math.min(820, availableHeight)
+    readonly property int surfaceHeight: Math.min(740, availableHeight)
 
     property bool displayed: false
     property bool toggleValue: true
     property real sliderValue: 0.62
     property int segmentIndex: 1
-    property int galleryPage: 0
+    property int galleryPage: 1
+    property int demoWorkspace: 2
+    readonly property int headerHeight: StyleTokens.space20 * 3 + StyleControl.buttonHeight + StyleTokens.space12
     property var iconNames: []
     property string iconFilter: ""
 
     readonly property var filteredIconNames: iconFilter.length === 0
         ? iconNames
         : iconNames.filter((name) => name.includes(iconFilter))
-    property string lastAction: "Nothing selected yet"
 
     onGalleryPageChanged: {
         galleryFlick.contentY = 0
@@ -69,19 +69,19 @@ PanelWindow {
         }
     }
 
-    component GalleryCard: Rectangle {
+    component GalleryCard: Item {
         id: card
 
         required property string title
-        property int page: 0
+        property int page: 1
+        property string description: ""
+        readonly property bool inlinePreview: page === 1
         default property alias content: cardContent.data
 
         visible: root.galleryPage === page
-        implicitHeight: cardColumn.implicitHeight + StyleTokens.space16 * 2
-        radius: StyleTokens.radiusMd
-        color: StyleTokens.alphaHairline
-        border.width: StyleTokens.borderWidth
-        border.color: StyleOverlay.borderSubtle
+        implicitHeight: (inlinePreview
+            ? Math.max(cardHeading.implicitHeight, cardContent.implicitHeight)
+            : cardHeading.implicitHeight + StyleTokens.space16 + cardContent.implicitHeight) + StyleTokens.space16 * 2
 
         onImplicitHeightChanged: {
             if (parent && parent.scheduleLayout)
@@ -92,34 +92,69 @@ PanelWindow {
                 parent.scheduleLayout()
         }
 
+        PopoverSeparator {
+            width: parent.width
+        }
+
         Column {
-            id: cardColumn
+            id: cardHeading
+            x: StyleTokens.space16
+            y: StyleTokens.space16
+            width: card.inlinePreview ? StyleTokens.space20 * 8 : card.width - StyleTokens.space16 * 2
+            spacing: StyleTokens.space4
 
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.top: parent.top
-            anchors.margins: StyleTokens.space16
+            Text {
+                width: parent.width
+                text: card.title
+                color: Colors.base05
+                font.family: StyleTokens.fontSans
+                font.pixelSize: StyleTokens.fontSizeSm
+                font.weight: Font.DemiBold
+            }
+
+            GuideText {
+                visible: text.length > 0
+                text: card.description
+            }
+        }
+
+        Column {
+            id: cardContent
+            x: card.inlinePreview ? cardHeading.x + cardHeading.width + StyleTokens.space20 : StyleTokens.space16
+            y: card.inlinePreview ? StyleTokens.space16 : cardHeading.y + cardHeading.implicitHeight + StyleTokens.space16
+            width: card.width - x - StyleTokens.space16
             spacing: StyleTokens.space12
+        }
+    }
 
-            Column {
-                width: parent.width
+    component GuideText: Text {
+        width: parent.width
+        color: Colors.base04
+        font.family: StyleTokens.fontSans
+        font.pixelSize: StyleTokens.fontSizeSm
+        wrapMode: Text.WordWrap
+    }
 
-                Text {
-                    width: parent.width
-                    text: card.title
-                    color: Colors.base05
-                    font.family: StyleTokens.fontSans
-                    font.pixelSize: StyleTokens.fontSizeMd
-                    font.weight: Font.DemiBold
-                }
-            }
+    component DemoSample: Column {
+        property string caption
+        default property alias content: sampleContent.data
 
-            Column {
-                id: cardContent
+        width: Math.max(sampleContent.implicitWidth, sampleCaption.implicitWidth)
+        spacing: StyleTokens.space8
 
-                width: parent.width
-                spacing: StyleTokens.space12
-            }
+        Row {
+            id: sampleContent
+            anchors.horizontalCenter: parent.horizontalCenter
+            height: StyleControl.buttonHeight
+        }
+
+        Text {
+            id: sampleCaption
+            anchors.horizontalCenter: parent.horizontalCenter
+            text: parent.caption
+            color: Colors.base04
+            font.family: StyleTokens.fontSans
+            font.pixelSize: StyleTokens.fontSizeXs
         }
     }
 
@@ -130,8 +165,8 @@ PanelWindow {
     component GalleryMasonry: Item {
         id: masonry
 
-        property int spacing: StyleTokens.space12
-        readonly property int columnCount: width >= 840 ? 2 : 1
+        property int spacing: root.galleryPage === 1 ? 0 : StyleTokens.space12
+        readonly property int columnCount: root.galleryPage !== 1 && width >= 840 ? 2 : 1
         property real laidOutHeight: 0
 
         implicitHeight: laidOutHeight
@@ -178,123 +213,6 @@ PanelWindow {
         }
     }
 
-    // A like-for-like bar sample for evaluating installed icon packs. Every
-    // row uses glyphs or SVGs shipped by the named pack; this guide never
-    // redraws a missing icon or mixes in a substitute from another pack.
-    component IconPackBarPreview: Rectangle {
-        id: preview
-
-        property string fontFamily: ""
-        property var glyphs: []
-        property var iconSources: []
-        property bool materialAxes: false
-        property bool filled: false
-        property int iconWeight: Font.Normal
-
-        width: parent.width
-        height: 44
-        radius: StyleTokens.radiusMd
-        color: StyleBar.background
-        border.width: StyleTokens.borderWidth
-        border.color: StyleOverlay.surfaceBorder
-
-        Row {
-            anchors.left: parent.left
-            anchors.leftMargin: StyleTokens.space12
-            anchors.verticalCenter: parent.verticalCenter
-            spacing: StyleTokens.space10
-
-            Repeater {
-                model: [1, 2, 3]
-
-                Text {
-                    required property int modelData
-
-                    text: modelData
-                    color: modelData === 2 ? Colors.base05 : Colors.base04
-                    font.family: StyleTokens.fontSans
-                    font.pixelSize: StyleTokens.fontSizeXs
-                    font.weight: modelData === 2 ? Font.DemiBold : Font.Normal
-                }
-            }
-        }
-
-        Row {
-            anchors.right: parent.right
-            anchors.rightMargin: StyleTokens.space12
-            anchors.verticalCenter: parent.verticalCenter
-            spacing: StyleTokens.space8
-
-            Repeater {
-                model: preview.glyphs
-
-                Text {
-                    required property var modelData
-                    readonly property var glyphValue: typeof modelData === "object" ? modelData.glyph : modelData
-
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: typeof glyphValue === "number" ? String.fromCodePoint(glyphValue) : glyphValue
-                    color: Colors.base05
-                    font.family: typeof modelData === "object" ? modelData.family : preview.fontFamily
-                    font.pixelSize: StyleTokens.fontSizeLg
-                    font.weight: preview.iconWeight
-                    font.variableAxes: preview.materialAxes ? {
-                        "FILL": preview.filled ? 1 : 0,
-                        "wght": 400,
-                        "GRAD": 0,
-                        "opsz": 20
-                    } : {}
-                }
-            }
-
-            Repeater {
-                model: preview.iconSources
-
-                Item {
-                    id: themeGlyph
-
-                    required property string modelData
-
-                    width: StyleTokens.fontSizeLg
-                    height: StyleTokens.fontSizeLg
-
-                    Image {
-                        id: themeGlyphImage
-
-                        anchors.fill: parent
-                        source: themeGlyph.modelData
-                        sourceSize: Qt.size(width, height)
-                        fillMode: Image.PreserveAspectFit
-                        visible: false
-                    }
-
-                    ColorOverlay {
-                        anchors.fill: parent
-                        source: themeGlyphImage
-                        color: Colors.base05
-                    }
-                }
-            }
-
-            Text {
-                anchors.verticalCenter: parent.verticalCenter
-                text: "EN"
-                color: Colors.base05
-                font.family: StyleTokens.fontSans
-                font.pixelSize: StyleTokens.fontSizeXs
-                font.weight: Font.Medium
-            }
-
-            Text {
-                anchors.verticalCenter: parent.verticalCenter
-                text: "22°  14:59"
-                color: Colors.base05
-                font.family: StyleTokens.fontSans
-                font.pixelSize: StyleTokens.fontSizeXs
-            }
-        }
-    }
-
     MouseArea {
         anchors.fill: parent
         acceptedButtons: Qt.LeftButton
@@ -327,23 +245,30 @@ PanelWindow {
 
                 Item {
                     width: parent.width
-                    height: 68
+                    height: root.headerHeight
 
-                    Text {
+                    Column {
                         anchors.left: parent.left
-                        anchors.leftMargin: StyleTokens.space20
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: "Component gallery"
-                        color: Colors.base05
-                        font.family: StyleTokens.fontSans
-                        font.pixelSize: StyleTokens.fontSizeLg
-                        font.weight: Font.DemiBold
+                        anchors.right: closeButton.left
+                        anchors.top: parent.top
+                        anchors.margins: StyleTokens.space20
+                        spacing: StyleTokens.space4
+
+                        Text {
+                            text: "Quickshell style guide"
+                            color: Colors.base05
+                            font.family: StyleTokens.fontSans
+                            font.pixelSize: StyleTokens.fontSizeLg
+                            font.weight: Font.DemiBold
+                        }
+
                     }
 
                     PillButton {
+                        id: closeButton
                         anchors.right: parent.right
-                        anchors.rightMargin: StyleTokens.space16
-                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.top: parent.top
+                        anchors.margins: StyleTokens.space16
                         iconName: "window-close-symbolic"
                         paddingHorizontal: StylePopover.iconButtonPadding
                         paddingVertical: StylePopover.iconButtonPadding
@@ -351,11 +276,11 @@ PanelWindow {
                     }
 
                     SegmentedControl {
-                        width: 400
+                        anchors.left: parent.left
                         anchors.right: parent.right
-                        anchors.rightMargin: StyleTokens.space16 + StyleControl.buttonWidth + StyleTokens.space8
-                        anchors.verticalCenter: parent.verticalCenter
-                        labels: ["Components", "Widgets", "Icon packs", "Icons"]
+                        anchors.bottom: parent.bottom
+                        anchors.margins: StyleTokens.space16
+                        labels: ["Theme", "Components", "Widgets", "Icons"]
                         currentIndex: root.galleryPage
                         onSegmentSelected: (index) => root.galleryPage = index
                     }
@@ -370,7 +295,7 @@ PanelWindow {
 
                     visible: root.galleryPage < 3
                     width: parent.width
-                    height: parent.height - 69
+                    height: parent.height - root.headerHeight - StyleTokens.borderWidth
                     contentWidth: width
                     contentHeight: galleryMasonry.implicitHeight + StyleTokens.space16 * 2
                     clip: true
@@ -384,78 +309,183 @@ PanelWindow {
                         width: parent.width - StyleTokens.space16 * 2
 
                         GalleryCard {
-                            title: "Button"
+                            page: 0
+                            title: "Matugen palette"
+                            description: "Current wallpaper colors"
 
-                            Row {
-                                spacing: StyleTokens.space8
+                            Repeater {
+                                model: [
+                                    { label: "Surfaces · base00–03", colors: [Colors.base00, Colors.base01, Colors.base02, Colors.base03] },
+                                    { label: "Content · base04–07", colors: [Colors.base04, Colors.base05, Colors.base06, Colors.base07] },
+                                    { label: "Accents · base08–0F", colors: [Colors.base08, Colors.base09, Colors.base0A, Colors.base0B, Colors.base0C, Colors.base0D, Colors.base0E, Colors.base0F] }
+                                ]
 
-                                Button {
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    iconName: "system-search-symbolic"
-                                    interactive: true
-                                    onClicked: root.lastAction = "Icon button clicked"
-                                }
+                                Column {
+                                    required property var modelData
+                                    width: parent.width
+                                    spacing: StyleTokens.space8
 
-                                Button {
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    iconName: "utilities-terminal-symbolic"
-                                    text: "Icon + label"
-                                    interactive: true
-                                    onClicked: root.lastAction = "Labelled button clicked"
-                                }
+                                    GuideText { text: modelData.label }
 
-                                Button {
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    text: "Active"
-                                    interactive: true
-                                    active: true
-                                }
+                                    Row {
+                                        id: swatches
+                                        readonly property int count: modelData.colors.length
+                                        width: parent.width
+                                        spacing: StyleTokens.space4
 
-                                Button {
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    text: "Static"
-                                }
+                                        Repeater {
+                                            model: modelData.colors
 
-                                RowActions {
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    hovered: true
-                                    showDisconnect: true
-                                    showRemove: true
-                                    onDisconnectRequested: root.lastAction = "Disconnect requested"
-                                    onRemoveRequested: root.lastAction = "Forget requested"
-                                }
-
-                                // The demoted stage, where the same glyph arms
-                                // into the worded confirm.
-                                RowActions {
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    hovered: true
-                                    showRemove: true
-                                    onRemoveRequested: root.lastAction = "Forget requested"
+                                            Rectangle {
+                                                required property color modelData
+                                                width: (swatches.width - (swatches.count - 1) * swatches.spacing) / swatches.count
+                                                height: StyleTokens.space20
+                                                radius: StyleTokens.radiusXs
+                                                color: modelData
+                                                border.width: StyleTokens.borderWidth
+                                                border.color: StyleOverlay.borderSubtle
+                                            }
+                                        }
+                                    }
                                 }
                             }
-
                         }
 
                         GalleryCard {
-                            title: "Toggle"
+                            page: 0
+                            title: "Typography"
+                            description: StyleTokens.fontSans
 
-                            Row {
+                            Repeater {
+                                model: [
+                                    { label: "Display", size: StyleTokens.fontSizeXl },
+                                    { label: "Title", size: StyleTokens.fontSizeLg },
+                                    { label: "Supporting title", size: StyleTokens.fontSizeMd },
+                                    { label: "Body and controls", size: StyleTokens.fontSizeSm },
+                                    { label: "Metadata", size: StyleTokens.fontSizeXs }
+                                ]
+
+                                Text {
+                                    required property var modelData
+                                    width: parent.width
+                                    text: modelData.label + " · " + modelData.size + " px"
+                                    color: Colors.base05
+                                    font.family: StyleTokens.fontSans
+                                    font.pixelSize: modelData.size
+                                    elide: Text.ElideRight
+                                }
+                            }
+                        }
+
+                        GalleryCard {
+                            page: 0
+                            title: "Spacing and shape"
+
+                            Flow {
+                                width: parent.width
                                 spacing: StyleTokens.space16
 
-                                Toggle {
-                                    checked: root.toggleValue
-                                    onToggled: root.toggleValue = !root.toggleValue
+                                Repeater {
+                                    model: [StyleTokens.space4, StyleTokens.space8, StyleTokens.space12, StyleTokens.space16, StyleTokens.space20]
+
+                                    DemoSample {
+                                        required property int modelData
+                                        caption: modelData + " px"
+                                        Rectangle {
+                                            anchors.bottom: parent.bottom
+                                            width: modelData
+                                            height: modelData
+                                            color: Colors.base04
+                                            radius: StyleTokens.radiusXs
+                                        }
+                                    }
+                                }
+                            }
+
+                            GuideText {
+                                text: "Radii: " + StyleTokens.radiusXs + " / " + StyleTokens.radiusSm + " / " + StyleTokens.radiusMd
+                                    + " px · Borders: " + StyleTokens.borderWidth + " px"
+                            }
+                        }
+
+                        GalleryCard {
+                            title: "Buttons"
+
+                            Flow {
+                                width: parent.width
+                                spacing: StyleTokens.space20
+
+                                DemoSample {
+                                    caption: "Icon only"
+                                    Button {
+                                        iconName: "system-search-symbolic"
+                                        interactive: true
+                                    }
                                 }
 
-                                Toggle {
-                                    checked: false
-                                    onToggled: checked = !checked
+                                DemoSample {
+                                    caption: "Icon + label"
+                                    Button {
+                                        iconName: "utilities-terminal-symbolic"
+                                        text: "Terminal"
+                                        interactive: true
+                                    }
                                 }
 
-                                Toggle {
-                                    checked: true
-                                    interactive: false
+                                DemoSample {
+                                    caption: "Active"
+                                    Button {
+                                        text: "Selected"
+                                        interactive: true
+                                        active: true
+                                    }
+                                }
+
+                                DemoSample {
+                                    caption: "Disabled"
+                                    Button {
+                                        text: "Unavailable"
+                                        opacity: StyleTokens.opacityDisabled
+                                    }
+                                }
+                            }
+                        }
+
+                        GalleryCard {
+                            title: "Row action"
+
+                            RowActions {
+                                hovered: true
+                                showRemove: true
+                                onRemoveRequested: confirming = false
+                            }
+                        }
+
+                        GalleryCard {
+                            title: "Toggles"
+
+                            Flow {
+                                width: parent.width
+                                spacing: StyleTokens.space20
+
+                                DemoSample {
+                                    caption: root.toggleValue ? "On" : "Off"
+                                    Toggle {
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        checked: root.toggleValue
+                                        onToggled: {
+                                            root.toggleValue = !root.toggleValue
+                                        }
+                                    }
+                                }
+
+                                DemoSample {
+                                    caption: "Disabled"
+                                    Toggle {
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        checked: true
+                                        interactive: false
+                                    }
                                 }
                             }
                         }
@@ -466,8 +496,12 @@ PanelWindow {
                             Slider {
                                 width: parent.width
                                 value: root.sliderValue
-                                onMoved: (value) => root.sliderValue = value
+                                onMoved: (value) => {
+                                    root.sliderValue = value
+                                }
                             }
+
+                            GuideText { text: "Level · " + Math.round(root.sliderValue * 100) + "%" }
                         }
 
                         GalleryCard {
@@ -477,7 +511,9 @@ PanelWindow {
                                 width: parent.width
                                 labels: ["Output", "Input", "Apps"]
                                 currentIndex: root.segmentIndex
-                                onSegmentSelected: (index) => root.segmentIndex = index
+                                onSegmentSelected: (index) => {
+                                    root.segmentIndex = index
+                                }
                             }
                         }
 
@@ -486,231 +522,103 @@ PanelWindow {
 
                             BarGroup {
                                 Row {
-                                    Button {
-                                        iconName: "system-search-symbolic"
-                                        interactive: true
-                                    }
+                                    Repeater {
+                                        model: [1, 2, 3]
 
-                                    Button {
-                                        iconName: "utilities-terminal-symbolic"
-                                        interactive: true
-                                    }
-
-                                    Button {
-                                        iconSource: IconRegistry.volumeIcon(0.8, false, true)
-                                        interactive: true
+                                        Button {
+                                            required property int modelData
+                                            text: modelData
+                                            interactive: true
+                                            active: root.demoWorkspace === modelData
+                                            onClicked: {
+                                                root.demoWorkspace = modelData
+                                            }
+                                        }
                                     }
                                 }
                             }
                         }
 
-
                         GalleryCard {
-                            page: 1
+                            page: 2
                             title: "Capture"
 
                             Widgets.CapturePopover {
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 active: true
-                                springReveal: false
                             }
                         }
 
                         GalleryCard {
-                            page: 1
+                            page: 2
                             title: "Bluetooth"
 
                             Widgets.BluetoothPopover {
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 active: true
-                                springReveal: false
                             }
                         }
 
                         GalleryCard {
-                            page: 1
+                            page: 2
                             title: "Wi-Fi"
 
                             Widgets.NetworkPopover {
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 active: true
-                                springReveal: false
                             }
                         }
 
                         GalleryCard {
-                            page: 1
+                            page: 2
                             title: "Sound"
 
                             Widgets.VolumePopover {
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 active: true
-                                springReveal: false
                             }
                         }
 
                         GalleryCard {
-                            page: 1
+                            page: 2
                             title: "Calendar"
 
                             Widgets.ClockPopover {
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 active: true
-                                springReveal: false
                             }
                         }
 
                         GalleryCard {
-                            page: 1
+                            page: 2
                             title: "Icon menu"
 
                             PopoverMenu {
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 active: true
-                                springReveal: false
                                 iconRow: true
                                 entries: Services.PowerMenu.entries
                             }
                         }
 
                         GalleryCard {
-                            page: 1
+                            page: 2
                             title: "Weather"
 
                             Widgets.WeatherPopover {
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 active: true
-                                springReveal: false
                             }
                         }
 
-                        GalleryCard {
-                            page: 2
-                            title: "MacTahoe · current"
 
-                            IconPackBarPreview {
-                                iconSources: [
-                                    IconRegistry.weatherIcon("few-clouds"),
-                                    IconRegistry.volumeIcon(0.8, false, true),
-                                    IconRegistry.networkIcon("wireless"),
-                                    IconRegistry.bluetoothIcon(true),
-                                    IconRegistry.batteryIcon(100, false)
-                                ]
-                            }
-                        }
-
-                        GalleryCard {
-                            page: 2
-                            title: "Material Symbols Rounded"
-
-                            IconPackBarPreview {
-                                fontFamily: "Material Symbols Rounded"
-                                materialAxes: true
-                                glyphs: ["partly_cloudy_day", "volume_up", "wifi", "bluetooth", "battery_full"]
-                            }
-                        }
-
-                        GalleryCard {
-                            page: 2
-                            title: "Material Symbols Rounded · filled"
-
-                            IconPackBarPreview {
-                                fontFamily: "Material Symbols Rounded"
-                                materialAxes: true
-                                filled: true
-                                glyphs: ["partly_cloudy_day", "volume_up", "wifi", "bluetooth", "battery_full"]
-                            }
-                        }
-
-                        GalleryCard {
-                            page: 2
-                            title: "Material Symbols Sharp"
-
-                            IconPackBarPreview {
-                                fontFamily: "Material Symbols Sharp"
-                                materialAxes: true
-                                glyphs: ["partly_cloudy_day", "volume_up", "wifi", "bluetooth", "battery_full"]
-                            }
-                        }
-
-                        GalleryCard {
-                            page: 2
-                            title: "Material Design Icons"
-
-                            IconPackBarPreview {
-                                fontFamily: "Material Design Icons"
-                                glyphs: [0xF0595, 0xF057E, 0xF05A9, 0xF00AF, 0xF12A3]
-                            }
-                        }
-
-                        GalleryCard {
-                            page: 2
-                            title: "Font Awesome Solid"
-
-                            IconPackBarPreview {
-                                fontFamily: "Font Awesome 7 Free Solid"
-                                iconWeight: Font.Black
-                                glyphs: [
-                                    0xF6C4,
-                                    0xF028,
-                                    0xF1EB,
-                                    { glyph: 0xF294, family: "Font Awesome 7 Brands" },
-                                    0xF240
-                                ]
-                            }
-                        }
-
-                        GalleryCard {
-                            page: 2
-                            title: "Papirus"
-
-                            IconPackBarPreview {
-                                iconSources: [
-                                    "file:///usr/share/icons/Papirus/16x16/panel/weather-clear.svg",
-                                    "file:///usr/share/icons/Papirus/16x16/panel/audio-volume-high.svg",
-                                    "file:///usr/share/icons/Papirus/16x16/panel/network-wireless-signal-excellent.svg",
-                                    "file:///usr/share/icons/Papirus/16x16/panel/bluetooth-active.svg",
-                                    "file:///usr/share/icons/Papirus/16x16/panel/battery-100.svg"
-                                ]
-                            }
-                        }
-
-                        GalleryCard {
-                            page: 2
-                            title: "Breeze"
-
-                            IconPackBarPreview {
-                                iconSources: [
-                                    "file:///usr/share/icons/breeze/applets/48/weather-clear.svg",
-                                    "file:///usr/share/icons/breeze/status/16/audio-volume-high.svg",
-                                    "file:///usr/share/icons/breeze/devices/16/network-wireless-connected-100.svg",
-                                    "file:///usr/share/icons/breeze/devices/16/network-bluetooth.svg",
-                                    "file:///usr/share/icons/breeze/status/16/battery-100.svg"
-                                ]
-                            }
-                        }
-
-                        GalleryCard {
-                            page: 2
-                            title: "Adwaita"
-
-                            IconPackBarPreview {
-                                iconSources: [
-                                    "file:///usr/share/icons/Adwaita/symbolic/status/weather-clear-symbolic.svg",
-                                    "file:///usr/share/icons/Adwaita/symbolic/status/audio-volume-high-symbolic.svg",
-                                    "file:///usr/share/icons/Adwaita/symbolic/status/network-wireless-signal-excellent-symbolic.svg",
-                                    "file:///usr/share/icons/Adwaita/symbolic/status/bluetooth-active-symbolic.svg",
-                                    "file:///usr/share/icons/Adwaita/symbolic/legacy/battery-full-symbolic.svg"
-                                ]
-                            }
-                        }
                     }
                 }
 
                 Column {
                     visible: root.galleryPage === 3
                     width: parent.width
-                    height: parent.height - 69
+                    height: parent.height - root.headerHeight - StyleTokens.borderWidth
 
                     Item {
                         width: parent.width
@@ -809,6 +717,8 @@ PanelWindow {
                         }
                     }
                 }
+
+
             }
         }
     }
