@@ -83,12 +83,99 @@ Singleton {
         395: "storm",
     })
 
+    readonly property var iconSeverity: ({
+        "unknown": -1,
+        "clear": 0,
+        "few-clouds": 1,
+        "overcast": 2,
+        "fog": 3,
+        "showers-scattered": 4,
+        "showers": 5,
+        "snow": 6,
+        "storm": 7,
+    })
+
     function iconForCode(code) {
         return codeToIcon[parseInt(code)] ?? "unknown"
     }
 
+    // wttr.in has no per-day condition, only hourly slots. Sampling one slot
+    // (noon) puts a sun on a day that rains from 15:00 on, so take the worst
+    // slot instead.
+    function worstHourly(hourly) {
+        return (hourly ?? []).reduce((worst, slot) => {
+            const severity = root.iconSeverity[root.iconForCode(slot.weatherCode)] ?? -1
+            return severity > worst.severity ? { severity, slot } : worst
+        }, { severity: -2, slot: {} }).slot
+    }
+
     function refresh() {
         weatherProcess.running = true
+    }
+
+    function applyReport(report) {
+        const separator = report.indexOf("\n")
+        if (separator < 0)
+            return false
+
+        const configuredLocation = report.slice(0, separator).trim()
+        let data
+        try {
+            data = JSON.parse(report.slice(separator + 1).trim())
+        } catch (e) {
+            return false
+        }
+
+        const cc = data?.current_condition?.[0]
+        if (!cc)
+            return false
+
+        const code = parseInt(cc.weatherCode ?? "113")
+        root.icon = root.iconForCode(code)
+        root.temperature = (cc.temp_C ?? "--") + "°C"
+        root.currentTemp = parseFloat(cc.temp_C ?? "NaN")
+        root.description = cc.weatherDesc?.[0]?.value ?? ""
+        root.feelsLike = (cc.FeelsLikeC ?? "--") + "°C"
+        root.humidity = (cc.humidity ?? "--") + "%"
+        root.wind = (cc.windspeedKmph ?? "--") + " km/h " + (cc.winddir16Point ?? "")
+
+        root.locationName = configuredLocation
+
+        const days = data?.weather ?? []
+        root.forecast = days.slice(0, root.forecastDayCount).map(day => {
+            const worst = root.worstHourly(day.hourly)
+            const dayCode = parseInt(worst.weatherCode ?? "113")
+            const minNum = parseFloat(day.mintempC ?? "NaN")
+            const maxNum = parseFloat(day.maxtempC ?? "NaN")
+            return {
+                date: day.date ?? "",
+                icon: root.iconForCode(dayCode),
+                minC: (day.mintempC ?? "--") + "°C",
+                maxC: (day.maxtempC ?? "--") + "°C",
+                // numeric temps for range-bar math (NaN when data missing)
+                minTemp: isNaN(minNum) ? null : minNum,
+                maxTemp: isNaN(maxNum) ? null : maxNum,
+                description: worst.weatherDesc?.[0]?.value ?? "",
+            }
+        })
+
+        // Publish readiness only after every field and forecast row is
+        // populated, so consumers never reveal a partially updated
+        // weather model.
+        root.hasData = true
+        return true
+    }
+
+    FileView {
+        id: weatherCache
+
+        path: (Quickshell.env("XDG_CACHE_HOME") || Quickshell.env("HOME") + "/.cache")
+            + "/quickshell-weather-" + encodeURIComponent(Quickshell.env("WEATHER_CITY") || "Montreal") + ".json"
+        printErrors: false
+        onLoaded: {
+            if (!root.hasData)
+                root.applyReport(text())
+        }
     }
 
     Process {
@@ -104,56 +191,8 @@ Singleton {
 
         stdout: StdioCollector {
             onStreamFinished: {
-                const separator = this.text.indexOf("\n")
-                if (separator < 0)
-                    return
-
-                const configuredLocation = this.text.slice(0, separator).trim()
-                let data
-                try {
-                    data = JSON.parse(this.text.slice(separator + 1).trim())
-                } catch (e) {
-                    return
-                }
-
-                const cc = data?.current_condition?.[0]
-                if (!cc)
-                    return
-
-                const code = parseInt(cc.weatherCode ?? "113")
-                root.icon = root.iconForCode(code)
-                root.temperature = (cc.temp_C ?? "--") + "°C"
-                root.currentTemp = parseFloat(cc.temp_C ?? "NaN")
-                root.description = cc.weatherDesc?.[0]?.value ?? ""
-                root.feelsLike = (cc.FeelsLikeC ?? "--") + "°C"
-                root.humidity = (cc.humidity ?? "--") + "%"
-                root.wind = (cc.windspeedKmph ?? "--") + " km/h " + (cc.winddir16Point ?? "")
-
-                root.locationName = configuredLocation
-
-                const days = data?.weather ?? []
-                root.forecast = days.slice(0, root.forecastDayCount).map(day => {
-                    // use mid-day hourly slot for description
-                    const mid = day.hourly?.[Math.floor((day.hourly?.length ?? 0) / 2)] ?? {}
-                    const dayCode = parseInt(mid.weatherCode ?? "113")
-                    const minNum = parseFloat(day.mintempC ?? "NaN")
-                    const maxNum = parseFloat(day.maxtempC ?? "NaN")
-                    return {
-                        date: day.date ?? "",
-                        icon: root.iconForCode(dayCode),
-                        minC: (day.mintempC ?? "--") + "°C",
-                        maxC: (day.maxtempC ?? "--") + "°C",
-                        // numeric temps for range-bar math (NaN when data missing)
-                        minTemp: isNaN(minNum) ? null : minNum,
-                        maxTemp: isNaN(maxNum) ? null : maxNum,
-                        description: mid.weatherDesc?.[0]?.value ?? "",
-                    }
-                })
-
-                // Publish readiness only after every field and forecast row is
-                // populated, so consumers never reveal a partially updated
-                // weather model.
-                root.hasData = true
+                if (root.applyReport(this.text))
+                    weatherCache.setText(this.text)
             }
         }
     }
