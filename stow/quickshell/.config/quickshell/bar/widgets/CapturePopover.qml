@@ -15,6 +15,7 @@ PopoverPanel {
     readonly property int tileRowWidth: popoverWidth - StylePopover.listRowInset * 2
 
     property int tab: shotTab
+    onTabChanged: root.animatePanel()
 
     readonly property var shotEntries: [
         { "label": "Region", "icon": "shot-region", "mode": "region" },
@@ -32,7 +33,7 @@ PopoverPanel {
 
     signal dismissRequested()
 
-    onActiveChanged: {
+    onDismissFinished: {
         if (!active)
             tab = shotTab
     }
@@ -62,8 +63,8 @@ PopoverPanel {
 
         Behavior on color {
             ColorAnimation {
-                duration: StyleTokens.easeDurationFast
-                easing.type: StyleTokens.easeSymmetric
+                duration: StyleTokens.motionFeedbackDuration
+                easing.type: StyleTokens.easeFade
             }
         }
 

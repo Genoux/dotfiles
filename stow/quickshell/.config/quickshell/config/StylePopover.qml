@@ -8,6 +8,9 @@ Singleton {
     // own hairline border still reads as its edge rather than merging into the
     // bar, and nothing more.
     readonly property int barGap: StyleTokens.space4
+    // A panel pushed against a screen edge reads as clipped rather than placed.
+    // Hold it off by the same inset the bar keeps from that edge.
+    readonly property int screenEdgeGap: StyleBar.margin
     readonly property int panelWidth: 320
     readonly property int minWidth: 184
     // Content like the tray menu populates asynchronously (QsMenuOpener is a
@@ -18,19 +21,19 @@ Singleton {
     readonly property int contentPaddingH: StyleTokens.space16
     readonly property int rowHeight: 32
     readonly property int separatorHeight: StyleTokens.borderWidth
-
-    // A single reversible transition keeps reveal and dismissal visually
-    // identical and lets rapid toggles reverse from the current frame.
-    readonly property int transitionDuration: StyleTokens.easeDurationFast
-    readonly property real hiddenScale: 0.97
+    readonly property int panelMotionDuration: 100
+    readonly property real panelStartScale: 0.99
+    readonly property int panelMotionEasing: StyleTokens.easeStandard
+    readonly property int panelExitDuration: 80
+    readonly property real panelExitScale: 1
+    readonly property int panelExitEasing: Easing.OutQuad
 
     readonly property int shadowRadius: 8
     readonly property int shadowSamples: 17
 
     // Tray context menu — a system right-click menu, not a bar widget panel.
-    // It hugs its content instead of filling panelWidth, aligns to the icon's
-    // edge instead of centring on it, and skips the spring reveal that marks a
-    // widget panel opening.
+    // It hugs its content instead of filling panelWidth and aligns to the
+    // icon's edge instead of centring on it.
     readonly property int contextMenuMinWidth: 160
     readonly property int contextMenuMaxWidth: 360
     readonly property int contextMenuRowHeight: 28
@@ -144,12 +147,7 @@ Singleton {
     // A stream row carries a name line over its own slider, so it needs more than
     // the two-line device row: a slider's hit area is taller than a caption.
     readonly property int streamRowHeight: 44
-    // The body under the segmented control is a FIXED height, not content-fit.
-    // The panel hangs off the bar, so it grows upward — a content-fit body would
-    // move the header and the segments themselves on every tab switch, and a
-    // second click would land on a different tab than the one aimed at. Tabs that
-    // hold still are worth more than a panel that hugs its shortest tab.
-    readonly property int soundBodyHeight: 220
+    readonly property int soundBodyMaxHeight: 220
 
     // System monitor — wide enough for three compact meters and aligned numeric
     // process columns, while remaining a glanceable popover rather than a small
@@ -164,6 +162,15 @@ Singleton {
     readonly property int systemProcessRowCount: 6
     readonly property int systemProcessValueWidth: 42
     readonly property int systemProcessListHeight: systemProcessRowHeight * systemProcessRowCount + StyleTokens.space8
+
+    readonly property int systemInfoWidth: 420
+    readonly property int systemInfoArtSize: StyleTokens.fontSizeXs * 0.8
+    readonly property int systemInfoHeroPaddingV: StyleTokens.space20
+    readonly property int systemInfoLabelWidth: 64
+    readonly property int systemInfoLabelGap: StyleTokens.space12
+    readonly property int systemInfoBodyPaddingV: StyleTokens.space16
+    readonly property int systemInfoGroupPadding: StyleTokens.space12
+    readonly property int systemInfoRowPadding: StyleTokens.space6
 
     readonly property int pillPaddingH: StyleTokens.space10
     readonly property int pillPaddingV: StyleTokens.space6

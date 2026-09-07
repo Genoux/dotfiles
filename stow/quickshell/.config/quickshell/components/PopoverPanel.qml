@@ -10,8 +10,7 @@ Item {
 
     property bool active: false
     property bool fitContent: false
-    // Widget panels spring up from the bar; a context menu should just appear.
-    property bool springReveal: true
+    property bool displaying: false
 
     default property alias content: contentLayer.data
     readonly property int chromePadding: StylePopover.padding
@@ -60,56 +59,69 @@ Item {
     width: implicitWidth
     height: implicitHeight
 
-    // One reversible state transition owns both directions. Qt reverses an
-    // interrupted transition from its current frame, so rapid toggles cannot
-    // reset opacity/scale or leave competing animations behind.
-    state: active ? "shown" : "hidden"
-    opacity: 0
-    scale: springReveal ? StylePopover.hiddenScale : 1
+    opacity: displaying ? 1 : 0
+    enabled: active
     transformOrigin: Item.Bottom
 
-    states: [
-        State {
-            name: "hidden"
+    function animatePanel() {
+        if (!active)
+            return;
+        panelExit.stop();
+        panelMotion.stop();
+        scale = StylePopover.panelStartScale;
+        panelMotion.start();
+    }
 
-            PropertyChanges {
-                panel.opacity: 0
-                panel.scale: panel.springReveal ? StylePopover.hiddenScale : 1
+    function updateVisibility() {
+        if (active) {
+            const reopening = displaying;
+            panelExit.stop();
+            displaying = true;
+            if (!reopening) {
+                scale = StylePopover.panelStartScale;
             }
-        },
-        State {
-            name: "shown"
-
-            PropertyChanges {
-                panel.opacity: 1
-                panel.scale: 1
-            }
+            panelMotion.restart();
+        } else {
+            panelMotion.stop();
+            if (!displaying || StylePopover.panelExitScale === 1 || StylePopover.panelExitDuration <= 0)
+                Qt.callLater(finishDismissal);
+            else
+                panelExit.restart();
         }
-    ]
+    }
 
-    transitions: Transition {
-        id: visibilityTransition
-
-        from: "hidden"
-        to: "shown"
-        reversible: true
-
-        OpacityAnimator {
-            target: panel
-            duration: StylePopover.transitionDuration
-            easing.type: Easing.InOutCubic
+    function finishDismissal() {
+        if (!active) {
+            displaying = false;
+            dismissFinished();
         }
+    }
 
-        ScaleAnimator {
-            target: panel
-            duration: StylePopover.transitionDuration
-            easing.type: Easing.InOutCubic
-        }
+    onActiveChanged: updateVisibility()
+    Component.onCompleted: {
+        if (active && !displaying)
+            updateVisibility();
+    }
 
-        onRunningChanged: {
-            if (!running && panel.state === "hidden")
-                panel.dismissFinished();
-        }
+    NumberAnimation {
+        id: panelMotion
+
+        target: panel
+        property: "scale"
+        to: 1
+        duration: StylePopover.panelMotionDuration
+        easing.type: StylePopover.panelMotionEasing
+    }
+
+    NumberAnimation {
+        id: panelExit
+
+        target: panel
+        property: "scale"
+        to: StylePopover.panelExitScale
+        duration: StylePopover.panelExitDuration
+        easing.type: StylePopover.panelExitEasing
+        onFinished: panel.finishDismissal()
     }
 
     DropShadow {
@@ -142,6 +154,8 @@ Item {
         y: chromePadding
         width: parent.width - chromePadding * 2
         height: parent.height - chromePadding * 2
+
+
     }
 
 }
