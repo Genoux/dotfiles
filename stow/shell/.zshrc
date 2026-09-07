@@ -238,12 +238,6 @@ export PATH="$HOME/.cargo/bin:$PATH"
 export PATH="/home/john/.local/bin:$PATH"
 # <<< Codex installer <<<
 
-# Routes the AI CLIs through the local 9router gateway. Machine-local and
-# absent by default, so a fresh install talks to the upstream providers.
-if [[ -f ~/.config/9router/env ]]; then
-    source ~/.config/9router/env
-fi
-
 # Run a command in a memory-capped cgroup scope, so one runaway dev server
 # cannot take the whole machine down. MemoryHigh throttles and forces reclaim;
 # MemoryMax is the hard wall. Usage: capdev bun dev
