@@ -44,13 +44,35 @@ PopoverPanel {
         }
     }
 
-    onTabChanged: Qt.callLater(root.revealSelected)
+    onTabChanged: {
+        Qt.callLater(root.revealSelected)
+        root.animatePanel()
+    }
 
-    onActiveChanged: {
-        if (active)
-            Qt.callLater(root.revealSelected)
-        else
+    onDismissFinished: {
+        if (!active)
             root.tab = root.outputTab
+    }
+
+    Component.onCompleted: Qt.callLater(root.revealSelected)
+
+    Connections {
+        target: AudioState
+
+        function onNodeRevisionChanged() {
+            if (!root.active)
+                Qt.callLater(root.revealSelected)
+        }
+
+        function onSinkChanged() {
+            if (!root.active)
+                Qt.callLater(root.revealSelected)
+        }
+
+        function onSourceChanged() {
+            if (!root.active)
+                Qt.callLater(root.revealSelected)
+        }
     }
 
     Item {
@@ -150,8 +172,8 @@ PopoverPanel {
 
                     Behavior on opacity {
                         NumberAnimation {
-                            duration: StyleTokens.easeDurationFast
-                            easing.type: StyleTokens.easeStandard
+                            duration: StyleTokens.motionFeedbackDuration
+                            easing.type: StyleTokens.easeFade
                         }
                     }
                 }
@@ -161,17 +183,19 @@ PopoverPanel {
                 width: parent.width
             }
 
-            // Fixed-height body: see StylePopover.soundBodyHeight for why this
-            // does not hug its content.
             Item {
                 width: parent.width
-                implicitHeight: StylePopover.soundBodyHeight
+                readonly property bool empty: root.tab === root.appsTab ? AudioState.streamCount === 0
+                    : (root.onInput ? AudioState.inputCount === 0 : AudioState.outputCount === 0)
+                implicitHeight: empty ? StylePopover.emptyStateHeight
+                    : Math.min(listColumn.implicitHeight, StylePopover.soundBodyMaxHeight)
                 height: implicitHeight
 
                 PopoverMessage {
                     anchors.fill: parent
-                    visible: root.tab === root.appsTab && AudioState.streamCount === 0
-                    text: "Nothing playing"
+                    visible: parent.empty
+                    text: root.tab === root.appsTab ? "Nothing playing"
+                        : (root.onInput ? "No input devices" : "No output devices")
                 }
 
                 Flickable {

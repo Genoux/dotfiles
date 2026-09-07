@@ -1,4 +1,10 @@
 hl.layer_rule({
+  name = "no-anim-quickshell-popover",
+  no_anim = true,
+  match = { namespace = "^(quickshell-popover)$" },
+})
+
+hl.layer_rule({
   name = "no-anim-hyprpicker",
   no_anim = true,
   match = { namespace = "hyprpicker" },

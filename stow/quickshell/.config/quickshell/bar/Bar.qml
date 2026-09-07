@@ -17,7 +17,6 @@ PanelWindow {
     readonly property int contentHeight: Math.max(StyleBar.estimatedContentHeight, leftRow.implicitHeight, windowTitle.implicitHeight, rightRow.implicitHeight)
 
     implicitHeight: contentHeight + StyleBar.topPadding + StyleBar.bottomPadding
-    height: implicitHeight
     color: StyleBar.background
 
     anchors {
@@ -153,6 +152,7 @@ PanelWindow {
 
             Widgets.Info {
                 Layout.alignment: Qt.AlignVCenter
+                barWindow: bar
             }
 
             // Keep the development surface available without occupying a keybind.

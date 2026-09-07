@@ -18,10 +18,12 @@ PopoverPanel {
         WifiState.detailed = active
         if (active) {
             WifiState.clearError()
-            WifiState.refresh()
-        } else {
-            WifiState.passphrasePath = ""
         }
+    }
+
+    onDismissFinished: {
+        if (!active)
+            WifiState.passphrasePath = ""
     }
 
     Item {
@@ -109,7 +111,7 @@ PopoverPanel {
                 height: StylePopover.emptyStateHeight
                 text: WifiState.available
                     ? "Wi-Fi is off"
-                    : (WifiState.loaded ? "No Wi-Fi adapter" : "Looking for a radio…")
+                    : "No Wi-Fi adapter"
             }
 
             // Scrolls as one list so the section eyebrows travel with their

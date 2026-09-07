@@ -1,12 +1,11 @@
 import QtQuick
+import QtQuick.Window
 import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Wayland
 import qs.config
 import qs.services
 
-// Host for a bar widget's panel. The window remains mapped while the panel's
-// OUT animation runs, then unmounts after the visual has fully faded.
 Item {
     id: root
 
@@ -16,6 +15,11 @@ Item {
     // A panel that only shows state never takes the keyboard, so typing keeps
     // going to the focused window. Raise this for the panels that hold a field.
     property bool acceptsKeyboard: false
+    // A panel is normally dropped from its button. Raise this for a panel that
+    // reads as a destination rather than a control — About this system — and the
+    // compositor places it centred instead. Anchoring nothing is what centres a
+    // layer surface; the margins below go unused.
+    property bool centered: false
     property bool open: false
     property bool exiting: false
     property bool presented: false
@@ -39,7 +43,7 @@ Item {
     }
 
     // Unmap immediately so a follow-up overlay (slurp, recorder) is not
-    // waiting on the panel's 160ms dismiss animation.
+    // waiting on the panel's dismiss animation.
     function dismissNow() {
         if (open)
             open = false;
@@ -96,12 +100,12 @@ Item {
         screen: root.barWindow ? root.barWindow.screen : null
         visible: root.presented
         color: StyleTokens.transparent
+        onClosed: root.open = false
         exclusionMode: ExclusionMode.Ignore
 
         WlrLayershell.layer: WlrLayer.Overlay
         WlrLayershell.keyboardFocus: root.acceptsKeyboard ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
-        // Must match the ^(quickshell)$ namespace in hypr windowrules.lua — this is what gets layer blur.
-        WlrLayershell.namespace: "quickshell"
+        WlrLayershell.namespace: "quickshell-popover"
 
         implicitWidth: slot.width
         implicitHeight: slot.height
@@ -112,23 +116,36 @@ Item {
         }
 
         anchors {
-            left: true
-            bottom: true
+            left: !root.centered
+            bottom: !root.centered
         }
 
         margins {
             left: {
                 const centred = root.centerX - slot.width / 2;
-                const limit = root.screenWidth > 0 ? root.screenWidth - slot.width : centred;
-                return Math.round(Math.max(0, Math.min(centred, limit)));
+                const gap = StylePopover.screenEdgeGap;
+                const limit = root.screenWidth > 0 ? root.screenWidth - slot.width - gap : centred;
+                return Math.round(Math.max(gap, Math.min(centred, limit)));
             }
             bottom: root.panelBottomMargin
         }
 
+        Connections {
+            target: overlay.contentItem.Window.window
+            enabled: root.open && PopoverCoordinator.current === root
+
+            function onFrameSwapped() {
+                PopoverCoordinator.notifyPresented(root);
+            }
+        }
+
         HyprlandFocusGrab {
-            active: root.open
+            active: root.open && PopoverCoordinator.current === root
             windows: [root.barWindow, overlay]
-            onCleared: root.open = false
+            onCleared: {
+                if (PopoverCoordinator.current === root)
+                    root.open = false;
+            }
         }
 
         Item {

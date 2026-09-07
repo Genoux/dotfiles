@@ -9,6 +9,7 @@ import QtQuick
 //
 Singleton {
     property Item current: null
+    property Item pendingPrevious: null
 
     // The panel still fading out after dismissal. If another panel opens before
     // that fade ends, its outgoing window is unmounted first so two large panel
@@ -22,21 +23,43 @@ Singleton {
             exiting = null;
     }
 
+    function closePopover(popover) {
+        if (!popover)
+            return;
+        popover.open = false;
+        if (popover.exiting !== undefined)
+            popover.exiting = false;
+    }
+
+    function finishHandoff() {
+        const previous = pendingPrevious;
+        pendingPrevious = null;
+        closePopover(previous);
+    }
+
+    function notifyPresented(popover) {
+        if (current === popover)
+            finishHandoff();
+    }
+
     function requestOpen(popover) {
         const previous = current;
-
         if (exiting !== null && exiting !== popover)
             exiting.exiting = false;
 
-        // Adopt the new popover *before* closing the old one: the close below
-        // re-enters via notifyClosed, which must see that it is no longer
-        // current.
         current = popover;
+        if (previous === null || previous === popover)
+            return;
 
-        if (previous !== null && previous !== popover) {
-            previous.open = false;
-            if (previous.exiting !== undefined)
-                previous.exiting = false;
+        // Keep the last rendered panel until Qt Quick queues the replacement's
+        // first frame. Mapping a Wayland window alone does not present content.
+        if (pendingPrevious === popover) {
+            pendingPrevious = null;
+            closePopover(previous);
+        } else if (pendingPrevious !== null) {
+            closePopover(previous);
+        } else {
+            pendingPrevious = previous;
         }
     }
 
@@ -74,7 +97,11 @@ Singleton {
         if (isDescendantOf(item, current.contentRoot))
             return;
 
-        current.open = false;
+        const previous = current;
+        Qt.callLater(() => {
+            if (current === previous)
+                previous.open = false;
+        });
     }
 
     function notifyClosed(popover) {
@@ -82,5 +109,6 @@ Singleton {
             return;
 
         current = null;
+        finishHandoff();
     }
 }

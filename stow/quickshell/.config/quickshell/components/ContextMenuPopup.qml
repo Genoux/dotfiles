@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Window
 import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Wayland
@@ -9,7 +10,7 @@ import qs.services
 // right-click menu, not a bar widget panel.
 //
 // It deliberately does NOT reuse BarPopover. A widget panel is a piece of the
-// shell's own UI: it centres on its widget and springs up from the bar.
+// shell's own UI: it centres on its widget and hangs off the bar.
 // A context menu belongs to the application that raised it and should behave
 // the way every other menu on the desktop does: pinned to the edge of the item
 // that spawned it, appearing at once with no travel, and never animating into
@@ -24,6 +25,8 @@ Item {
     required property Item anchorItem
 
     property bool open: false
+    property bool presented: false
+    property bool exiting: false
     default property alias content: slot.data
 
     // Root of the panel's own content, so PopoverCoordinator can tell a click
@@ -46,12 +49,26 @@ Item {
         open = !open;
     }
 
+    function finishDismissal() {
+        if (!open)
+            exiting = false;
+    }
+
+    onExitingChanged: {
+        PopoverCoordinator.notifyExiting(root, exiting);
+        if (!exiting && !open)
+            presented = false;
+    }
+
     onOpenChanged: {
         if (!open) {
             PopoverCoordinator.notifyClosed(root);
+            exiting = true;
             return;
         }
 
+        presented = true;
+        exiting = false;
         resolveAnchor();
         PopoverCoordinator.requestOpen(root);
     }
@@ -60,14 +77,14 @@ Item {
         id: overlay
 
         screen: root.barWindow ? root.barWindow.screen : null
-        visible: root.open
+        visible: root.presented
         color: StyleTokens.transparent
+        onClosed: root.open = false
         exclusionMode: ExclusionMode.Ignore
 
         WlrLayershell.layer: WlrLayer.Overlay
         WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
-        // Must match the ^(quickshell)$ namespace in hypr windowrules.lua — this is what gets layer blur.
-        WlrLayershell.namespace: "quickshell"
+        WlrLayershell.namespace: "quickshell-popover"
 
         implicitWidth: slot.width
         implicitHeight: slot.height
@@ -96,10 +113,22 @@ Item {
             bottom: (root.barWindow ? root.barWindow.height : 0) + StylePopover.barGap
         }
 
+        Connections {
+            target: overlay.contentItem.Window.window
+            enabled: root.open && PopoverCoordinator.current === root
+
+            function onFrameSwapped() {
+                PopoverCoordinator.notifyPresented(root);
+            }
+        }
+
         HyprlandFocusGrab {
-            active: root.open
+            active: root.open && PopoverCoordinator.current === root
             windows: [root.barWindow, overlay]
-            onCleared: root.open = false
+            onCleared: {
+                if (PopoverCoordinator.current === root)
+                    root.open = false;
+            }
         }
 
         Item {

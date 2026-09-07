@@ -9,9 +9,6 @@ PopoverPanel {
     property int displayYear: 0
     property int displayMonth: 0  // 1-12
 
-    // -1 = prev (slide right-to-left), +1 = next (slide left-to-right)
-    property int slideDirection: 1
-
     // Debounces scroll-to-navigate so one trackpad swipe (many wheel deltas)
     // moves a single month instead of flying through several.
     property bool wheelLocked: false
@@ -74,34 +71,31 @@ PopoverPanel {
     }
 
     function navigatePrev() {
-        root.slideDirection = -1
         if (root.displayMonth === 1) {
             root.displayMonth = 12
             root.displayYear -= 1
         } else {
             root.displayMonth -= 1
         }
-        slideAnim.restart()
+        root.animatePanel()
     }
 
     function navigateNext() {
-        root.slideDirection = 1
         if (root.displayMonth === 12) {
             root.displayMonth = 1
             root.displayYear += 1
         } else {
             root.displayMonth += 1
         }
-        slideAnim.restart()
+        root.animatePanel()
     }
 
     function jumpToToday() {
         if (root.viewingCurrentMonth)
             return
-        root.slideDirection = root.displayYear < root.todayYear || (root.displayYear === root.todayYear && root.displayMonth < root.todayMonth) ? 1 : -1
         root.displayYear = root.todayYear
         root.displayMonth = root.todayMonth
-        slideAnim.restart()
+        root.animatePanel()
     }
 
     Column {
@@ -327,44 +321,6 @@ PopoverPanel {
 
         interval: StylePopover.calendarWheelDebounce
         onTriggered: root.wheelLocked = false
-    }
-
-    // Month slide animation — restarted explicitly by the navigation handlers
-    // so the programmatic month reset on popover open never triggers a slide.
-    SequentialAnimation {
-        id: slideAnim
-
-        PropertyAction {
-            target: gridColumn
-            property: "x"
-            value: root.slideDirection * 16
-        }
-
-        PropertyAction {
-            target: gridColumn
-            property: "opacity"
-            value: 0
-        }
-
-        ParallelAnimation {
-            NumberAnimation {
-                target: gridColumn
-                property: "x"
-                to: 0
-                duration: StyleTokens.easeDurationNormal
-                easing.type: StyleTokens.easeStandard
-            }
-
-            NumberAnimation {
-                target: gridColumn
-                property: "opacity"
-                to: 1
-                duration: StyleTokens.easeDurationNormal
-                easing.type: StyleTokens.easeStandard
-            }
-
-        }
-
     }
 
 }
