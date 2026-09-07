@@ -1,6 +1,7 @@
 import QtQuick
 import qs.components
 import qs.config
+import qs.services
 
 Button {
     id: root
@@ -17,6 +18,11 @@ Button {
 
         barWindow: root.barWindow
         anchorItem: root
+        acceptsKeyboard: BluetoothState.pairingNeedsInput
+        onOpenChanged: {
+            if (!open)
+                BluetoothState.cancelPairing()
+        }
 
         BluetoothPopover {
             active: popover.open

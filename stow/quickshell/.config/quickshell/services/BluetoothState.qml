@@ -60,6 +60,10 @@ Singleton {
         return count
     }
 
+    property string pairingAddress: ""
+    property var pairingPrompt: ({})
+    property bool pairingFinished: false
+    readonly property bool pairingNeedsInput: ["pin", "passkey"].includes(pairingPrompt.kind)
     property string pendingPairAddress: ""
     property string lastConnectedAddress: stateFile.adapter?.lastConnectedAddress ?? ""
     property bool reconnectOnEnable: false
@@ -86,22 +90,13 @@ Singleton {
         return text.includes("Failed to") || text.includes("not available")
     }
 
-    function pairingError(output) {
-        const text = String(output || "")
-        if (text.includes("AuthenticationFailed"))
-            return "Pairing rejected by device"
-        if (text.includes("AuthenticationRejected"))
-            return "Pairing confirmation rejected"
-        if (text.includes("AuthenticationCanceled"))
-            return "Pairing canceled"
-        if (text.includes("AuthenticationTimeout") || text.includes("Timed out"))
-            return "Pairing timed out"
-        return "Could not pair"
+    function answerPairing(accept, value) {
+        pairProcess.write(JSON.stringify({id: pairingPrompt.id, accept: accept, value: value || ""}) + "\n");
     }
 
-    function agentCapability(device) {
-        const icon = String(device?.icon || "")
-        return icon.startsWith("input-") ? "KeyboardDisplay" : "NoInputNoOutput"
+    function cancelPairing() {
+        if (pairProcess.running)
+            pairProcess.write(JSON.stringify({cancel: true}) + "\n");
     }
 
     function finishPairableWindow() {
@@ -159,6 +154,7 @@ Singleton {
     }
 
     function disableAdapter() {
+        cancelPairing()
         stopScan()
         reconnectOnEnable = false
         requestedAdapterEnabled = false
@@ -281,21 +277,10 @@ Singleton {
             pendingPairAddress = device.address
             adapter.pairableTimeout = 60
             adapter.pairable = true
-            // Quickshell 0.3 exposes pair(), but does not provide the BlueZ
-            // agent that pairing needs. bluetoothctl supplies that agent while
-            // the native model continues to own the device state shown in QML.
-            pairProcess.exec([
-                "bash",
-                "-c",
-                `
-                bluetoothctl --agent "$2" --timeout 30 pair "$1" \
-                    && bluetoothctl trust "$1" \
-                    && bluetoothctl --timeout 15 connect "$1"
-                `,
-                "bluetooth-pair",
-                device.address,
-                root.agentCapability(device),
-            ])
+            pairingAddress = device.address
+            pairingPrompt = ({})
+            pairingFinished = false
+            pairProcess.exec(["python", Quickshell.shellPath("assets/scripts/bluetooth-pair.py"), device.dbusPath])
             return
         }
 
@@ -305,6 +290,8 @@ Singleton {
     function forgetDevice(device) {
         if (!device)
             return
+        if (pairingAddress === device.address)
+            cancelPairing()
         if (pendingPairAddress === device.address)
             pendingPairAddress = ""
         if (lastConnectedAddress === device.address)
@@ -472,17 +459,35 @@ Singleton {
     Process {
         id: pairProcess
 
-        stdout: StdioCollector {
-            id: pairOutput
+        stdinEnabled: true
+        stdout: SplitParser {
+            onRead: data => {
+                try {
+                    const message = JSON.parse(data)
+                    if (message.type === "prompt") {
+                        root.pairingPrompt = message
+                    } else if (message.type === "error" || message.type === "done") {
+                        root.pairingFinished = true
+                        if (message.type === "error") {
+                            root.errorAddress = root.pairingAddress
+                            root.errorText = message.message || "Could not pair"
+                        }
+                    }
+                } catch (error) {
+                    console.warn("Invalid Bluetooth pairing response", error)
+                }
+            }
         }
         stderr: StdioCollector {}
 
-        onExited: (exitCode) => {
-            if (exitCode !== 0 || root.commandFailed(pairOutput.text)) {
-                root.errorAddress = root.busyAddress
-                root.errorText = root.pairingError(pairOutput.text)
-                root.pendingPairAddress = ""
+        onExited: exitCode => {
+            if (!root.pairingFinished) {
+                root.errorAddress = root.pairingAddress
+                root.errorText = "Pairing helper exited unexpectedly"
             }
+            root.pairingPrompt = ({})
+            root.pairingAddress = ""
+            root.pendingPairAddress = ""
             root.busyAddress = ""
             root.finishPairableWindow()
         }
@@ -535,7 +540,7 @@ Singleton {
                 root.bumpDevices()
                 if (modelData.connected) {
                     root.notifyConnected(modelData)
-                    if (modelData.address === root.busyAddress)
+                    if (modelData.address === root.busyAddress && root.pairingAddress.length === 0)
                         root.busyAddress = ""
                     if (modelData.address === root.errorAddress)
                         root.errorAddress = ""

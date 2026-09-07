@@ -1,4 +1,5 @@
 import QtQuick
+import qs
 import qs.components
 import qs.config
 import qs.services
@@ -47,6 +48,84 @@ PopoverPanel {
                 text: BluetoothState.blocked
                     ? "Bluetooth is blocked"
                     : (BluetoothState.available ? "Bluetooth is off" : "No Bluetooth adapter")
+            }
+
+            Column {
+                visible: BluetoothState.pairingAddress.length > 0
+                width: parent.width
+                padding: StylePopover.contentPaddingV
+                spacing: StyleTokens.space6
+
+                Text {
+                    width: parent.width - parent.padding * 2
+                    text: {
+                        const prompt = BluetoothState.pairingPrompt;
+                        const name = BluetoothState.findDevice(BluetoothState.pairingAddress)?.name || "device";
+                        if (prompt.kind === "confirm")
+                            return `Confirm ${prompt.code} matches the code on ${name}`;
+                        if (prompt.kind === "display")
+                            return `Enter ${prompt.code} on ${name}, then press Enter`;
+                        if (prompt.kind === "authorize")
+                            return `Allow pairing with ${name}?`;
+                        if (BluetoothState.pairingNeedsInput)
+                            return `Enter the ${prompt.kind === "pin" ? "PIN" : "passkey"} for ${name}`;
+                        return `Pairing with ${name}…`;
+                    }
+                    textFormat: Text.PlainText
+                    wrapMode: Text.Wrap
+                    color: Colors.base05
+                    font.family: StyleTokens.fontSans
+                    font.pixelSize: StyleTokens.fontSizeSm
+                }
+
+                Rectangle {
+                    visible: BluetoothState.pairingNeedsInput
+                    width: parent.width - parent.padding * 2
+                    height: StylePopover.listRowHeight
+                    radius: StyleTokens.radiusSm
+                    color: StyleTokens.alphaLight
+
+                    TextInput {
+                        id: pairingInput
+                        anchors.fill: parent
+                        anchors.margins: StyleTokens.space8
+                        color: Colors.base05
+                        font.family: StyleTokens.fontSans
+                        font.pixelSize: StyleTokens.fontSizeSm
+                        verticalAlignment: TextInput.AlignVCenter
+                        clip: true
+                        maximumLength: BluetoothState.pairingPrompt.kind === "pin" ? 16 : 6
+                        readonly property bool valid: BluetoothState.pairingPrompt.kind === "pin"
+                            ? text.length > 0 : /^[0-9]{1,6}$/.test(text)
+                        onAccepted: {
+                            if (valid)
+                                BluetoothState.answerPairing(true, text);
+                        }
+                        Connections {
+                            target: BluetoothState
+                            function onPairingPromptChanged() {
+                                pairingInput.text = "";
+                                if (root.active && BluetoothState.pairingNeedsInput)
+                                    Qt.callLater(() => pairingInput.forceActiveFocus());
+                            }
+                        }
+                    }
+                }
+
+                Row {
+                    spacing: StyleTokens.space6
+
+                    PillButton {
+                        visible: ["confirm", "authorize", "pin", "passkey"].includes(BluetoothState.pairingPrompt.kind)
+                        text: BluetoothState.pairingNeedsInput ? "Submit" : "Confirm"
+                        interactive: !BluetoothState.pairingNeedsInput || pairingInput.valid
+                        onClicked: BluetoothState.answerPairing(true, pairingInput.text)
+                    }
+                    PillButton {
+                        text: "Cancel"
+                        onClicked: BluetoothState.cancelPairing()
+                    }
+                }
             }
 
             // Scrolls as one list so the section eyebrows travel with their
