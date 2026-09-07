@@ -6,7 +6,7 @@
 # rather than the only one. They can go whenever.
 
 duck = 20
-denoise = true
+denoise = false
 record_debug = false
 
 push_to_talk = true
