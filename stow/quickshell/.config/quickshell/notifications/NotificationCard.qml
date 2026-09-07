@@ -5,6 +5,7 @@ import QtQuick
 import QtQuick.Layouts
 import qs
 import qs.config
+import qs.components
 import qs.services as Services
 
 Rectangle {
@@ -16,6 +17,7 @@ Rectangle {
     readonly property string body: cleanText(notification?.body ?? "")
     readonly property string iconName: notification?.appIcon || notification?.desktopEntry || "dialog-information-symbolic"
     readonly property bool hasImage: (notification?.image ?? "").length > 0
+    readonly property var namedActions: (notification?.actions ?? []).filter(action => action.identifier !== "default" && action.identifier !== "")
 
     property bool hovered: false
 
@@ -40,7 +42,7 @@ Rectangle {
         target: root
         property: "x"
         to: root.restingX
-        duration: StyleTokens.easeDurationFast
+        duration: StyleTokens.motionFeedbackDuration
         easing.type: StyleTokens.easeStandard
     }
 
@@ -50,7 +52,7 @@ Rectangle {
         target: root
         property: "x"
         to: root.restingX + StyleNotification.dragRunway
-        duration: StyleTokens.easeDurationFast
+        duration: StyleTokens.motionFeedbackDuration
         easing.type: StyleTokens.easeStandard
         onFinished: Services.Notifications.dismiss(root.notification)
     }
@@ -64,6 +66,16 @@ Rectangle {
 
     Component.onCompleted: root.startExpireTimer()
     onNotificationChanged: root.startExpireTimer()
+    onDraggingChanged: root.startExpireTimer()
+
+    Connections {
+        target: Services.Notifications
+
+        function onRefreshed(notification) {
+            if (notification === root.notification)
+                root.startExpireTimer()
+        }
+    }
     onHoveredChanged: {
         if (hovered || dragging)
             expireTimer.stop()
@@ -73,6 +85,7 @@ Rectangle {
 
     RowLayout {
         id: content
+        z: 1
 
         anchors.fill: parent
         anchors.margins: StyleNotification.padding
@@ -115,7 +128,30 @@ Rectangle {
                 font.family: StyleTokens.fontSans
                 font.pixelSize: StyleTokens.fontSizeSm
                 font.weight: Font.DemiBold
+                textFormat: Text.PlainText
                 elide: Text.ElideRight
+            }
+
+            Flow {
+                id: actionFlow
+
+                Layout.fillWidth: true
+                Layout.preferredHeight: childrenRect.height
+                visible: root.namedActions.length > 0
+                spacing: StyleTokens.space6
+
+                Repeater {
+                    model: root.namedActions
+
+                    PillButton {
+                        required property var modelData
+
+                        text: modelData.text
+                        width: Math.min(implicitWidth, actionFlow.width)
+                        clipContent: true
+                        onClicked: modelData.invoke()
+                    }
+                }
             }
 
             Text {
@@ -175,22 +211,21 @@ Rectangle {
     }
 
     function expiryMs() {
-        const requestedTimeout = Number(notification?.expireTimeout ?? 0)
-        if (!Number.isFinite(requestedTimeout) || requestedTimeout <= 0)
+        if (notification?.urgency === NotificationUrgency.Critical)
+            return 0
+        const requestedTimeout = Number(notification?.expireTimeout ?? -1)
+        if (!Number.isFinite(requestedTimeout) || requestedTimeout < 0)
             return StyleNotification.timeout
 
-        // Quickshell documents seconds; DBus/notify-send use milliseconds.
-        // notify-send -t 1500 often arrives as 1500, which used to become a
-        // 25-minute timer after * 1000.
-        const asMs = requestedTimeout >= 100 ? requestedTimeout : requestedTimeout * 1000
-        return Math.max(1200, asMs)
+        // Quickshell 0.3.0 notification.cpp stores the DBus milliseconds unchanged.
+        return requestedTimeout
     }
 
     function startExpireTimer() {
         const nextInterval = expiryMs()
         expireTimer.stop()
 
-        if (nextInterval <= 0 || hovered)
+        if (nextInterval <= 0 || hovered || dragging)
             return
 
         expireTimer.interval = nextInterval
@@ -199,9 +234,7 @@ Rectangle {
 
     function activate() {
         const actions = notification?.actions ?? []
-        const action = actions.find((candidate) => candidate.identifier === "")
-            ?? actions.find((candidate) => candidate.identifier === "default")
-            ?? actions[0]
+        const action = actions.find((candidate) => candidate.identifier === "default")
 
         if (action) {
             action.invoke()
