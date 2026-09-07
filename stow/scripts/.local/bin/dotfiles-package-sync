@@ -54,6 +54,10 @@ case "$MODE" in
         ADDED_COUNT=0
 
         for pkg in "${PACKAGES[@]}"; do
+            if grep -Fxq "$pkg" "$DOTFILES_DIR/packages/sync-exclude" 2>/dev/null; then
+                continue
+            fi
+
             # Safety check: ensure package is installed
             if ! pacman -Qq "$pkg" &>/dev/null; then
                 continue
@@ -103,6 +107,10 @@ case "$MODE" in
         REMOVED_COUNT=0
 
         for pkg in "${PACKAGES[@]}"; do
+            if grep -Fxq "$pkg" "$DOTFILES_DIR/packages/sync-exclude" 2>/dev/null; then
+                continue
+            fi
+
             # Skip hardware-managed packages
             if [[ -d "$HARDWARE_DIR" ]] && grep -rFxq "$pkg" "$HARDWARE_DIR"/*.package 2>/dev/null; then
                 continue
