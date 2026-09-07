@@ -12,12 +12,15 @@ Singleton {
 
     property var screen: null
 
+    signal refreshed(var notification)
+
     function track(notification) {
         if (!notification)
             return
 
         root.screen = ShellActions.focusedScreen()
         notification.tracked = true
+        root.refreshed(notification)
     }
 
     function dismiss(notification) {
