@@ -9,11 +9,9 @@ Button {
 
     required property var barWindow
 
-    iconSource: IconRegistry.weatherIcon(WeatherState.icon)
-    text: WeatherState.temperature
+    text: IconRegistry.weatherEmoji(WeatherState.icon) + " " + WeatherState.temperature
     fontSize: StyleBar.labelFontSize
     interactive: true
-    iconTextSpacing: StyleControl.iconTextSpacing
     active: popover.open
     onClicked: popover.toggle()
 

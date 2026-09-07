@@ -124,6 +124,23 @@ Singleton {
         return themeIcon(icons[condition] ?? "weather-overcast-symbolic")
     }
 
+    function weatherEmoji(condition) {
+        const emoji = {
+            "clear": "☀️",
+            "clear-night": "🌙",
+            "few-clouds": "⛅",
+            "few-clouds-night": "☁️",
+            "fog": "🌫️",
+            "overcast": "☁️",
+            "showers-scattered": "🌦️",
+            "showers": "🌧️",
+            "snow": "❄️",
+            "storm": "⛈️",
+            "windy": "💨",
+        }
+        return emoji[condition] ?? "☁️"
+    }
+
     function bluetoothIcon(enabled) {
         return themeIcon("bluetooth-active-symbolic")
     }

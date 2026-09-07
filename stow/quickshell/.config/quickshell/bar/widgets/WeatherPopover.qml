@@ -1,4 +1,5 @@
 import QtQuick
+import Quickshell
 import qs
 import qs.components
 import qs.config
@@ -24,44 +25,6 @@ PopoverPanel {
         + forecastRowCount * StylePopover.forecastRowHeight
         + StylePopover.contentPaddingV
 
-    property real dataOpacity: 0
-
-    function revealData() {
-        if (!active || !WeatherState.hasData || dataOpacity >= 1)
-            return
-
-        dataFade.restart()
-    }
-
-    onActiveChanged: {
-        if (active)
-            Qt.callLater(revealData)
-    }
-
-    onDismissFinished: {
-        if (!active)
-            dataOpacity = 0
-    }
-
-    Connections {
-        target: WeatherState
-
-        function onHasDataChanged() {
-            if (WeatherState.hasData)
-                Qt.callLater(root.revealData)
-        }
-    }
-
-    NumberAnimation {
-        id: dataFade
-
-        target: root
-        property: "dataOpacity"
-        to: 1
-        duration: StyleTokens.easeDurationFast
-        easing.type: StyleTokens.easeStandard
-    }
-
     // Shared column geometry — the axis labels in the section header must land
     // exactly on the ends of the track in the rows below, or the scale they
     // describe reads as decoration instead of an axis.
@@ -73,7 +36,12 @@ PopoverPanel {
     readonly property int trackWidth: Math.max(0, trackRight - trackLeft)
     readonly property int minLabelX: trackLeft - columnGap - tempLabelWidth
 
-    readonly property string todayDate: Qt.formatDate(new Date(), "yyyy-MM-dd")
+    SystemClock {
+        id: dateClock
+        precision: SystemClock.Minutes
+    }
+
+    readonly property string todayDate: Qt.formatDate(dateClock.date, "yyyy-MM-dd")
     readonly property var todayForecast: WeatherState.forecast.length > 0 ? WeatherState.forecast[0] : null
     readonly property string todayHighLow: todayForecast
         ? "H:" + degreeLabel(todayForecast.maxTemp) + " L:" + degreeLabel(todayForecast.minTemp)
@@ -139,7 +107,7 @@ PopoverPanel {
             width: root.popoverWidth
             bottomPadding: StylePopover.contentPaddingV
             spacing: 0
-            opacity: root.dataOpacity
+            visible: WeatherState.hasData
 
             // macOS-style weather hero: the location and glanceable temperature
             // own the left edge, while condition detail forms a compact right-
@@ -196,10 +164,10 @@ PopoverPanel {
                     width: parent.width / 2
                     spacing: StyleTokens.space2
 
-                    ThemedIcon {
+                    Text {
                         anchors.right: parent.right
-                        source: IconRegistry.weatherIcon(WeatherState.icon)
-                        size: root.heroIconSize
+                        text: IconRegistry.weatherEmoji(WeatherState.icon)
+                        font.pixelSize: root.heroIconSize
                     }
 
                     Text {
@@ -369,11 +337,13 @@ PopoverPanel {
                     elide: Text.ElideRight
                 }
 
-                ThemedIcon {
+                Text {
                     x: root.padH + root.dayLabelWidth + root.columnGap
                     anchors.verticalCenter: parent.verticalCenter
-                    source: IconRegistry.weatherIcon(forecastRow.modelData.icon)
-                    size: root.forecastIconSize
+                    width: root.forecastIconSize
+                    horizontalAlignment: Text.AlignHCenter
+                    text: IconRegistry.weatherEmoji(forecastRow.modelData.icon)
+                    font.pixelSize: root.forecastIconSize
                 }
 
                 Text {
@@ -458,18 +428,13 @@ PopoverPanel {
 
         Text {
             anchors.centerIn: parent
-            text: "Loading weather…"
+            text: "Weather unavailable"
             color: Colors.base04
             font.family: StyleTokens.fontSans
             font.pixelSize: StyleTokens.fontSizeSm
-            opacity: root.active && !WeatherState.hasData ? 1 : 0
+            visible: !WeatherState.hasData
 
-            Behavior on opacity {
-                NumberAnimation {
-                    duration: StyleTokens.easeDurationFast
-                    easing.type: StyleTokens.easeStandard
-                }
-            }
+
         }
     }
 
