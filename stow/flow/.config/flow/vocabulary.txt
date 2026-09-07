@@ -15,3 +15,6 @@ Wayland
 Vercel
 Gemini
 LLM
+wd
+wdq
+qwd
