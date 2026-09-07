@@ -67,10 +67,7 @@ Singleton {
         terminateProcess.exec(["kill", "-TERM", "--", String(numericPid)])
     }
 
-    onActiveChanged: {
-        if (active)
-            refresh()
-    }
+    Component.onCompleted: refresh()
 
     Process {
         id: sampleProcess
@@ -154,8 +151,10 @@ Singleton {
                     }
                 }
 
-                root.processes = nextProcesses
-                root.loaded = true
+                if (lines.some(line => line.startsWith("stats\t"))) {
+                    root.processes = nextProcesses
+                    root.loaded = true
+                }
             }
         }
     }
@@ -172,13 +171,13 @@ Singleton {
     Timer {
         id: refreshAfterKill
 
-        interval: StyleTokens.easeDurationNormal
+        interval: StyleTokens.motionEnterDuration
         onTriggered: root.refresh()
     }
 
     Timer {
-        interval: StyleTokens.pollIntervalFast * 2
-        running: root.active
+        interval: root.active ? StyleTokens.pollIntervalFast * 2 : StyleTokens.pollIntervalSlow
+        running: true
         repeat: true
         onTriggered: root.refresh()
     }

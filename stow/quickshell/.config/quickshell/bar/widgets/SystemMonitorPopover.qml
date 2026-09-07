@@ -115,7 +115,7 @@ PopoverPanel {
 
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
-                        text: SystemMonitor.loaded ? "up " + SystemMonitor.uptime : "Sampling…"
+                        text: SystemMonitor.loaded ? "up " + SystemMonitor.uptime : "Unavailable"
                         color: Colors.base04
                         font.family: StyleTokens.fontMono
                         font.pixelSize: StyleTokens.fontSizeXs
@@ -221,7 +221,7 @@ PopoverPanel {
                 PopoverMessage {
                     anchors.fill: parent
                     visible: !SystemMonitor.loaded
-                    text: "Sampling processes…"
+                    text: "Process information unavailable"
                 }
 
                 Column {
@@ -247,8 +247,8 @@ PopoverPanel {
 
                             Behavior on color {
                                 ColorAnimation {
-                                    duration: StyleTokens.easeDurationFast
-                                    easing.type: StyleTokens.easeSymmetric
+                                    duration: StyleTokens.motionFeedbackDuration
+                                    easing.type: StyleTokens.easeFade
                                 }
                             }
 
