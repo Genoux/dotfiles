@@ -53,20 +53,15 @@ Singleton {
     readonly property int pollIntervalNormal: 5000
     readonly property int pollIntervalSlow: 30000
 
-    // Three motion speeds, and only three. `Instant` is for a surface that must
-    // not appear to travel (backdrops, overlay fades); `Fast` is the default for
-    // state feedback on something already on screen; `Normal` is for a surface
-    // entering or leaving. Anything slower reads as lag on a bar you glance at.
-    readonly property int easeDurationInstant: 100
-    readonly property int easeDurationFast: 150
-    readonly property int easeDurationNormal: 200
-
-    // Curves are tokens too, because the same gesture was being drawn with
-    // OutCubic in one widget and InOutQuad in its neighbour.
-    // Standard: anything entering, revealing, or responding to a pointer.
-    // Symmetric: a fill or tint that must feel identical in and out.
+    // Slow-start curves make short interactions feel delayed. Keep geometry
+    // ease-out and fades linear; never animate a value derived from an animation.
+    readonly property int motionFeedbackDuration: 100
+    readonly property int motionEnterDuration: 100
+    readonly property int motionExitDuration: 70
+    readonly property int motionHoverDelay: 100
     readonly property int easeStandard: Easing.OutCubic
-    readonly property int easeSymmetric: Easing.InOutQuad
+    readonly property int easeFade: Easing.Linear
+    readonly property int easePulse: Easing.InOutSine
 
     readonly property color transparent: "transparent"
     // The interaction tint. One value, everywhere: hover fill, resting pill

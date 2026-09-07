@@ -26,6 +26,7 @@ Item {
     }
 
     function hide() {
+        showAnimation.stop()
         hideAnimation.start()
     }
 
@@ -72,7 +73,7 @@ Item {
             property: "revealOpacityValue"
             to: 1
             duration: StyleOverlay.showDuration
-            easing.type: StyleTokens.easeStandard
+            easing.type: StyleTokens.easeFade
         }
 
         NumberAnimation {
@@ -92,7 +93,7 @@ Item {
             property: "revealOpacityValue"
             to: 0
             duration: StyleOverlay.hideDuration
-            easing.type: Easing.InCubic
+            easing.type: StyleTokens.easeFade
         }
 
         NumberAnimation {
@@ -100,10 +101,10 @@ Item {
             property: "revealScaleValue"
             to: StyleOverlay.hiddenScale
             duration: StyleOverlay.hideDuration
-            easing.type: Easing.InCubic
+            easing.type: StyleTokens.easeStandard
         }
 
-        onStopped: {
+        onFinished: {
             if (!root.active)
                 root.hideFinished()
         }

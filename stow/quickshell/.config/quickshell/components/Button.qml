@@ -139,11 +139,8 @@ Rectangle {
         cursorShape: root.interactive ? Qt.PointingHandCursor : Qt.ArrowCursor
         hoverEnabled: true
         onClicked: (mouse) => {
-            // Any interactive button dismisses an open popover, except the one
-            // that owns it and the controls inside it — PopoverCoordinator
-            // decides which by structure. Runs before the button's own handler
-            // so a widget opening its panel still hands off from the outgoing
-            // one rather than racing it.
+            // Defer click-away dismissal so this handler can open a replacement
+            // without unmapping the current panel before its first frame.
             if (root.interactive)
                 PopoverCoordinator.notifyInteraction(root);
 
@@ -155,8 +152,8 @@ Rectangle {
         enabled: root.animateColor
 
         ColorAnimation {
-            duration: StyleTokens.easeDurationFast
-            easing.type: StyleTokens.easeSymmetric
+            duration: StyleTokens.motionFeedbackDuration
+            easing.type: StyleTokens.easeFade
         }
 
     }

@@ -9,6 +9,7 @@ Button {
     fontSize: StyleTokens.fontSizeSm
     foreground: Colors.base05
     background: StyleTokens.alphaLight
+    hoverBackground: StyleTokens.alphaActive
     paddingHorizontal: StylePopover.pillPaddingH
     paddingVertical: StylePopover.pillPaddingV
     radius: height / 2

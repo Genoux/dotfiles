@@ -53,7 +53,7 @@ PanelWindow {
         Behavior on opacity {
             NumberAnimation {
                 duration: root.active ? StyleOverlay.showDuration : StyleOverlay.hideDuration
-                easing.type: root.active ? Easing.OutCubic : Easing.InCubic
+                easing.type: StyleTokens.easeFade
             }
         }
     }

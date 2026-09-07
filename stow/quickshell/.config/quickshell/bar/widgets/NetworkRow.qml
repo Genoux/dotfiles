@@ -54,15 +54,8 @@ Rectangle {
 
     Behavior on color {
         ColorAnimation {
-            duration: StyleTokens.easeDurationFast
-            easing.type: StyleTokens.easeStandard
-        }
-    }
-
-    Behavior on implicitHeight {
-        NumberAnimation {
-            duration: StyleTokens.easeDurationFast
-            easing.type: StyleTokens.easeStandard
+            duration: StyleTokens.motionFeedbackDuration
+            easing.type: StyleTokens.easeFade
         }
     }
 
@@ -171,33 +164,36 @@ Rectangle {
 
         Behavior on opacity {
             NumberAnimation {
-                duration: StyleTokens.easeDurationFast
-                easing.type: StyleTokens.easeStandard
+                duration: StyleTokens.motionFeedbackDuration
+                easing.type: StyleTokens.easeFade
             }
         }
 
         Behavior on border.color {
             ColorAnimation {
-                duration: StyleTokens.easeDurationFast
-                easing.type: StyleTokens.easeStandard
+                duration: StyleTokens.motionFeedbackDuration
+                easing.type: StyleTokens.easeFade
             }
         }
 
         function submit() {
             if (input.text.length > 0)
                 WifiState.connectWithPassphrase(row.network, input.text)
-            input.text = ""
         }
 
         onVisibleChanged: {
             if (visible)
                 input.forceActiveFocus()
-            else
-                input.text = ""
         }
 
         TextInput {
             id: input
+
+            text: row.expanded ? WifiState.passphraseDraft : ""
+            onTextEdited: {
+                if (row.expanded)
+                    WifiState.passphraseDraft = text
+            }
 
             anchors.left: parent.left
             anchors.leftMargin: StyleTokens.space8

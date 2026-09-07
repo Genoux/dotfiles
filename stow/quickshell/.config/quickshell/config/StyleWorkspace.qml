@@ -11,5 +11,5 @@ Singleton {
     readonly property int inlineIconPadding: StyleTokens.space4
     readonly property int inlineIconSpacing: StyleTokens.space4
     readonly property int inlineMaxIcons: 4
-    readonly property int revealDuration: StyleTokens.easeDurationFast
+    readonly property int revealDuration: StyleTokens.motionFeedbackDuration
 }

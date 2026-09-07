@@ -74,8 +74,8 @@ Rectangle {
 
         Behavior on opacity {
             NumberAnimation {
-                duration: StyleTokens.easeDurationFast
-                easing.type: StyleTokens.easeStandard
+                duration: StyleTokens.motionFeedbackDuration
+                easing.type: StyleTokens.easeFade
             }
         }
     }

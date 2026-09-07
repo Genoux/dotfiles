@@ -12,7 +12,7 @@ Singleton {
     readonly property int asciiMaxRange: 4000
     readonly property int noiseReduction: 20
     readonly property bool monstercat: true
-    readonly property int animationDuration: StyleTokens.easeDurationFast
+    readonly property int animationDuration: StyleTokens.motionFeedbackDuration
     readonly property int silenceThreshold: 2
     readonly property real maxFill: 1
     readonly property real snapThreshold: 4.5

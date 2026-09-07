@@ -17,6 +17,6 @@ Singleton {
     readonly property color borderSubtle: StyleTokens.alphaHairline
     readonly property color shadow: Qt.rgba(0, 0, 0, 0.2)
     readonly property real hiddenScale: 0.98
-    readonly property int showDuration: StyleTokens.easeDurationInstant
-    readonly property int hideDuration: StyleTokens.easeDurationInstant
+    readonly property int showDuration: StyleTokens.motionEnterDuration
+    readonly property int hideDuration: StyleTokens.motionExitDuration
 }

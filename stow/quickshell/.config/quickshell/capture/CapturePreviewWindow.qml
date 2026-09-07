@@ -58,7 +58,7 @@ PanelWindow {
         clip: true
         verticalLayoutDirection: ListView.BottomToTop
         model: ScriptModel {
-            values: Services.CaptureState.captures
+            values: root.active ? Services.CaptureState.captures : []
         }
 
         // Spans the gaps between cards too, so crossing from one to the next
@@ -90,7 +90,7 @@ PanelWindow {
                 from: 0
                 to: 1
                 duration: StyleNotification.showDuration
-                easing.type: StyleTokens.easeStandard
+                easing.type: StyleTokens.easeFade
             }
         }
 
@@ -99,7 +99,7 @@ PanelWindow {
                 property: "opacity"
                 to: 0
                 duration: StyleNotification.hideDuration
-                easing.type: StyleTokens.easeStandard
+                easing.type: StyleTokens.easeFade
             }
         }
 

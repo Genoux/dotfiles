@@ -78,6 +78,7 @@ PanelWindow {
 
     MouseArea {
         anchors.fill: parent
+        cursorShape: Qt.PointingHandCursor
         acceptedButtons: Qt.LeftButton
         onClicked: Services.Launcher.close()
     }
@@ -90,13 +91,6 @@ PanelWindow {
         anchors.centerIn: parent
         active: root.active
         onHideFinished: root.finishHide()
-
-        Behavior on height {
-            NumberAnimation {
-                duration: StyleOverlay.showDuration
-                easing.type: StyleTokens.easeStandard
-            }
-        }
 
         LauncherPanel {
             id: panel

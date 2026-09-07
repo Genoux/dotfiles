@@ -1,5 +1,6 @@
 import QtQuick
 import Quickshell
+import qs.config
 pragma Singleton
 
 Singleton {
@@ -58,14 +59,14 @@ Singleton {
     readonly property int lockGlyphSize: 20
     readonly property color lockGlyphColor: Qt.rgba(1, 1, 1, 0.7)
     readonly property int idleCollapseMs: 5000 // collapse back to lock after focus loss (only when empty)
-    readonly property int morphDuration: 150 // circle <-> input morph
-    readonly property int glyphFadeDuration: 200 // lock-glyph fade in/out speed
+    readonly property int morphDuration: StyleTokens.motionFeedbackDuration // circle <-> input morph
+    readonly property int glyphFadeDuration: StyleTokens.motionFeedbackDuration // lock-glyph fade in/out speed
     readonly property int cursorRevealDelay: 100 // ms after morph before caret appears
     readonly property int caretBlinkInterval: 530 // ms between blink peaks
-    readonly property int caretBlinkFadeDuration: 150 // ms; softens on/off transitions
+    readonly property int caretBlinkFadeDuration: StyleTokens.motionFeedbackDuration // ms; softens on/off transitions
     readonly property color failureColor: Qt.rgba(1, 0.18, 0.18, 0.9) // wrong-password border
     // ── Animation ─────────────────────────────────────────────────────────────
-    readonly property int fadeInDuration: 240
+    readonly property int fadeInDuration: StyleTokens.motionEnterDuration
     // lock surface fade in over desktop
-    readonly property int fadeOutDuration: 320
+    readonly property int fadeOutDuration: StyleTokens.motionExitDuration
 }

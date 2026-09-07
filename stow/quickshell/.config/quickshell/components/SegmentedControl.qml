@@ -12,6 +12,8 @@ Item {
     id: control
 
     property var labels: []
+    property color textColor: Colors.base04
+    property color selectedTextColor: Colors.base05
     // Controlled, not self-managing: the owner holds the current index and this
     // only asks for a new one. Assigning currentIndex from inside would overwrite
     // the owner's binding on first click, and every later programmatic change —
@@ -66,15 +68,15 @@ Item {
 
                 Behavior on color {
                     ColorAnimation {
-                        duration: StyleTokens.easeDurationFast
-                        easing.type: StyleTokens.easeSymmetric
+                        duration: StyleTokens.motionFeedbackDuration
+                        easing.type: StyleTokens.easeFade
                     }
                 }
 
                 Text {
                     anchors.centerIn: parent
                     text: segment.modelData
-                    color: segment.selected ? Colors.base05 : Colors.base04
+                    color: segment.selected ? control.selectedTextColor : control.textColor
                     font.family: StyleTokens.fontSans
                     font.pixelSize: StyleTokens.fontSizeSm
                     font.weight: segment.selected ? Font.DemiBold : Font.Normal

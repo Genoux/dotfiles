@@ -36,7 +36,7 @@ PanelWindow {
         // The capture preview card owns this corner while it is up, so the
         // stack sits above it rather than under it.
         bottom: StyleShellLayout.notificationBottomMargin
-            + Services.CaptureState.captures.length
+            + (Services.CaptureState.screen === root.screen ? Services.CaptureState.captures.length : 0)
                 * (StyleCapture.cardHeight + StyleNotification.gap)
         // Negative by the runway so a dragged card has somewhere to go past the
         // output edge. Cards still rest at the usual inset.
@@ -55,7 +55,7 @@ PanelWindow {
 
     Behavior on margins.bottom {
         NumberAnimation {
-            duration: StyleTokens.easeDurationFast
+            duration: StyleTokens.motionFeedbackDuration
             easing.type: StyleTokens.easeStandard
         }
     }
@@ -68,7 +68,7 @@ PanelWindow {
         interactive: false
         clip: true
         model: ScriptModel {
-            values: root.shownNotifications
+            values: root.active ? root.shownNotifications : []
         }
 
         // A plain Item takes the delegate slot so the ListView positions this
@@ -93,7 +93,7 @@ PanelWindow {
                 from: 0
                 to: 1
                 duration: StyleNotification.showDuration
-                easing.type: StyleTokens.easeStandard
+                easing.type: StyleTokens.easeFade
             }
         }
 
@@ -101,7 +101,7 @@ PanelWindow {
             NumberAnimation {
                 properties: "x,y"
                 duration: StyleNotification.hideDuration
-                easing.type: Easing.InOutCubic
+                easing.type: StyleTokens.easeStandard
             }
         }
 
@@ -110,7 +110,7 @@ PanelWindow {
                 property: "opacity"
                 to: 0
                 duration: StyleNotification.hideDuration
-                easing.type: Easing.InCubic
+                easing.type: StyleTokens.easeFade
             }
         }
     }

@@ -7,8 +7,8 @@ import QtQuick
 Singleton {
     readonly property int infoWidth: 180
     readonly property int textFadeWidth: 10
-    readonly property int controlsRevealDuration: StyleTokens.easeDurationNormal
-    readonly property int controlsHoverDelay: 300
+    readonly property int controlsRevealDuration: StyleTokens.motionFeedbackDuration
+    readonly property int controlsHoverDelay: StyleTokens.motionHoverDelay
     // Pixels per second, not pixels per tick: the marquee is advanced by the
     // frame clock, so its speed must not be expressed in frames.
     readonly property int scrollSpeed: 21
