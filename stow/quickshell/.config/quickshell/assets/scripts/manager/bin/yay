@@ -1,0 +1,2 @@
+#!/bin/bash
+exec /usr/bin/yay --sudo pkexec --sudoflags '' --sudoloop=false "$@"

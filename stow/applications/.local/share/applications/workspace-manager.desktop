@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Workspace Settings
+Comment=Manage packages, configurations, hardware, and desktop setup
+Exec=launch-workspace-manager
+Icon=preferences-system
+Terminal=false
+Categories=Settings;
+StartupNotify=false
