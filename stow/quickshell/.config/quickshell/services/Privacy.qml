@@ -31,6 +31,12 @@ Singleton {
             stopping = false;
     }
 
+    Timer {
+        interval: 5000
+        running: root.stopping
+        onTriggered: root.stopping = false
+    }
+
     FileView {
         id: recordStateFile
 

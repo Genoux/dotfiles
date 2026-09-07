@@ -23,7 +23,8 @@ Singleton {
     }
 
     function finalizeClose() {
-        query = ""
+        if (!visible)
+            query = ""
     }
 
     function toggleFor(targetScreen) {

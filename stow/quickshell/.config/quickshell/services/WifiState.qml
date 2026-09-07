@@ -50,6 +50,8 @@ Singleton {
     // Which unconnected secured network has its passphrase field open. One at a
     // time: two open fields would leave the reader unsure which one Enter joins.
     property string passphrasePath: ""
+    property string passphraseDraft: ""
+    onPassphrasePathChanged: passphraseDraft = ""
     property string busyPath: ""
     property string errorPath: ""
     property string errorText: ""

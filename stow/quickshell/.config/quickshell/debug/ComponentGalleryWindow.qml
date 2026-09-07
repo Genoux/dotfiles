@@ -215,6 +215,7 @@ PanelWindow {
 
     MouseArea {
         anchors.fill: parent
+        cursorShape: Qt.PointingHandCursor
         acceptedButtons: Qt.LeftButton
         onClicked: Services.ComponentGallery.close()
     }

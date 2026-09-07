@@ -36,6 +36,13 @@ Singleton {
         return String(candidate?.dbusName ?? "").endsWith(".playerctld");
     }
 
+    function hasTrackMetadata(candidate) {
+        return [candidate?.trackTitle, candidate?.trackArtist].every(value => {
+            const text = String(value ?? "").trim();
+            return text.length > 0 && !/^(unknown(?: artist| title| track)?|n\/a)$/i.test(text);
+        });
+    }
+
     function isStalePaused(candidate) {
         if (!candidate)
             return false;

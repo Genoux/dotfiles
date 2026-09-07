@@ -10,7 +10,9 @@ BarGroup {
     id: root
 
     readonly property var player: Services.MediaPlayers.player
-    readonly property string trackText: player ? `${player.trackTitle || player.identity || "Media"}${player.trackArtist ? " - " + player.trackArtist : ""}` : ""
+    readonly property string currentTrackText: Services.MediaPlayers.hasTrackMetadata(player) ? `${player.trackTitle} - ${player.trackArtist}` : ""
+    readonly property bool shouldShow: !!player?.isPlaying && currentTrackText.length > 0
+    property string trackText: ""
     readonly property bool canGoPrevious: Services.MediaPlayers.canGoPrevious
     readonly property bool canGoNext: Services.MediaPlayers.canGoNext
     readonly property bool canTogglePlayback: Services.MediaPlayers.canTogglePlayback
@@ -47,7 +49,7 @@ BarGroup {
                 const cls = String((toplevel.wayland && toplevel.wayland.appId) || (toplevel.lastIpcObject && toplevel.lastIpcObject.class) || "").toLowerCase();
                 const initialClass = String(toplevel.lastIpcObject ? toplevel.lastIpcObject.initialClass : "").toLowerCase();
                 return tokens.some((token) => {
-                    return cls.includes(token) || initialClass.includes(token) || token.includes(cls);
+                    return cls.includes(token) || initialClass.includes(token) || (cls.length > 0 && token.includes(cls));
                 });
             });
             if (focusToplevel(classMatch))
@@ -76,7 +78,22 @@ BarGroup {
         focusPlayerHyprlandWindow(root.player);
     }
 
-    visible: player !== null && trackText.length > 0
+    onCurrentTrackTextChanged: {
+        if (currentTrackText.length > 0)
+            trackText = currentTrackText;
+    }
+    Component.onCompleted: trackText = currentTrackText
+
+    opacity: shouldShow ? 1 : 0
+    visible: shouldShow || opacity > 0
+    enabled: shouldShow
+
+    Behavior on opacity {
+        NumberAnimation {
+            duration: root.shouldShow ? StyleTokens.motionEnterDuration : StyleTokens.motionExitDuration
+            easing.type: StyleTokens.easeFade
+        }
+    }
 
     HoverHandler {
         id: hoverHandler
@@ -102,7 +119,7 @@ BarGroup {
         id: contentRow
 
         height: StyleMedia.trackHeight
-        spacing: root.controlsExpanded ? StyleTokens.space3 : 0
+        spacing: 0
 
         Rectangle {
             id: mediaInfo
@@ -253,7 +270,7 @@ BarGroup {
             Behavior on color {
                 ColorAnimation {
                     duration: StyleMedia.controlsRevealDuration
-                    easing.type: StyleTokens.easeStandard
+                    easing.type: StyleTokens.easeFade
                 }
 
             }
@@ -272,11 +289,13 @@ BarGroup {
             id: controlsReveal
 
             height: StyleMedia.trackHeight
-            width: root.controlsExpanded ? controlsRow.implicitWidth : 0
+            width: root.controlsExpanded ? controlsRow.implicitWidth + StyleTokens.space3 : 0
             clip: true
 
             Row {
                 id: controlsRow
+
+                x: StyleTokens.space3
 
                 height: StyleMedia.trackHeight
                 spacing: 0
@@ -309,7 +328,7 @@ BarGroup {
                 Behavior on opacity {
                     NumberAnimation {
                         duration: StyleMedia.controlsRevealDuration
-                        easing.type: StyleTokens.easeStandard
+                        easing.type: StyleTokens.easeFade
                     }
 
                 }
@@ -331,7 +350,7 @@ BarGroup {
     Behavior on color {
         ColorAnimation {
             duration: StyleMedia.controlsRevealDuration
-            easing.type: StyleTokens.easeStandard
+            easing.type: StyleTokens.easeFade
         }
 
     }

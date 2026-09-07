@@ -87,7 +87,7 @@ Button {
     onClicked: (mouse) => {
         if (root.recording || root.collapsing || Privacy.rawRecording) {
             Privacy.stopping = true;
-            runRecorder([]);
+            runRecorder(["stop"]);
             return;
         }
         recordPopover.toggle();
@@ -139,7 +139,7 @@ Button {
     Timer {
         id: revealTimer
 
-        interval: StyleMedia.controlsHoverDelay
+        interval: StyleTokens.motionHoverDelay
         onTriggered: root.hoverArmed = true
     }
 
@@ -154,7 +154,7 @@ Button {
         enabled: !hideAnimation.running
 
         NumberAnimation {
-            duration: StyleMedia.controlsRevealDuration
+            duration: StyleRecording.expandDuration
             easing.type: StyleTokens.easeStandard
         }
     }
@@ -166,7 +166,7 @@ Button {
             target: root
             property: "trailReveal"
             to: 0
-            duration: StyleMedia.controlsRevealDuration
+            duration: StyleRecording.expandDuration
             easing.type: StyleTokens.easeStandard
         }
 
@@ -174,16 +174,16 @@ Button {
             target: root
             property: "recordingColor"
             to: Qt.rgba(StyleRecording.fill.r, StyleRecording.fill.g, StyleRecording.fill.b, 0)
-            duration: StyleMedia.controlsRevealDuration
-            easing.type: StyleTokens.easeStandard
+            duration: StyleRecording.expandDuration
+            easing.type: StyleTokens.easeFade
         }
 
         ColorAnimation {
             target: root
             property: "displayForeground"
             to: Colors.base05
-            duration: StyleMedia.controlsRevealDuration
-            easing.type: StyleTokens.easeStandard
+            duration: StyleRecording.expandDuration
+            easing.type: StyleTokens.easeFade
         }
 
         onFinished: {
@@ -202,7 +202,7 @@ Button {
             property: "recordingColor"
             to: StyleRecording.pulse
             duration: StyleRecording.pulseDuration
-            easing.type: Easing.InOutSine
+            easing.type: StyleTokens.easePulse
         }
 
         ColorAnimation {
@@ -210,7 +210,7 @@ Button {
             property: "recordingColor"
             to: StyleRecording.fill
             duration: StyleRecording.pulseDuration
-            easing.type: Easing.InOutSine
+            easing.type: StyleTokens.easePulse
         }
 
     }

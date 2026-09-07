@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Quickshell 0.3.0 treats inherited crash metadata as a relaunch, even for IPC.
+unset __QUICKSHELL_CRASH_INFO_FD __QUICKSHELL_CRASH_DUMP_PID __QUICKSHELL_CRASH_SIGNAL __QUICKSHELL_CRASH_DUMP_FD
+
 [[ -f ~/.config/user-dirs.dirs ]] && source ~/.config/user-dirs.dirs
 OUTPUT_DIR="${SCREENRECORD_DIR:-${XDG_VIDEOS_DIR:-$HOME/Videos}}"
 
@@ -239,6 +242,8 @@ if screenrecording_active; then
 elif [[ -f "$STATE_FILE" ]] && grep -qx 1 "$STATE_FILE"; then
   mark_inactive
   unload_mix
+elif [[ "$SCOPE" == "stop" ]]; then
+  exit 0
 elif [[ "$SCOPE" == "fullscreen" ]]; then
   [[ "$2" == "audio" ]] && enable_audio
   start_screenrecording

@@ -11,7 +11,13 @@ Row {
     property var barWindow: null
     property string tooltipText: ""
     property bool tooltipVisible: false
+    property bool tooltipPresented: false
     property real _centerX: 0
+
+    onTooltipVisibleChanged: {
+        if (tooltipVisible)
+            tooltipPresented = true;
+    }
 
     function showTooltip(button, source, fallback) {
         const label = source.length > 0 ? source : fallback;
@@ -47,15 +53,15 @@ Row {
 
         Behavior on width {
             NumberAnimation {
-                duration: StyleTokens.easeDurationNormal
+                duration: slot.active ? StyleTokens.motionEnterDuration : StyleTokens.motionExitDuration
                 easing.type: StyleTokens.easeStandard
             }
         }
 
         Behavior on opacity {
             NumberAnimation {
-                duration: StyleTokens.easeDurationNormal
-                easing.type: StyleTokens.easeStandard
+                duration: slot.active ? StyleTokens.motionEnterDuration : StyleTokens.motionExitDuration
+                easing.type: StyleTokens.easeFade
             }
         }
     }
@@ -81,7 +87,7 @@ Row {
         anchor.rect.height: 1
         grabFocus: false
         color: StyleTokens.transparent
-        visible: root.tooltipVisible && root.tooltipText.length > 0 && root.barWindow !== null
+        visible: root.tooltipPresented && root.tooltipText.length > 0 && root.barWindow !== null
         implicitWidth: tooltipPanel.implicitWidth
         implicitHeight: tooltipPanel.implicitHeight
         onClosed: root.hideTooltip()
@@ -91,6 +97,10 @@ Row {
 
             active: root.tooltipVisible && root.tooltipText.length > 0
             fitContent: true
+            onDismissFinished: {
+                if (!root.tooltipVisible)
+                    root.tooltipPresented = false;
+            }
 
             PopoverLabel {
                 text: root.tooltipText
