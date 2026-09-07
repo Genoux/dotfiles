@@ -1,0 +1,8 @@
+#!/bin/bash
+set -euo pipefail
+
+config="${XDG_CONFIG_HOME:-$HOME/.config}/quickshell/manager.qml"
+if quickshell ipc -p "$config" call manager open >/dev/null 2>&1; then
+    exit 0
+fi
+exec quickshell -n -p "$config"

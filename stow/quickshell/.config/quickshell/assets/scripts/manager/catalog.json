@@ -1,0 +1,256 @@
+[
+  {
+    "id": "overview",
+    "title": "Overview",
+    "description": "Your desktop, configuration, and installation health.",
+    "icon": "computer-symbolic",
+    "actions": [
+      {
+        "id": "system_status",
+        "title": "System status",
+        "description": "Hardware, packages, configurations, themes, shell, and Hyprland.",
+        "readOnly": true,
+        "button": "Inspect"
+      },
+      {
+        "id": "verify",
+        "title": "Verify installation",
+        "description": "Check package installation, critical tools, configuration links, and theme assets.",
+        "readOnly": true,
+        "button": "Inspect"
+      }
+    ]
+  },
+  {
+    "id": "packages",
+    "title": "Packages",
+    "description": "Keep installed software and your package lists in sync.",
+    "icon": "package-x-generic-symbolic",
+    "actions": [
+      {
+        "id": "packages_manage",
+        "title": "Reconcile packages",
+        "description": "Review missing, extra, and dependency packages. Install missing software, choose what to keep, remove extras, update manifests, or perform a full sync.",
+        "button": "Manage"
+      },
+      {
+        "id": "packages_install",
+        "title": "Install all tracked packages",
+        "description": "Install the official and AUR packages declared in dotfiles, including preparation and verification.",
+        "button": "Install"
+      },
+      {
+        "id": "packages_unlisted",
+        "title": "Manage unlisted packages",
+        "description": "Select which unlisted packages to keep, add them to dotfiles, or remove them from the system.",
+        "button": "Manage"
+      },
+      {
+        "id": "packages_status",
+        "title": "Package details",
+        "description": "Inspect official, AUR, installed, and tracked package counts and differences.",
+        "readOnly": true,
+        "button": "Inspect"
+      }
+    ]
+  },
+  {
+    "id": "updates",
+    "title": "Updates",
+    "description": "Keep your system and apps up to date.",
+    "icon": "software-update-available-symbolic",
+    "actions": []
+  },
+  {
+    "id": "cleanup",
+    "title": "Cleanup",
+    "description": "Review storage and choose what to clear.",
+    "icon": "user-trash-symbolic",
+    "actions": []
+  },
+  {
+    "id": "temporary",
+    "title": "Temporary installs",
+    "description": "Try a package, then keep it or remove it.",
+    "icon": "list-add-symbolic",
+    "actions": []
+  },
+  {
+    "id": "configs",
+    "title": "Configurations",
+    "description": "Manage the configuration packages linked into your home folder.",
+    "icon": "folder-symbolic",
+    "actions": [
+      {
+        "id": "configs_manage",
+        "title": "Manage configuration links",
+        "description": "Choose which packages stay linked. Existing selections are preserved and changes are reviewed before applying.",
+        "button": "Manage"
+      },
+      {
+        "id": "configs_link",
+        "title": "Link all configurations",
+        "description": "Link every stow package, clean stale links, and update configured user services.",
+        "button": "Link"
+      },
+      {
+        "id": "configs_unlink",
+        "title": "Unlink all configurations",
+        "description": "Remove all dotfiles-managed configuration links. This includes the shell and this widget; the operation continues in the background.",
+        "button": "Unlink"
+      },
+      {
+        "id": "configs_status",
+        "title": "Configuration details",
+        "description": "Inspect every stow package and its current link state.",
+        "readOnly": true,
+        "button": "Inspect"
+      }
+    ]
+  },
+  {
+    "id": "hardware",
+    "title": "Hardware",
+    "description": "Detected devices and the drivers that support them.",
+    "icon": "preferences-system-devices-symbolic",
+    "actions": [
+      {
+        "id": "hardware_setup",
+        "title": "Set up hardware",
+        "description": "Detect this machine, install the matching driver packages, and generate GPU configuration. A reboot may be needed.",
+        "button": "Set up"
+      },
+      {
+        "id": "hardware_status",
+        "title": "Hardware details",
+        "description": "Inspect detected GPU, CPU, device type, and hardware-managed packages.",
+        "readOnly": true,
+        "button": "Inspect"
+      }
+    ]
+  },
+  {
+    "id": "system",
+    "title": "System configuration",
+    "description": "Power, boot, networking, login, and other system settings.",
+    "icon": "preferences-system-symbolic",
+    "actions": [
+      {
+        "id": "system_apply",
+        "title": "Apply system configurations",
+        "description": "Apply the existing power, sleep, logind, build, timezone, DNS, Bluetooth, ESP32, greeter, and boot setup scripts. Some changes require a reboot.",
+        "button": "Apply"
+      },
+      {
+        "id": "system_details",
+        "title": "Configuration details",
+        "description": "Check which system configurations are available and applied.",
+        "readOnly": true,
+        "button": "Inspect"
+      }
+    ]
+  },
+  {
+    "id": "themes",
+    "title": "Appearance",
+    "description": "Wallpaper-derived colors, GTK themes, and matching cursors.",
+    "icon": "applications-graphics-symbolic",
+    "actions": [
+      {
+        "id": "theme_install",
+        "title": "Install a GTK theme",
+        "description": "Choose a theme, light or dark appearance, and standard or solid variant. Apply the theme and matching cursor using the existing GTK workflow.",
+        "button": "Install"
+      },
+      {
+        "id": "theme_remove",
+        "title": "Uninstall the current theme",
+        "description": "Remove the current theme using the existing GTK uninstall workflow.",
+        "button": "Uninstall"
+      },
+      {
+        "id": "theme_status",
+        "title": "Theme details",
+        "description": "Inspect matugen, generated theme assets, GTK appearance, and cursor settings.",
+        "readOnly": true,
+        "button": "Inspect"
+      }
+    ]
+  },
+  {
+    "id": "shell",
+    "title": "Shell",
+    "description": "Zsh, Oh My Zsh, plugins, and your default shell.",
+    "icon": "utilities-terminal-symbolic",
+    "actions": [
+      {
+        "id": "shell_setup",
+        "title": "Set up shell",
+        "description": "Set up zsh, Oh My Zsh, configured plugins, terminfo, and Starship. Choose whether to change your default shell when prompted.",
+        "button": "Set up"
+      },
+      {
+        "id": "shell_status",
+        "title": "Shell details",
+        "description": "Inspect the current shell and installed plugin configuration.",
+        "readOnly": true,
+        "button": "Inspect"
+      }
+    ]
+  },
+  {
+    "id": "hyprland",
+    "title": "Hyprland",
+    "description": "Monitor configuration and compositor plugins.",
+    "icon": "video-display-symbolic",
+    "actions": [
+      {
+        "id": "hyprland_setup",
+        "title": "Set up Hyprland",
+        "description": "Configure detected monitors and the repository's Hyprland plugins. The compositor configuration may reload.",
+        "button": "Set up"
+      },
+      {
+        "id": "hyprland_status",
+        "title": "Hyprland details",
+        "description": "Inspect compositor, monitor, GPU configuration, and plugin status.",
+        "readOnly": true,
+        "button": "Inspect"
+      }
+    ]
+  },
+  {
+    "id": "installation",
+    "title": "Installation",
+    "description": "Complete setup, resume interrupted work, and inspect installation state.",
+    "icon": "system-software-install-symbolic",
+    "actions": [
+      {
+        "id": "full_install",
+        "title": "Full installation",
+        "description": "Run all existing install phases: preflight, hardware, packages, configurations, system setup, themes, shell, Hyprland, and verification. This changes the live desktop.",
+        "button": "Install"
+      },
+      {
+        "id": "resume_install",
+        "title": "Resume installation",
+        "description": "Continue the existing installer from its last failed phase using saved state.",
+        "button": "Resume"
+      },
+      {
+        "id": "install_state",
+        "title": "Installation state",
+        "description": "View completed and failed phases and the available resume point.",
+        "readOnly": true,
+        "button": "Inspect"
+      }
+    ]
+  },
+  {
+    "id": "activity",
+    "title": "Activity",
+    "description": "Progress, questions, and results from your latest operation.",
+    "icon": "view-list-symbolic",
+    "actions": []
+  }
+]
