@@ -1,8 +1,26 @@
-import qs.config
 import qs.components
+import qs.config
 
 Button {
+    id: root
+
+    required property var barWindow
+
     iconSource: IconRegistry.barControlIcon("info")
     interactive: true
-    onClicked: ShellActions.launchOrFocus("system-info", "fastfetch", "system-info")
+    active: popover.open
+    onClicked: popover.toggle()
+
+    BarPopover {
+        id: popover
+
+        barWindow: root.barWindow
+        anchorItem: root
+        centered: true
+
+        SystemInfoPopover {
+            active: popover.open
+            onCloseRequested: popover.open = false
+        }
+    }
 }
