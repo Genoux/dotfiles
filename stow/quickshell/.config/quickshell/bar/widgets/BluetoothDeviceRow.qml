@@ -60,8 +60,8 @@ Rectangle {
 
     Behavior on color {
         ColorAnimation {
-            duration: StyleTokens.easeDurationFast
-            easing.type: StyleTokens.easeStandard
+            duration: StyleTokens.motionFeedbackDuration
+            easing.type: StyleTokens.easeFade
         }
     }
 

@@ -175,6 +175,7 @@ postgresql
 power-profiles-daemon
 prismlauncher
 python-build
+python-gobject
 python-pip
 python-pipx
 python-protobuf
