@@ -1,0 +1,32 @@
+[Unit]
+Description=9Router local AI gateway
+Documentation=https://github.com/decolua/9router
+After=network-online.target
+
+[Service]
+Type=simple
+# docker.service is a system unit, so a user unit cannot order against it.
+# Restart=always makes the container retry until the daemon is up after boot.
+ExecStartPre=-/usr/bin/docker rm -f 9router
+# No --user here: the image entrypoint starts as root to chown /app/data and
+# then su-exec's to its own uid 1000 user, which is john on this host. Forcing
+# --user makes su-exec fail with "setgroups: Operation not permitted".
+# Port publishing makes the browser arrive from the docker0 gateway, not
+# 127.0.0.1, so 9router treats every dashboard login as remote and rejects its
+# own default password. INITIAL_PASSWORD is the documented way out; it lives in
+# a machine-local file and is passed through by name so an absent file leaves
+# it unset rather than blank.
+EnvironmentFile=-%h/.config/9router/service.env
+ExecStart=/usr/bin/docker run --rm --name 9router \
+    --publish 127.0.0.1:20128:20128 \
+    --volume %h/.9router:/app/data \
+    --env DATA_DIR=/app/data \
+    --env INITIAL_PASSWORD \
+    decolua/9router:latest
+ExecStop=/usr/bin/docker stop 9router
+Restart=always
+RestartSec=10
+TimeoutStopSec=30
+
+[Install]
+WantedBy=default.target
