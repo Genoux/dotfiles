@@ -72,7 +72,12 @@ Singleton {
         if (!path)
             return;
 
-        Quickshell.execDetached(["sh", "-c", `wl-copy --type image/png < '${path}'`]);
+        if (isVideo(path)) {
+            const uri = "file://" + path.split("/").map(segment => encodeURIComponent(segment)).join("/");
+            Quickshell.execDetached(["wl-copy", "--type", "text/uri-list", uri + "\r\n"]);
+        } else {
+            Quickshell.execDetached(["sh", "-c", 'wl-copy --type image/png < "$1"', "sh", path]);
+        }
     }
 
     function edit(path) {

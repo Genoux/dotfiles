@@ -2,14 +2,10 @@
 # Polls webcam, microphone, screen access, and local recording state.
 # Emits "webcam:mic:screenAccess:recording<TAB>webcamSrc<TAB>micSrc<TAB>screenSrc" on change.
 
-# Recorders whose presence means "actively writing a recording".
-EXTERNAL_RECORDERS=(obs gpu-screen-recorder kooha)
-# Superset also reported as a screen source, without implying a local recording.
-SCREEN_RECORDERS=(wl-screenrec wf-recorder "${EXTERNAL_RECORDERS[@]}")
-SCREEN_RECORDER_PATTERN=$(IFS='|'; printf '%s' "${SCREEN_RECORDERS[*]}")
+SCREEN_RECORDER_PATTERN="wl-screenrec|wf-recorder"
 
 has_pactl=0
-command -v pactl >/dev/null 2>&1 && has_pactl=1
+command -v pactl >/dev/null 2>&1 && command -v jq >/dev/null 2>&1 && has_pactl=1
 has_pipewire=0
 command -v pw-dump >/dev/null 2>&1 && command -v jq >/dev/null 2>&1 && has_pipewire=1
 
@@ -41,40 +37,22 @@ webcam_sources_from_pids() {
 }
 
 mic_sources_from_outputs() {
-    printf '%s\n' "$1" | awk '
-        /Source Output #/ { block = "" }
-        { block = block $0 "\n" }
-        /^$/ {
-            if (block ~ /target\.object = "alsa_input/ && block ~ /application\.name = "/) {
-                match(block, /application\.name = "([^"]+)"/, parts)
-                if (parts[1] != "") print parts[1]
-            }
-            block = ""
-        }
-        END {
-            if (block ~ /target\.object = "alsa_input/ && block ~ /application\.name = "/) {
-                match(block, /application\.name = "([^"]+)"/, parts)
-                if (parts[1] != "") print parts[1]
-            }
-        }
-    ' | sort -u | paste -sd ','
+    jq -nr --argjson outputs "${1:-[]}" --argjson sources "${2:-[]}" '
+        [$sources[] | select((.monitor_source // "") == "")
+         | select((.monitor_of_sink // 4294967295) == 4294967295)
+         | select((.properties["device.class"] // "") != "monitor")
+         | select((.name // "") | endswith(".monitor") | not)
+         | .index] as $microphones |
+        [$outputs[] | select(.corked != true)
+         | select(.source as $source | $microphones | index($source) != null)
+         | .properties["application.name"] // .properties["application.process.binary"] // "Microphone"]
+        | unique | join(",")
+    ' 2>/dev/null
 }
 
-# One pgrep over /proc, not one per name: five separate -x calls cost ~0.19s
-# here versus ~0.04s for a single alternation pattern.
 running_recorders() {
     pgrep -x -l "$SCREEN_RECORDER_PATTERN" 2>/dev/null |
         awk '{ print $2 }' | sort -u | paste -sd ','
-}
-
-is_external_recorder() {
-    local app
-    for app in "${EXTERNAL_RECORDERS[@]}"; do
-        case ",$1," in
-            *",$app,"*) return 0 ;;
-        esac
-    done
-    return 1
 }
 
 portal_screencast_active() {
@@ -103,35 +81,28 @@ portal_screencast_sources() {
     ' 2>/dev/null
 }
 
-# A webcam that also registers as an audio source counts as an active mic.
-webcam_is_mic() {
-    [ "$1" = "1" ] && [ "$has_pactl" = "1" ] || return 1
-    pactl list sources short 2>/dev/null | grep -qi "webcam\|camera\|video"
-}
-
 build_payload() {
-    local webcam_pids source_outputs pw_state recorders
+    local webcam_pids source_outputs sources pw_state recorders
     local webcam mic screen_access recording
     local webcam_src mic_src screen_src
 
     webcam_pids=$(get_webcam_pids)
     [ -n "$webcam_pids" ] && webcam=1 || webcam=0
 
-    source_outputs=""
-    [ "$has_pactl" = "1" ] && source_outputs=$(pactl list source-outputs 2>/dev/null)
-    if printf '%s' "$source_outputs" | grep -q 'target.object = "alsa_input'; then
-        mic=1
-    elif webcam_is_mic "$webcam"; then
-        mic=1
-    else
-        mic=0
+    source_outputs="[]"
+    sources="[]"
+    if [ "$has_pactl" = "1" ]; then
+        source_outputs=$(pactl -f json list source-outputs 2>/dev/null)
+        sources=$(pactl -f json list sources 2>/dev/null)
     fi
+    mic_src=$(mic_sources_from_outputs "$source_outputs" "$sources")
+    [ -n "$mic_src" ] && mic=1 || mic=0
 
     pw_state=""
     [ "$has_pipewire" = "1" ] && pw_state=$(pw-dump 2>/dev/null)
 
     recorders=$(running_recorders)
-    is_external_recorder "$recorders" && recording=1 || recording=0
+    [ -n "$recorders" ] && recording=1 || recording=0
     if [ "$recording" = "1" ] || portal_screencast_active "$pw_state"; then
         screen_access=1
     else
@@ -139,7 +110,6 @@ build_payload() {
     fi
 
     webcam_src=$(webcam_sources_from_pids "$webcam_pids" | prettify_sources)
-    mic_src=$(mic_sources_from_outputs "$source_outputs")
     screen_src=$(join_sources "$recorders,$(portal_screencast_sources "$pw_state")" | prettify_sources)
 
     printf '%s:%s:%s:%s\t%s\t%s\t%s' \
