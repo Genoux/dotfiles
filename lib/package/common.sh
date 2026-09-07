@@ -110,6 +110,9 @@ read_installed_packages() {
     declare -gA installed_aur_map=()
 
     while IFS= read -r pkg; do
+        if grep -Fxq "$pkg" "$DOTFILES_DIR/packages/sync-exclude" 2>/dev/null; then
+            continue
+        fi
         if [[ -v aur_packages_set["$pkg"] ]]; then
             installed_aur+=("$pkg")
             installed_aur_map["$pkg"]=1
