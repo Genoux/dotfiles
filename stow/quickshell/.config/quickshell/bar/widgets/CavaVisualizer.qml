@@ -94,8 +94,8 @@ noise_reduction = ${StyleCava.noiseReduction}
 
                 Behavior on opacity {
                     NumberAnimation {
-                        duration: StyleTokens.easeDurationNormal
-                        easing.type: StyleTokens.easeStandard
+                        duration: StyleTokens.motionEnterDuration
+                        easing.type: StyleTokens.easeFade
                     }
                 }
             }

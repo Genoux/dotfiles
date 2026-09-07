@@ -30,8 +30,8 @@ Rectangle {
 
     Behavior on color {
         ColorAnimation {
-            duration: StyleTokens.easeDurationFast
-            easing.type: StyleTokens.easeSymmetric
+            duration: StyleTokens.motionFeedbackDuration
+            easing.type: StyleTokens.easeFade
         }
     }
 
@@ -51,15 +51,15 @@ Rectangle {
 
         Behavior on x {
             NumberAnimation {
-                duration: StyleTokens.easeDurationFast
+                duration: StyleTokens.motionFeedbackDuration
                 easing.type: StyleTokens.easeStandard
             }
         }
 
         Behavior on color {
             ColorAnimation {
-                duration: StyleTokens.easeDurationFast
-                easing.type: StyleTokens.easeSymmetric
+                duration: StyleTokens.motionFeedbackDuration
+                easing.type: StyleTokens.easeFade
             }
         }
     }

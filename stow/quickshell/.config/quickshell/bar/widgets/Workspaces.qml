@@ -114,7 +114,7 @@ Row {
                 Behavior on opacity {
                     NumberAnimation {
                         duration: StyleWorkspace.revealDuration
-                        easing.type: Easing.OutQuad
+                        easing.type: StyleTokens.easeFade
                     }
                 }
             }
@@ -125,7 +125,6 @@ Row {
                 anchors.centerIn: parent
                 spacing: StyleWorkspace.inlineIconSpacing
                 opacity: workspacePill.showInlineIcons ? 1 : 0
-                scale: 0.98 + opacity * 0.02
 
                 Repeater {
                     model: ScriptModel {
@@ -154,16 +153,10 @@ Row {
                 Behavior on opacity {
                     NumberAnimation {
                         duration: StyleWorkspace.revealDuration
-                        easing.type: StyleTokens.easeStandard
+                        easing.type: StyleTokens.easeFade
                     }
                 }
 
-                Behavior on scale {
-                    NumberAnimation {
-                        duration: StyleWorkspace.revealDuration
-                        easing.type: StyleTokens.easeStandard
-                    }
-                }
             }
 
             MouseArea {
@@ -180,8 +173,8 @@ Row {
 
             Behavior on color {
                 ColorAnimation {
-                    duration: StyleTokens.easeDurationFast
-                    easing.type: StyleTokens.easeSymmetric
+                    duration: StyleTokens.motionFeedbackDuration
+                    easing.type: StyleTokens.easeFade
                 }
             }
 

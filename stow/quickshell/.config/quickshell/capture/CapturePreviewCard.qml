@@ -67,7 +67,8 @@ Rectangle {
     }
 
     Component.onCompleted: {
-        expireTimer.restart();
+        if (!holding)
+            expireTimer.restart();
         if (isVideo)
             posterProcess.running = true;
     }
@@ -154,7 +155,7 @@ Rectangle {
 
             Behavior on blur {
                 NumberAnimation {
-                    duration: StyleTokens.easeDurationFast
+                    duration: StyleTokens.motionFeedbackDuration
                     easing.type: StyleTokens.easeStandard
                 }
             }
@@ -169,8 +170,8 @@ Rectangle {
 
             Behavior on opacity {
                 NumberAnimation {
-                    duration: StyleTokens.easeDurationFast
-                    easing.type: StyleTokens.easeStandard
+                    duration: StyleTokens.motionFeedbackDuration
+                    easing.type: StyleTokens.easeFade
                 }
             }
         }
@@ -224,7 +225,7 @@ Rectangle {
         target: root
         property: "x"
         to: root.restingX
-        duration: StyleTokens.easeDurationFast
+        duration: StyleTokens.motionFeedbackDuration
         easing.type: StyleTokens.easeStandard
     }
 
@@ -234,7 +235,7 @@ Rectangle {
         target: root
         property: "x"
         to: root.restingX + StyleNotification.dragRunway
-        duration: StyleTokens.easeDurationFast
+        duration: StyleTokens.motionFeedbackDuration
         easing.type: StyleTokens.easeStandard
         onFinished: Services.CaptureState.remove(root.path)
     }
@@ -246,8 +247,8 @@ Rectangle {
 
         Behavior on opacity {
             NumberAnimation {
-                duration: StyleTokens.easeDurationFast
-                easing.type: StyleTokens.easeStandard
+                duration: StyleTokens.motionFeedbackDuration
+                easing.type: StyleTokens.easeFade
             }
         }
 
@@ -299,8 +300,8 @@ Rectangle {
 
         Behavior on opacity {
             NumberAnimation {
-                duration: StyleTokens.easeDurationFast
-                easing.type: StyleTokens.easeStandard
+                duration: StyleTokens.motionFeedbackDuration
+                easing.type: StyleTokens.easeFade
             }
         }
     }

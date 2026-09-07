@@ -160,15 +160,15 @@ Item {
 
                     Behavior on color {
                         ColorAnimation {
-                            duration: StyleTokens.easeDurationFast
-                            easing.type: StyleTokens.easeStandard
+                            duration: StyleTokens.motionFeedbackDuration
+                            easing.type: StyleTokens.easeFade
                         }
                     }
 
                     Behavior on border.color {
                         ColorAnimation {
-                            duration: StyleTokens.easeDurationFast
-                            easing.type: StyleTokens.easeStandard
+                            duration: StyleTokens.motionFeedbackDuration
+                            easing.type: StyleTokens.easeFade
                         }
                     }
 

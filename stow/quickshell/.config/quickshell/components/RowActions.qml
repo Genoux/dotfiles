@@ -51,8 +51,8 @@ Row {
 
     Behavior on opacity {
         NumberAnimation {
-            duration: StyleTokens.easeDurationFast
-            easing.type: StyleTokens.easeStandard
+            duration: StyleTokens.motionFeedbackDuration
+            easing.type: StyleTokens.easeFade
 
             // Disarm only once the controls are gone. Clearing on hover-out
             // instead would swap the word back to the glyph in full view, so the
@@ -104,7 +104,7 @@ Row {
 
         Behavior on width {
             NumberAnimation {
-                duration: StyleTokens.easeDurationInstant
+                duration: StyleTokens.motionFeedbackDuration
                 easing.type: StyleTokens.easeStandard
             }
 

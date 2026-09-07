@@ -56,7 +56,7 @@ Item {
 
         Behavior on width {
             NumberAnimation {
-                duration: StyleTokens.easeDurationNormal
+                duration: StyleTokens.motionEnterDuration
                 easing.type: StyleTokens.easeStandard
             }
         }

@@ -92,7 +92,7 @@ Item {
 
             Behavior on scale {
                 NumberAnimation {
-                    duration: StyleTokens.easeDurationFast
+                    duration: StyleTokens.motionFeedbackDuration
                     easing.type: StyleTokens.easeStandard
                 }
             }

@@ -181,7 +181,7 @@ Every structural stroke is `StyleTokens.borderWidth` (1px). Create hierarchy thr
 - Use `PillButton` for compact toggles inside panels.
 - Use `PopoverAction` for menu rows and stacked action tiles.
 - Use `ThemedIcon` for rendered icons. Let `IconRegistry` decide between bundled SVG and Freedesktop sources.
-- Hover and selection use `StyleTokens.alphaLight`, `easeDurationFast`, and the standard or symmetric curve as appropriate.
+- Hover and selection use `StyleTokens.alphaLight`, `motionFeedbackDuration`, and `easeFade` for color changes.
 - Disabled content uses `StyleTokens.opacityDisabled`, not a hardcoded grey.
 
 ### Levels and continuous values
@@ -195,7 +195,7 @@ Every structural stroke is `StyleTokens.borderWidth` (1px). Create hierarchy thr
 
 - Use `SegmentedControl` when one popover covers several subjects that would otherwise stack into a single long scroll.
 - It is not a row of `PillButton`s: the segments share one recessed track so they read as one control with a current position, and only the selected segment carries `alphaLight`.
-- **A panel with segments must give its body a fixed height.** Bar popovers hang off the bar and grow upward, so a content-fit body moves the header and the segments themselves on every switch — and the next click lands on a different tab than the one aimed at. Absorb the slack with an empty state, not with a moving panel.
+- Sound device and application lists fit their current rows up to `StylePopover.soundBodyMaxHeight`; longer lists scroll. Do not reserve blank rows below a short list.
 - Where a list can run past the fold, scroll the current item into view when the segment opens. A selection the reader has to hunt for is not a selection.
 
 ### Row actions
@@ -221,23 +221,26 @@ Every structural stroke is `StyleTokens.borderWidth` (1px). Create hierarchy thr
 
 ### Interaction policy
 
-- Pointer feedback is fast and subtle; state changes already on screen use 150ms.
-- Surface entry/exit uses 100–200ms according to `StyleTokens` and the owning domain style.
-- Use `easeStandard` for entry and pointer response, `easeSymmetric` for reversible fills, and preserve deliberate spring/exit curves already owned by a component.
+- Pointer feedback and surface entry take 100ms; dismissal takes 70ms. Use `motionFeedbackDuration`, `motionEnterDuration`, and `motionExitDuration` through the owning domain style.
+- Use `easeStandard` (OutCubic) for geometry and `easeFade` (Linear) for opacity and color. Reserve `easePulse` for continuous status pulses.
+- Bar popovers scale as one whole panel from `panelStartScale` to 1, anchored at the bottom. Opening, tab changes, calendar navigation and tray submenus share `panelMotionDuration` and `panelMotionEasing` (currently 99% / 100ms / OutCubic). Dismissal optionally shrinks using `panelExitScale`, `panelExitEasing`, and `panelExitDuration`. A scale of 1 or duration of 0 dismisses immediately. Keep opacity steady: exit fades expose a gray background artifact over windows with this blur setup. Widget handoffs bypass the exit after the incoming frame is ready. Opening stays opaque. Do not add compositing layers or bounce.
+- When switching widgets, retain the previous panel until the replacement queues its first rendered frame. Only the current panel owns the focus grab.
+- Keep content and its window alive until dismissal finishes. Reset tabs and release content after the fade, and let interrupted transitions continue from their current value.
+- Disable compositor animation for popovers. Keep the blur alpha threshold at 0.1 so faint shadows do not become blurred rectangular containers.
+- Hover reveals wait 100ms to avoid expanding widgets while the pointer merely crosses the bar. Click actions have no reveal delay.
+- Prepare widget data before opening and retain successful results during background refreshes. Cache weather and system information across shell restarts; build tray menus eagerly. Opening must not start a content fade or clear existing data.
 - Do not add motion to polling, debounce, timeout, or settle timers. Cadence is behavior, not animation.
 - Keep tray and media behavior aligned with the UX policies in `OVERVIEW.md` and `.cursor/rules/quickshell.mdc`.
 
 ## Known divergences
 
-Three places do not follow the rules above. They are listed here so nobody copies them as precedent, and nobody "fixes" them without deciding to.
+Two places do not follow the rules above. They are listed here so nobody copies them as precedent, and nobody "fixes" them without deciding to.
 
-**The lock screen is a parallel design system.** `lock/StyleLock.qml` defines its own font (`SF Pro Display`), its own palette (raw white-alpha `Qt.rgba` values, not matugen `Colors`), and its own sizes (120px clock, 26px date, 10px input radius) — none of them on the shared scales. Only one line in the whole lock surface reaches into `Colors`. This may be deliberate: the lock screen renders in a session where the shell's theme is not guaranteed, and a wallpaper-derived palette on top of the wallpaper itself is a legibility risk. **Treat it as intentional until decided otherwise. Do not partially reconcile it** — half a lock screen on shared tokens is worse than none.
-
-**Panel reveal curves are not unified.** `PopoverPanel` reveals with `InOutCubic`; `OverlayPanel` (launcher) hides with `InCubic`. Same gesture, different curve family. `easeStandard` / `easeSymmetric` cover pointer feedback only — panel motion is still owned per-component. Unifying it is a perceptible change, so it is a decision, not a cleanup.
+**The lock screen is a parallel design system.** `lock/StyleLock.qml` defines its own font (`SF Pro Display`), its own palette (raw white-alpha `Qt.rgba` values, not matugen `Colors`), and its own sizes (120px clock, 26px date, 10px input radius) — none of them on the shared scales. Only one line in the whole lock surface reaches into `Colors`. This may be deliberate: the lock screen renders in a session where the shell's theme is not guaranteed, and a wallpaper-derived palette on top of the wallpaper itself is a legibility risk. Motion uses the shared shell tokens; keep its separate palette and geometry intentional.
 
 **`PopoverLabel` and `PopoverMessage` overlap.** Near-identical `Text` wrappers on the same band height and inset, differing only in default colour (`base05` vs `base04`) and centring. `PopoverLabel` has exactly one call site. Prefer `PopoverMessage` for new work; `PopoverLabel` is a candidate for deletion.
 
-Two more things that look like duplication but are not: `BarPopover` vs `ContextMenuPopup` share ~70% of their window scaffolding but encode genuinely different UX contracts (centred + spring-revealed widget panel vs edge-pinned + immediate system menu), and each says so in its own header comment. `PopoverPanel` vs `OverlayPanel` likewise. Leave both splits alone.
+Two more things that look like duplication but are not: `BarPopover` vs `ContextMenuPopup` share ~70% of their window scaffolding but encode genuinely different UX contracts (centred widget panel vs edge-pinned system menu), and each says so in its own header comment. `PopoverPanel` vs `OverlayPanel` likewise. Leave both splits alone.
 
 ## Do's and Don'ts
 

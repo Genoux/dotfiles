@@ -204,7 +204,7 @@ Item {
                         id: widthAnim
 
                         duration: StyleLock.morphDuration
-                        easing.type: Easing.OutCubic
+                        easing.type: StyleTokens.easeStandard
                         onRunningChanged: {
                             if (widthAnim.running) {
                                 root.cursorReady = false;
@@ -321,7 +321,7 @@ Item {
                     Behavior on opacity {
                         NumberAnimation {
                             duration: StyleLock.caretBlinkFadeDuration
-                            easing.type: Easing.InOutQuad
+                            easing.type: StyleTokens.easeFade
                         }
 
                     }
@@ -353,7 +353,7 @@ Item {
         property: "opacity"
         to: 1
         duration: StyleLock.fadeInDuration
-        easing.type: Easing.InOutSine
+        easing.type: StyleTokens.easeFade
     }
 
     NumberAnimation {
@@ -363,7 +363,7 @@ Item {
         property: "opacity"
         to: 0
         duration: StyleLock.fadeOutDuration
-        easing.type: Easing.InOutSine
+        easing.type: StyleTokens.easeFade
     }
 
     Connections {
