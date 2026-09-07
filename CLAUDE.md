@@ -52,6 +52,7 @@ Uses GNU Stow for symlinking dotfiles. Each subdirectory in `stow/` is a stow pa
 - `shell/` - Zsh, shell configs
 - `kitty/` - Kitty terminal
 - `claude/`, `cursor/`, `zed/` - Editor configs
+- `icons/` - App icon overrides layered onto the MacTahoe icon theme
 
 Commands:
 ```bash
@@ -145,6 +146,26 @@ Full installation sequence (run via `./dotfiles install`):
 1. Create directory in `stow/<name>/`
 2. Mirror home directory structure (e.g., `stow/myapp/.config/myapp/config.toml`)
 3. Link with `./dotfiles config link <name>`
+
+### Overriding an App Icon
+
+App icons are never special-cased in QML. QuickShell resolves them through
+`IconRegistry` -> the app's `.desktop` `Icon=` name -> `Quickshell.iconPath()`,
+so an override placed in the icon theme applies everywhere at once: bar,
+launcher, tray and notifications.
+
+1. Read the name the app declares: `Icon=` in `/usr/share/applications/<app>.desktop`
+2. Drop a PNG under that exact name in `stow/icons/.local/share/icons/MacTahoe/apps/scalable/`
+3. `./dotfiles config link icons`
+
+The package holds only the overrides, never a copy of the theme. Qt resolves
+`.png` before `.svg` within a theme directory, so a PNG wins over the vendor
+`.svg` sitting beside it and the vendor tree is left untouched. All three
+MacTahoe variants share one real `apps/scalable` directory, so a single file
+covers `MacTahoe`, `-dark` and `-light`.
+
+Reinstalling MacTahoe over `~/.local/share/icons` replaces the stow symlinks
+with vendor files; re-run `./dotfiles config link icons` to restore them.
 
 ### Modifying System Configs
 
