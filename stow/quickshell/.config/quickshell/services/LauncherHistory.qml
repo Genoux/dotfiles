@@ -9,7 +9,39 @@ Singleton {
 
     readonly property string historyPath: `${ShellActions.stateDir}/launcher-history.json`
     readonly property int maxEntries: 200
-    property int revision: 0
+
+    // Launch order, most recent first. Authoritative in memory: the file backs
+    // it up, it is not re-read and re-parsed on every lookup.
+    property var recentIds: []
+
+    // id -> launch rank. Rebuilt only when the history changes, because the
+    // search comparator reaches for it O(n log n) times per keystroke.
+    readonly property var recentRanks: {
+        const ranks = new Map()
+        recentIds.forEach((entryId, index) => ranks.set(entryId, index))
+        return ranks
+    }
+
+    // id -> { name, haystack }. Rebuilt only when the installed entry set
+    // changes; joining and lowercasing every desktop entry per keystroke was
+    // the second-largest cost in the filter.
+    readonly property var searchIndex: {
+        const index = new Map()
+        for (const entry of DesktopEntries.applications.values) {
+            index.set(entry.id, {
+                name: String(entry.name ?? "").toLowerCase(),
+                haystack: [
+                    entry.name,
+                    entry.genericName,
+                    entry.comment,
+                    entry.id,
+                    ...(entry.keywords ?? []),
+                    ...(entry.categories ?? []),
+                ].join(" ").toLowerCase()
+            })
+        }
+        return index
+    }
 
     function desktopId(entryId) {
         const text = String(entryId ?? "").trim()
@@ -42,69 +74,60 @@ Singleton {
         }
     }
 
-    function recentIds() {
-        const _ = revision
-        return historyFile.loaded ? parseRecent(historyFile.text()) : []
-    }
-
-    function recentRank(entryId) {
-        const index = recentIds().indexOf(entryId)
-        return index < 0 ? Number.MAX_SAFE_INTEGER : index
-    }
-
-    function entryForId(entryId) {
-        const id = desktopId(entryId)
-        if (!id)
-            return null
-
-        return DesktopEntries.byId(id)
-            ?? DesktopEntries.applications.values.find((entry) => entry.id === id)
-            ?? null
-    }
-
     function recentEntries() {
-        const _ = revision
-        return recentIds()
-            .map((entryId) => entryForId(entryId))
-            .filter((entry) => entry !== null)
+        return recentIds
+            .map((entryId) => DesktopEntries.byId(entryId))
+            // An uninstalled app lingers in history; byId hands back a null
+            // QObject for it, which is falsy but compares unequal to JS null.
+            .filter((entry) => !!entry)
     }
 
-    function sortEntries(entries) {
-        const _ = revision
-        return [...entries].sort((left, right) => {
-            const leftRank = recentRank(left.id)
-            const rightRank = recentRank(right.id)
-            if (leftRank !== rightRank)
-                return leftRank - rightRank
-            return left.name.localeCompare(right.name)
-        })
+    // Tier ahead of recency: an app whose NAME opens with the query outranks
+    // one that merely mentions it in a category, however recently that one ran.
+    // Matching still spans the whole haystack, only the ordering is tiered.
+    function matchTier(entry, terms, normalizedQuery) {
+        const indexed = searchIndex.get(entry.id)
+        if (!indexed || !terms.every((term) => indexed.haystack.includes(term)))
+            return -1
+
+        if (indexed.name.startsWith(normalizedQuery))
+            return 0
+        if (indexed.name.includes(normalizedQuery))
+            return 1
+        return 2
     }
 
-    function matches(entry, normalizedQuery) {
-        if (normalizedQuery.length === 0)
-            return false
-
-        const haystack = [
-            entry.name,
-            entry.genericName,
-            entry.comment,
-            entry.id,
-            ...(entry.keywords ?? []),
-            ...(entry.categories ?? []),
-        ].join(" ").toLowerCase()
-
+    function search(normalizedQuery, limit) {
         const terms = normalizedQuery.split(/\s+/).filter((term) => term.length > 0)
-        return terms.every((term) => haystack.includes(term))
+        if (terms.length === 0)
+            return recentEntries()
+
+        const matched = []
+        for (const entry of DesktopEntries.applications.values) {
+            const tier = matchTier(entry, terms, normalizedQuery)
+            if (tier < 0)
+                continue
+
+            matched.push({
+                entry: entry,
+                tier: tier,
+                rank: recentRanks.get(entry.id) ?? Number.MAX_SAFE_INTEGER
+            })
+        }
+
+        matched.sort((left, right) => {
+            if (left.tier !== right.tier)
+                return left.tier - right.tier
+            if (left.rank !== right.rank)
+                return left.rank - right.rank
+            return left.entry.name.localeCompare(right.entry.name)
+        })
+
+        return matched.slice(0, limit).map((match) => match.entry)
     }
 
-    function persistRecent(recent) {
-        if (!historyFile.adapter)
-            return
-
-        historyFile.adapter.recent = recent
-        historyFile.writeAdapter()
-        historyFile.reload()
-        revision++
+    function syncFromFile() {
+        recentIds = historyFile.loaded ? parseRecent(historyFile.text()) : []
     }
 
     function record(entry) {
@@ -112,8 +135,12 @@ Singleton {
         if (!id)
             return
 
-        const recent = [id, ...recentIds().filter((existingId) => existingId !== id)].slice(0, maxEntries)
-        persistRecent(recent)
+        recentIds = [id, ...recentIds.filter((existingId) => existingId !== id)].slice(0, maxEntries)
+        if (!historyFile.adapter)
+            return
+
+        historyFile.adapter.recent = recentIds
+        historyFile.writeAdapter()
     }
 
     Process {
@@ -130,10 +157,10 @@ Singleton {
         watchChanges: true
         printErrors: false
 
-        onLoadedChanged: root.revision++
+        onLoadedChanged: root.syncFromFile()
         onFileChanged: {
             reload()
-            root.revision++
+            root.syncFromFile()
         }
 
         JsonAdapter {

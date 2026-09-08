@@ -12,15 +12,7 @@ PanelWindow {
     required property var screen
 
     readonly property string normalizedQuery: Services.Launcher.query.toLowerCase().trim()
-    readonly property var filteredEntries: {
-        const _ = Services.LauncherHistory.revision
-        if (normalizedQuery.length === 0)
-            return Services.LauncherHistory.recentEntries()
-
-        return Services.LauncherHistory.sortEntries(
-            DesktopEntries.applications.values.filter((entry) => Services.LauncherHistory.matches(entry, normalizedQuery))
-        ).slice(0, StyleLauncher.maxResults)
-    }
+    readonly property var filteredEntries: Services.LauncherHistory.search(normalizedQuery, StyleLauncher.maxResults)
 
     readonly property int surfaceHeight: StyleLauncher.padding
         + StyleLauncher.searchHeight
@@ -30,12 +22,6 @@ PanelWindow {
     readonly property bool active: Services.Launcher.visible && Services.Launcher.screen === root.screen
 
     property bool displayed: false
-    property var closingEntries: []
-    property int closingListHeight: panel.listHeight
-    property int closingSurfaceHeight: surfaceHeight
-
-    readonly property var visibleEntries: root.active ? root.filteredEntries : root.closingEntries
-    readonly property int visibleListHeight: root.active ? panel.listHeight : root.closingListHeight
 
     screen: root.screen
     visible: displayed
@@ -53,12 +39,6 @@ PanelWindow {
         right: true
     }
 
-    function snapshotClosingLayout() {
-        closingEntries = filteredEntries
-        closingListHeight = panel.listHeight
-        closingSurfaceHeight = surfaceHeight
-    }
-
     function finishHide() {
         displayed = false
         Services.Launcher.finalizeClose()
@@ -71,7 +51,6 @@ PanelWindow {
             surface.show()
             Qt.callLater(() => panel.focusSearch())
         } else {
-            snapshotClosingLayout()
             surface.hide()
         }
     }
@@ -87,7 +66,7 @@ PanelWindow {
         id: surface
 
         width: StyleLauncher.width
-        height: root.active ? root.surfaceHeight : root.closingSurfaceHeight
+        height: root.surfaceHeight
         anchors.centerIn: parent
         active: root.active
         onHideFinished: root.finishHide()
@@ -96,7 +75,7 @@ PanelWindow {
             id: panel
 
             anchors.fill: parent
-            filteredEntries: root.visibleEntries
+            filteredEntries: root.filteredEntries
             active: root.active
             onLaunch: (entry) => root.launchEntry(entry)
             onClose: Services.Launcher.close()
