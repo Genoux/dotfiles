@@ -14,10 +14,11 @@ Singleton {
     readonly property int emptyHeight: 200
     readonly property int listMaxHeight: 300
     readonly property int iconSize: 24
+    readonly property int searchIconSize: 16
     readonly property int maxResults: 100
     readonly property color text: Colors.base05
-    readonly property color selection: Qt.rgba(225 / 255, 225 / 255, 225 / 255, 0.2)
+    readonly property color selection: StyleTokens.surfaceAlpha(text, 0.2)
     readonly property color searchBg: Qt.rgba(0, 0, 0, 0.08)
     readonly property color selectedBg: StyleTokens.alphaHairline
-    readonly property color placeholder: Qt.rgba(1, 1, 1, 0.4)
+    readonly property color placeholder: StyleTokens.surfaceAlpha(text, StyleTokens.opacityDisabled)
 }

@@ -1,8 +1,7 @@
 import Quickshell
-import Quickshell.Widgets
 import QtQuick
+import QtQuick.Controls as Controls
 import QtQuick.Layouts
-import Qt5Compat.GraphicalEffects
 import qs
 import qs.components
 import qs.config
@@ -17,6 +16,20 @@ Item {
     signal launch(var entry)
     signal close
 
+    readonly property int listHeight: filteredEntries.length === 0
+        ? StyleLauncher.emptyHeight
+        : Math.min(
+            filteredEntries.length * StyleLauncher.resultHeight + StyleLauncher.padding,
+            StyleLauncher.listMaxHeight
+        )
+
+    // Typing breaks the declarative binding on `text`, so a reopen would keep
+    // the previous query on screen while the service has already cleared it.
+    function focusSearch() {
+        searchInput.text = Services.Launcher.query
+        searchInput.forceActiveFocus()
+    }
+
     ColumnLayout {
         anchors.fill: parent
         anchors.topMargin: StyleLauncher.padding
@@ -24,101 +37,67 @@ Item {
         anchors.rightMargin: StyleLauncher.padding
         spacing: StyleLauncher.spacing
 
-        Rectangle {
+        Controls.TextField {
+            id: searchInput
+
             Layout.fillWidth: true
             Layout.preferredHeight: StyleLauncher.searchHeight
-            radius: StyleTokens.radiusMd
-            color: StyleLauncher.searchBg
-            border.width: StyleTokens.borderWidth
-            border.color: StyleOverlay.borderSubtle
 
-            RowLayout {
-                anchors.fill: parent
-                anchors.leftMargin: StyleTokens.space12
-                anchors.rightMargin: StyleTokens.space12
-                spacing: StyleTokens.space8
+            text: Services.Launcher.query
+            placeholderText: "Search..."
+            color: StyleLauncher.text
+            placeholderTextColor: StyleLauncher.placeholder
+            selectionColor: StyleLauncher.selection
+            selectedTextColor: StyleLauncher.text
+            font.family: StyleTokens.fontSans
+            font.pixelSize: StyleTokens.fontSizeSm
+            verticalAlignment: TextInput.AlignVCenter
+            topPadding: 0
+            bottomPadding: 0
+            leftPadding: StyleTokens.space12 + StyleLauncher.searchIconSize + StyleTokens.space8
+            rightPadding: StyleTokens.space12
+            enabled: root.active
+            Accessible.name: placeholderText
 
-                Item {
-                    Layout.alignment: Qt.AlignVCenter
-                    Layout.preferredWidth: 16
-                    Layout.preferredHeight: 16
+            background: Rectangle {
+                radius: StyleTokens.radiusMd
+                color: StyleLauncher.searchBg
+                border.width: StyleTokens.borderWidth
+                border.color: StyleOverlay.borderSubtle
 
-                    IconImage {
-                        id: searchIconSource
+                ThemedIcon {
+                    x: StyleTokens.space12
+                    anchors.verticalCenter: parent.verticalCenter
+                    source: Quickshell.iconPath("system-search-symbolic")
+                    size: StyleLauncher.searchIconSize
+                    tint: StyleLauncher.text
+                }
+            }
 
-                        anchors.fill: parent
-                        source: Quickshell.iconPath("system-search-symbolic")
-                        visible: false
-                    }
+            onTextChanged: {
+                if (Services.Launcher.query !== text)
+                    Services.Launcher.query = text
+                results.currentIndex = 0
+            }
 
-                    ColorOverlay {
-                        anchors.fill: parent
-                        source: searchIconSource
-                        color: StyleLauncher.text
-                    }
+            onAccepted: root.launch(root.filteredEntries[results.currentIndex])
+
+            Keys.onPressed: (event) => {
+                if (event.key === Qt.Key_Escape) {
+                    root.close()
+                    event.accepted = true
+                    return
                 }
 
-                Item {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: parent.height
+                if (event.key === Qt.Key_Down) {
+                    results.currentIndex = Math.min(results.currentIndex + 1, Math.max(0, root.filteredEntries.length - 1))
+                    event.accepted = true
+                    return
+                }
 
-                    TextInput {
-                        id: searchInput
-
-                        anchors.fill: parent
-                        verticalAlignment: TextInput.AlignVCenter
-                        text: Services.Launcher.query
-                        color: StyleLauncher.text
-                        selectionColor: StyleLauncher.selection
-                        selectedTextColor: StyleLauncher.text
-                        font.family: StyleTokens.fontSans
-                        font.pixelSize: StyleTokens.fontSizeSm
-                        font.weight: Font.Normal
-                        clip: true
-                        enabled: root.active
-                        cursorVisible: root.active && activeFocus
-                        onTextChanged: {
-                            if (Services.Launcher.query !== text)
-                                Services.Launcher.query = text
-                            results.currentIndex = 0
-                        }
-
-                        Keys.onPressed: (event) => {
-                            if (event.key === Qt.Key_Escape) {
-                                root.close()
-                                event.accepted = true
-                                return
-                            }
-
-                            if (event.key === Qt.Key_Down) {
-                                results.currentIndex = Math.min(results.currentIndex + 1, Math.max(0, root.filteredEntries.length - 1))
-                                event.accepted = true
-                                return
-                            }
-
-                            if (event.key === Qt.Key_Up) {
-                                results.currentIndex = Math.max(results.currentIndex - 1, 0)
-                                event.accepted = true
-                                return
-                            }
-
-                            if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-                                root.launch(root.filteredEntries[results.currentIndex])
-                                event.accepted = true
-                            }
-                        }
-                    }
-
-                    Text {
-                        anchors.fill: parent
-                        z: -1
-                        visible: searchInput.text.length === 0
-                        text: "Search..."
-                        color: StyleLauncher.placeholder
-                        font.family: StyleTokens.fontSans
-                        font.pixelSize: StyleTokens.fontSizeSm
-                        verticalAlignment: Text.AlignVCenter
-                    }
+                if (event.key === Qt.Key_Up) {
+                    results.currentIndex = Math.max(results.currentIndex - 1, 0)
+                    event.accepted = true
                 }
             }
         }
@@ -126,7 +105,6 @@ Item {
         Item {
             Layout.fillWidth: true
             Layout.preferredHeight: root.listHeight
-            clip: true
 
             ListView {
                 id: results
@@ -138,39 +116,33 @@ Item {
                 currentIndex: 0
                 spacing: 0
                 clip: true
+                // Every delegate build resolves an icon off disk, so churning
+                // them on each keystroke is the expensive part of retyping.
+                reuseItems: true
                 boundsBehavior: Flickable.StopAtBounds
+
+                highlight: Rectangle {
+                    radius: StyleTokens.radiusMd
+                    color: StyleLauncher.selectedBg
+                    border.width: StyleTokens.borderWidth
+                    border.color: StyleOverlay.borderSubtle
+                }
+                // ListView paces the highlight by velocity unless duration wins.
+                highlightMoveVelocity: -1
+                highlightMoveDuration: StyleTokens.motionFeedbackDuration
+                highlightResizeDuration: 0
 
                 footer: Item {
                     width: results.width
                     height: StyleLauncher.padding
                 }
 
-                delegate: Rectangle {
+                delegate: Item {
                     required property var modelData
                     required property int index
 
-                    readonly property bool selected: ListView.isCurrentItem
-
                     width: results.width
                     height: StyleLauncher.resultHeight
-                    radius: StyleTokens.radiusMd
-                    color: selected ? StyleLauncher.selectedBg : StyleTokens.transparent
-                    border.width: StyleTokens.borderWidth
-                    border.color: selected ? StyleOverlay.borderSubtle : StyleTokens.transparent
-
-                    Behavior on color {
-                        ColorAnimation {
-                            duration: StyleTokens.motionFeedbackDuration
-                            easing.type: StyleTokens.easeFade
-                        }
-                    }
-
-                    Behavior on border.color {
-                        ColorAnimation {
-                            duration: StyleTokens.motionFeedbackDuration
-                            easing.type: StyleTokens.easeFade
-                        }
-                    }
 
                     RowLayout {
                         anchors.fill: parent
@@ -178,12 +150,11 @@ Item {
                         anchors.rightMargin: StyleTokens.space8
                         spacing: StyleTokens.space10
 
-                        IconImage {
+                        ThemedIcon {
                             Layout.alignment: Qt.AlignVCenter
-                            width: StyleLauncher.iconSize
-                            height: StyleLauncher.iconSize
-                            implicitSize: StyleLauncher.iconSize
                             source: Quickshell.iconPath(modelData.icon || "application-x-executable")
+                            size: StyleLauncher.iconSize
+                            colored: true
                         }
 
                         Text {
@@ -202,7 +173,10 @@ Item {
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
-                        onEntered: results.currentIndex = index
+                        // The list scrolls under a stationary cursor during
+                        // arrow-key nav; entered() would drag the selection
+                        // back to whatever row slid beneath it.
+                        onPositionChanged: results.currentIndex = index
                         onClicked: root.launch(modelData)
                     }
                 }
@@ -217,16 +191,5 @@ Item {
                 font.pixelSize: StyleTokens.fontSizeSm
             }
         }
-    }
-
-    readonly property int listHeight: filteredEntries.length === 0
-        ? StyleLauncher.emptyHeight
-        : Math.min(
-            filteredEntries.length * StyleLauncher.resultHeight + StyleLauncher.padding,
-            StyleLauncher.listMaxHeight
-        )
-
-    function focusSearch() {
-        searchInput.forceActiveFocus()
     }
 }
