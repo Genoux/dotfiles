@@ -1,4 +1,5 @@
 import re
+import subprocess
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
@@ -12,6 +13,16 @@ def test_dropin_disables_debug_exactly_once():
     assert "!!debug" not in options
     assert options.count("debug") == 1
     assert "!debug" in options
+
+
+def test_dropin_builds_on_every_core():
+    dropin = REPO / "system/makepkg.conf.d/dotfiles.conf"
+    result = subprocess.run(
+        ["bash", "-c", f'source "{dropin}"; echo "$MAKEFLAGS"; nproc'],
+        capture_output=True, text=True, check=True,
+    )
+    makeflags, cores = result.stdout.split()
+    assert makeflags == f"-j{cores}"
 
 
 def test_installer_never_edits_etc_makepkg_conf_directly():
