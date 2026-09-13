@@ -31,17 +31,20 @@ fi
 KEYD_CONFIG="$SYSTEM_DIR/keyd/default.conf"
 if [[ -f "$KEYD_CONFIG" ]]; then
     log_info "Installing keyd configuration..."
-    sudo cp "$KEYD_CONFIG" /etc/keyd/default.conf
-    sudo chmod 644 /etc/keyd/default.conf
-    log_success "Keyd configuration installed"
-    
-    # Enable and start keyd service
-    if systemctl is-enabled keyd.service &>/dev/null; then
-        log_info "Reloading keyd configuration..."
-        sudo keyd reload
+    if install_file_if_changed "$KEYD_CONFIG" /etc/keyd/default.conf; then
+        log_success "Keyd configuration installed"
+        if systemctl is-enabled keyd.service &>/dev/null; then
+            log_info "Reloading keyd configuration..."
+            sudo keyd reload
+        else
+            log_info "Enabling and starting keyd service..."
+            sudo systemctl enable --now keyd.service
+        fi
     else
-        log_info "Enabling and starting keyd service..."
-        sudo systemctl enable --now keyd.service
+        log_info "Keyd configuration already up to date"
+        if ! systemctl is-enabled keyd.service &>/dev/null; then
+            sudo systemctl enable --now keyd.service
+        fi
     fi
     log_success "Keyd configuration applied"
 else

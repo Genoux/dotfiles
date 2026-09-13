@@ -11,5 +11,6 @@ fi
 log_info "Installing PAM configurations..."
 
 sudo install -m 644 "$DOTFILES_DIR/system/pam.d/quickshell-lock" /etc/pam.d/quickshell-lock
+sudo install -m 644 "$DOTFILES_DIR/system/pam.d/greetd" /etc/pam.d/greetd
 
 log_success "PAM configurations installed"

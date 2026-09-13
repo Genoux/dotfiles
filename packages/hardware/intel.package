@@ -1,0 +1,6 @@
+# Static manifest, selected (not generated) by Intel GPU detection in
+# lib/hardware-packages.sh.
+vulkan-intel
+lib32-vulkan-intel
+intel-media-driver
+linux-firmware-intel

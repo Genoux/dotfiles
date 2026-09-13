@@ -1,6 +1,8 @@
 #!/bin/bash
 # makepkg configuration
-# Disables debug packages in makepkg.conf (Arch-specific)
+# Disables debug package generation via a makepkg.conf.d drop-in — never
+# edits /etc/makepkg.conf itself (sed-patching it in place is what caused it
+# to accumulate "!!!debug" across repeated installer runs).
 
 # Get dotfiles directory
 DOTFILES_DIR="$(cd "$(dirname "$(dirname "$(dirname "${BASH_SOURCE[0]}")")")" && pwd)"
@@ -16,11 +18,8 @@ fi
 
 log_section "makepkg"
 
-# makepkg.conf - disable debug packages
-if [[ -f /etc/makepkg.conf ]]; then
-    if grep -q "OPTIONS=.*debug.*" /etc/makepkg.conf; then
-        sudo sed -i 's/\(OPTIONS=([^)]*\)debug\([^)]*)\)/\1!debug\2/' /etc/makepkg.conf
-        log_success "Disabled debug packages"
-    fi
+if install_file_if_changed "$DOTFILES_DIR/system/makepkg.conf.d/dotfiles.conf" /etc/makepkg.conf.d/dotfiles.conf; then
+    log_success "Installed makepkg.conf.d/dotfiles.conf (debug packages disabled)"
+else
+    log_info "makepkg.conf.d/dotfiles.conf already up to date"
 fi
-

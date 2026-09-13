@@ -1,0 +1,3 @@
+# Static manifest, selected (not generated) by CPU vendor detection in
+# lib/hardware-packages.sh.
+intel-ucode

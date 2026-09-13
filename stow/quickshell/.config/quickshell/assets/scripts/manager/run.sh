@@ -24,9 +24,8 @@ case "$operation" in
         hyprland_status
         ;;
     verify) run_full_verification ;;
-    packages_manage) packages_manage ;;
     packages_install) packages_install ;;
-    packages_unlisted) packages_clean_unlisted ;;
+    packages_custom) packages_custom ;;
     packages_status) packages_status ;;
     configs_manage) config_manage_interactive ;;
     configs_link) config_link_all ;;

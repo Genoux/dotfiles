@@ -1,69 +1,63 @@
-app2unit-git
-apple-fonts
-arc-gtk-theme
-arduino-ide-bin
-battop
-caprine-bin
-ch34x-dkms-git
-claude-desktop-extra
-cliamp
-clipse
-codex-desktop
-cursor-appimage
-downgrade
-dragon-drop
-electron29-bin
-esp-idf
-fabric-ai
-figma-linux-font-helper
-gitkraken
-gnome-shell-extension-blur-my-shell
-google-breakpad
-google-chrome
-grimblast-git
-gtk-engine-murrine
-http-parser
-hyprfloat
-hyprshotgun
-hypruler-bin
-lazyjournal
-localsend-bin
+# AUR packages, hand-curated. See packages/arch.package for the "single
+# source of truth" policy. Prefer -bin variants (prebuilt) over source builds
+# whenever both exist.
+
+# --- AUR helper itself ---
+yay
+
+# --- Desktop / theming ---
 matugen-bin
-ncurses5-compat-libs
-ngrok
+arc-gtk-theme
+gtk-engine-murrine
+apple-fonts
+ttf-rubik-vf
+ttf-material-design-icons-git
+
+# --- Greeter / boot ---
+sysc-greet-hyprland
+
+# --- Hyprland extras ---
+hypruler-bin
+grimblast-git
+app2unit-git
+
+# --- Clipboard / launcher utilities ---
+clipse
+wl-screenrec
+
+# --- Remote desktop / streaming ---
+sunshine-bin
+
+# --- Networking ---
 nordvpn-bin
-notion-app-electron
+ngrok
+localsend-bin
+
+# --- System diagnostics ---
+battop
+tzupdate
+ncurses5-compat-libs
+google-breakpad
+http-parser
+
+# --- Dev tools / CLIs ---
 openai-codex-bin
 opencode-bin
-opencode-desktop
-passmark-performancetest-bin
-phonon-qt5
-phonon-qt5-vlc
-protonup-qt
+opencode-desktop-bin
+cliamp-bin
+fabric-ai
+claude-desktop-extra
 python310
 python-gevent-eventemitter
 python-inputs
 python-materialyoucolor
-python-steam
 python-terminaltexteffects
-python-vdf
-sherlock-launcher-bin
+
+# --- Apps ---
 slack-desktop
 spotify
-stably-orca-bin
-sunsetr
-sunshine-bin
-sysc-greet-hyprland
-telegram-desktop-bin
-terax-bin
-tinty-git
-ttf-material-design-icons-git
-ttf-rubik-vf
-tzupdate
-waylandar-git
-weather
-witr-bin
-wl-screenrec
-yay
+google-chrome
 zen-browser-bin
-zscroll-git
+cursor-bin
+gitkraken
+stably-orca-bin

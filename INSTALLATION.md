@@ -113,17 +113,12 @@ dotfiles recovery emergency
 
 The installer runs in phases, creating snapshots before each:
 
-1. **preflight** - Check network, disk space, conflicts
-2. **hardware_detect** - Detect GPU, CPU, generate driver configs
-3. **system_prepare** - Install yay, Node.js, prepare system
-4. **packages_official** - Install official Arch packages
-5. **packages_aur** - Install AUR packages
-6. **config_link** - Link dotfiles with stow
-7. **system_config** - Apply system-level configs
-8. **theme_setup** - Install themes and colors
-9. **shell_setup** - Configure zsh/fish
-10. **hyprland_setup** - Configure Hyprland
-11. **verification** - Verify everything works
+1. **hardware_detect** - Detect GPU/CPU and select the matching static `packages/hardware/*.package` manifests (detection only, no installs)
+2. **preflight** - Enable multilib, sync the pacman DB, check network/disk space/conflicts, validate every official/AUR package name (including the selected hardware manifests)
+3. **packages_official** - One `pacman -Syu --needed` for `packages/arch.package` + selected hardware manifests, then one `yay -S --needed` for `packages/aur.package` + selected hardware AUR manifests
+4. **config_link** - Link dotfiles with stow, then `install/system/*.sh` (network, makepkg, hardware driver post-install setup, etc.), shell/theme/Hyprland setup
+5. **packages_custom** - Build `packages/custom.package` GitHub PKGBUILD repos (`gh` + `makepkg -si`)
+6. **verification** - Verify everything works
 
 Each phase:
 - Creates a snapshot before starting

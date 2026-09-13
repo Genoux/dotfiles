@@ -76,9 +76,6 @@ stow/calcurse/.config/calcurse/ics-feeds
 # Claude session state
 stow/claude/.claude.json
 
-# Hardware-specific packages (auto-generated per machine)
-packages/hardware/
-
 # Theme build dependencies
 themes/*/
 

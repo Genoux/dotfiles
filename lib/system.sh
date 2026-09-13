@@ -46,7 +46,7 @@ system_apply() {
     run_logged "$DOTFILES_DIR/install/system/logind.sh"
     run_logged "$DOTFILES_DIR/install/system/makepkg.sh"
     run_logged "$DOTFILES_DIR/install/system/timezone.sh"
-    run_logged "$DOTFILES_DIR/install/system/systemd-resolved.sh"
+    run_logged "$DOTFILES_DIR/install/system/network.sh"
     run_logged "$DOTFILES_DIR/install/system/bluetooth.sh"
     run_logged "$DOTFILES_DIR/install/system/esp32.sh"
     run_logged "$DOTFILES_DIR/install/system/greeter.sh"

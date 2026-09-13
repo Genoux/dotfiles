@@ -1,0 +1,6 @@
+# Static manifest, selected (not generated) by AMD GPU detection in
+# lib/hardware-packages.sh.
+vulkan-radeon
+lib32-vulkan-radeon
+linux-firmware-amdgpu
+linux-firmware-radeon

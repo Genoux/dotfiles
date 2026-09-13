@@ -14,7 +14,8 @@ Personal Arch Linux dotfiles with automated system configuration, Hyprland deskt
 # Common commands
 ./dotfiles status                    # Show overall system state
 ./dotfiles install                   # Full installation
-./dotfiles packages manage           # Interactive package management
+./dotfiles packages install          # Install missing packages from packages/*.package
+./dotfiles packages custom           # Build custom GitHub PKGBUILD packages
 ./dotfiles packages update           # System update (yay -Syu)
 ./dotfiles config link [name]        # Stow configs (all or specific)
 ./dotfiles config unlink [name]      # Unstow configs
@@ -27,20 +28,34 @@ Personal Arch Linux dotfiles with automated system configuration, Hyprland deskt
 
 ### Package Management (`lib/package/`, `packages/`)
 
-- **`packages/arch.package`** - Official Arch packages
-- **`packages/aur.package`** - AUR packages
+`packages/*.package` are the single source of truth for what gets installed —
+nothing is auto-synced from the running system back into these files.
+
+- **`packages/arch.package`** - Official Arch packages (hand-curated)
+- **`packages/aur.package`** - AUR packages (hand-curated, prefer `-bin` variants)
+- **`packages/custom.package`** - `owner/repo` GitHub repos with a PKGBUILD at
+  their root (not on the AUR — e.g. locally maintained apps), built with
+  `makepkg -si` via `./dotfiles packages custom`
+- **`packages/hardware/*.package`** - Static, hand-curated GPU/CPU manifests
+  (`nvidia.package`, `amd.package`, `intel.package`, `amd-ucode.package`,
+  `intel-ucode.package`), selected — never regenerated — by `./dotfiles
+  hardware setup`'s hardware detection
 - **`packages/hyprland-plugins.package`** - Hyprland plugins
 - **`packages/zsh-plugins.package`** - Zsh plugins
 
 Core library modules:
-- **`lib/package/core.sh`** - System preparation (yay, Node.js installation)
+- **`lib/package/core.sh`** - `ensure_yay_installed` (built from source, called only after the official phase's `-Syu`)
+- **`lib/package/preflight.sh`** - Validates every package name against pacman/AUR before installing anything
+- **`lib/package/install-official.sh`** - One batched `pacman -Syu --needed` for all official packages
+- **`lib/package/install-aur.sh`** - One batched `yay -S --needed` for all AUR packages
 - **`lib/package/install.sh`** - Package installation orchestration
-- **`lib/package/manage.sh`** - Interactive package management with gum
-- **`lib/package/common.sh`** - Shared package utilities (dependency checks, AUR detection)
+- **`lib/package/custom.sh`** - Custom (GitHub PKGBUILD) package builds
 - **`lib/package/update.sh`** - System update logic
-- **`lib/package/status.sh`** - Package status reporting
+- **`lib/package/status.sh`** - Package status reporting (read-only)
 
 Package files are plain text, one package per line. Comments start with `#`.
+To add or remove a package, edit `packages/arch.package` or `packages/aur.package`
+directly, then run `./dotfiles packages install`.
 
 ### Configuration Management (`lib/config.sh`, `stow/`)
 
@@ -72,7 +87,7 @@ System-level configs requiring root access:
 - `system/greetd/` - Login manager (greetd + sysc-greet)
 - `system/tlp.d/` - Power management (TLP)
 - `system/udev/` - udev rules (ESP32, AMD power save)
-- `system/pacman/hooks/` - Pacman hooks for auto-sync
+- `system/pacman/hooks/` - Pacman cache-cleanup hook only (package lists are never auto-synced — see Package Management)
 - `system/plymouth/` - Boot splash
 - `system/modprobe.d/` - Kernel module configs
 
@@ -84,13 +99,15 @@ Apply with: `./dotfiles system apply`
 
 ### Hardware Management (`lib/hardware-packages.sh`, `packages/hardware/`)
 
-Auto-detects hardware and installs appropriate drivers:
-- GPU detection (AMD/NVIDIA/Intel)
-- CPU microcode (AMD/Intel)
+Static, hand-curated manifests selected (never generated) by detected
+hardware — generating from what's already installed produced empty
+manifests on a fresh machine:
+- `packages/hardware/nvidia.package`, `amd.package`, `intel.package` - GPU driver packages, selected by `lspci`-based GPU detection
+- `packages/hardware/amd-ucode.package`, `intel-ucode.package` - CPU microcode, selected by `/proc/cpuinfo` vendor detection
 - Laptop-specific configs
 
 ```bash
-./dotfiles hardware setup    # Detect and install drivers
+./dotfiles hardware setup    # Detect hardware, install the selected manifests
 ./dotfiles hardware status   # Show hardware info
 ```
 
@@ -113,33 +130,24 @@ QuickShell is Qt6/QML-based (Qt6/QML, not TypeScript).
 
 ## Installation Flow
 
-Full installation sequence (run via `./dotfiles install`):
+Full installation sequence (run via `./dotfiles install`), in the actual
+phase order (`install.sh`):
 
-1. **System preparation** (`install/system/setup.sh`)
-   - Install yay (AUR helper)
-   - Install Node.js
-   - Configure system files
-
-2. **Package installation** (`lib/package/install.sh`)
-   - Sync package databases
-   - Install official packages from `packages/arch.package`
-   - Install AUR packages from `packages/aur.package`
-   - Run package audit
-
-3. **Configuration linking** (`lib/config.sh`)
-   - Stow all packages from `stow/` to `$HOME`
-
-4. **Post-installation** (`install/post/`)
-   - Shell setup (zsh, oh-my-zsh, plugins)
-   - Hyprland plugins
-   - GTK theme installation
+1. **Hardware detection** (`lib/hardware-packages.sh`) - detect GPU/CPU only, no pacman/yay calls, so it can safely run before preflight
+2. **Preflight** (`lib/package/preflight.sh`) - enable multilib, sync the pacman DB, validate every official/AUR package name (including the hardware manifests hardware detection just selected)
+3. **Official packages** (`lib/package/install-official.sh`) - one `pacman -Syu --needed` for `packages/arch.package` + the selected `packages/hardware/*.package`
+4. **AUR packages** (`lib/package/install-aur.sh`) - one `yay -S --needed` for `packages/aur.package` (+ any hardware AUR manifests)
+5. **Configuration + system** (`install/config/all.sh`) - stow all packages from `stow/` to `$HOME`, then `install/system/*.sh` (network, makepkg, hardware driver post-install setup, etc.), shell/theme/Hyprland setup
+6. **Custom packages** (`lib/package/custom.sh`) - GitHub PKGBUILD repos from `packages/custom.package`, built last via `gh` + `makepkg -si`
+7. **Verification** (`lib/package/verify.sh`)
 
 ## Development Patterns
 
 ### Adding Packages
 
-1. Add to `packages/arch.package` (official) or `packages/aur.package` (AUR)
-2. Run `./dotfiles packages manage` for interactive install/sync
+1. Add to `packages/arch.package` (official), `packages/aur.package` (AUR),
+   or `packages/custom.package` (`owner/repo` GitHub PKGBUILD, not on the AUR)
+2. Run `./dotfiles packages install` (or `packages custom` for the GitHub list)
 
 ### Creating New Stow Package
 
@@ -205,10 +213,11 @@ All operations log to `~/.dotfiles-install.log` or `~/.dotfiles-daily.log`. Help
 
 ## Common Tasks
 
-**Sync after manual package changes:**
+**Install after editing package lists:**
 ```bash
-./dotfiles packages manage
-# Review missing/extra packages, choose to install or update package files
+./dotfiles packages install
+# Edit packages/arch.package or packages/aur.package by hand first — nothing
+# auto-syncs installed packages back into these files.
 ```
 
 **Update system:**

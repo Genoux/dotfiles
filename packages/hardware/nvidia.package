@@ -1,0 +1,9 @@
+# Static manifest, selected (not generated) by NVIDIA GPU detection in
+# lib/hardware-packages.sh. nvidia-prime is deliberately NOT listed: nothing
+# in this repo (stow/cursor's shim included) uses PRIME render offload
+# (__NV_PRIME_RENDER_OFFLOAD / prime-run / DRI_PRIME) — checked before adding.
+nvidia-open-dkms
+nvidia-utils
+lib32-nvidia-utils
+libva-nvidia-driver
+linux-firmware-nvidia

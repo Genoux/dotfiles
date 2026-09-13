@@ -1,0 +1,8 @@
+# Custom packages built from source with makepkg, one "owner/repo" GitHub
+# path per line. Each repo must have a PKGBUILD at its root. Built last, via
+# `dotfiles packages custom` (requires GitHub authentication for private
+# repos — see lib/package/custom.sh).
+
+Genoux/flow
+Genoux/frigate-desktop
+Genoux/idleon-desktop

@@ -34,15 +34,21 @@ sudo chmod 755 /var/lib/greeter 2>/dev/null
 
 # Deploy greeter preferences
 if [[ -f "$DOTFILES_DIR/system/greetd/preferences.json" ]]; then
-    sudo cp "$DOTFILES_DIR/system/greetd/preferences.json" /var/lib/greeter/.cache/sysc-greet/preferences 2>/dev/null
-    sudo chown greeter:greeter /var/lib/greeter/.cache/sysc-greet/preferences 2>/dev/null
-    log_success "Greeter preferences deployed"
+    if install_file_if_changed "$DOTFILES_DIR/system/greetd/preferences.json" /var/lib/greeter/.cache/sysc-greet/preferences; then
+        sudo chown greeter:greeter /var/lib/greeter/.cache/sysc-greet/preferences 2>/dev/null
+        log_success "Greeter preferences deployed"
+    else
+        log_info "Greeter preferences already up to date"
+    fi
 fi
 
 # Deploy greeter Hyprland config (watchdog warning suppression + sysc-greet autostart)
 if [[ -f "$DOTFILES_DIR/system/greetd/hyprland-greeter-config.lua" ]]; then
-    sudo cp "$DOTFILES_DIR/system/greetd/hyprland-greeter-config.lua" /etc/greetd/hyprland-greeter-config.lua 2>/dev/null
-    log_success "Greeter Hyprland config deployed"
+    if install_file_if_changed "$DOTFILES_DIR/system/greetd/hyprland-greeter-config.lua" /etc/greetd/hyprland-greeter-config.lua; then
+        log_success "Greeter Hyprland config deployed"
+    else
+        log_info "Greeter Hyprland config already up to date"
+    fi
 fi
 
 # Copy wallpapers if user has any
@@ -53,21 +59,12 @@ if [[ -d "$HOME/.config/hypr/wallpapers" ]]; then
     log_success "Wallpapers copied"
 fi
 
-# Backup and create greetd config
-if [[ -f /etc/greetd/config.toml ]]; then
-    sudo cp /etc/greetd/config.toml /etc/greetd/config.toml.backup 2>/dev/null
+# Install greetd config
+if install_file_if_changed "$DOTFILES_DIR/system/greetd/config.toml" /etc/greetd/config.toml; then
+    log_success "greetd configured"
+else
+    log_info "greetd config already up to date"
 fi
-
-sudo tee /etc/greetd/config.toml > /dev/null <<'EOF'
-[terminal]
-vt = 1
-
-[default_session]
-command = "Hyprland -c /etc/greetd/hyprland-greeter-config.lua"
-user = "greeter"
-EOF
-
-log_success "greetd configured"
 
 # Enable greetd service
 sudo systemctl enable greetd.service 2>/dev/null

@@ -24,10 +24,14 @@ if [[ -f /etc/modprobe.d/blacklist-acpi-cpufreq.conf ]]; then
 fi
 
 # Copy module load configuration
+config_changed=false
 if [[ -f "$SYSTEM_DIR/modules-load.d/cpufreq.conf" ]]; then
-    sudo mkdir -p /etc/modules-load.d
-    sudo cp "$SYSTEM_DIR/modules-load.d/cpufreq.conf" /etc/modules-load.d/cpufreq.conf
-    log_success "cpufreq.conf"
+    if install_file_if_changed "$SYSTEM_DIR/modules-load.d/cpufreq.conf" /etc/modules-load.d/cpufreq.conf; then
+        config_changed=true
+        log_success "cpufreq.conf"
+    else
+        log_info "cpufreq.conf already up to date"
+    fi
 fi
 
 # Load the module now (without reboot)
@@ -37,10 +41,11 @@ else
     log_warning "Module will be loaded after reboot"
 fi
 
-# Check if cpupower is installed
+# cpupower is tracked in packages/arch.package, installed by the official
+# phase's single `pacman -Syu` — verify only, no second install path.
 if ! command -v cpupower &>/dev/null; then
-    log_info "Installing cpupower..."
-    sudo pacman -S --needed --noconfirm cpupower
+    log_error "cpupower not installed. Run: dotfiles packages install"
+    exit 1
 fi
 
 # Set CPU governor to schedutil (best for laptops)
@@ -54,6 +59,7 @@ fi
 sudo systemctl enable cpupower.service 2>/dev/null || true
 log_success "cpupower.service enabled"
 
-# Set reboot needed flag
-mkdir -p "$HOME/.local/state/dotfiles"
-touch "$HOME/.local/state/dotfiles/.reboot_needed"
+if $config_changed; then
+    mkdir -p "$HOME/.local/state/dotfiles"
+    touch "$HOME/.local/state/dotfiles/.reboot_needed"
+fi

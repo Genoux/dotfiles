@@ -17,16 +17,22 @@ fi
 log_section "systemd Journald"
 
 if [[ -d "$SYSTEM_DIR/systemd/journald.conf.d" ]]; then
-    sudo mkdir -p /etc/systemd/journald.conf.d
+    journald_changed=false
     for file in "$SYSTEM_DIR/systemd/journald.conf.d"/*; do
-        if [[ -f "$file" ]]; then
-            filename=$(basename "$file")
-            sudo cp "$file" /etc/systemd/journald.conf.d/
+        [[ -f "$file" ]] || continue
+        filename=$(basename "$file")
+        if install_file_if_changed "$file" "/etc/systemd/journald.conf.d/$filename"; then
+            journald_changed=true
             log_success "$filename"
+        else
+            log_info "$filename already up to date"
         fi
     done
 
-    # Safe to restart: journald re-execs without dropping the session.
-    sudo systemctl restart systemd-journald 2>/dev/null || true
+    # Safe to restart: journald re-execs without dropping the session. Only
+    # do it when the config actually changed.
+    if $journald_changed; then
+        sudo systemctl restart systemd-journald 2>/dev/null || true
+    fi
     log_info "Journal usage: $(journalctl --disk-usage 2>/dev/null | sed 's/^.*take up //')"
 fi

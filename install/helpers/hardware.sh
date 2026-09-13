@@ -12,13 +12,16 @@ detect_gpu() {
         has_nvidia=true
     fi
     
-    # Check for AMD
-    if lspci | grep -iE "vga.*amd|vga.*ati|display.*amd|display.*ati" &>/dev/null; then
+    # Check for AMD. Word-bounded \bati\b — an unbounded "ati" matches the
+    # "ati" inside "Corporation", which is present in the standard lspci
+    # description for every vendor ("VGA compatible controller: <Vendor>
+    # Corporation ..."), so it was misdetecting AMD on Intel-only machines.
+    if lspci | grep -iE "vga.*\b(amd|ati)\b|display.*\b(amd|ati)\b" &>/dev/null; then
         has_amd=true
     fi
-    
+
     # Check for Intel
-    if lspci | grep -iE "vga.*intel|display.*intel" &>/dev/null; then
+    if lspci | grep -iE "vga.*\bintel\b|display.*\bintel\b" &>/dev/null; then
         has_intel=true
     fi
     
@@ -53,8 +56,10 @@ detect_device_type() {
         fi
     fi
     
-    # Fallback: check for battery
-    if [[ -d /sys/class/power_supply/BAT* ]] 2>/dev/null; then
+    # Fallback: check for battery. -d doesn't glob inside [[ ]] (SC2144) — a
+    # literal "BAT*" directory never exists, so this always fell through to
+    # the dmidecode/desktop path below.
+    if compgen -G "/sys/class/power_supply/BAT*" &>/dev/null; then
         echo "laptop"
         return
     fi
@@ -76,66 +81,6 @@ is_laptop() {
 # Check if device is a desktop
 is_desktop() {
     [[ "$(detect_device_type)" == "desktop" ]]
-}
-
-# Filter packages based on hardware
-filter_packages_by_hardware() {
-    local package_file="$1"
-    local temp_file
-    
-    # Create temporary file (caller is responsible for cleanup)
-    temp_file=$(mktemp)
-    
-    # Validate input file
-    if [[ ! -f "$package_file" || ! -r "$package_file" ]]; then
-        log_error "Package file not found or not readable: $package_file" >&2
-        rm -f "$temp_file"
-        return 1
-    fi
-    
-    # NVIDIA-specific packages to filter
-    local nvidia_packages=(
-        "nvidia"
-        "nvidia-open-dkms"
-        "nvidia-prime"
-        "nvidia-settings"
-        "nvidia-utils"
-        "python-nvidia-ml-py"
-    )
-    
-    if has_nvidia_gpu; then
-        # Keep all packages if NVIDIA is present
-        cp "$package_file" "$temp_file"
-        log_info "NVIDIA GPU detected - keeping NVIDIA packages" >&2
-    else
-        # Filter out NVIDIA packages if no NVIDIA hardware
-        log_info "No NVIDIA GPU detected - filtering NVIDIA packages" >&2
-        
-        while IFS= read -r line; do
-            # Keep comments and empty lines as-is
-            if [[ "$line" =~ ^#.*$ || -z "$line" ]]; then
-                echo "$line" >> "$temp_file"
-                continue
-            fi
-            
-            # Check if this is a NVIDIA package to filter
-            local should_keep=true
-            for nvidia_pkg in "${nvidia_packages[@]}"; do
-                if [[ "$line" == "$nvidia_pkg" ]]; then
-                    should_keep=false
-                    log_info "  Skipping: $nvidia_pkg (no NVIDIA hardware)" >&2
-                    break
-                fi
-            done
-            
-            if $should_keep; then
-                echo "$line" >> "$temp_file"
-            fi
-        done < "$package_file"
-    fi
-    
-    # Output the filtered file path
-    echo "$temp_file"
 }
 
 # Show hardware summary

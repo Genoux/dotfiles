@@ -19,12 +19,13 @@ log_section "systemd Sleep"
 
 # systemd sleep configuration
 if [[ -d "$SYSTEM_DIR/systemd/sleep.conf.d" ]]; then
-    sudo mkdir -p /etc/systemd/sleep.conf.d
     for file in "$SYSTEM_DIR/systemd/sleep.conf.d"/*; do
-        if [[ -f "$file" ]]; then
-            filename=$(basename "$file")
-            sudo cp "$file" /etc/systemd/sleep.conf.d/
+        [[ -f "$file" ]] || continue
+        filename=$(basename "$file")
+        if install_file_if_changed "$file" "/etc/systemd/sleep.conf.d/$filename"; then
             log_success "$filename"
+        else
+            log_info "$filename already up to date"
         fi
     done
 fi
@@ -48,13 +49,13 @@ fi
 
 # Install system-sleep hooks (for hibernate, etc.)
 if [[ -d "$SYSTEM_DIR/systemd/system-sleep" ]]; then
-    sudo mkdir -p /usr/lib/systemd/system-sleep
     for file in "$SYSTEM_DIR/systemd/system-sleep"/*; do
-        if [[ -f "$file" ]]; then
-            filename=$(basename "$file")
-            sudo cp "$file" /usr/lib/systemd/system-sleep/
-            sudo chmod +x "/usr/lib/systemd/system-sleep/$filename"
+        [[ -f "$file" ]] || continue
+        filename=$(basename "$file")
+        if install_file_if_changed "$file" "/usr/lib/systemd/system-sleep/$filename" 755; then
             log_success "Installed system-sleep hook: $filename"
+        else
+            log_info "system-sleep hook $filename already up to date"
         fi
     done
 fi
@@ -65,17 +66,24 @@ if is_laptop; then
 
     # Install logind configuration for lid switch behavior
     if [[ -d "$SYSTEM_DIR/systemd/logind.conf.d" ]]; then
-        sudo mkdir -p /etc/systemd/logind.conf.d
+        logind_changed=false
         for file in "$SYSTEM_DIR/systemd/logind.conf.d"/*; do
-            if [[ -f "$file" ]]; then
-                filename=$(basename "$file")
-                sudo cp "$file" /etc/systemd/logind.conf.d/
+            [[ -f "$file" ]] || continue
+            filename=$(basename "$file")
+            if install_file_if_changed "$file" "/etc/systemd/logind.conf.d/$filename"; then
+                logind_changed=true
                 log_success "Installed logind config: $filename"
+            else
+                log_info "logind config $filename already up to date"
             fi
         done
 
-        log_success "Lid switch configuration installed"
-        log_warning "Reboot required for logind changes to take effect"
+        if $logind_changed; then
+            log_success "Lid switch configuration installed"
+            log_warning "Reboot required for logind changes to take effect"
+            mkdir -p "$HOME/.local/state/dotfiles"
+            touch "$HOME/.local/state/dotfiles/.reboot_needed"
+        fi
     fi
 else
     log_info "Desktop detected - skipping lid switch configuration"

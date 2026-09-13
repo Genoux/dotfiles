@@ -33,44 +33,60 @@ if systemctl is-active --quiet power-profiles-daemon; then
 fi
 
 # Install TLP configuration
+tlp_config_changed=false
 if [[ -d "$SYSTEM_DIR/tlp.d" ]]; then
-    log_info "Installing TLP configuration..."
-    sudo mkdir -p /etc/tlp.d
-    sudo cp -r "$SYSTEM_DIR/tlp.d/"* /etc/tlp.d/
-    log_success "TLP configuration installed"
+    for file in "$SYSTEM_DIR/tlp.d"/*; do
+        [[ -f "$file" ]] || continue
+        filename=$(basename "$file")
+        if install_file_if_changed "$file" "/etc/tlp.d/$filename"; then
+            tlp_config_changed=true
+            log_success "$filename"
+        else
+            log_info "$filename already up to date"
+        fi
+    done
 fi
 
 # Install udev rules for AMD GPU power management
 if [[ -f "$SYSTEM_DIR/udev/rules.d/99-amd-power-save.rules" ]]; then
-    log_info "Installing udev power management rules..."
-    sudo mkdir -p /etc/udev/rules.d
-    sudo cp "$SYSTEM_DIR/udev/rules.d/99-amd-power-save.rules" /etc/udev/rules.d/
-    sudo udevadm control --reload-rules
-    sudo udevadm trigger
-    log_success "Udev rules installed"
+    if install_file_if_changed "$SYSTEM_DIR/udev/rules.d/99-amd-power-save.rules" /etc/udev/rules.d/99-amd-power-save.rules; then
+        sudo udevadm control --reload-rules
+        sudo udevadm trigger
+        log_success "Udev power management rules installed"
+    else
+        log_info "Udev power management rules already up to date"
+    fi
 fi
 
 # Install modprobe configuration
 if [[ -f "$SYSTEM_DIR/modprobe.d/power-save.conf" ]]; then
-    log_info "Installing kernel module power settings..."
-    sudo mkdir -p /etc/modprobe.d
-    sudo cp "$SYSTEM_DIR/modprobe.d/power-save.conf" /etc/modprobe.d/
-    log_success "Kernel module settings installed"
+    if install_file_if_changed "$SYSTEM_DIR/modprobe.d/power-save.conf" /etc/modprobe.d/power-save.conf; then
+        log_success "Kernel module power settings installed (reboot to fully apply)"
+    else
+        log_info "Kernel module power settings already up to date"
+    fi
 fi
 
 # Install sysctl configuration
 if [[ -f "$SYSTEM_DIR/sysctl.d/99-battery-optimize.conf" ]]; then
-    log_info "Installing sysctl battery optimizations..."
-    sudo mkdir -p /etc/sysctl.d
-    sudo cp "$SYSTEM_DIR/sysctl.d/99-battery-optimize.conf" /etc/sysctl.d/
-    sudo sysctl --system >/dev/null 2>&1
-    log_success "Sysctl settings applied"
+    if install_file_if_changed "$SYSTEM_DIR/sysctl.d/99-battery-optimize.conf" /etc/sysctl.d/99-battery-optimize.conf; then
+        sudo sysctl --system >/dev/null 2>&1
+        log_success "Sysctl battery optimizations applied"
+    else
+        log_info "Sysctl battery optimizations already up to date"
+    fi
 fi
 
-# Enable and start TLP
+# Enable TLP, restarting only when its configuration actually changed —
+# `systemctl start` on an already-running unit is already a no-op, but a
+# config change needs an explicit restart to take effect.
 log_info "Enabling TLP service..."
 sudo systemctl enable tlp.service
-sudo systemctl start tlp.service
+if $tlp_config_changed; then
+    sudo systemctl restart tlp.service
+else
+    sudo systemctl start tlp.service
+fi
 
 # Enable TLP RF switching (for WiFi/Bluetooth power management)
 if systemctl list-unit-files | grep -q "systemd-rfkill"; then

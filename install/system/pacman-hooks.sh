@@ -1,6 +1,5 @@
 #!/bin/bash
 # Pacman hooks installer
-# Sets up automatic package list synchronization with dotfiles
 
 # Get dotfiles directory
 DOTFILES_DIR="$(cd "$(dirname "$(dirname "$(dirname "${BASH_SOURCE[0]}")")")" && pwd)"
@@ -12,68 +11,42 @@ if [[ -z "${DOTFILES_HELPERS_LOADED:-}" ]]; then
     DOTFILES_HELPERS_LOADED=true
 fi
 
-log_info "Configuring pacman hooks for dotfiles sync..."
+log_info "Configuring pacman hooks..."
 
-# Check if pacman is available
 if ! command -v pacman &>/dev/null; then
     log_warning "pacman is not available. Skipping pacman hooks installation"
     exit 0
 fi
 
-# Create hooks directory if it doesn't exist
-if [[ ! -d "/etc/pacman.d/hooks" ]]; then
-    log_info "Creating /etc/pacman.d/hooks directory..."
-    sudo mkdir -p /etc/pacman.d/hooks
+# Remove a previous version of this installer's auto-sync mechanism: package
+# installs/removals used to get written back into arch.package/aur.package
+# automatically, which fought with the hand-curated package lists being the
+# single source of truth. Cleans up any machine that ran the old installer.
+removed_stale=false
+for stale in /etc/pacman.d/hooks/dotfiles-sync-install.hook /etc/pacman.d/hooks/dotfiles-sync-remove.hook; do
+    if [[ -f "$stale" ]]; then
+        sudo rm -f "$stale"
+        removed_stale=true
+    fi
+done
+if [[ -L /usr/local/bin/dotfiles-package-sync || -e /usr/local/bin/dotfiles-package-sync ]]; then
+    sudo rm -f /usr/local/bin/dotfiles-package-sync
+    removed_stale=true
+fi
+if $removed_stale; then
+    log_success "Removed stale package auto-sync hooks/symlink"
 fi
 
-# Install all hook files from the dotfiles hooks directory
-shopt -s nullglob
-hook_files=("$SYSTEM_DIR/pacman/hooks"/*.hook)
-shopt -u nullglob
+sudo mkdir -p /etc/pacman.d/hooks
 
-if [[ ${#hook_files[@]} -eq 0 ]]; then
-    log_error "No hook files found in $SYSTEM_DIR/pacman/hooks/"
+CACHE_HOOK="$SYSTEM_DIR/pacman/hooks/dotfiles-clean-cache.hook"
+if [[ ! -f "$CACHE_HOOK" ]]; then
+    log_error "Hook file not found: $CACHE_HOOK"
     exit 1
 fi
 
-log_info "Installing ${#hook_files[@]} pacman hooks..."
-sudo cp "${hook_files[@]}" /etc/pacman.d/hooks/
-sudo chmod 644 /etc/pacman.d/hooks/*.hook
-log_success "Pacman hooks installed"
-
-# Ensure sync script is executable and accessible
-SYNC_SCRIPT="$DOTFILES_DIR/stow/scripts/.local/bin/dotfiles-package-sync"
-if [[ ! -f "$SYNC_SCRIPT" ]]; then
-    log_error "Sync script not found: $SYNC_SCRIPT"
-    exit 1
-fi
-
-if [[ ! -x "$SYNC_SCRIPT" ]]; then
-    log_info "Making sync script executable..."
-    chmod +x "$SYNC_SCRIPT"
-fi
-
-# Create symlink to /usr/local/bin for global access
-if [[ ! -L "/usr/local/bin/dotfiles-package-sync" ]]; then
-    log_info "Creating symlink in /usr/local/bin..."
-    sudo ln -sf "$SYNC_SCRIPT" /usr/local/bin/dotfiles-package-sync
-    log_success "Symlink created: /usr/local/bin/dotfiles-package-sync"
-elif [[ "$(readlink /usr/local/bin/dotfiles-package-sync)" != "$SYNC_SCRIPT" ]]; then
-    log_info "Updating symlink in /usr/local/bin..."
-    sudo ln -sf "$SYNC_SCRIPT" /usr/local/bin/dotfiles-package-sync
-    log_success "Symlink updated"
-fi
-
-# Verify installation
-if [[ -f "/etc/pacman.d/hooks/dotfiles-sync-install.hook" ]] && \
-   [[ -f "/etc/pacman.d/hooks/dotfiles-sync-remove.hook" ]] && \
-   [[ -L "/usr/local/bin/dotfiles-package-sync" ]]; then
-    log_success "Pacman hooks configured successfully"
-    echo
-    log_info "Package installations and removals will now be automatically synced to:"
-    echo "  - $DOTFILES_DIR/packages/arch.package"
-    echo "  - $DOTFILES_DIR/packages/aur.package"
+if install_file_if_changed "$CACHE_HOOK" /etc/pacman.d/hooks/dotfiles-clean-cache.hook; then
+    log_success "Installed dotfiles-clean-cache.hook"
 else
-    log_error "Hook installation verification failed"
-    exit 1
+    log_info "dotfiles-clean-cache.hook already up to date"
 fi

@@ -141,14 +141,17 @@ legacy hyprlang one-line rule sprawl unless the user asks.
 
 ## Learned Workspace Facts
 
-- `idleon-desktop` is a LOCALLY BUILT package (`Packager: Unknown Packager`), not in
-  any repo or the AUR. Its PKGBUILD lives outside this repo at
-  `~/Desktop/@john/idleon-desktop/PKGBUILD`. Deliberately NOT listed in
-  `packages/aur.package` — adding it would make `./dotfiles install` fail trying to
-  fetch it. Rebuild with `makepkg -si` from that directory.
-- `nvidia-open-dkms` / `nvidia-utils` stay out of the flat manifests on purpose;
-  GPU packages are hardware-detected (`./dotfiles hardware setup`,
-  `packages/dependencies.json`). Do not "sync" them into `arch.package`.
+- `idleon-desktop` and `frigate-desktop` are LOCALLY BUILT packages, not in the
+  official repos or the AUR. Their PKGBUILDs live in the private GitHub repos
+  `Genoux/idleon-desktop` / `Genoux/frigate-desktop`. They are listed in
+  `packages/custom.package` (one `owner/repo` per line), built by
+  `./dotfiles packages custom` via `gh repo clone` + `makepkg -si` — never add
+  them to `packages/aur.package`, pacman/yay cannot fetch them.
+- `nvidia-open-dkms` / `nvidia-utils` stay out of `arch.package` on purpose;
+  GPU packages live in static manifests (`packages/hardware/nvidia.package`,
+  `amd.package`, `intel.package`) selected — never generated — by
+  `./dotfiles hardware setup`'s `lspci` detection. Do not "sync" them into
+  `arch.package`.
 
 - `gpu.lua` and `monitors.lua` must stay at the Hypr config root; dotfiles
   detection and setup scripts expect those exact paths.

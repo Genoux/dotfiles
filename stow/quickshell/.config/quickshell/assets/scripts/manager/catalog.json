@@ -28,22 +28,16 @@
     "icon": "package-x-generic-symbolic",
     "actions": [
       {
-        "id": "packages_manage",
-        "title": "Reconcile packages",
-        "description": "Review missing, extra, and dependency packages. Install missing software, choose what to keep, remove extras, update manifests, or perform a full sync.",
-        "button": "Manage"
-      },
-      {
         "id": "packages_install",
         "title": "Install all tracked packages",
         "description": "Install the official and AUR packages declared in dotfiles, including preparation and verification.",
         "button": "Install"
       },
       {
-        "id": "packages_unlisted",
-        "title": "Manage unlisted packages",
-        "description": "Select which unlisted packages to keep, add them to dotfiles, or remove them from the system.",
-        "button": "Manage"
+        "id": "packages_custom",
+        "title": "Build custom packages",
+        "description": "Build the GitHub PKGBUILD repos declared in packages/custom.package. May prompt for GitHub authentication.",
+        "button": "Build"
       },
       {
         "id": "packages_status",

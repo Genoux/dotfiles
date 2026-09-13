@@ -1,0 +1,11 @@
+#%PAM-1.0
+
+# gnome-keyring lines unlock the login keyring with the login password, so
+# nothing prompts for it later. Requires both passwords to match.
+auth       required     pam_securetty.so
+auth       requisite    pam_nologin.so
+auth       include      system-local-login
+auth       optional     pam_gnome_keyring.so
+account    include      system-local-login
+session    include      system-local-login
+session    optional     pam_gnome_keyring.so auto_start

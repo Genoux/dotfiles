@@ -161,7 +161,9 @@ setup_hyprland_plugins() {
     # Load plugin configuration
     load_plugin_config
 
-    # Ensure build dependencies are installed first (before any plugin operations)
+    # Build deps (cmake, meson, cpio, git, gcc via base-devel) are tracked in
+    # packages/arch.package and installed by the official phase's single
+    # `pacman -Syu` — verify only here, don't run a second install path.
     log_info "Checking build dependencies..."
     local deps=(cmake meson cpio git gcc)
     local missing=()
@@ -173,15 +175,10 @@ setup_hyprland_plugins() {
     done
 
     if [[ ${#missing[@]} -gt 0 ]]; then
-        log_info "Installing missing dependencies: ${missing[*]}"
-        sudo pacman -S --needed --noconfirm "${missing[@]}" || {
-            log_error "Failed to install dependencies"
-            return 1
-        }
-        echo
-    else
-        log_success "All dependencies installed"
+        log_error "Missing build dependencies: ${missing[*]}. Run: dotfiles packages install"
+        return 1
     fi
+    log_success "All dependencies installed"
     echo
 
     # Cache sudo credentials upfront to avoid multiple password prompts

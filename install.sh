@@ -66,15 +66,25 @@ trap 'kill "$SUDO_KEEPALIVE_PID" 2>/dev/null || true' EXIT
 # Check and install bootstrap dependencies (git assumed to be installed already)
 echo "Checking bootstrap dependencies..."
 MISSING_DEPS=()
-for dep in stow gum jq; do
-    if ! command -v "$dep" &>/dev/null; then
+for dep in stow gum jq pciutils; do
+    # pciutils provides lspci, not a `pciutils` command — hardware_detect
+    # (lib/hardware-packages.sh) needs lspci to detect the GPU at all.
+    check_cmd="$dep"
+    [[ "$dep" == "pciutils" ]] && check_cmd="lspci"
+    if ! command -v "$check_cmd" &>/dev/null; then
         MISSING_DEPS+=("$dep")
     fi
 done
 
 if [[ ${#MISSING_DEPS[@]} -gt 0 ]]; then
     echo "Installing missing dependencies: ${MISSING_DEPS[*]}"
-    sudo pacman -S --needed --noconfirm "${MISSING_DEPS[@]}" || {
+    # -Syu, not -S: this is the very first pacman transaction in the whole
+    # install, possibly against a never-synced DB. A full sync+upgrade here
+    # (rather than a partial `-S` of just these three packages) means nothing
+    # downstream can land between a sync and a full upgrade — see
+    # lib/package/preflight.sh's sync_pacman_db for the rest of that
+    # invariant.
+    sudo pacman -Syu --needed --noconfirm "${MISSING_DEPS[@]}" || {
         echo "Failed to install bootstrap dependencies: ${MISSING_DEPS[*]}"
         exit 1
     }
@@ -135,6 +145,24 @@ trap 'handle_error ${LINENO} "$BASH_COMMAND"; atomic_rollback; exit 1' ERR
 # Check prerequisites
 check_prerequisites
 
+# Hardware detection phase — detects GPU/CPU only (no network or pacman/yay
+# calls) and selects which static packages/hardware/*.package manifests
+# apply to this machine. Runs before preflight specifically so preflight's
+# package-name validation checks exactly what was just selected.
+if ! is_phase_completed "hardware_detect"; then
+    start_phase "hardware_detect"
+    create_snapshot "hardware_detect"
+
+    source "$DOTFILES_DIR/lib/hardware-packages.sh"
+    if ! hardware_packages_setup; then
+        fail_phase "hardware_detect" "Hardware detection failed"
+        exit 1
+    fi
+
+    complete_phase "hardware_detect"
+    echo
+fi
+
 # Pre-flight phase
 if ! is_phase_completed "preflight"; then
     start_phase "preflight"
@@ -153,21 +181,6 @@ fi
 
 # Start live log monitor
 start_log_monitor
-
-# Hardware detection phase
-if ! is_phase_completed "hardware_detect"; then
-    start_phase "hardware_detect"
-    create_snapshot "hardware_detect"
-
-    source "$DOTFILES_DIR/lib/hardware-packages.sh"
-    if ! hardware_packages_setup; then
-        fail_phase "hardware_detect" "Hardware detection failed"
-        exit 1
-    fi
-
-    complete_phase "hardware_detect"
-    echo
-fi
 
 # Package installation phases
 if ! $SKIP_PACKAGES; then
@@ -200,6 +213,23 @@ if ! $SKIP_CONFIGS; then
         fi
 
         complete_phase "config_link"
+        echo
+    fi
+fi
+
+# Custom package builds (GitHub PKGBUILD repos) — last, since they may need
+# tools/configs from the phases above.
+if ! $SKIP_PACKAGES; then
+    if ! is_phase_completed "packages_custom"; then
+        start_phase "packages_custom"
+        create_snapshot "packages_custom"
+
+        if ! packages_custom; then
+            fail_phase "packages_custom" "Custom package builds failed"
+            exit 1
+        fi
+
+        complete_phase "packages_custom"
         echo
     fi
 fi

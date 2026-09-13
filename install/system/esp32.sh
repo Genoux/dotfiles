@@ -19,28 +19,32 @@ log_section "ESP32"
 
 # ESP32 USB-to-Serial driver configuration
 if [[ -d "$SYSTEM_DIR/modules-load.d" ]]; then
-    sudo mkdir -p /etc/modules-load.d
     for file in "$SYSTEM_DIR/modules-load.d"/*; do
-        if [[ -f "$file" ]]; then
-            filename=$(basename "$file")
-            sudo cp "$file" /etc/modules-load.d/
+        [[ -f "$file" ]] || continue
+        filename=$(basename "$file")
+        if install_file_if_changed "$file" "/etc/modules-load.d/$filename"; then
             log_success "$filename"
+        else
+            log_info "$filename already up to date"
         fi
     done
 fi
 
 # ESP32 udev rules
 if [[ -d "$SYSTEM_DIR/udev/rules.d" ]]; then
-    sudo mkdir -p /etc/udev/rules.d
+    udev_changed=false
     for file in "$SYSTEM_DIR/udev/rules.d"/*; do
-        if [[ -f "$file" ]]; then
-            filename=$(basename "$file")
-            sudo cp "$file" /etc/udev/rules.d/
+        [[ -f "$file" ]] || continue
+        filename=$(basename "$file")
+        if install_file_if_changed "$file" "/etc/udev/rules.d/$filename"; then
+            udev_changed=true
             log_success "$filename"
+        else
+            log_info "$filename already up to date"
         fi
     done
-    # Reload udev rules
-    if command -v udevadm &>/dev/null; then
+    # Reload udev rules only when something actually changed
+    if $udev_changed && command -v udevadm &>/dev/null; then
         sudo udevadm control --reload-rules >/dev/null 2>&1
         sudo udevadm trigger >/dev/null 2>&1
     fi

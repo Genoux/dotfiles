@@ -19,17 +19,22 @@ log_section "systemd Logind"
 
 # systemd logind configuration
 if [[ -d "$SYSTEM_DIR/systemd/logind.conf.d" ]]; then
-    sudo mkdir -p /etc/systemd/logind.conf.d
+    logind_changed=false
     for file in "$SYSTEM_DIR/systemd/logind.conf.d"/*; do
-        if [[ -f "$file" ]]; then
-            filename=$(basename "$file")
-            sudo cp "$file" /etc/systemd/logind.conf.d/
+        [[ -f "$file" ]] || continue
+        filename=$(basename "$file")
+        if install_file_if_changed "$file" "/etc/systemd/logind.conf.d/$filename"; then
+            logind_changed=true
             log_success "$filename (reboot required)"
+        else
+            log_info "$filename already up to date"
         fi
     done
 
     # Set flag that reboot is needed (don't restart logind - it kills the session!)
     # Use a flag file since we're running in a subshell
-    mkdir -p "$HOME/.local/state/dotfiles"
-    touch "$HOME/.local/state/dotfiles/.reboot_needed"
+    if $logind_changed; then
+        mkdir -p "$HOME/.local/state/dotfiles"
+        touch "$HOME/.local/state/dotfiles/.reboot_needed"
+    fi
 fi

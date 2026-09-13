@@ -5,21 +5,6 @@
 STATE_FILE="$HOME/.dotfiles-install-state.json"
 SNAPSHOT_DIR="$HOME/.dotfiles-snapshots"
 
-# Installation phases in order
-declare -a INSTALL_PHASES=(
-    "preflight"
-    "hardware_detect"
-    "system_prepare"
-    "packages_official"
-    "packages_aur"
-    "config_link"
-    "system_config"
-    "theme_setup"
-    "shell_setup"
-    "hyprland_setup"
-    "verification"
-)
-
 # Initialize state file
 init_state() {
     local install_id="${1:-$(date +%s)}"
@@ -137,35 +122,6 @@ fail_phase() {
     mv "$temp_file" "$STATE_FILE"
 
     log_error "✗ Phase failed: $phase ($error)"
-}
-
-# Record installed package
-record_package() {
-    local package="$1"
-    local type="${2:-official}"  # official or aur
-
-    local temp_file
-    temp_file=$(mktemp)
-
-    jq --arg pkg "$package" --arg type "$type" \
-        ".packages_installed.$type += [\$pkg] | .packages_installed.$type |= unique" \
-        "$STATE_FILE" > "$temp_file"
-
-    mv "$temp_file" "$STATE_FILE"
-}
-
-# Record linked config
-record_config() {
-    local config="$1"
-
-    local temp_file
-    temp_file=$(mktemp)
-
-    jq --arg cfg "$config" \
-        '.configs_linked += [$cfg] | .configs_linked |= unique' \
-        "$STATE_FILE" > "$temp_file"
-
-    mv "$temp_file" "$STATE_FILE"
 }
 
 # List dotfiles-managed stow symlinks under existing home config dirs, one

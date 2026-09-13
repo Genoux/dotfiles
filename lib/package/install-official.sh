@@ -1,76 +1,43 @@
 #!/bin/bash
-# Official repository package installation helpers
+# Official repository package installation
 
+# Read arch.package + every static packages/hardware/*.package manifest that
+# applies to this machine (via lib/hardware-packages.sh's
+# read_hardware_official_packages, which selects by detected hardware) into
+# packages_ref.
 read_official_install_packages() {
     local -n packages_ref=$1
-
-    log_info "Filtering packages based on hardware..."
-
-    local filtered_packages
-    filtered_packages=$(filter_packages_by_hardware "$PACKAGES_FILE")
 
     packages_ref=()
     while IFS= read -r pkg; do
         [[ -z "$pkg" ]] && continue
         [[ "$pkg" =~ ^#.*$ ]] && continue
         packages_ref+=("$pkg")
-    done < "$filtered_packages"
+    done < "$PACKAGES_FILE"
 
-    rm -f "$filtered_packages"
+    local hw_official=()
+    read_hardware_official_packages hw_official
+    packages_ref+=("${hw_official[@]}")
 }
 
+# Install every official package in one transaction. Names are assumed
+# already validated by preflight (check_package_names) — no per-package
+# existence probing or silent-skip fallback here.
 install_official_packages() {
-    local -n packages_ref=$1
-    local missing_official=()
+    local -n install_packages_ref=$1
 
-    for pkg in "${packages_ref[@]}"; do
-        if ! pacman -Q "$pkg" &>/dev/null; then
-            if pacman -Ss "^$pkg$" &>/dev/null; then
-                missing_official+=("$pkg")
-            else
-                log_warning "Package $pkg not found in official repositories, skipping"
-            fi
-        fi
-    done
-
-    if [[ ${#missing_official[@]} -eq 0 ]]; then
-        log_success "All official packages already installed"
+    if [[ ${#install_packages_ref[@]} -eq 0 ]]; then
+        log_success "No official packages to install"
         return 0
     fi
 
-    log_info "Installing ${#missing_official[@]} official packages..."
+    log_info "Installing ${#install_packages_ref[@]} official packages..."
 
-    # First attempt
-    local failed=()
-    if ! run_command_logged "Install official packages (attempt 1)" sudo pacman -S --needed --noconfirm "${missing_official[@]}"; then
-        # Collect failures
-        for pkg in "${missing_official[@]}"; do
-            if ! pacman -Q "$pkg" &>/dev/null; then
-                failed+=("$pkg")
-            fi
-        done
-
-        if [[ ${#failed[@]} -gt 0 ]]; then
-            log_warning "First attempt failed for ${#failed[@]} packages, retrying individually..."
-
-            # Retry each failed package individually
-            local retry_failed=()
-            for pkg in "${failed[@]}"; do
-                log_info "Retrying: $pkg"
-                if ! sudo pacman -S --needed --noconfirm "$pkg" 2>&1 | tee -a "${DOTFILES_LOG_FILE:-/dev/null}"; then
-                    retry_failed+=("$pkg")
-                    log_error "Failed to install: $pkg"
-                else
-                    log_success "✓ Installed: $pkg"
-                fi
-            done
-
-            if [[ ${#retry_failed[@]} -gt 0 ]]; then
-                log_error "Failed to install ${#retry_failed[@]} official packages:"
-                printf '  ✗ %s\n' "${retry_failed[@]}"
-                return 1
-            fi
-        fi
+    if ! run_command_logged "Sync, upgrade and install official packages" \
+        sudo pacman -Syu --needed --noconfirm -- "${install_packages_ref[@]}"; then
+        log_error "Official package installation failed"
+        log_info "Check log file for details: ${DOTFILES_LOG_FILE:-N/A}"
+        return 1
     fi
 
     log_success "✓ All official packages installed"

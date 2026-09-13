@@ -42,7 +42,10 @@ if [[ -d "$SYSTEM_DIR/plymouth/themes/splash" ]]; then
     log_success "Plymouth theme installed"
 fi
 
-# Update mkinitcpio.conf to add plymouth hook
+# Update mkinitcpio.conf to add the plymouth hook. mkinitcpio.conf is a
+# vendor file with many other fields (MODULES, other HOOKS) we must not
+# clobber, so this is a guarded single-field edit rather than a whole-file
+# install; the guard checks the desired end state, so re-running is a no-op.
 if [[ -f /etc/mkinitcpio.conf ]]; then
     # Check if plymouth hook already exists
     if ! grep -q "HOOKS=.*plymouth" /etc/mkinitcpio.conf; then

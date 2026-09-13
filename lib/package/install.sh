@@ -1,15 +1,6 @@
 #!/bin/bash
 # Package installation orchestration
 
-_remove_debug_packages_before_install() {
-    local debug_packages
-    debug_packages=$(pacman -Qq | grep '\-debug$' 2>/dev/null || true)
-
-    if [[ -n "$debug_packages" ]]; then
-        echo "$debug_packages" | xargs sudo pacman -Rdd --noconfirm >/dev/null 2>&1 || true
-    fi
-}
-
 _validate_package_files() {
     if [[ ! -f "$PACKAGES_FILE" ]]; then
         fatal_error "packages/arch.package not found in $DOTFILES_DIR"
@@ -20,6 +11,11 @@ _validate_package_files() {
     fi
 }
 
+# Install everything tracked in packages/arch.package, packages/aur.package
+# and the static packages/hardware/*.package manifests selected for this
+# machine. Each phase (official, AUR) is a single batched transaction; a
+# failure aborts here rather than limping on with a partially-installed
+# system.
 packages_install() {
     sudo -v || {
         log_error "Failed to obtain sudo privileges"
@@ -31,43 +27,35 @@ packages_install() {
 
     log_section "Installing Packages"
 
-    _remove_debug_packages_before_install
     _validate_package_files
 
+    # Populated and read via `local -n` in the read_/install_/verify_
+    # functions below, not referenced by name here.
+    # shellcheck disable=SC2034
     local packages=()
+    # shellcheck disable=SC2034
     local aur_packages=()
 
     read_official_install_packages packages
     read_aur_install_packages aur_packages
 
-    # Full sync + upgrade, not just -Sy: 'pacman -S --needed' never upgrades
-    # already-installed packages, so on a populated machine an old package (e.g.
-    # quickshell) would stay behind the version the configs expect. -Syu keeps
-    # the system current and avoids partial-upgrade breakage.
-    if ! run_command_logged "Sync and upgrade system" sudo pacman -Syu --noconfirm; then
-        log_error "Failed to sync/upgrade packages"
+    if ! install_official_packages packages; then
         return 1
     fi
 
-    install_official_packages packages
-    # AUR is inherently flaky (stale PKGBUILD urls, checksum drift, AppImage 404s).
-    # A failed AUR package is reported by install_aur_packages and the verify step
-    # below; it must not abort the whole install (config linking still has to run).
-    install_aur_packages aur_packages || log_warning "Some AUR packages failed — continuing"
+    if ! install_aur_packages aur_packages; then
+        return 1
+    fi
 
-    echo
-    package_install_audit packages aur_packages
-
-    # Verify installation
     echo
     source "$DOTFILES_DIR/lib/package/verify.sh"
     if ! verify_package_installation packages "official"; then
         log_error "Official package verification failed"
-        log_info "Some packages may have failed to install. Check logs for details."
+        return 1
     fi
 
     if ! verify_package_installation aur_packages "AUR"; then
         log_error "AUR package verification failed"
-        log_info "Some AUR packages may have failed to install. Check logs for details."
+        return 1
     fi
 }

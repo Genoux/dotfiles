@@ -17,30 +17,46 @@ fi
 
 log_section "ZRAM Compressed Swap"
 
-# Install zram-generator if not already installed
+# zram-generator is tracked in packages/arch.package, installed by the
+# official phase's single `pacman -Syu` — verify only, no second install path.
 if ! pacman -Qi zram-generator &>/dev/null; then
-    log_info "Installing zram-generator..."
-    sudo pacman -S --needed --noconfirm zram-generator
+    log_error "zram-generator not installed. Run: dotfiles packages install"
+    exit 1
 fi
 
 # Copy ZRAM configuration
+zram_config_changed=false
 if [[ -f "$SYSTEM_DIR/systemd/zram-generator.conf" ]]; then
-    sudo cp "$SYSTEM_DIR/systemd/zram-generator.conf" /etc/systemd/zram-generator.conf
-    log_success "zram-generator.conf"
+    if install_file_if_changed "$SYSTEM_DIR/systemd/zram-generator.conf" /etc/systemd/zram-generator.conf; then
+        zram_config_changed=true
+        log_success "zram-generator.conf"
+    else
+        log_info "zram-generator.conf already up to date"
+    fi
 fi
 
-# Reload systemd
 sudo systemctl daemon-reload
-
-# Start and enable ZRAM
-sudo systemctl start systemd-zram-setup@zram0.service 2>/dev/null || true
 sudo systemctl enable systemd-zram-setup@zram0.service 2>/dev/null || true
 
-# Verify ZRAM is working
 if swapon --show | grep -q zram; then
-    log_success "ZRAM active ($(swapon --show | grep zram | awk '{print $3}'))"
+    if $zram_config_changed; then
+        # zram-generator only reads its config when the device is (re)created;
+        # resizing a live swap device in place isn't supported, and restarting
+        # it while something is actively swapped out risks that data. Defer
+        # to the next reboot rather than restarting it here.
+        log_warning "ZRAM config changed — new sizing takes effect after reboot"
+        mkdir -p "$HOME/.local/state/dotfiles"
+        touch "$HOME/.local/state/dotfiles/.reboot_needed"
+    else
+        log_success "ZRAM active ($(swapon --show | grep zram | awk '{print $3}'))"
+    fi
 else
-    log_warning "ZRAM will be active after reboot"
-    mkdir -p "$HOME/.local/state/dotfiles"
-    touch "$HOME/.local/state/dotfiles/.reboot_needed"
+    sudo systemctl start systemd-zram-setup@zram0.service 2>/dev/null || true
+    if swapon --show | grep -q zram; then
+        log_success "ZRAM active ($(swapon --show | grep zram | awk '{print $3}'))"
+    else
+        log_warning "ZRAM will be active after reboot"
+        mkdir -p "$HOME/.local/state/dotfiles"
+        touch "$HOME/.local/state/dotfiles/.reboot_needed"
+    fi
 fi

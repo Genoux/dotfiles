@@ -24,7 +24,7 @@ class OperationTests(unittest.TestCase):
         (self.repo / 'install/helpers').mkdir(parents=True)
         (self.repo / 'lib').mkdir()
         (self.repo / 'install/helpers/all.sh').write_text('')
-        functions = ['show_hardware_info', 'run_full_verification', 'packages_manage', 'packages_install', 'packages_clean_unlisted',
+        functions = ['show_hardware_info', 'run_full_verification', 'packages_install', 'packages_custom',
                      'packages_status', 'config_manage_interactive', 'config_link_all', 'config_unlink_all', 'config_status',
                      'hardware_packages_setup', 'hardware_packages_status', 'system_apply', 'system_status', 'theme_install_gtk',
                      'theme_uninstall_gtk', 'theme_status', 'shell_setup', 'shell_status', 'hyprland_setup_all', 'hyprland_status']
@@ -73,7 +73,7 @@ class OperationTests(unittest.TestCase):
         return manager.respond({'id': question['id'], 'jobId': question['jobId'], **values})
 
     def set_operation(self, source):
-        (self.repo / 'lib/package.sh').write_text(self.package_source + '\npackages_manage() {\n' + source + '\n}\n')
+        (self.repo / 'lib/package.sh').write_text(self.package_source + '\npackages_custom() {\n' + source + '\n}\n')
 
     def test_every_catalog_action_dispatches(self):
         for operation in manager.OPERATIONS:
@@ -94,7 +94,7 @@ class OperationTests(unittest.TestCase):
 
     def test_multiselect_then_confirmation_preserves_values(self):
         self.set_operation('result=$(gum choose --no-limit --selected="hypr (linked)" --header "Choose configurations" "hypr (linked)" "quickshell (linked)" "kitty")\nprintf "%s" "$result" > "$DOTFILES_DIR/chosen"\nif gum confirm "Apply selections?"; then touch "$DOTFILES_DIR/applied"; fi\nreturn 0')
-        process = self.launch('packages_manage')
+        process = self.launch('packages_custom')
         question = self.question()
         self.assertEqual(question['selected'], ['hypr (linked)'])
         self.assertTrue(question['multiple'])
@@ -108,21 +108,21 @@ class OperationTests(unittest.TestCase):
 
     def test_cancel_cannot_turn_into_remove_everything(self):
         self.set_operation('trap ":" TERM\nresult=$(printf "one\\ntwo\\n" | gum filter --no-limit --placeholder "Keep packages")\ntouch "$DOTFILES_DIR/must-not-run"')
-        process = self.launch('packages_manage')
+        process = self.launch('packages_custom')
         self.answer(self.question(), cancel=True)
         self.assertEqual(self.completed(process)['status'], 'cancelled')
         self.assertFalse((self.repo / 'must-not-run').exists())
 
     def test_skip_confirmation_is_not_cancellation(self):
         self.set_operation('if gum confirm "Optional step?"; then touch "$DOTFILES_DIR/skipped"; fi\nreturn 0')
-        process = self.launch('packages_manage')
+        process = self.launch('packages_custom')
         self.answer(self.question(), accepted=False)
         self.assertEqual(self.completed(process)['status'], 'completed')
         self.assertFalse((self.repo / 'skipped').exists())
 
     def test_input_prompt_and_stale_response_validation(self):
         self.set_operation('result=$(gum input --prompt "Package label" --value "initial")\nprintf "%s" "$result" > "$DOTFILES_DIR/input"')
-        process = self.launch('packages_manage')
+        process = self.launch('packages_custom')
         question = self.question()
         self.assertEqual(question['title'], 'Package label')
         self.assertEqual(question['value'], 'initial')
@@ -134,7 +134,7 @@ class OperationTests(unittest.TestCase):
 
     def test_reported_errors_cannot_become_success(self):
         self.set_operation('log_error "failed inner operation"\nreturn 0')
-        self.assertEqual(self.completed(self.launch('packages_manage'))['status'], 'failed')
+        self.assertEqual(self.completed(self.launch('packages_custom'))['status'], 'failed')
 
     def test_read_only_operation_cannot_escalate(self):
         path = self.repo / 'lib/package.sh'

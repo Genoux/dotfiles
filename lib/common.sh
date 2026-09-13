@@ -167,6 +167,30 @@ ensure_dir() {
     fi
 }
 
+# Install a file to a system path only when its content actually changed.
+# Prints nothing; the caller decides what "changed" means for it (e.g.
+# whether to restart a service). Requires sudo for the target path.
+#
+# Usage: if install_file_if_changed source dest [mode]; then # changed
+#   mode defaults to 644.
+install_file_if_changed() {
+    local source="$1"
+    local dest="$2"
+    local mode="${3:-644}"
+
+    if [[ ! -f "$source" ]]; then
+        log_error "install_file_if_changed: source not found: $source"
+        return 2
+    fi
+
+    if [[ -f "$dest" ]] && cmp -s "$source" "$dest"; then
+        return 1
+    fi
+
+    sudo install -Dm"$mode" "$source" "$dest"
+    return 0
+}
+
 # Interactive yes/no prompt with gum (custom colors, no help text)
 # Usage: if ask_yes_no "Continue?"; then ...
 #        if ask_yes_no "Continue?" "y"; then ...  # default to yes

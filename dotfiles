@@ -44,7 +44,8 @@ show_usage() {
     echo "    emergency              Launch emergency minimal shell"
     echo
     echo "  packages             Manage packages"
-    echo "    manage                 Interactive package management (default)"
+    echo "    install                Install missing packages from packages/*.package (default)"
+    echo "    custom                 Build custom GitHub PKGBUILD packages"
     echo "    update                 System update (yay -Syu)"
     echo "    status                 Show package info"
     echo
@@ -262,7 +263,8 @@ main() {
         packages|pkg)
             source "$DOTFILES_DIR/lib/package.sh"
             case "$subcommand" in
-                manage|"") packages_manage ;;
+                install|"") packages_install ;;
+                custom) packages_custom || exit $? ;;
                 update) packages_update || exit $? ;;
                 status) packages_status ;;
                 *) log_error "Unknown subcommand: $subcommand"; show_usage; exit 1 ;;
