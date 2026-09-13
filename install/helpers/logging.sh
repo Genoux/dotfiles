@@ -9,7 +9,14 @@ export DOTFILES_DAILY_LOG="$DOTFILES_LOG_DIR/dotfiles.log"
 # Initialize logging
 init_logging() {
     local log_type="${1:-daily}"  # install or daily
-    
+
+    # A live monitor (install.sh) tails the current file; nested scripts run
+    # via run_logged must keep writing there, or the progress screen freezes
+    # while their output lands in another, freshly truncated file.
+    if [[ -n "${DOTFILES_LOG_MONITOR_PID:-}" ]] && kill -0 "$DOTFILES_LOG_MONITOR_PID" 2>/dev/null; then
+        return 0
+    fi
+
     # Ensure log directory exists
     ensure_directory "$DOTFILES_LOG_DIR"
     
