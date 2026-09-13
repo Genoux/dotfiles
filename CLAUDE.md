@@ -66,7 +66,7 @@ Uses GNU Stow for symlinking dotfiles. Each subdirectory in `stow/` is a stow pa
 - `hypr/` - Hyprland compositor config
 - `shell/` - Zsh, shell configs
 - `kitty/` - Kitty terminal
-- `claude/`, `cursor/`, `zed/` - Editor configs
+- `claude/`, `zed/` - Editor configs
 - `icons/` - App icon overrides layered onto the MacTahoe icon theme
 
 Commands:
