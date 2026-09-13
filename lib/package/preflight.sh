@@ -42,51 +42,31 @@ ensure_multilib_enabled() {
 check_network() {
     log_info "Checking network connectivity..."
 
-    if ! ping -c 1 archlinux.org &>/dev/null; then
-        log_error "No network connectivity to archlinux.org"
+    if ! curl --fail --silent --show-error --location --connect-timeout 5 --max-time 20 \
+        --output /dev/null https://archlinux.org; then
+        log_error "Cannot reach https://archlinux.org. Check WiFi, DNS, and the system clock."
         return 1
-    fi
-
-    if ! ping -c 1 aur.archlinux.org &>/dev/null; then
-        log_warning "Cannot reach AUR (aur.archlinux.org)"
-        log_info "AUR packages may fail to install"
     fi
 
     log_success "✓ Network connectivity OK"
     return 0
 }
 
-# Check disk space (auto-reclaims the package cache when low before failing)
 check_disk_space() {
-    log_info "Checking disk space..."
-
-    # 2GB floor. A from-scratch install wants more headroom, but on an already
-    # populated machine (re-sync) the real need is small, and a tight root can't
-    # spare 5GB. Override with DOTFILES_MIN_DISK_MB for a true fresh install.
-    local required_mb="${DOTFILES_MIN_DISK_MB:-2000}"
-    local cache_dir="/var/cache/pacman/pkg"
-    local available_mb
-    available_mb=$(df "$cache_dir" --output=avail -BM | tail -1 | tr -dc '0-9')
-
-    # A clean install re-downloads packages into the pacman cache, which sits on
-    # root. On a tight root that cache is the difference between pass and fail, so
-    # reclaim it automatically and re-check before giving up. Cached .pkg files are
-    # just downloads — removing them only means future installs re-fetch.
-    if [[ ${available_mb:-0} -lt $required_mb ]]; then
-        log_warning "Low disk space (${available_mb}M) — clearing package cache to reclaim..."
-        sudo rm -rf "$cache_dir"/download-* 2>/dev/null || true
-        sudo find "$cache_dir" -maxdepth 1 -type f -name '*.pkg.tar*' -delete 2>/dev/null || true
-        available_mb=$(df "$cache_dir" --output=avail -BM | tail -1 | tr -dc '0-9')
-    fi
-
-    if [[ ${available_mb:-0} -lt $required_mb ]]; then
-        log_error "Insufficient disk space: ${available_mb}M available, ${required_mb}M required"
-        log_info "Free space on / — e.g. remove unused /opt apps. See: df -h /"
-        return 1
-    fi
-
-    log_success "✓ Disk space OK (${available_mb}M available)"
-    return 0
+    local required_mb="${DOTFILES_MIN_DISK_MB:-15000}"
+    local build_required_mb="${DOTFILES_MIN_BUILD_MB:-8000}"
+    local path required available_mb
+    for path in / "$HOME"; do
+        required=$required_mb
+        [[ "$path" == "$HOME" ]] && required=$build_required_mb
+        available_mb=$(df -Pm "$path" | awk 'NR == 2 {print $4}') || return 1
+        if [[ ! "$available_mb" =~ ^[0-9]+$ || "$available_mb" -lt "$required" ]]; then
+            log_error "Insufficient space on $path: ${available_mb:-unknown} MiB free, $required MiB required."
+            log_info "Package downloads and source builds need room; check df -h / /home."
+            return 1
+        fi
+        log_info "Disk space on $path: $available_mb MiB free"
+    done
 }
 
 # Validate package files
@@ -111,20 +91,17 @@ check_package_files() {
         errors=$((errors + 1))
     fi
 
-    # Check for syntax errors (invalid package names)
-    local invalid_packages=()
-    while IFS= read -r pkg; do
-        [[ -z "$pkg" || "$pkg" =~ ^# ]] && continue
-        if [[ ! "$pkg" =~ ^[a-z0-9@._+-]+$ ]]; then
-            invalid_packages+=("$pkg")
-        fi
-    done < "$PACKAGES_FILE"
-
-    if [[ ${#invalid_packages[@]} -gt 0 ]]; then
-        log_error "Invalid package names in arch.package:"
-        printf '  ✗ %s\n' "${invalid_packages[@]}"
-        errors=$((errors + 1))
-    fi
+    local file pkg
+    for file in "$PACKAGES_FILE" "$AUR_PACKAGES_FILE"; do
+        [[ -r "$file" ]] || continue
+        while IFS= read -r pkg || [[ -n "$pkg" ]]; do
+            [[ -z "$pkg" || "$pkg" =~ ^# ]] && continue
+            if [[ ! "$pkg" =~ ^[a-z0-9@._+-]+$ ]]; then
+                log_error "Invalid package name in $file: $pkg"
+                errors=$((errors + 1))
+            fi
+        done < "$file"
+    done
 
     if [[ $errors -gt 0 ]]; then
         return 1
@@ -168,7 +145,7 @@ check_package_names() {
         if ! command -v curl &>/dev/null; then
             log_warning "curl not installed — skipping AUR name validation"
         else
-            local -a curl_args=(-sG --data-urlencode "v=5" --data-urlencode "type=info")
+            local -a curl_args=(--fail --silent --show-error --connect-timeout 5 --max-time 30 -G --data-urlencode "v=5" --data-urlencode "type=info")
             local pkg
             for pkg in "${aur_packages[@]}"; do
                 curl_args+=(--data-urlencode "arg[]=$pkg")
@@ -177,8 +154,9 @@ check_package_names() {
             local response
             response=$(curl "${curl_args[@]}" "https://aur.archlinux.org/rpc/") || response=""
 
-            if [[ -z "$response" ]] || ! command -v jq &>/dev/null; then
-                log_warning "Could not reach the AUR RPC — skipping AUR name validation"
+            if ! printf '%s' "$response" | jq -e '.results | type == "array"' >/dev/null 2>&1; then
+                log_error "AUR returned no valid package list. Retry when https://aur.archlinux.org is available."
+                return 1
             else
                 local -A aur_seen=()
                 while IFS= read -r name; do
@@ -194,8 +172,8 @@ check_package_names() {
 
     if [[ ${#bad_official[@]} -gt 0 || ${#bad_aur[@]} -gt 0 ]]; then
         log_error "Unknown package names — fix packages/*.package before installing:"
-        printf '  ✗ %s (official)\n' "${bad_official[@]}"
-        printf '  ✗ %s (AUR)\n' "${bad_aur[@]}"
+        (( ${#bad_official[@]} == 0 )) || printf '  ✗ %s (official)\n' "${bad_official[@]}"
+        (( ${#bad_aur[@]} == 0 )) || printf '  ✗ %s (AUR)\n' "${bad_aur[@]}"
         return 1
     fi
 
@@ -241,19 +219,10 @@ check_pacman_lock() {
     return 0
 }
 
-# Sync the pacman sync DB. check_package_names needs this to have already
-# happened — pacman -Si against a stale/never-synced DB reports every name as
-# unknown, which used to make a fresh install's preflight reject its own
-# curated package lists. This is now the only `pacman -Sy` in the install
-# path: packages_prepare (core.sh) used to run a second one later, which
-# just widened the window between syncing and the eventual `-Syu` for no
-# benefit — a partial-upgrade risk if anything installs packages in between
-# (hardware_detect doesn't — it only detects and selects manifests, never
-# installs during `./dotfiles install`).
 sync_pacman_db() {
     log_info "Syncing pacman database..."
 
-    if ! run_command_logged "Sync pacman database" sudo pacman -Sy --noconfirm; then
+    if ! run_command_logged "Sync pacman database" sudo pacman -Syu --noconfirm; then
         log_error "Failed to sync pacman database"
         return 1
     fi
@@ -288,42 +257,15 @@ check_conflicts() {
 run_preflight_checks() {
     log_section "Pre-flight Checks"
 
-    local failed=0
-
-    check_network || failed=$((failed + 1))
-    echo
-
-    check_disk_space || failed=$((failed + 1))
-    echo
-
-    check_package_files || failed=$((failed + 1))
-    echo
-
-    ensure_multilib_enabled || failed=$((failed + 1))
-    echo
-
-    if ! check_pacman_lock; then
-        failed=$((failed + 1))
-    elif ! sync_pacman_db; then
-        failed=$((failed + 1))
-    fi
-    echo
-
-    check_package_names || failed=$((failed + 1))
-    echo
-
-    check_yay || failed=$((failed + 1))
-    echo
-
-    check_conflicts || failed=$((failed + 1))
-    echo
-
-    if [[ $failed -gt 0 ]]; then
-        log_error "Pre-flight checks failed ($failed issues)"
-        log_info "Fix the issues above before running installation"
-        return 1
-    fi
+    check_network || return 1
+    check_disk_space || return 1
+    check_package_files || return 1
+    check_conflicts || return 1
+    check_pacman_lock || return 1
+    ensure_multilib_enabled || return 1
+    sync_pacman_db || return 1
+    check_package_names || return 1
+    check_yay || return 1
 
     log_success "✓ All pre-flight checks passed"
-    return 0
 }

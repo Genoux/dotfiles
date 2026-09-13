@@ -247,6 +247,34 @@ is_config_linked() {
 }
 
 # Link a config
+config_backup_conflicts() {
+    local config="$1"
+    local output line relative target backup_root
+    if output=$(stow -n -R --no-folding -t "$HOME" "$config" 2>&1); then
+        return 0
+    fi
+
+    backup_root="${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles/config-backups/$(date +%s%N)/$config"
+    while IFS= read -r line; do
+        relative=""
+        if [[ "$line" =~ over\ existing\ target\ (.*)\ since\ neither ]]; then
+            relative="${BASH_REMATCH[1]}"
+        elif [[ "$line" =~ existing\ target\ is\ not\ owned\ by\ stow:\ (.*) ]]; then
+            relative="${BASH_REMATCH[1]}"
+        fi
+        [[ -n "$relative" ]] || continue
+        if [[ "$relative" == /* || "/$relative/" == *"/../"* ]]; then
+            log_error "Unexpected Stow conflict path: $relative"
+            return 1
+        fi
+        target="$HOME/$relative"
+        [[ -e "$target" || -L "$target" ]] || continue
+        mkdir -p "$(dirname "$backup_root/$relative")" || return 1
+        mv -- "$target" "$backup_root/$relative" || return 1
+        log_info "Existing config saved: $backup_root/$relative"
+    done <<< "$output"
+}
+
 config_link() {
     local config="$1"
     local force="${2:-false}"
@@ -291,64 +319,21 @@ config_link() {
     fi
 
     # Stow the config (always restow to pick up new files)
-    # Use --adopt to move existing files into stow directory (repo is source of truth)
     if $already_linked; then
         log_info "Re-stowing $config (updating symlinks)..."
     else
         log_info "Linking $config..."
     fi
 
-    # Try stow with --adopt flag to handle conflicts (moves existing files into stow dir)
+    if [[ "$force" == "true" ]]; then
+        config_backup_conflicts "$config" || return 1
+    fi
+
     local stow_output
     local stow_success=false
-
-    if stow_output=$(stow -R --no-folding --adopt -t "$HOME" "$config" 2>&1); then
-        if $already_linked; then
-            log_success "$config re-stowed successfully"
-        else
-            log_success "$config linked successfully"
-        fi
+    if stow_output=$(stow -R --no-folding -t "$HOME" "$config" 2>&1); then
         stow_success=true
-    elif echo "$stow_output" | grep -q "source is an absolute symlink"; then
-        # Handle absolute symlink in source directory
-        log_warning "$config has absolute symlink in source"
-        
-        # Extract the problematic symlink path from error message
-        local symlink_path=$(echo "$stow_output" | grep -oP "dotfiles/stow/$config/[^ ]+")
-        if [[ -n "$symlink_path" ]]; then
-            local full_path="$DOTFILES_DIR/$symlink_path"
-            if [[ -L "$full_path" ]]; then
-                log_info "Removing absolute symlink: $symlink_path"
-                rm "$full_path"
-                
-                # Try stow again
-                if stow_output=$(stow -R --no-folding --adopt -t "$HOME" "$config" 2>&1); then
-                    log_success "$config linked successfully"
-                    stow_success=true
-                else
-                    graceful_error "Failed to link $config after removing symlink" "$stow_output"
-                    return 1
-                fi
-            fi
-        else
-            graceful_error "Failed to link $config" "$stow_output"
-            return 1
-        fi
-    elif [[ "$config" == "quickshell" ]] && echo "$stow_output" | grep -q "existing target is not owned by stow"; then
-        log_warning "$config has absolute symlinks outside stow ownership"
-        quickshell_remove_absolute_symlinks
-
-        if stow_output=$(stow -R --no-folding --adopt -t "$HOME" "$config" 2>&1); then
-            if $already_linked; then
-                log_success "$config re-stowed successfully"
-            else
-                log_success "$config linked successfully"
-            fi
-            stow_success=true
-        else
-            graceful_error "Failed to link $config after removing absolute symlinks" "$stow_output"
-            return 1
-        fi
+        log_success "$config linked successfully"
     else
         graceful_error "Failed to link $config" "$stow_output"
         return 1
@@ -506,14 +491,15 @@ config_link_all() {
     if [[ $failed -eq 0 ]]; then
         log_success "All configs linked successfully"
     else
-        log_warning "$failed config(s) failed to link"
+        log_error "$failed config(s) failed to link"
+        return 1
     fi
 
     # Restart systemd services after config changes
     echo
     local install_root="${DOTFILES_INSTALL:-$DOTFILES_DIR/install}"
     if [[ -f "$install_root/config/services.sh" ]]; then
-        bash "$install_root/config/services.sh"
+        bash "$install_root/config/services.sh" || return 1
     fi
 
     echo

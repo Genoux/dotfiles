@@ -166,7 +166,7 @@ _report_update_failure() {
 
 # Update system packages (official + AUR)
 packages_update() {
-    if ! sudo -v; then
+    if ! ensure_sudo; then
         log_error "Failed to obtain sudo privileges"
         return 1
     fi

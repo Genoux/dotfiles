@@ -11,7 +11,6 @@ export DOTFILES_INSTALL="$DOTFILES_DIR/install"
 # Parse arguments
 SKIP_PACKAGES=false
 SKIP_CONFIGS=false
-RESUME=false
 ROLLBACK_PHASE=""
 SHOW_STATE=false
 FORCE_FRESH=false
@@ -23,7 +22,7 @@ for arg in "$@"; do
         --skip-packages) SKIP_PACKAGES=true ;;
         --skip-configs) SKIP_CONFIGS=true ;;
         --yes|-y) export AUTO_YES=true ;;
-        --resume) RESUME=true ;;
+        --resume) ;;
         --rollback=*) ROLLBACK_PHASE="${arg#*=}" ;;
         --state) SHOW_STATE=true ;;
         --fresh) FORCE_FRESH=true ;;
@@ -36,98 +35,88 @@ for arg in "$@"; do
             echo "  --skip-packages     Skip package installation"
             echo "  --skip-configs      Skip configuration linking"
             echo "  --yes, -y           Automatically answer yes to prompts"
-            echo "  --resume            Resume from last failure point"
+            echo "  --resume            Resume an interrupted install (the default)"
             echo "  --rollback=PHASE    Rollback to specific phase"
             echo "  --state             Show current installation state"
             echo "  --fresh             Force fresh install (clear state)"
             echo "  --help              Show this help"
             exit 0
             ;;
+        *) echo "Unknown option: $arg. Run ./install.sh --help." >&2; exit 2 ;;
     esac
 done
 
-# Validate sudo access first
-if ! sudo -v; then
-    echo "Failed to authenticate"
-    exit 1
-fi
-
-# Start sudo keep-alive in background
-while true; do
-    sudo -n true
-    sleep 50
-    kill -0 "$$" 2>/dev/null || exit
-done &
-SUDO_KEEPALIVE_PID=$!
-
-# Ensure keep-alive is killed on exit
-trap 'kill "$SUDO_KEEPALIVE_PID" 2>/dev/null || true' EXIT
-
-# Check and install bootstrap dependencies (git assumed to be installed already)
-echo "Checking bootstrap dependencies..."
-MISSING_DEPS=()
-for dep in stow gum jq pciutils; do
-    # pciutils provides lspci, not a `pciutils` command — hardware_detect
-    # (lib/hardware-packages.sh) needs lspci to detect the GPU at all.
-    check_cmd="$dep"
-    [[ "$dep" == "pciutils" ]] && check_cmd="lspci"
-    if ! command -v "$check_cmd" &>/dev/null; then
-        MISSING_DEPS+=("$dep")
-    fi
-done
-
-if [[ ${#MISSING_DEPS[@]} -gt 0 ]]; then
-    echo "Installing missing dependencies: ${MISSING_DEPS[*]}"
-    # -Syu, not -S: this is the very first pacman transaction in the whole
-    # install, possibly against a never-synced DB. A full sync+upgrade here
-    # (rather than a partial `-S` of just these three packages) means nothing
-    # downstream can land between a sync and a full upgrade — see
-    # lib/package/preflight.sh's sync_pacman_db for the rest of that
-    # invariant.
-    sudo pacman -Syu --needed --noconfirm "${MISSING_DEPS[@]}" || {
-        echo "Failed to install bootstrap dependencies: ${MISSING_DEPS[*]}"
-        exit 1
-    }
-else
-    echo "All bootstrap dependencies already installed ✓"
-fi
-
-# Load helpers
 source "$DOTFILES_INSTALL/helpers/all.sh"
-
-# Load state management and atomic operations
 source "$DOTFILES_DIR/lib/install-state.sh"
 source "$DOTFILES_DIR/lib/atomic.sh"
-
-# Load package management entry point early: defines PACKAGES_FILE /
-# AUR_PACKAGES_FILE and the package API used by pre-flight (before the package
-# phases would otherwise source it).
 source "$DOTFILES_DIR/lib/package.sh"
 
-# Handle state commands
 if $SHOW_STATE; then
+    require_command jq || exit 1
     show_state
     exit 0
 fi
 
 if [[ -n "$ROLLBACK_PHASE" ]]; then
+    require_command jq || exit 1
     rollback_to_phase "$ROLLBACK_PHASE"
     exit $?
 fi
 
-# Initialize logging
-init_logging "install"
+mkdir -p "$DOTFILES_LOG_DIR"
+exec 9>"$DOTFILES_LOG_DIR/install.lock"
+if ! flock -n 9; then
+    log_error "Another dotfiles installation is running. Wait for it to finish."
+    exit 1
+fi
 
-# Setup error handling
-setup_error_handling
+init_logging "install"
+trap cleanup_install EXIT
 trap handle_install_interrupt INT TERM
+trap 'handle_error ${LINENO} "$BASH_COMMAND"; exit 1' ERR
+
+if [[ $EUID -eq 0 || -d /run/archiso ]]; then
+    log_error "Run this after installing Arch and rebooting, as your normal user (not root or the live ISO)."
+    exit 1
+fi
+if [[ "$(uname -m)" != "x86_64" ]]; then
+    log_error "These package manifests support x86_64 Arch Linux. $(uname -m) is not supported."
+    exit 1
+fi
+for prerequisite in pacman sudo; do
+    require_command "$prerequisite" || exit 1
+done
+export PATH="$HOME/.local/bin:$PATH"
+export LC_ALL=C.UTF-8
+
+log_info "Installing on $(hostname): $(uname -m), $(nproc) CPUs"
+log_info "Full log: $DOTFILES_LOG_FILE"
+if ! ensure_sudo; then
+    log_error "Sudo authentication failed. Your user needs sudo access."
+    exit 1
+fi
+while kill -0 "$$" 2>/dev/null; do
+    sudo -n true || break
+    sleep 50
+done &
+SUDO_KEEPALIVE_PID=$!
+
+MISSING_DEPS=()
+for dep in stow gum jq pciutils curl git; do
+    check_cmd="$dep"
+    [[ "$dep" == "pciutils" ]] && check_cmd="lspci"
+    command -v "$check_cmd" &>/dev/null || MISSING_DEPS+=("$dep")
+done
+if [[ ${#MISSING_DEPS[@]} -gt 0 ]]; then
+    run_command_logged "Install bootstrap dependencies" sudo pacman -Syu --needed --noconfirm "${MISSING_DEPS[@]}" || exit 1
+fi
 
 # Initialize or resume state
 if $FORCE_FRESH; then
     clear_state
     init_state
     atomic_begin
-elif $RESUME && can_resume; then
+elif can_resume; then
     log_info "Resuming installation from last failure point..."
     RESUME_POINT=$(get_resume_point)
     log_info "Resume point: $RESUME_POINT"
@@ -140,11 +129,7 @@ else
     atomic_begin
 fi
 
-# Setup atomic rollback on error (log the failing command/line first, then roll back)
-trap 'handle_error ${LINENO} "$BASH_COMMAND"; atomic_rollback; exit 1' ERR
-
-# Check prerequisites
-check_prerequisites
+DOTFILES_INSTALL_STATE_READY=true
 
 # Hardware detection phase — detects GPU/CPU only (no network or pacman/yay
 # calls) and selects which static packages/hardware/*.package manifests
@@ -165,7 +150,7 @@ if ! is_phase_completed "hardware_detect"; then
 fi
 
 # Pre-flight phase
-if ! is_phase_completed "preflight"; then
+if ! $SKIP_PACKAGES; then
     start_phase "preflight"
     create_snapshot "preflight"
 
@@ -190,7 +175,7 @@ if ! $SKIP_PACKAGES; then
         start_phase "packages_official"
         create_snapshot "packages_official"
 
-        if ! source "$DOTFILES_INSTALL/packages/all.sh"; then
+        if ! run_logged "$DOTFILES_INSTALL/packages/base.sh" official; then
             fail_phase "packages_official" "Package installation failed"
             exit 1
         fi
@@ -198,11 +183,22 @@ if ! $SKIP_PACKAGES; then
         complete_phase "packages_official"
         echo
     fi
+
+    if ! is_phase_completed "packages_aur"; then
+        start_phase "packages_aur"
+        create_snapshot "packages_aur"
+        if ! run_logged "$DOTFILES_INSTALL/packages/base.sh" aur; then
+            fail_phase "packages_aur" "AUR package installation failed"
+            exit 1
+        fi
+        complete_phase "packages_aur"
+        echo
+    fi
 fi
 
 # Config phases
 if ! $SKIP_CONFIGS; then
-    sudo -v
+    ensure_sudo
 
     if ! is_phase_completed "config_link"; then
         start_phase "config_link"
@@ -239,18 +235,16 @@ fi
 stop_log_monitor
 
 # Verification phase
-if ! is_phase_completed "verification"; then
-    start_phase "verification"
+start_phase "verification"
 
-    source "$DOTFILES_DIR/lib/package/verify.sh"
-    if ! run_full_verification; then
-        fail_phase "verification" "Verification failed"
-        log_warning "Installation completed with warnings"
-    else
-        complete_phase "verification"
-    fi
-    echo
+source "$DOTFILES_DIR/lib/package/verify.sh"
+if ! run_full_verification; then
+    fail_phase "verification" "Verification failed"
+    exit 1
+else
+    complete_phase "verification"
 fi
+echo
 
 # Mark as complete
 mark_complete
@@ -264,11 +258,6 @@ atomic_cleanup 3
 # Show finish screen
 source "$DOTFILES_INSTALL/post/all.sh"
 
-# Finish logging
-finish_logging
-
-# Stop sudo keep-alive
-kill "$SUDO_KEEPALIVE_PID" 2>/dev/null || true
 
 # Exit successfully
 exit 0

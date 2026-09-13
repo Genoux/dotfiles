@@ -13,7 +13,7 @@ source "$DOTFILES_DIR/lib/config.sh"
 log_info "Linking all configurations..."
 
 # Link all configs
-config_link_all true
+config_link_all true || exit 1
 
 echo
 log_info "Installing dotfiles command..."
@@ -32,11 +32,4 @@ else
 fi
 
 echo
-
-# Run services setup
-if [[ -f "$DOTFILES_INSTALL/config/services.sh" ]]; then
-    bash "$DOTFILES_INSTALL/config/services.sh"
-else
-    log_warning "services.sh not found at $DOTFILES_INSTALL/config/services.sh"
-fi
 

@@ -29,8 +29,8 @@ ensure_gentle_ai() {
         fi
 
         log_info "Installing gentle-ai via go install..."
-        go install github.com/gentleman-programming/gentle-ai/cmd/gentle-ai@latest
-        GENTLE_AI_BIN="$HOME/.local/bin/gentle-ai"
+        mkdir -p "$(dirname "$GENTLE_AI_BIN")"
+        GOBIN="$(dirname "$GENTLE_AI_BIN")" go install github.com/gentleman-programming/gentle-ai/cmd/gentle-ai@latest
     fi
 
     command -v "$GENTLE_AI_BIN" &>/dev/null
@@ -111,10 +111,10 @@ gentle_ai_setup() {
     ensure_gentle_ai || return 1
     ensure_cursor_gentle_ai_prereqs
 
-    if ! "$GENTLE_AI_BIN" install \
+    if ! (cd "$DOTFILES_DIR" && "$GENTLE_AI_BIN" install \
         --scope=workspace \
         --agent cursor \
-        --preset full-gentleman; then
+        --preset full-gentleman); then
         log_warning "gentle-ai install reported issues; project files may still be usable"
     fi
 

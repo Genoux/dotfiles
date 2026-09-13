@@ -20,7 +20,7 @@ configure_laptop_settings() {
 }
 
 system_apply() {
-    if ! sudo -v; then
+    if ! ensure_sudo; then
         log_error "Failed to authenticate with sudo"
         return 1
     fi

@@ -70,7 +70,7 @@ update_state() {
     fi
 
     local temp_file
-    temp_file=$(mktemp)
+    temp_file=$(mktemp "${STATE_FILE}.XXXXXX")
 
     jq --arg key "$key" --arg val "$value" \
         'setpath($key | split("."); $val)' \
@@ -94,10 +94,10 @@ complete_phase() {
     local phase="$1"
 
     local temp_file
-    temp_file=$(mktemp)
+    temp_file=$(mktemp "${STATE_FILE}.XXXXXX")
 
     jq --arg phase "$phase" \
-        '.completed_phases += [$phase] | .resume_point = null' \
+        '.completed_phases = ((.completed_phases + [$phase]) | unique) | .resume_point = null | .status = "in_progress"' \
         "$STATE_FILE" > "$temp_file"
 
     mv "$temp_file" "$STATE_FILE"
@@ -111,7 +111,7 @@ fail_phase() {
     local error="${2:-unknown error}"
 
     local temp_file
-    temp_file=$(mktemp)
+    temp_file=$(mktemp "${STATE_FILE}.XXXXXX")
 
     jq --arg phase "$phase" --arg error "$error" \
         '.failed_phases += [{"phase": $phase, "error": $error, "time": now | todate}] |
@@ -161,7 +161,7 @@ create_snapshot() {
 
     # Update state with snapshot info
     local temp_file
-    temp_file=$(mktemp)
+    temp_file=$(mktemp "${STATE_FILE}.XXXXXX")
 
     jq --arg phase "$phase" --arg snapshot "$snapshot_id" \
         '.snapshots[$phase] = {
@@ -281,7 +281,10 @@ mark_complete() {
     update_state "status" "completed"
     update_state "end_time" "$(date -Iseconds)"
     update_state "current_phase" "complete"
-    update_state "resume_point" "null"
+    local temp_file
+    temp_file=$(mktemp "${STATE_FILE}.XXXXXX")
+    jq ' .resume_point = null' "$STATE_FILE" > "$temp_file"
+    mv "$temp_file" "$STATE_FILE"
 
     log_success "Installation marked as complete"
 }

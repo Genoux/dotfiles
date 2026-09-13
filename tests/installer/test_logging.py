@@ -96,3 +96,29 @@ def test_nested_stop_neither_kills_the_monitor_nor_writes_the_log_into_itself(tm
     install_log = (tmp_path / "install.log").read_text()
     assert install_log.count("line one") == 1
     assert "Full log" not in install_log
+
+
+def test_failed_child_script_does_not_continue_to_success(tmp_path):
+    child = tmp_path / "child.sh"
+    child.write_text("false\necho false-success\n")
+    result = bash(logging_prelude(tmp_path) + f'init_logging install; run_logged "{child}"')
+    assert result.returncode == 1
+    assert "false-success" not in (tmp_path / "install.log").read_text()
+
+
+def test_nonterminal_output_is_visible_and_previous_log_is_saved(tmp_path):
+    (tmp_path / "install.log").write_text("previous failure\n")
+    result = bash(logging_prelude(tmp_path) + 'init_logging install; run_command_logged download echo downloading')
+    assert result.returncode == 0
+    assert "downloading" in result.stdout
+    assert "[TIME] download:" in (tmp_path / "install.log").read_text()
+    assert (tmp_path / "install.log.previous").read_text() == "previous failure\n"
+
+
+def test_nonterminal_monitor_streams_nested_command_output(tmp_path):
+    child = tmp_path / "child.sh"
+    child.write_text(f'source "{LOGGING_SH}"\nrun_command_logged nested echo nested-progress\n')
+    result = bash(logging_prelude(tmp_path) + f'init_logging install; start_log_monitor; run_logged "{child}"; sleep 0.4; stop_log_monitor')
+    assert result.returncode == 0, result.stderr
+    assert "nested-progress" in result.stdout
+    assert (tmp_path / "install.log").read_text().count("nested-progress") == 1

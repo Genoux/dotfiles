@@ -253,7 +253,9 @@ hyprland_setup() {
     # description contains spaces (e.g. "Lenovo Group Limited 0x889A"), which an
     # unquoted $() split into bogus extra monitors.
     local monitors=()
-    mapfile -t monitors < <(detect_monitors)
+    if hyprctl version &>/dev/null; then
+        mapfile -t monitors < <(detect_monitors)
+    fi
     
     # Ensure directory exists
     ensure_directory "$(dirname "$MONITORS_LUA")"

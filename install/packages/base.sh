@@ -16,4 +16,4 @@ source "$DOTFILES_DIR/lib/package.sh"
 # it found.
 
 # Install packages (now includes hardware packages)
-packages_install
+packages_install "${1:-all}"

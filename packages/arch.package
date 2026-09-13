@@ -40,6 +40,7 @@ python-pipx
 python-protobuf
 python-gobject
 rust
+go
 nodejs
 npm
 pnpm
@@ -51,6 +52,7 @@ gperf
 
 # --- Hyprland / QuickShell desktop ---
 hyprland
+hyprpm
 hyprlang
 hypridle
 hyprpicker
@@ -59,6 +61,9 @@ cmake
 meson
 # ^ cmake/meson: build deps for `hyprpm` plugin builds (lib/hyprland-plugins.sh)
 quickshell
+qt6-5compat
+# ^ qt6-5compat: Qt5Compat.GraphicalEffects, imported by the shell's QML (ColorOverlay);
+#   an undeclared dep here gets swept as an orphan and the shell stops loading
 awww
 cava
 btop

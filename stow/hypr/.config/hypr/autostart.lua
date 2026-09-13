@@ -16,7 +16,7 @@ local portalServices = {
 local startupCommands = {
   "quickshell",
   "/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1",
-  "hyprpm reload -n",
+  "system-hyprland-plugins",
   "gsettings set org.gnome.desktop.wm.preferences button-layout ':'",
   "xdg-settings set default-web-browser firefox.desktop",
   "system-pick-wallpaper",

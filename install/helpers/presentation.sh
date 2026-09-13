@@ -103,22 +103,38 @@ log_info() {
 }
 
 log_success() {
-    gum style --foreground "${MATUGEN_GUM_ACCENT:-2}" "$*"
+    if command -v gum &>/dev/null; then
+        gum style --foreground "${MATUGEN_GUM_ACCENT:-2}" "$*"
+    else
+        printf "%s\n" "$*"
+    fi
     log_to_file "OK" "$*"
 }
 
 log_warning() {
-    gum log --level warn "$@"
+    if command -v gum &>/dev/null; then
+        gum log --level warn "$@"
+    else
+        printf "WARN: %s\n" "$*" >&2
+    fi
     log_to_file "WARN" "$*"
 }
 
 log_error() {
-    gum log --level error "$@"
+    if command -v gum &>/dev/null; then
+        gum log --level error "$@"
+    else
+        printf "ERROR: %s\n" "$*" >&2
+    fi
     log_to_file "ERROR" "$*"
 }
 
 log_section() {
-    gum style --bold "$@"
+    if command -v gum &>/dev/null; then
+        gum style --bold "$@"
+    else
+        printf "%s\n" "$*"
+    fi
     echo
     log_to_file "----" "$*"
 }

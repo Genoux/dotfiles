@@ -12,7 +12,7 @@ log_info "Setting up themes..."
 # Install GTK theme (non-interactive default)
 if [[ -x "$DOTFILES_DIR/lib/gtk.sh" ]]; then
     log_info "Installing GTK theme..."
-    bash "$DOTFILES_DIR/lib/gtk.sh" install || log_warning "GTK theme installation skipped"
+    bash -e "$DOTFILES_DIR/lib/gtk.sh" install || exit 1
     echo
 fi
 
@@ -22,5 +22,5 @@ log_info "Run system-pick-wallpaper to refresh generated app themes."
 if [[ -x "$DOTFILES_DIR/lib/theme.sh" ]]; then
     # shellcheck source=/dev/null
     source "$DOTFILES_DIR/lib/theme.sh"
-    matugen_ensure_outputs || true
+    matugen_ensure_outputs || exit 1
 fi

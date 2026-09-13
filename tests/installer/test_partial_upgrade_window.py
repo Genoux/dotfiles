@@ -189,7 +189,8 @@ echo "exit=$?"
         assert not call.startswith("yay "), f"hardware_detect must not call yay: {call!r}"
 
     syu_calls = [c for c in calls if c.startswith("pacman -Syu")]
-    assert len(syu_calls) == 1, syu_calls
+    assert len(syu_calls) == 2, syu_calls
+    syu_calls = syu_calls[1:]
     assert "nvidia-open-dkms" in syu_calls[0]
     assert "nvidia-utils" in syu_calls[0]
     assert "vulkan-radeon" in syu_calls[0]
@@ -296,3 +297,21 @@ def test_packages_prepare_has_no_partial_install_calls():
         if "pacman -S " in line or "pacman -S --" in line:
             raise AssertionError(f"partial install call left in core.sh: {line!r}")
     assert "ensure_nodejs_installed" not in content
+
+
+def test_amd_hardware_selection_succeeds_under_errexit(sandbox):
+    sandbox.write_package_file('arch.package', ['base'])
+    sandbox.write_package_file('aur.package', [])
+    sandbox.write_package_file('hardware/amd.package', ['vulkan-radeon'])
+    sandbox.stub('lspci', "echo 'VGA compatible controller: Advanced Micro Devices, Inc. [AMD/ATI]'")
+    result = sandbox.run(f"""
+set -e
+{source('install/helpers/hardware.sh', 'lib/hardware-packages.sh', 'lib/package/install-official.sh', 'lib/package/install-aur.sh')}
+packages=()
+aur=()
+read_official_install_packages packages
+read_aur_install_packages aur
+printf '%s\\n' "${{packages[@]}}"
+""")
+    assert result.returncode == 0, result.stderr
+    assert 'vulkan-radeon' in result.stdout

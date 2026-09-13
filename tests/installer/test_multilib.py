@@ -75,11 +75,11 @@ echo "exit=$?"
     assert len(sy_calls) == 1
 
 
-def test_run_preflight_checks_calls_multilib_before_pacman_lock():
+def test_run_preflight_checks_checks_lock_before_editing_multilib():
     from pathlib import Path
 
     text = (Path(__file__).resolve().parents[2] / "lib/package/preflight.sh").read_text()
     body = text[text.index("run_preflight_checks()") :]
     multilib_pos = body.index("ensure_multilib_enabled")
     lock_pos = body.index("check_pacman_lock")
-    assert multilib_pos < lock_pos
+    assert lock_pos < multilib_pos

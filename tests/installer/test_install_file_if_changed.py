@@ -73,3 +73,19 @@ echo "exit=$?"
     )
     assert "exit=2" in result.stdout
     assert not dest.exists()
+
+
+def test_passwordless_sudo_does_not_prompt_for_validation(sandbox):
+    sandbox.stub('sudo', 'if [ "$1" = -n ]; then exit 0; fi\nexit 1')
+    result = sandbox.run(f'{source("lib/common.sh")}\nensure_sudo')
+    assert result.returncode == 0
+    assert sandbox.calls() == ['sudo -n true']
+
+
+def test_failed_copy_never_reports_success(sandbox):
+    src = sandbox.root / 'source.conf'
+    src.write_text('content\n')
+    sandbox.stub('sudo', 'exit 1')
+    result = sandbox.run(f'{source("lib/common.sh")}\ninstall_file_if_changed "{src}" "{sandbox.root}/dest"')
+    assert result.returncode == 2
+    assert not (sandbox.root / 'dest').exists()

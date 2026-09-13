@@ -1,0 +1,13 @@
+#!/bin/bash
+set -e
+
+pending="$HOME/.local/state/dotfiles/hyprland-setup-pending"
+[[ -f "$pending" ]] || exec hyprpm reload -n
+exec 9>"$pending.lock"
+flock -n 9 || exit 0
+
+export DOTFILES_DIR="$(dirname "$(readlink -f "$HOME/.local/bin/dotfiles")")"
+export DOTFILES_INSTALL="$DOTFILES_DIR/install"
+source "$DOTFILES_INSTALL/helpers/all.sh"
+init_logging
+run_logged "$DOTFILES_INSTALL/config/hyprland.sh"

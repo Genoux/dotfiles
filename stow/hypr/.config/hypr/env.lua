@@ -29,7 +29,7 @@ hl.env("GTK_CSD", "0")
 hl.env("HL_INITIAL_WORKSPACE_TOKEN", "0")
 hl.env("GDK_DECORATION_LAYOUT", "")
 
-hl.env("GTK2_RC_FILES", "/home/john/.gtkrc-2.0")
+hl.env("GTK2_RC_FILES", home .. "/.gtkrc-2.0")
 hl.env("GTK_KEY_THEME_NAME", "Emacs")
 
 hl.env("MOZ_DISABLE_RDD_SANDBOX", "1")

@@ -183,7 +183,10 @@ setup_hyprland_plugins() {
 
     # Cache sudo credentials upfront to avoid multiple password prompts
     # hyprpm operations may require sudo for loading/unloading plugins
-    sudo -v 2>/dev/null || true
+    ensure_sudo 2>/dev/null || true
+
+    log_info "Preparing Hyprland headers and updating installed plugins..."
+    hyprpm update < <(echo "y") || return 1
 
     # Get list of currently installed plugins and disable orphaned ones
     local installed_plugins=()
@@ -247,12 +250,11 @@ setup_hyprland_plugins() {
         if [[ $failed_count -eq 0 ]]; then
             log_success "All plugins configured successfully ($installed_count/${#HYPRLAND_PLUGINS[@]})"
         else
-            log_warning "$failed_count plugin(s) failed to install"
+            log_error "$failed_count plugin(s) failed to install"
+            return 1
         fi
 
-        # Update all plugins
-        log_info "Updating plugins..."
-        hyprpm update < <(echo "y")
+        hyprpm reload -n || return 1
     fi
 
 }

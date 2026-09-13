@@ -35,6 +35,11 @@ _ensure_github_auth() {
         return 0
     fi
 
+    if [[ "${FULL_INSTALL:-false}" == "true" || ! -t 0 ]]; then
+        log_warning "Custom apps need GitHub login. Later: gh auth login; dotfiles packages custom"
+        return 1
+    fi
+
     log_info "GitHub authentication required for custom package builds"
     if ! gh auth login --hostname github.com --git-protocol https --web; then
         return 1

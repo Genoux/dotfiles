@@ -15,14 +15,15 @@ def test_dropin_disables_debug_exactly_once():
     assert "!debug" in options
 
 
-def test_dropin_builds_on_every_core():
+def test_dropin_limits_parallelism_to_cpu_and_memory():
     dropin = REPO / "system/makepkg.conf.d/dotfiles.conf"
     result = subprocess.run(
         ["bash", "-c", f'source "{dropin}"; echo "$MAKEFLAGS"; nproc'],
         capture_output=True, text=True, check=True,
     )
     makeflags, cores = result.stdout.split()
-    assert makeflags == f"-j{cores}"
+    memory_kb = int(next(line.split()[1] for line in Path("/proc/meminfo").read_text().splitlines() if line.startswith("MemTotal:")))
+    assert makeflags == f"-j{min(int(cores), max(1, memory_kb // 2097152))}"
 
 
 def test_installer_never_edits_etc_makepkg_conf_directly():

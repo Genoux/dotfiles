@@ -17,6 +17,10 @@ declare -A THEME_REPOS=(
     [Colloid-gtk-theme]="https://github.com/vinceliuice/Colloid-gtk-theme"
 )
 
+gtk_interactive() {
+    [[ "${AUTO_YES:-false}" != "true" && -t 0 && -t 1 ]]
+}
+
 list_themes() {
     local themes=()
     local theme_name
@@ -201,7 +205,9 @@ install_theme() {
     local dest="$HOME/.themes"
     local install_args=()
     
-    if command -v gum &>/dev/null; then
+    if ! gtk_interactive; then
+        log_info "Using dark, standard GTK theme defaults"
+    elif command -v gum &>/dev/null; then
         color=$(printf "dark\nlight\n" | gum choose --no-show-help --header "")
         [[ -z "$color" ]] && return 0
         
@@ -227,11 +233,12 @@ install_theme() {
     
     install_args+=("--dest" "$dest" "-l")
     
-    if [[ "$color" == "light" ]]; then
-        install_args+=("--color" "light")
-    fi
-    
-    if [[ "$variant" == "solid" ]]; then
+    install_args+=("--color" "$color")
+    if [[ "$theme_name" == "MacTahoe-gtk-theme" ]]; then
+        local opacity="normal"
+        [[ "$variant" == "solid" ]] && opacity="solid"
+        install_args+=("--opacity" "$opacity")
+    elif [[ "$variant" == "solid" ]]; then
         install_args+=("--solid")
     fi
     
@@ -244,7 +251,8 @@ install_theme() {
     local install_exit
     (
         cd "$theme_path" || exit 1
-        ./install.sh "${install_args[@]}" 2>&1
+        # MacTahoe 0919863 calls setterm under errexit, even with redirected output.
+        TERM=xterm-256color ./install.sh "${install_args[@]}" 2>&1
     )
     install_exit=$?
     
@@ -273,13 +281,17 @@ install_theme() {
         fi
         
         echo
-        read -n 1 -s -r -p "Press any key to continue..."
+        if gtk_interactive; then
+            read -n 1 -s -r -p "Press any key to continue..." || true
+        fi
         return 0
     else
         echo
         log_error "Installation failed"
         echo
-        read -n 1 -s -r -p "Press any key to continue..."
+        if gtk_interactive; then
+            read -n 1 -s -r -p "Press any key to continue..." || true
+        fi
         return 1
     fi
 }
@@ -316,11 +328,15 @@ uninstall_current_theme() {
         else
             log_error "No themes found to uninstall"
             echo
-            read -n 1 -s -r -p "Press any key to continue..."
+            if gtk_interactive; then
+            read -n 1 -s -r -p "Press any key to continue..." || true
+        fi
             return 1
         fi
         echo
-        read -n 1 -s -r -p "Press any key to continue..."
+        if gtk_interactive; then
+            read -n 1 -s -r -p "Press any key to continue..." || true
+        fi
         return 0
     fi
     
@@ -379,6 +395,9 @@ main() {
             list_themes
             ;;
         install)
+            if [[ -z "$theme_name" ]] && ! gtk_interactive; then
+                theme_name="${DOTFILES_GTK_THEME:-MacTahoe-gtk-theme}"
+            fi
             if [[ -z "$theme_name" ]]; then
                 local themes=($(list_themes))
                 if [[ ${#themes[@]} -eq 0 ]]; then

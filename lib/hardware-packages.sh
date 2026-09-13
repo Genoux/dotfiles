@@ -52,6 +52,7 @@ read_hardware_official_packages() {
     has_nvidia_gpu && _append_hardware_manifest "$HARDWARE_MANIFEST_DIR/nvidia.package" hw_official_ref
     has_amd_gpu && _append_hardware_manifest "$HARDWARE_MANIFEST_DIR/amd.package" hw_official_ref
     has_intel_gpu && _append_hardware_manifest "$HARDWARE_MANIFEST_DIR/intel.package" hw_official_ref
+    return 0
 }
 
 # Read every static AUR hardware manifest that applies to this machine into
@@ -67,6 +68,7 @@ read_hardware_aur_packages() {
     has_nvidia_gpu && _append_hardware_manifest "$HARDWARE_MANIFEST_DIR/nvidia-aur.package" hw_aur_ref
     has_amd_gpu && _append_hardware_manifest "$HARDWARE_MANIFEST_DIR/amd-aur.package" hw_aur_ref
     has_intel_gpu && _append_hardware_manifest "$HARDWARE_MANIFEST_DIR/intel-aur.package" hw_aur_ref
+    return 0
 }
 
 # Detect hardware and report it. During `./dotfiles install` this only

@@ -10,3 +10,7 @@ source "$HELPERS_DIR/hardware.sh"
 source "$HELPERS_DIR/logging.sh"
 source "$DOTFILES_DIR/lib/common.sh"
 
+
+if [[ "${FULL_INSTALL:-false}" == "true" && -n "${DOTFILES_LOG_SESSION_PID:-}" && "$DOTFILES_LOG_SESSION_PID" != "$$" ]]; then
+    setup_error_handling
+fi

@@ -83,9 +83,8 @@ verify_config_links() {
 
 # Verify theme setup
 verify_theme_setup() {
-    local theme_files=(
-        "$HOME/.config/quickshell/Colors.qml"
-    )
+    source "$DOTFILES_DIR/lib/theme.sh"
+    local theme_files=("${MATUGEN_OUTPUTS[@]}")
 
     local missing=()
 
@@ -116,6 +115,13 @@ run_full_verification() {
         failed=$((failed + 1))
     fi
     echo
+
+    for config_file in "$HOME/.config/hypr/gpu.lua" "$HOME/.config/hypr/monitors.lua"; do
+        if [[ ! -s "$config_file" ]]; then
+            log_error "Missing generated Hyprland config: $config_file"
+            failed=$((failed + 1))
+        fi
+    done
 
     # Verify config links
     if ! verify_config_links; then

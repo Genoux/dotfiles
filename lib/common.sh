@@ -1,6 +1,10 @@
 #!/bin/bash
 # Common utilities shared across all lib modules
 
+ensure_sudo() {
+    sudo -n true 2>/dev/null || sudo -v
+}
+
 # Get command version
 # Usage: get_version command
 get_version() {
@@ -179,7 +183,7 @@ install_file_if_changed() {
     local mode="${3:-644}"
 
     if [[ ! -f "$source" ]]; then
-        log_error "install_file_if_changed: source not found: $source"
+        fatal_error "install_file_if_changed: source not found: $source" 2
         return 2
     fi
 
@@ -187,7 +191,10 @@ install_file_if_changed() {
         return 1
     fi
 
-    sudo install -Dm"$mode" "$source" "$dest"
+    sudo install -Dm"$mode" "$source" "$dest" || {
+        fatal_error "Failed to install $source to $dest" 2
+        return 2
+    }
     return 0
 }
 

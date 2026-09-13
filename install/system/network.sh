@@ -20,6 +20,12 @@ fi
 
 log_section "Network Configuration (iwd + systemd-networkd)"
 
+if systemctl is-active --quiet NetworkManager; then
+    log_warning "Keeping NetworkManager: its saved WiFi connections are not available to iwd."
+    log_info "The existing network will remain available after reboot."
+    exit 0
+fi
+
 # Step 1: Disable (never stop — that would drop the network this install run
 # still needs) conflicting network services for next boot.
 log_info "Disabling conflicting network services (takes effect on reboot)..."
@@ -115,7 +121,7 @@ configure_resolv_conf() {
     return 1
 }
 
-configure_resolv_conf "${RESOLV_CONF:-/etc/resolv.conf}" "${STUB_RESOLV:-/run/systemd/resolve/stub-resolv.conf}"
+configure_resolv_conf "${RESOLV_CONF:-/etc/resolv.conf}" "${STUB_RESOLV:-/run/systemd/resolve/stub-resolv.conf}" || true
 
 log_success "systemd-networkd and systemd-resolved configured"
 

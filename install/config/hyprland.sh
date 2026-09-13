@@ -29,21 +29,26 @@ fi
 
 log_section "Hyprland Configuration"
 
-# Setup plugins (doesn't require Hyprland to be running)
-if command -v hyprpm &>/dev/null; then
-    # Setup plugins - our updated script handles sudo gracefully
-    setup_hyprland_plugins
-    echo
+if [[ -z "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]]; then
+    instances=$(hyprctl instances -j 2>/dev/null || true)
+    instance=$(jq -r 'if length == 1 then .[0].instance else empty end' <<< "${instances:-[]}" 2>/dev/null || true)
+    if [[ -n "$instance" ]]; then
+        export HYPRLAND_INSTANCE_SIGNATURE="$instance"
+    fi
+fi
+
+hyprland_setup_gpu || exit 1
+hyprland_setup || exit 1
+
+pending="$HOME/.local/state/dotfiles/hyprland-setup-pending"
+if ! hyprctl version &>/dev/null; then
+    mkdir -p "$(dirname "$pending")"
+    touch "$pending"
+    log_info "Plugin setup will run automatically at the first Hyprland login."
+elif command -v hyprpm &>/dev/null; then
+    setup_hyprland_plugins || exit 1
+    rm -f "$pending"
 else
-    log_warning "hyprpm not found, skipping plugin setup"
+    log_error "hyprpm is missing. Run dotfiles packages install."
+    exit 1
 fi
-
-# Only setup monitors if Hyprland is running
-if ! hyprctl version &>/dev/null 2>&1; then
-    log_warning "Hyprland not running, cannot configure monitors"
-    log_info "Plugins configured. Run 'dotfiles hyprland setup' after starting Hyprland to configure monitors"
-    exit 0
-fi
-
-hyprland_setup
-

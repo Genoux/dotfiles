@@ -82,7 +82,7 @@ def test_names_only_resolve_after_the_db_has_been_synced(sandbox):
     sandbox.stub(
         "pacman",
         f"""
-if [ "$1" = "-Sy" ]; then
+if [ "$1" = "-Syu" ]; then
     touch "{synced_marker}"
     exit 0
 fi
@@ -138,3 +138,27 @@ def test_packages_prepare_no_longer_duplicates_the_sync(sandbox):
     content = (sandbox.dotfiles_dir / "lib/package/core.sh").read_text()
     code_lines = [l for l in content.splitlines() if not l.strip().startswith("#")]
     assert not any("pacman -Sy" in l for l in code_lines)
+
+
+def test_malformed_aur_response_is_a_network_failure_not_unknown_packages(sandbox):
+    sandbox.write_package_file("arch.package", [])
+    sandbox.write_package_file("aur.package", ["yay"])
+    sandbox.stub("curl", "echo '<html>gateway unavailable</html>'")
+    result = sandbox.run(f"""
+{source("lib/package/install-official.sh", "lib/package/install-aur.sh", "lib/package/preflight.sh")}
+read_hardware_official_packages() {{ :; }}
+read_hardware_aur_packages() {{ :; }}
+check_package_names
+""")
+    assert result.returncode == 1
+    assert "no valid package list" in result.stderr
+    assert "Unknown package" not in result.stderr
+
+
+def test_failed_network_check_prevents_package_manager_mutations(sandbox):
+    sandbox.stub("curl", "exit 1")
+    sandbox.stub("pacman", "exit 99")
+    result = sandbox.run(f"{source('lib/package/preflight.sh')}\nrun_preflight_checks")
+    assert result.returncode == 1
+    assert not any(call.startswith("pacman ") or call.startswith("sudo ") for call in sandbox.calls())
+    assert "--max-time 20" in sandbox.calls()[0]

@@ -74,7 +74,7 @@ ensure_yay_installed() {
 # Prepare system for package installation
 packages_prepare() {
     # Validate sudo access upfront
-    if ! sudo -v; then
+    if ! ensure_sudo; then
         log_error "Failed to obtain sudo privileges"
         return 1
     fi
@@ -82,28 +82,6 @@ packages_prepare() {
     # Initialize logging and start monitor
     init_logging "package"
     start_log_monitor
-
-    # yay/nodejs are no longer bootstrapped here — nodejs is tracked in
-    # packages/arch.package (installed by the official phase's single -Syu),
-    # and ensure_yay_installed runs later, from install_aur_packages, after
-    # that -Syu has already put base-devel/git in place. Mirror ranking was
-    # removed outright (not merely relocated): it was a `pacman -S reflector`
-    # + rank pass whose only purpose is faster download speed, not
-    # correctness, and it doesn't belong ahead of a full sync+upgrade either
-    # way — archinstall already ranks mirrors during initial setup, and nothing
-    # else in this repo depends on reflector being present. Multilib enabling
-    # moved to preflight's ensure_multilib_enabled — lib32-* names (GPU/Wine
-    # packages) need it enabled before check_package_names validates them,
-    # not after.
-
-    # No separate `pacman -Sy` here: preflight's sync_pacman_db already synced
-    # once, and install_official_packages's `-Syu` (the very next pacman call
-    # in this phase) re-syncs anyway — an extra -Sy here only widened the
-    # window between a sync and the eventual upgrade for no benefit.
-
-    finish_logging
-    sleep 1
-    stop_log_monitor true
 
     log_success "System preparation complete"
 }

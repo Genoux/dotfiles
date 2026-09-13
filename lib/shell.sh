@@ -42,14 +42,14 @@ install_omz() {
     local temp_file=$(mktemp)
 
     # Download installer
-    if ! run_command_logged "Download Oh My Zsh installer" curl -fL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh -o "$temp_file"; then
+    if ! run_command_logged "Download Oh My Zsh installer" curl -fL --connect-timeout 10 --max-time 60 --retry 2 https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh -o "$temp_file"; then
         echo "[$(date '+%Y-%m-%d %H:%M:%S')] Failed: Download Oh My Zsh installer" >> "$DOTFILES_LOG_FILE"
         rm -f "$temp_file"
         return 1
     fi
 
     # Run installer in unattended mode
-    if ! run_command_logged "Install Oh My Zsh" env RUNZSH=no CHSH=no sh "$temp_file"; then
+    if ! run_command_logged "Install Oh My Zsh" env RUNZSH=no CHSH=no KEEP_ZSHRC=yes sh "$temp_file"; then
         echo "[$(date '+%Y-%m-%d %H:%M:%S')] Failed: Install Oh My Zsh" >> "$DOTFILES_LOG_FILE"
         rm -f "$temp_file"
         return 1
@@ -118,7 +118,7 @@ install_plugins() {
 
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] Completed: Install zsh plugins (installed: $installed, skipped: $skipped, failed: $failed)" >> "$DOTFILES_LOG_FILE"
 
-    return 0
+    (( failed == 0 ))
 }
 
 # Install kitty terminfo so TERM=xterm-kitty is recognized

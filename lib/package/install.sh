@@ -11,19 +11,13 @@ _validate_package_files() {
     fi
 }
 
-# Install everything tracked in packages/arch.package, packages/aur.package
-# and the static packages/hardware/*.package manifests selected for this
-# machine. Each phase (official, AUR) is a single batched transaction; a
-# failure aborts here rather than limping on with a partially-installed
-# system.
 packages_install() {
-    sudo -v || {
+    ensure_sudo || {
         log_error "Failed to obtain sudo privileges"
         return 1
     }
 
-    clear
-    packages_prepare
+    packages_prepare || return 1
 
     log_section "Installing Packages"
 
@@ -39,30 +33,16 @@ packages_install() {
     read_official_install_packages packages
     read_aur_install_packages aur_packages
 
-    if ! install_official_packages packages; then
-        return 1
-    fi
-
-    # Before the AUR phase, not with the other system configs: its MAKEFLAGS
-    # is what lets the first install's source builds use every core.
-    if ! run_logged "$DOTFILES_DIR/install/system/makepkg.sh"; then
-        log_error "Failed to install the makepkg configuration"
-        return 1
-    fi
-
-    if ! install_aur_packages aur_packages; then
-        return 1
-    fi
-
-    echo
     source "$DOTFILES_DIR/lib/package/verify.sh"
-    if ! verify_package_installation packages "official"; then
-        log_error "Official package verification failed"
-        return 1
+    if [[ "${1:-all}" != "aur" ]]; then
+        install_official_packages packages || return 1
+        verify_package_installation packages "official" || return 1
     fi
 
-    if ! verify_package_installation aur_packages "AUR"; then
-        log_error "AUR package verification failed"
-        return 1
+    if [[ "${1:-all}" != "official" ]]; then
+        run_logged "$DOTFILES_DIR/install/system/makepkg.sh" || return 1
+        install_aur_packages aur_packages || return 1
+        verify_package_installation aur_packages "AUR" || return 1
     fi
+    return 0
 }

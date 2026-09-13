@@ -145,7 +145,7 @@ cleanup_journal() {
 
 # Run all cleanup tasks (non-interactive for orphans)
 cleanup_all() {
-    if ! sudo -v; then
+    if ! ensure_sudo; then
         log_error "Failed to obtain sudo privileges"
         return 1
     fi

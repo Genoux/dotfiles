@@ -29,12 +29,17 @@ init_logging() {
         export DOTFILES_LOG_FILE="$DOTFILES_DAILY_LOG"
     fi
     
-    # Overwrite log file (fresh start each session)
+    if [[ -f "$DOTFILES_LOG_FILE" ]]; then
+        cp "$DOTFILES_LOG_FILE" "$DOTFILES_LOG_FILE.previous"
+    fi
+
     echo "=== Session started: $(date '+%Y-%m-%d %H:%M:%S') ===" > "$DOTFILES_LOG_FILE" 2>/dev/null || {
         log_warning "Could not create log file: $DOTFILES_LOG_FILE"
         return 1
     }
     
+    export DOTFILES_LOG_STEP_FILE="$DOTFILES_LOG_FILE.step"
+    printf "Preparing\n" > "$DOTFILES_LOG_STEP_FILE"
     export DOTFILES_SESSION_START=$(date +%s)
     export DOTFILES_LOG_SESSION_PID=$$
 }
@@ -75,9 +80,17 @@ _render_log_monitor_frame() {
     term_width=$(tput cols 2>/dev/null || echo 80)
     local visible_lines=$((term_height - 5))
     local text_width=$((term_width - 4))
+    (( visible_lines < 1 )) && visible_lines=1
+    (( text_width < 1 )) && text_width=1
 
-    local current_step
-    current_step=$(grep -o "Starting: .*" "$DOTFILES_LOG_FILE" 2>/dev/null | tail -1 | sed -e 's/^Starting: //' -e 's|.*/||' -e 's/\.sh$//')
+    local current_step="Preparing"
+    if [[ -r "${DOTFILES_LOG_STEP_FILE:-}" ]]; then
+        IFS= read -r current_step < "$DOTFILES_LOG_STEP_FILE" || true
+    fi
+    current_step="${current_step##*/}"
+    current_step="${current_step%.sh}"
+    local elapsed=$(( $(date +%s) - DOTFILES_SESSION_START ))
+    current_step+=" — $((elapsed / 60))m $((elapsed % 60))s elapsed"
 
     # printf -v, not $(...): command substitution drops the trailing newlines.
     local frame row log_line
@@ -92,20 +105,29 @@ _render_log_monitor_frame() {
 }
 
 start_log_monitor() {
-    [[ -t 1 ]] || return 0
     _log_monitor_running && return 0
+    if [[ -n "${DOTFILES_LOG_SESSION_PID:-}" && "$DOTFILES_LOG_SESSION_PID" != "$$" ]]; then
+        return 0
+    fi
+    if [[ ! -t 1 ]]; then
+        tail --pid="$$" -n 0 -F --sleep-interval=0.2 "$DOTFILES_LOG_FILE" &
+        export DOTFILES_LOG_MONITOR_PID=$! DOTFILES_LOG_MONITOR_OWNER=$$
+        export DOTFILES_LOG_MONITOR_PLAIN=true
+        return 0
+    fi
 
     tput smcup 2>/dev/null || true
     tput civis 2>/dev/null || true
-    clear
+    clear 2>/dev/null || true
 
+    local DOTFILES_LOG_MONITOR_PARENT=$$
     (
         set +eEo pipefail
         trap - ERR
 
         local spinners=("⠋" "⠙" "⠹" "⠸" "⠼" "⠴" "⠦" "⠧" "⠇" "⠏")
         local spinner_index=0
-        while true; do
+        while kill -0 "$DOTFILES_LOG_MONITOR_PARENT" 2>/dev/null; do
             _render_log_monitor_frame "${spinners[$spinner_index]}"
             spinner_index=$(((spinner_index + 1) % ${#spinners[@]}))
             sleep "${DOTFILES_LOG_REFRESH_RATE:-0.2}"
@@ -124,8 +146,11 @@ stop_log_monitor() {
     wait "$DOTFILES_LOG_MONITOR_PID" 2>/dev/null || true
     unset DOTFILES_LOG_MONITOR_PID DOTFILES_LOG_MONITOR_OWNER
 
-    tput cnorm 2>/dev/null || true
-    tput rmcup 2>/dev/null || true
+    if [[ "${DOTFILES_LOG_MONITOR_PLAIN:-false}" != "true" ]]; then
+        tput cnorm 2>/dev/null || true
+        tput rmcup 2>/dev/null || true
+    fi
+    unset DOTFILES_LOG_MONITOR_PLAIN
 
     if [[ "$show_log_tail" == "true" ]] && [[ -f "$DOTFILES_LOG_FILE" ]]; then
         tail -n 30 "$DOTFILES_LOG_FILE" | strip_terminal_codes
@@ -136,7 +161,7 @@ stop_log_monitor() {
 run_logged() {
     local script="$1"
     shift
-    run_command_logged "$script" bash "$script" "$@"
+    run_command_logged "$script" bash -e "$script" "$@"
 }
 
 run_command_logged() {
@@ -144,14 +169,29 @@ run_command_logged() {
     shift
 
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting: $step_name" >> "$DOTFILES_LOG_FILE"
+    local previous_step="Preparing"
+    if [[ -n "${DOTFILES_LOG_STEP_FILE:-}" ]]; then
+        IFS= read -r previous_step < "$DOTFILES_LOG_STEP_FILE" || true
+        printf '%s\n' "$step_name" > "$DOTFILES_LOG_STEP_FILE"
+    fi
 
     # `|| true` keeps set -e/pipefail callers from exiting before the command's
     # own status is read from PIPESTATUS.
     local exit_code=0
-    {
-        stdbuf -oL -eL "$@" </dev/null 2>&1 | strip_terminal_codes >> "$DOTFILES_LOG_FILE"
-        exit_code=${PIPESTATUS[0]}
-    } || true
+    local started=$SECONDS
+    if _log_monitor_running || [[ "${DOTFILES_LOG_SESSION_PID:-$$}" != "$$" ]]; then
+        {
+            stdbuf -oL -eL "$@" </dev/null 2>&1 | strip_terminal_codes >> "$DOTFILES_LOG_FILE"
+            exit_code=${PIPESTATUS[0]}
+        } || true
+    else
+        printf 'Starting: %s\n' "$step_name"
+        {
+            stdbuf -oL -eL "$@" </dev/null 2>&1 | strip_terminal_codes | tee -a "$DOTFILES_LOG_FILE"
+            exit_code=${PIPESTATUS[0]}
+        } || true
+    fi
+    log_to_file "TIME" "$step_name: $((SECONDS - started))s"
 
     if [ "$exit_code" -eq 0 ]; then
         echo "[$(date '+%Y-%m-%d %H:%M:%S')] Completed: $step_name" >> "$DOTFILES_LOG_FILE"
@@ -159,11 +199,15 @@ run_command_logged() {
         echo "[$(date '+%Y-%m-%d %H:%M:%S')] Failed: $step_name (exit code: $exit_code)" >> "$DOTFILES_LOG_FILE"
     fi
 
+    if [[ -n "${DOTFILES_LOG_STEP_FILE:-}" ]]; then
+        printf '%s\n' "$previous_step" > "$DOTFILES_LOG_STEP_FILE"
+    fi
     return "$exit_code"
 }
 
 # Finish logging session
 finish_logging() {
+    [[ "${DOTFILES_LOG_SESSION_PID:-$$}" == "$$" ]] || return 0
     if [[ -n "${DOTFILES_SESSION_START:-}" && -n "${DOTFILES_LOG_FILE:-}" ]]; then
         local end_time=$(date +%s)
         local duration=$((end_time - DOTFILES_SESSION_START))

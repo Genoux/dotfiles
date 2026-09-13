@@ -62,3 +62,16 @@ echo "exit=$?"
     )
     assert result.returncode == 0, result.stderr
     assert "exit=1" in result.stdout
+
+
+def test_full_install_does_not_open_github_login(sandbox):
+    sandbox.write_package_file("custom.package", ["Genoux/flow"])
+    sandbox.stub("gh", "exit 1")
+    result = sandbox.run(f"""
+export FULL_INSTALL=true
+{source("lib/package/custom.sh")}
+packages_custom
+""")
+    assert result.returncode == 0
+    assert "gh auth login" not in sandbox.calls()
+    assert not any(call.startswith("gh repo clone") for call in sandbox.calls())

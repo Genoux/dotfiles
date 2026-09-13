@@ -4,6 +4,30 @@
 # Track if we're in an error state
 export DOTFILES_ERROR_STATE=false
 
+cleanup_install() {
+    local status=$?
+    trap - EXIT ERR INT TERM
+    stop_log_monitor true
+    if [[ -n "${SUDO_KEEPALIVE_PID:-}" ]]; then
+        terminate_process_tree "$SUDO_KEEPALIVE_PID"
+        wait "$SUDO_KEEPALIVE_PID" 2>/dev/null || true
+    fi
+    if (( status != 0 )); then
+        if [[ "${DOTFILES_INSTALL_STATE_READY:-false}" == "true" ]] && command -v jq &>/dev/null && load_state; then
+            local phase
+            phase=$(get_state current_phase)
+            if [[ "$(get_state status)" != "failed" ]]; then
+                fail_phase "$phase" "Installer exited with status $status"
+            fi
+        fi
+        log_error "Installation stopped (exit $status). Completed work is saved."
+        log_info "Retry: $DOTFILES_DIR/install.sh --resume"
+    fi
+    show_log_location
+    finish_logging
+    exit "$status"
+}
+
 # Error handler
 handle_error() {
     local exit_code=$?
@@ -56,7 +80,7 @@ handle_install_interrupt() {
 # Set up error trapping
 setup_error_handling() {
     set -E  # Inherit ERR trap in functions
-    trap 'handle_error ${LINENO} "$BASH_COMMAND"' ERR
+    trap 'handle_error "${BASH_SOURCE[0]}:${LINENO}" "$BASH_COMMAND"' ERR
 }
 
 # Graceful error - don't exit, just log and continue

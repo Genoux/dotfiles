@@ -17,6 +17,7 @@ log_success() { printf 'OK: %s\\n' "$*" >&2; }
 log_section() { printf '== %s ==\\n' "$*" >&2; }
 fatal_error() { printf 'FATAL: %s\\n' "$*" >&2; return 1; }
 run_command_logged() { shift; "$@"; }
+ensure_sudo() { sudo -v; }
 init_logging() { :; }
 start_log_monitor() { :; }
 stop_log_monitor() { :; }
@@ -82,6 +83,8 @@ class BashSandbox:
         env["PACKAGES_FILE"] = str(self.dotfiles_dir / "packages/arch.package")
         env["AUR_PACKAGES_FILE"] = str(self.dotfiles_dir / "packages/aur.package")
         env["HOME"] = str(self.root)
+        for kind in ("CACHE", "CONFIG", "DATA", "STATE"):
+            env[f"XDG_{kind}_HOME"] = str(self.root / {"CACHE": ".cache", "CONFIG": ".config", "DATA": ".local/share", "STATE": ".local/state"}[kind])
         env["DOTFILES_LOG_FILE"] = str(self.root / "dotfiles.log")
         full_script = f"set -uo pipefail\n{STUB_LOGGERS}\n{script}\n"
         return subprocess.run(

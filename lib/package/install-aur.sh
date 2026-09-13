@@ -20,35 +20,8 @@ read_aur_install_packages() {
     aur_packages_ref+=("${hw_aur[@]}")
 }
 
-_neutralize_npm_config_for_aur() {
-    local -n npmrc_backup_ref=$1
-
-    npmrc_backup_ref=""
-    if [[ -f "$HOME/.npmrc" ]]; then
-        npmrc_backup_ref="$HOME/.npmrc.aur-install-backup"
-        mv "$HOME/.npmrc" "$npmrc_backup_ref" 2>/dev/null || true
-    fi
-
-    echo "" > "$HOME/.npmrc"
-    export NPM_CONFIG_USERCONFIG=/dev/null
-    unset NPM_CONFIG_PREFIX npm_config_prefix NPM_CONFIG_GLOBALCONFIG npm_config_globalconfig
-}
-
-_restore_npm_config_after_aur() {
-    local npmrc_backup="$1"
-
-    if [[ -n "$npmrc_backup" && -f "$npmrc_backup" ]]; then
-        mv "$npmrc_backup" "$HOME/.npmrc" 2>/dev/null || true
-    else
-        rm -f "$HOME/.npmrc" 2>/dev/null || true
-    fi
-}
-
-# Install every AUR package in one yay transaction. Names are assumed already
-# validated by preflight. Stdin is /dev/null rather than piped answers: any
-# prompt yay's --answer* flags don't cover (e.g. an unexpected pacman
-# conflict resolution question) then fails fast with EOF instead of hanging
-# and leaving a stale db.lck (see root cause: nodejs conflict prompt, 2026-09).
+# yay's --useask resolves replacement conflicts (e.g. cliamp -> cliamp-bin)
+# inside the transaction: https://github.com/Jguer/yay/blob/next/doc/yay.8
 install_aur_packages() {
     local -n install_aur_packages_ref=$1
 
@@ -57,26 +30,32 @@ install_aur_packages() {
         return 0
     fi
 
-    sudo -v || {
+    ensure_sudo || {
         log_error "Failed to refresh sudo session for yay installation"
         return 1
     }
 
     ensure_yay_installed || return $?
 
-    local npmrc_backup=""
-    _neutralize_npm_config_for_aur npmrc_backup
+    local targets=() pkg
+    for pkg in "${install_aur_packages_ref[@]}"; do
+        if [[ "$pkg" == "yay" ]] && pacman -Qq yay &>/dev/null; then
+            log_info "Keeping the installed yay provider"
+        else
+            targets+=("$pkg")
+        fi
+    done
+    (( ${#targets[@]} > 0 )) || return 0
 
-    log_info "Installing ${#install_aur_packages_ref[@]} AUR packages..."
+    log_info "Installing ${#targets[@]} AUR packages..."
 
     local install_status=0
     run_command_logged "Install AUR packages" \
-        yay -S --needed --noconfirm --refresh \
+        env -u NPM_CONFIG_PREFIX -u npm_config_prefix -u NPM_CONFIG_GLOBALCONFIG -u npm_config_globalconfig \
+            NPM_CONFIG_USERCONFIG=/dev/null npm_config_userconfig=/dev/null yay -S --needed --noconfirm --useask --batchinstall=false \
             --answerclean None --answerdiff None --answeredit None \
-            --removemake -- "${install_aur_packages_ref[@]}" </dev/null \
+            --removemake -- "${targets[@]}" </dev/null \
         || install_status=$?
-
-    _restore_npm_config_after_aur "$npmrc_backup"
 
     if [[ $install_status -ne 0 ]]; then
         log_error "AUR package installation failed"

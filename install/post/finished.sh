@@ -1,7 +1,7 @@
 #!/bin/bash
 
 show_completion_screen() {
-    clear
+    [[ -t 1 ]] && clear
     echo
     # Green check, blue text for completion
     printf "\033[92m✓\033[0m \033[94mInstallation Complete\033[0m\n"
@@ -23,15 +23,21 @@ show_completion_screen() {
     echo "  • Reboot or log out and back in"
     echo "  • Start Hyprland: uwsm start hyprland-uwsm.desktop"
     echo
-    echo "[L] View install log  [R] Reboot now  [Q] Quit"
-    echo
+    local log_file="${DOTFILES_INSTALL_LOG:-$HOME/.local/state/dotfiles/install.log}"
+    if [[ -f "$log_file" ]]; then
+        awk '/\] \[WARN\]/ {sub(/^.*\] \[WARN\] /, ""); if (!seen[$0]++) print "  Warning: " $0}' "$log_file"
+    fi
+    if [[ -t 0 && -t 1 ]]; then
+        echo "[L] View install log  [R] Reboot now  [Q] Quit"
+        echo
+    fi
 }
 
 view_install_log() {
     local log_file="${DOTFILES_INSTALL_LOG:-$HOME/.local/state/dotfiles/install.log}"
 
     if [[ ! -f "$log_file" ]]; then
-        clear
+        [[ -t 1 ]] && clear
         echo
         echo "Install log not found"
         echo
@@ -39,7 +45,7 @@ view_install_log() {
         return
     fi
 
-    clear
+    [[ -t 1 ]] && clear
     if command -v less &>/dev/null; then
         less "$log_file"
     else
@@ -49,16 +55,21 @@ view_install_log() {
     fi
 }
 
+if [[ ! -t 0 || ! -t 1 ]]; then
+    show_completion_screen
+    exit 0
+fi
+
 while true; do
     show_completion_screen
 
-    read -n 1 -s -r key
+    read -n 1 -s -r key || break
     case "${key,,}" in
         l)
             view_install_log
             ;;
         r)
-            clear
+            [[ -t 1 ]] && clear
             echo
             printf "\033[94mRebooting system...\033[0m\n"
             echo
@@ -66,7 +77,7 @@ while true; do
             sudo systemctl reboot
             ;;
         q|$'\n'|$'\x0a')
-            clear
+            [[ -t 1 ]] && clear
             break
             ;;
     esac
