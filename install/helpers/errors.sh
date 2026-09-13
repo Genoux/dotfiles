@@ -26,6 +26,33 @@ handle_error() {
     fi
 }
 
+# Children first, so a parent cannot respawn a child that was just killed.
+# Walks the tree instead of killing the process group: install.sh is not a
+# group leader when run over ssh or from another script, and killing that
+# group would take down the caller too.
+terminate_process_tree() {
+    local root_pid="$1"
+    local child_pid
+
+    for child_pid in $(pgrep -P "$root_pid"); do
+        terminate_process_tree "$child_pid"
+    done
+
+    if [[ "$root_pid" != "$$" ]]; then
+        kill -TERM "$root_pid" 2>/dev/null || true
+    fi
+}
+
+# Ctrl+C reaches the foreground group, but yay and makepkg spawn builds that
+# outlive it (a stranded gtk2 `makepkg -F` ran on for 12 minutes).
+handle_install_interrupt() {
+    trap - INT TERM ERR
+    stop_log_monitor
+    terminate_process_tree "$$"
+    echo "Installation interrupted" >&2
+    exit 130
+}
+
 # Set up error trapping
 setup_error_handling() {
     set -E  # Inherit ERR trap in functions

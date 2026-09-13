@@ -120,6 +120,7 @@ init_logging "install"
 
 # Setup error handling
 setup_error_handling
+trap handle_install_interrupt INT TERM
 
 # Initialize or resume state
 if $FORCE_FRESH; then

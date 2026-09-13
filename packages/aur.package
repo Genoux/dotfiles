@@ -43,7 +43,6 @@ openai-codex-bin
 cliamp-bin
 fabric-ai
 claude-desktop-extra
-python310
 python-gevent-eventemitter
 python-inputs
 python-materialyoucolor

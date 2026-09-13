@@ -43,6 +43,13 @@ packages_install() {
         return 1
     fi
 
+    # Before the AUR phase, not with the other system configs: its MAKEFLAGS
+    # is what lets the first install's source builds use every core.
+    if ! run_logged "$DOTFILES_DIR/install/system/makepkg.sh"; then
+        log_error "Failed to install the makepkg configuration"
+        return 1
+    fi
+
     if ! install_aur_packages aur_packages; then
         return 1
     fi
