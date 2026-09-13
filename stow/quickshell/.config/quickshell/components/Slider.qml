@@ -23,6 +23,11 @@ Item {
 
     readonly property bool scrubbing: control.pressed
 
+    // Opts the slider out of SlidingHighlight: the scan treats anything with a
+    // `hovered` property as a peer and stops descending, so declaring it false
+    // here keeps the run's fill off the track when the pointer crosses it.
+    readonly property bool hovered: false
+
     signal moved(real value)
 
     implicitHeight: StyleControl.sliderHitHeight

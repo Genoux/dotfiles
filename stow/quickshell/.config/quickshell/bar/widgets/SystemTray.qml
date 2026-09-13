@@ -12,76 +12,92 @@ BarGroup {
 
     visible: SystemTray.items.values.length > 0
 
-    Row {
-        id: trayRow
+    // The indicator sits inside a wrapper sized from the row alone. BarGroup
+    // sizes itself from childrenRect, so an indicator parented straight into it
+    // would feed its own animated width back into the group's width, move the
+    // row, and never settle — the childrenRect loop PopoverPanel warns about.
+    Item {
+        implicitWidth: trayRow.implicitWidth
+        implicitHeight: trayRow.implicitHeight
 
-        spacing: StyleTray.rowSpacing
+        SlidingHighlight {
+            run: trayRow
+        }
 
-        Repeater {
-            model: SystemTray.items
+        Row {
+            id: trayRow
 
-            Item {
-                id: trayDelegate
+            spacing: StyleTray.rowSpacing
 
-                required property var modelData
+            Repeater {
+                model: SystemTray.items
 
-                width: btn.width
-                height: btn.height
-                implicitWidth: btn.implicitWidth
-                implicitHeight: btn.implicitHeight
+                Item {
+                    id: trayDelegate
 
-                Button {
-                    id: btn
+                    required property var modelData
 
-                    iconSource: trayDelegate.modelData.icon
-                    iconSize: StyleTray.iconSize
-                    minimumHeight: StyleControl.buttonHeight
-                    interactive: true
-                    active: trayPopover.open
+                    readonly property bool hovered: btn.hovered
 
-                    onClicked: (mouse) => {
-                        if (mouse.button === Qt.RightButton) {
-                            if (trayDelegate.modelData.hasMenu) {
-                                trayPopover.toggle()
-                            } else {
-                                trayDelegate.modelData.secondaryActivate()
-                            }
-                            return
-                        }
-                        if (mouse.button === Qt.MiddleButton) {
-                            trayDelegate.modelData.secondaryActivate()
-                            return
-                        }
-                        // Items with no primary action of their own — only a menu —
-                        // must show it here rather than fall through to activate():
-                        // apps that pop their own window on Activate() have no
-                        // reliable way to learn our icon's screen position, so it
-                        // lands wherever they default to (often top-left of screen).
-                        if (trayDelegate.modelData.onlyMenu && trayDelegate.modelData.hasMenu) {
-                            trayPopover.toggle()
-                            return
-                        }
-                        TrayFocus.activate(trayDelegate.modelData)
-                    }
-                }
+                    width: btn.width
+                    height: btn.height
+                    implicitWidth: btn.implicitWidth
+                    implicitHeight: btn.implicitHeight
 
-                ContextMenuPopup {
-                    id: trayPopover
+                    Button {
+                        id: btn
 
-                    // Must be qualified: an unqualified `barWindow` here resolves
-                    // against the popup's own property of that name, not this
-                    // widget's, and silently binds to undefined.
-                    barWindow: root.barWindow
-                    anchorItem: btn
-
-                    TrayMenu {
+                        iconSource: trayDelegate.modelData.icon
+                        hoverBackground: StyleTokens.transparent
+                        iconSize: StyleTray.iconSize
+                        minimumHeight: StyleControl.buttonHeight
+                        interactive: true
                         active: trayPopover.open
-                        trayItem: trayDelegate.modelData
-                        onCloseRequested: trayPopover.open = false
-                        onDismissFinished: trayPopover.finishDismissal()
-                    }
-                }
 
+                        onClicked: (mouse) => {
+                            if (mouse.button === Qt.RightButton) {
+                                if (trayDelegate.modelData.hasMenu) {
+                                    trayPopover.toggle()
+                                } else {
+                                    trayDelegate.modelData.secondaryActivate()
+                                }
+                                return
+                            }
+                            if (mouse.button === Qt.MiddleButton) {
+                                trayDelegate.modelData.secondaryActivate()
+                                return
+                            }
+                            // Items with no primary action of their own — only a menu —
+                            // must show it here rather than fall through to activate():
+                            // apps that pop their own window on Activate() have no
+                            // reliable way to learn our icon's screen position, so it
+                            // lands wherever they default to (often top-left of screen).
+                            if (trayDelegate.modelData.onlyMenu && trayDelegate.modelData.hasMenu) {
+                                trayPopover.toggle()
+                                return
+                            }
+                            TrayFocus.activate(trayDelegate.modelData)
+                        }
+                    }
+
+                    ContextMenuPopup {
+                        id: trayPopover
+
+                        // Must be qualified: an unqualified `barWindow` here resolves
+                        // against the popup's own property of that name, not this
+                        // widget's, and silently binds to undefined.
+                        barWindow: root.barWindow
+                        anchorItem: btn
+
+                        TrayMenu {
+                            active: trayPopover.open
+                            trayItem: trayDelegate.modelData
+                            onCloseRequested: trayPopover.open = false
+                            onDismissFinished: trayPopover.finishDismissal()
+                        }
+                    }
+
+                }
             }
         }
     }

@@ -6,12 +6,13 @@ import QtQuick
 import qs
 import qs.config
 import qs.components
-Row {
+Item {
     id: root
 
     property var hyprMonitor
 
-    spacing: StyleWorkspace.rowSpacing
+    implicitWidth: pillRow.implicitWidth
+    implicitHeight: pillRow.implicitHeight
 
     function workspaceWindows(workspace) {
         if (!workspace || !workspace.toplevels || !workspace.toplevels.values)
@@ -80,108 +81,113 @@ Row {
         return IconRegistry.source(IconRegistry.iconNameForToplevel(toplevel))
     }
 
-    Repeater {
-        model: Hyprland.workspaces.values.filter((workspace) => workspace.id > 0 && (!root.hyprMonitor || workspace.monitor === root.hyprMonitor))
+    SlidingHighlight {
+        run: pillRow
+    }
 
-        Rectangle {
-            id: workspacePill
+    Row {
+        id: pillRow
 
-            required property var modelData
-            readonly property var inlineWindows: root.workspaceWindows(modelData)
-            readonly property var visibleInlineWindows: inlineWindows.slice(0, StyleWorkspace.inlineMaxIcons)
-            readonly property int overflowWindowCount: Math.max(0, inlineWindows.length - StyleWorkspace.inlineMaxIcons)
-            readonly property bool showInlineIcons: hovered && inlineWindows.length > 0
-            readonly property int pillPaddingH: StyleControl.buttonPaddingHorizontal
+        anchors.left: parent.left
+        anchors.verticalCenter: parent.verticalCenter
+        spacing: StyleWorkspace.rowSpacing
 
-            width: showInlineIcons
-                ? Math.max(StyleControl.buttonWidth, inlineIconsRow.implicitWidth + StyleWorkspace.inlineIconPadding * 2)
-                : Math.max(StyleControl.buttonWidth, workspaceLabel.implicitWidth + pillPaddingH * 2)
-            implicitHeight: StyleControl.buttonHeight
-            height: implicitHeight
-            radius: StyleTokens.radiusSm
-            color: mouse.containsMouse ? StyleTokens.alphaLight : StyleTokens.transparent
+        Repeater {
+            model: Hyprland.workspaces.values.filter((workspace) => workspace.id > 0 && (!root.hyprMonitor || workspace.monitor === root.hyprMonitor))
 
-            Text {
-                id: workspaceLabel
+            Rectangle {
+                id: workspacePill
 
-                anchors.centerIn: parent
-                text: workspacePill.modelData.active ? "●" : workspacePill.modelData.id
-                color: workspacePill.modelData.focused ? Colors.base05 : Colors.base04
-                font.family: StyleTokens.fontSans
-                font.pixelSize: StyleTokens.fontSizeSm
-                opacity: workspacePill.showInlineIcons ? 0 : 1
+                required property var modelData
+                readonly property var inlineWindows: root.workspaceWindows(modelData)
+                readonly property var visibleInlineWindows: inlineWindows.slice(0, StyleWorkspace.inlineMaxIcons)
+                readonly property int overflowWindowCount: Math.max(0, inlineWindows.length - StyleWorkspace.inlineMaxIcons)
+                readonly property bool showInlineIcons: hovered && inlineWindows.length > 0
+                readonly property int pillPaddingH: StyleControl.buttonPaddingHorizontal
 
-                Behavior on opacity {
-                    NumberAnimation {
-                        duration: StyleWorkspace.revealDuration
-                        easing.type: StyleTokens.easeFade
-                    }
-                }
-            }
-
-            Row {
-                id: inlineIconsRow
-
-                anchors.centerIn: parent
-                spacing: StyleWorkspace.inlineIconSpacing
-                opacity: workspacePill.showInlineIcons ? 1 : 0
-
-                Repeater {
-                    model: ScriptModel {
-                        values: workspacePill.visibleInlineWindows
-                    }
-
-                    IconImage {
-                        required property var modelData
-
-                        width: StyleWorkspace.inlineIconSize
-                        height: StyleWorkspace.inlineIconSize
-                        implicitSize: StyleWorkspace.inlineIconSize
-                        source: root.iconSourceForToplevel(modelData)
-                    }
-                }
+                width: showInlineIcons
+                    ? Math.max(StyleControl.buttonWidth, inlineIconsRow.implicitWidth + StyleWorkspace.inlineIconPadding * 2)
+                    : Math.max(StyleControl.buttonWidth, workspaceLabel.implicitWidth + pillPaddingH * 2)
+                implicitHeight: StyleControl.buttonHeight
+                height: implicitHeight
+                radius: StyleTokens.radiusSm
+                color: StyleTokens.transparent
 
                 Text {
-                    visible: workspacePill.overflowWindowCount > 0
-                    text: `+${workspacePill.overflowWindowCount}`
-                    color: Colors.base04
-                    font.family: StyleTokens.fontSans
-                    font.pixelSize: StyleTokens.fontSizeXs
-                    anchors.verticalCenter: parent.verticalCenter
-                }
+                    id: workspaceLabel
 
-                Behavior on opacity {
-                    NumberAnimation {
-                        duration: StyleWorkspace.revealDuration
-                        easing.type: StyleTokens.easeFade
+                    anchors.centerIn: parent
+                    text: workspacePill.modelData.active ? "●" : workspacePill.modelData.id
+                    color: workspacePill.modelData.focused ? Colors.base05 : Colors.base04
+                    font.family: StyleTokens.fontSans
+                    font.pixelSize: StyleTokens.fontSizeSm
+                    opacity: workspacePill.showInlineIcons ? 0 : 1
+
+                    Behavior on opacity {
+                        NumberAnimation {
+                            duration: StyleWorkspace.revealDuration
+                            easing.type: StyleTokens.easeFade
+                        }
                     }
                 }
 
-            }
+                Row {
+                    id: inlineIconsRow
 
-            MouseArea {
-                id: mouse
+                    anchors.centerIn: parent
+                    spacing: StyleWorkspace.inlineIconSpacing
+                    opacity: workspacePill.showInlineIcons ? 1 : 0
 
-                anchors.fill: parent
-                acceptedButtons: Qt.LeftButton
-                cursorShape: Qt.PointingHandCursor
-                hoverEnabled: true
-                onClicked: ShellActions.switchWorkspace(workspacePill.modelData)
-            }
+                    Repeater {
+                        model: ScriptModel {
+                            values: workspacePill.visibleInlineWindows
+                        }
 
-            readonly property bool hovered: mouse.containsMouse
+                        IconImage {
+                            required property var modelData
 
-            Behavior on color {
-                ColorAnimation {
-                    duration: StyleTokens.motionFeedbackDuration
-                    easing.type: StyleTokens.easeFade
+                            width: StyleWorkspace.inlineIconSize
+                            height: StyleWorkspace.inlineIconSize
+                            implicitSize: StyleWorkspace.inlineIconSize
+                            source: root.iconSourceForToplevel(modelData)
+                        }
+                    }
+
+                    Text {
+                        visible: workspacePill.overflowWindowCount > 0
+                        text: `+${workspacePill.overflowWindowCount}`
+                        color: Colors.base04
+                        font.family: StyleTokens.fontSans
+                        font.pixelSize: StyleTokens.fontSizeXs
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    Behavior on opacity {
+                        NumberAnimation {
+                            duration: StyleWorkspace.revealDuration
+                            easing.type: StyleTokens.easeFade
+                        }
+                    }
+
                 }
-            }
 
-            Behavior on width {
-                NumberAnimation {
-                    duration: StyleWorkspace.revealDuration
-                    easing.type: StyleTokens.easeStandard
+                MouseArea {
+                    id: mouse
+
+                    anchors.fill: parent
+                    acceptedButtons: Qt.LeftButton
+                    cursorShape: Qt.PointingHandCursor
+                    hoverEnabled: true
+                    onClicked: ShellActions.switchWorkspace(workspacePill.modelData)
+                }
+
+                readonly property bool hovered: mouse.containsMouse
+
+                Behavior on width {
+                    NumberAnimation {
+                        duration: StyleWorkspace.revealDuration
+                        easing.type: StyleTokens.easeStandard
+                    }
                 }
             }
         }

@@ -146,7 +146,7 @@ Singleton {
     readonly property int segmentPaddingH: StyleTokens.space10
     // A stream row carries a name line over its own slider, so it needs more than
     // the two-line device row: a slider's hit area is taller than a caption.
-    readonly property int streamRowHeight: 44
+    readonly property int streamRowHeight: 52
     readonly property int soundBodyMaxHeight: 220
 
     // System monitor — wide enough for three compact meters and aligned numeric
@@ -160,11 +160,14 @@ Singleton {
     readonly property int systemMeterHeight: StyleTokens.space4
     readonly property int systemProcessRowHeight: 30
     readonly property int systemProcessRowCount: 6
-    readonly property int systemProcessValueWidth: 42
+    readonly property int systemProcessValueWidth: 46
     readonly property int systemProcessListHeight: systemProcessRowHeight * systemProcessRowCount + StyleTokens.space8
 
     readonly property int systemInfoWidth: 420
-    readonly property int systemInfoArtSize: StyleTokens.fontSizeXs * 0.8
+    // Off the type scale on purpose: this is the distribution logo drawn as a
+    // mono glyph mosaic, not text. Its size is set by the 420px panel it has to
+    // fit beside the hero block, and it carries no reading load.
+    readonly property int systemInfoArtSize: 8
     readonly property int systemInfoHeroPaddingV: StyleTokens.space20
     readonly property int systemInfoLabelWidth: 64
     readonly property int systemInfoLabelGap: StyleTokens.space12

@@ -215,72 +215,83 @@ PopoverPanel {
                 }
 
                 // Day grid — 6 rows × 7 cols
-                Column {
+                Item {
                     x: root.padH
-                    spacing: 0
+                    implicitWidth: dayGrid.implicitWidth
+                    implicitHeight: dayGrid.implicitHeight
+                    width: implicitWidth
+                    height: implicitHeight
 
-                    Repeater {
-                        model: 6
+                    // The peers are the day cells, two levels down inside the week
+                    // rows; a circle rather than the default pill, because that is
+                    // the shape a calendar day already wears.
+                    SlidingHighlight {
+                        run: dayGrid
+                        radius: height / 2
+                    }
 
-                        Row {
-                            required property int index
+                    Column {
+                        id: dayGrid
+                        spacing: 0
 
-                            readonly property int rowStart: index * 7
+                        Repeater {
+                            model: 6
 
-                            Repeater {
-                                model: 7
+                            Row {
+                                required property int index
 
-                                Item {
-                                    id: dayCell
+                                readonly property int rowStart: index * 7
 
-                                    required property int index
+                                Repeater {
+                                    model: 7
 
-                                    readonly property var cell: root.gridCells[parent.rowStart + index]
-                                    readonly property bool isToday: cell.currentMonth
-                                        && cell.day === root.todayDay
-                                        && root.displayMonth === root.todayMonth
-                                        && root.displayYear === root.todayYear
+                                    Item {
+                                        id: dayCell
 
-                                    width: root.cellSize
-                                    height: root.cellSize
+                                        required property int index
 
-                                    // Hover highlight — suppressed on today, which already has a fill
-                                    Rectangle {
-                                        anchors.centerIn: parent
-                                        width: StylePopover.calendarDayCircle
-                                        height: StylePopover.calendarDayCircle
-                                        radius: width / 2
-                                        visible: !dayCell.isToday && cellHover.containsMouse
-                                        color: StyleTokens.alphaLight
-                                    }
+                                        readonly property var cell: root.gridCells[parent.rowStart + index]
+                                        // Today already carries an accent fill, so it is not a peer
+                                        // the travelling highlight should claim.
+                                        readonly property bool hovered: cellHover.containsMouse && !isToday
 
-                                    // Today: filled accent circle
-                                    Rectangle {
-                                        anchors.centerIn: parent
-                                        visible: dayCell.isToday
-                                        width: StylePopover.calendarDayCircle
-                                        height: StylePopover.calendarDayCircle
-                                        radius: width / 2
-                                        color: Colors.base0D
-                                    }
+                                        readonly property bool isToday: cell.currentMonth
+                                            && cell.day === root.todayDay
+                                            && root.displayMonth === root.todayMonth
+                                            && root.displayYear === root.todayYear
 
-                                    Text {
-                                        anchors.centerIn: parent
-                                        text: dayCell.cell.day
-                                        // today gets contrasting dark text over the accent fill
-                                        color: dayCell.isToday ? Colors.base00 : Colors.base05
-                                        opacity: dayCell.cell.currentMonth ? 1 : StylePopover.calendarOtherMonthOpacity
-                                        font.family: StyleTokens.fontSans
-                                        font.pixelSize: StyleTokens.fontSizeMd
-                                        font.weight: dayCell.isToday ? Font.DemiBold : Font.Normal
-                                        horizontalAlignment: Text.AlignHCenter
-                                    }
+                                        width: root.cellSize
+                                        height: root.cellSize
 
-                                    MouseArea {
-                                        id: cellHover
+                                        // Today: filled accent circle
+                                        Rectangle {
+                                            anchors.centerIn: parent
+                                            visible: dayCell.isToday
+                                            width: StylePopover.calendarDayCircle
+                                            height: StylePopover.calendarDayCircle
+                                            radius: width / 2
+                                            color: Colors.base0D
+                                        }
 
-                                        anchors.fill: parent
-                                        hoverEnabled: true
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: dayCell.cell.day
+                                            // today gets contrasting dark text over the accent fill
+                                            color: dayCell.isToday ? Colors.base00 : Colors.base05
+                                            opacity: dayCell.cell.currentMonth ? 1 : StylePopover.calendarOtherMonthOpacity
+                                            font.family: StyleTokens.fontSans
+                                            font.pixelSize: StyleTokens.fontSizeMd
+                                            font.weight: dayCell.isToday ? Font.DemiBold : Font.Normal
+                                            horizontalAlignment: Text.AlignHCenter
+                                        }
+
+                                        MouseArea {
+                                            id: cellHover
+
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                        }
+
                                     }
 
                                 }
@@ -290,7 +301,6 @@ PopoverPanel {
                         }
 
                     }
-
                 }
 
             }

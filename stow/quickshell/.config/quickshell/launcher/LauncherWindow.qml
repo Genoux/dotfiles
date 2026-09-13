@@ -22,6 +22,7 @@ PanelWindow {
     readonly property bool active: Services.Launcher.visible && Services.Launcher.screen === root.screen
 
     property bool displayed: false
+    property string pendingHistoryId: ""
 
     screen: root.screen
     visible: displayed
@@ -41,12 +42,23 @@ PanelWindow {
 
     function finishHide() {
         displayed = false
+        recordPendingLaunch()
         Services.Launcher.finalizeClose()
+    }
+
+    function recordPendingLaunch() {
+        if (!pendingHistoryId)
+            return
+
+        Services.LauncherHistory.record(DesktopEntries.byId(pendingHistoryId))
+        pendingHistoryId = ""
     }
 
     onActiveChanged: {
         if (active) {
             surface.stopHide()
+            recordPendingLaunch()
+            panel.resetScroll()
             displayed = true
             surface.show()
             Qt.callLater(() => panel.focusSearch())
@@ -83,10 +95,11 @@ PanelWindow {
     }
 
     function launchEntry(entry) {
-        if (!entry)
+        if (!entry || !active)
             return
 
-        Services.LauncherHistory.record(entry)
+        // Updating history reorders the model, so wait until the panel is hidden.
+        pendingHistoryId = entry.id
         if (entry.runInTerminal)
             root.launchInTerminal(entry)
         else

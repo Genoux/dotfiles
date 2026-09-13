@@ -181,7 +181,7 @@ Singleton {
     Process {
         id: weatherProcess
 
-        command: ["bash", "-lc", `
+        command: ["bash", "-c", `
             location="\${WEATHER_CITY:-Montreal}"
             printf '%s\\n' "\${location}"
             encoded_location="\${location// /%20}"

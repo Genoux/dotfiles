@@ -55,7 +55,10 @@ Rectangle {
     implicitHeight: StylePopover.listRowHeight
     height: implicitHeight
     radius: StyleTokens.radiusSm
-    color: hover.hovered ? StyleTokens.alphaLight : StyleTokens.transparent
+    color: StyleTokens.transparent
+
+    // The list's travelling indicator paints the hover fill for the whole run.
+    readonly property bool hovered: hover.hovered
     opacity: device.blocked ? StyleTokens.opacityDisabled : 1
 
     Behavior on color {

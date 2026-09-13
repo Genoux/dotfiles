@@ -13,7 +13,6 @@ PopoverPanel {
     property var trayItem: null
 
     property var submenuPath: []
-    onSubmenuPathChanged: root.animatePanel()
     property int menuRevision: 0
     readonly property var currentOpener: {
         const revision = menuRevision;

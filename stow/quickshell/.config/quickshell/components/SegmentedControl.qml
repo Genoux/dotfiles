@@ -7,7 +7,9 @@ import qs.config
 //
 // Not a row of PillButtons: the segments share one recessed track so they read as
 // a single control with a current position rather than three separate toggles.
-// Only the selected segment carries a fill, per the Quiet Chrome Rule.
+// Only the selected segment carries a fill, per the Quiet Chrome Rule — and that
+// fill travels between segments, because a shared track with a current position
+// is exactly the thing a moving indicator describes.
 Item {
     id: control
 
@@ -38,6 +40,20 @@ Item {
         border.color: StyleOverlay.borderSubtle
     }
 
+    // Shares the row's rect without being laid out by it: a Row positions every
+    // child it has, so the indicator cannot live inside segmentRow itself.
+    Item {
+        anchors.fill: parent
+        anchors.margins: control.segmentGap
+
+        SlidingHighlight {
+            // count is read so the binding re-runs once the Repeater has built
+            // its segments; itemAt alone returns null on the first evaluation.
+            target: segments.count > 0 ? segments.itemAt(control.currentIndex) : null
+            radius: control.segmentRadius
+        }
+    }
+
     Row {
         id: segmentRow
 
@@ -46,6 +62,8 @@ Item {
         spacing: control.segmentGap
 
         Repeater {
+            id: segments
+
             model: control.labels
 
             Rectangle {
@@ -60,11 +78,11 @@ Item {
                     / Math.max(1, control.labels.length)
                 height: segmentRow.height
                 radius: control.segmentRadius
-                color: {
-                    if (segment.selected)
-                        return StyleTokens.alphaLight
-                    return area.containsMouse ? StyleTokens.alphaHairline : StyleTokens.transparent
-                }
+                // The selected fill is the travelling indicator above, so this
+                // paints only the hover preview of a segment you have not picked.
+                color: area.containsMouse && !segment.selected
+                    ? StyleTokens.alphaHairline
+                    : StyleTokens.transparent
 
                 Behavior on color {
                     ColorAnimation {

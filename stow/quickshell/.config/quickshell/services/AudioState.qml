@@ -112,12 +112,23 @@ Singleton {
 
     // An application stream names itself in its node properties; the node's own
     // description is the track or pipeline, which changes as it plays.
+    // PipeWire clients put the live title in media.name -- the browser tab, the
+    // track. Players that have nothing to say echo the app name or a driver
+    // placeholder there, so those fall back to the app name.
+    readonly property var genericStreamNames: ["audiostream", "playstream", "playback", "audio stream", "output", "record"]
+
     function streamLabel(node) {
         if (!node)
             return ""
 
         const properties = node.properties ?? ({})
         const application = String(properties["application.name"] ?? "").trim()
+        const media = String(properties["media.name"] ?? "").trim()
+        const generic = root.genericStreamNames.indexOf(media.toLowerCase()) >= 0
+
+        if (media.length > 0 && !generic && media.toLowerCase() !== application.toLowerCase())
+            return application.length > 0 ? `${application} — ${media}` : media
+
         if (application.length > 0)
             return application
 

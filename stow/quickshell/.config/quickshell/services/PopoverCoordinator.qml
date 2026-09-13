@@ -16,6 +16,19 @@ Singleton {
     // trees never overlap and read as merged content.
     property Item exiting: null
 
+    // Windows that stay live while a popover holds its Hyprland focus grab. The
+    // grab is exclusive: a surface outside its window list gets no pointer
+    // events at all, so the notification and capture stacks went dead — not
+    // even hoverable — whenever a bar panel was open.
+    property var grabPassthroughWindows: []
+
+    function registerGrabPassthrough(window, registered) {
+        const next = grabPassthroughWindows.filter(other => other !== null && other !== window);
+        if (registered)
+            next.push(window);
+        grabPassthroughWindows = next;
+    }
+
     function notifyExiting(popover, isExiting) {
         if (isExiting)
             exiting = popover;

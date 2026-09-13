@@ -21,7 +21,10 @@ Rectangle {
     implicitHeight: StylePopover.rowHeight
     height: implicitHeight
     radius: StyleTokens.radiusSm
-    color: area.containsMouse ? StyleTokens.alphaLight : StyleTokens.transparent
+    color: StyleTokens.transparent
+
+    // The list's travelling indicator paints the hover fill for the whole run.
+    readonly property bool hovered: area.containsMouse
 
     Behavior on color {
         ColorAnimation {

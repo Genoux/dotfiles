@@ -19,9 +19,12 @@ Rectangle {
     property int paddingRight: paddingHorizontal
     property int paddingVertical: StyleControl.buttonPaddingVertical
     property int iconTextSpacing: StyleControl.iconTextSpacing
-    property int minimumWidth: StyleControl.buttonWidth
-    // Preserve the icon box plus its minimum vertical breathing room.
-    property int minimumHeight: StyleControl.iconSize + StyleTokens.space2 * 2
+    // Both floors track *this* button's glyph. Pinning them to the standard
+    // StyleControl.iconSize made every small-icon button as wide as a 16px one
+    // but only as tall as its own 13px box, which is what turned the stream
+    // row's mute control into a lozenge.
+    property int minimumWidth: iconSize + StyleControl.buttonPaddingHorizontal * 2
+    property int minimumHeight: iconSize + StyleTokens.space2 * 2
     property color foreground: Colors.base05
     property color background: StyleTokens.transparent
     property color hoverBackground: StyleTokens.alphaLight
@@ -51,12 +54,17 @@ Rectangle {
     readonly property int effectiveTrailWidth: trailWidth > 0 ? trailWidth + trailPaddingRight : trailSlot.childrenRect.width
     readonly property int effectiveButtonWidth: iconSize + paddingHorizontal * 2
     readonly property int effectiveButtonHeight: iconSize + paddingVertical * 2
+    // The One Icon Box Rule: with no label there is no content to stretch the
+    // box, so a glyph gets a square regardless of which axis was padded wider.
+    // Ghost controls pad horizontally to overhang the content margin; that
+    // overhang must not flatten the hover fill.
+    readonly property int iconBoxSize: iconSize + Math.max(paddingHorizontal, paddingVertical) * 2
     readonly property int labelLineHeight: iconSize
 
     signal clicked(var mouse)
 
-    implicitWidth: iconOnly ? Math.max(minimumWidth, effectiveButtonWidth + Math.max(0, paddingRight - paddingHorizontal)) : Math.max(minimumWidth, contentRow.implicitWidth + paddingHorizontal + paddingRight)
-    implicitHeight: Math.max(minimumHeight, effectiveButtonHeight)
+    implicitWidth: iconOnly ? Math.max(minimumWidth, iconBoxSize + Math.max(0, paddingRight - paddingHorizontal)) : Math.max(minimumWidth, contentRow.implicitWidth + paddingHorizontal + paddingRight)
+    implicitHeight: Math.max(minimumHeight, iconOnly ? iconBoxSize : effectiveButtonHeight)
     width: implicitWidth
     height: implicitHeight
     radius: StyleTokens.radiusSm

@@ -45,7 +45,7 @@ Singleton {
     Process {
         id: devicesProcess
 
-        command: ["bash", "-lc", `hyprctl devices -j 2>/dev/null | jq -r '.keyboards[] | select(.main == true) | [.name, .active_keymap] | @tsv' | head -n1`]
+        command: ["bash", "-c", `hyprctl devices -j 2>/dev/null | jq -r '.keyboards[] | select(.main == true) | [.name, .active_keymap] | @tsv' | head -n1`]
 
         stdout: StdioCollector {
             onStreamFinished: root.applyDeviceLine(this.text)

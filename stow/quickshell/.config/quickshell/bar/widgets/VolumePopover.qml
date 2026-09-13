@@ -44,10 +44,7 @@ PopoverPanel {
         }
     }
 
-    onTabChanged: {
-        Qt.callLater(root.revealSelected)
-        root.animatePanel()
-    }
+    onTabChanged: Qt.callLater(root.revealSelected)
 
     onDismissFinished: {
         if (!active)
@@ -207,6 +204,10 @@ PopoverPanel {
                     clip: true
                     boundsBehavior: Flickable.StopAtBounds
                     interactive: contentHeight > height
+
+                    SlidingHighlight {
+                        run: listColumn
+                    }
 
                     Column {
                         id: listColumn

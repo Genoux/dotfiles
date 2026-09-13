@@ -15,7 +15,6 @@ PopoverPanel {
     readonly property int tileRowWidth: popoverWidth - StylePopover.listRowInset * 2
 
     property int tab: shotTab
-    onTabChanged: root.animatePanel()
 
     readonly property var shotEntries: [
         { "label": "Region", "icon": "shot-region", "mode": "region" },
@@ -55,11 +54,11 @@ PopoverPanel {
         implicitHeight: StylePopover.tileHeight
         height: implicitHeight
         radius: StyleTokens.radiusSm
-        color: {
-            if (active)
-                return StyleTokens.alphaActive;
-            return tileArea.containsMouse ? StyleTokens.alphaLight : StyleTokens.transparent;
-        }
+        // Active keeps its own fill: it outlasts the pointer, so it is state
+        // rather than hover and one travelling indicator cannot express both.
+        color: active ? StyleTokens.alphaActive : StyleTokens.transparent
+
+        readonly property bool hovered: tileArea.containsMouse
 
         Behavior on color {
             ColorAnimation {
@@ -182,7 +181,13 @@ PopoverPanel {
 
                 // Shot has no audio row, so its tiles centre in the taller
                 // body rather than top-aligning against a hole beneath them.
+                SlidingHighlight {
+                    run: shotTileRow
+                }
+
                 Row {
+                    id: shotTileRow
+
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.top: parent.top
                     visible: root.tab === root.shotTab
@@ -206,7 +211,13 @@ PopoverPanel {
                     }
                 }
 
+                SlidingHighlight {
+                    run: recordTileRow
+                }
+
                 Row {
+                    id: recordTileRow
+
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.top: parent.top
                     visible: root.tab === root.recordTab

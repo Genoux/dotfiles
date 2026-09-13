@@ -75,7 +75,10 @@ Singleton {
         // Two close /proc/stat snapshots produce a current CPU reading. `ps`
         // lifetime averages are sufficient for ranking the compact process list;
         // the panel is a glanceable overview, not a full btop replacement.
-        command: ["bash", "-lc", `
+        // -c, never -lc: a login shell sources the whole user profile on every
+        // poll, and forking it out of a 250MB process stalls the QML thread for
+        // half a second. LC_ALL is set here, which is all the shell was for.
+        command: ["bash", "-c", `
             export LC_ALL=C
 
             read -r idle_a total_a < <(awk '/^cpu / { idle=$5+$6; for (i=2; i<=NF; i++) total+=$i; print idle, total; exit }' /proc/stat)

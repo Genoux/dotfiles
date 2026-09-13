@@ -224,7 +224,13 @@ PopoverPanel {
                     text: "Process information unavailable"
                 }
 
+                SlidingHighlight {
+                    run: processColumn
+                }
+
                 Column {
+                    id: processColumn
+
                     anchors.fill: parent
                     visible: SystemMonitor.loaded
                     topPadding: StyleTokens.space4
@@ -243,7 +249,9 @@ PopoverPanel {
                             width: root.popoverWidth - StylePopover.listRowInset * 2
                             height: StylePopover.systemProcessRowHeight
                             radius: StyleTokens.radiusSm
-                            color: processHover.hovered ? StyleTokens.alphaLight : StyleTokens.transparent
+                            color: StyleTokens.transparent
+
+                            readonly property bool hovered: processHover.hovered
 
                             Behavior on color {
                                 ColorAnimation {

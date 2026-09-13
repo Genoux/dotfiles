@@ -19,9 +19,12 @@ Singleton {
     readonly property int fontSizeXl: 32
     readonly property int fontSizeLg: 16
     readonly property int fontSizeMd: 14
+    // The floor, and the only size that moved off the original ramp: at 10px
+    // eyebrows and metadata went illegible over a wallpaper. 11 is also what the
+    // media strip already used, so that one-off size folded into this step
+    // rather than surviving as a second name for the same pixel.
     readonly property int fontSizeSm: 12
-    readonly property int fontSizeXs: 10
-    readonly property int fontSizeMedia: 11
+    readonly property int fontSizeXs: 11
 
     readonly property int radiusXs: 4
     readonly property int radiusSm: 8
@@ -59,6 +62,10 @@ Singleton {
     readonly property int motionEnterDuration: 100
     readonly property int motionExitDuration: 70
     readonly property int motionHoverDelay: 100
+    // How long a travelling hover indicator keeps its peer after the pointer
+    // leaves it. Long enough to cross the seam between two neighbours without
+    // blinking, short enough that resting on a title or empty space lets go.
+    readonly property int motionHoverGrace: 60
     readonly property int easeStandard: Easing.OutCubic
     readonly property int easeFade: Easing.Linear
     readonly property int easePulse: Easing.InOutSine

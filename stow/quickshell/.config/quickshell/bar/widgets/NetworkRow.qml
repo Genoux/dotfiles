@@ -48,7 +48,12 @@ Rectangle {
     // Without this clip it would be drawn outside the row at full size from the
     // first frame.
     clip: true
-    color: hover.hovered || row.expanded ? StyleTokens.alphaLight : StyleTokens.transparent
+    // Expanded keeps its own fill: it outlasts the pointer, so it is state
+    // rather than hover and the run's indicator cannot express it.
+    color: row.expanded ? StyleTokens.alphaLight : StyleTokens.transparent
+
+    // The list's travelling indicator paints the hover fill for the whole run.
+    readonly property bool hovered: hover.hovered
     // A saved network out of range is listed for context, not for joining.
     opacity: row.network.inRange ? 1 : StyleTokens.opacityDisabled
 

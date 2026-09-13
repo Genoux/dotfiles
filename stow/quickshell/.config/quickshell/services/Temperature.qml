@@ -28,7 +28,7 @@ Singleton {
     Process {
         id: tempProcess
 
-        command: ["bash", "-lc", `
+        command: ["bash", "-c", `
             cpu=0
             gpu=0
 

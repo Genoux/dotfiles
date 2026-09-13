@@ -14,6 +14,14 @@ import qs.services as Services
 
 ShellRoot {
     IpcHandler {
+        target: "clipboard"
+
+        function toggle(): void {
+            Services.ClipboardHistory.toggle()
+        }
+    }
+
+    IpcHandler {
         target: "launcher"
 
         function toggle(): void {

@@ -87,6 +87,7 @@ PanelWindow {
 
             Widgets.PrivacyIndicator {
                 Layout.alignment: Qt.AlignVCenter
+                Layout.rightMargin: mediaPlayer.visible ? 0 : StyleTokens.space2
                 barWindow: bar
             }
 
@@ -98,9 +99,14 @@ PanelWindow {
                 Layout.rightMargin: mediaPlayer.visible ? StyleTokens.space2 : 0
             }
 
-            RowLayout {
-                spacing: StyleTokens.space1
-                Layout.rightMargin: 0
+            // One run of neighbours, one travelling fill. These are every
+            // peer on this side of the bar: same hover-pill rhythm, same
+            // spacing, no group chrome between them, so the indicator has an
+            // unbroken track to move along. MediaPlayer and PrivacyIndicator
+            // stay outside — they carry their own group border and are not
+            // peers of a plain button.
+            HoverRow {
+                Layout.alignment: Qt.AlignVCenter
 
                 Widgets.Volume {
                     Layout.alignment: Qt.AlignVCenter
@@ -113,6 +119,11 @@ PanelWindow {
                 }
 
                 Widgets.Bluetooth {
+                    Layout.alignment: Qt.AlignVCenter
+                    barWindow: bar
+                }
+
+                Widgets.Clipboard {
                     Layout.alignment: Qt.AlignVCenter
                     barWindow: bar
                 }
@@ -131,48 +142,45 @@ PanelWindow {
                     Layout.alignment: Qt.AlignVCenter
                 }
 
-            }
-
-            RowLayout {
-                spacing: StyleTokens.space4
-
                 Widgets.Weather {
+                    Layout.alignment: Qt.AlignVCenter
                     barWindow: bar
                 }
 
                 Widgets.Temperature {
+                    Layout.alignment: Qt.AlignVCenter
                     barWindow: bar
                 }
 
                 Widgets.Clock {
+                    Layout.alignment: Qt.AlignVCenter
                     barWindow: bar
                 }
 
-            }
+                Widgets.Info {
+                    Layout.alignment: Qt.AlignVCenter
+                    barWindow: bar
+                }
 
-            Widgets.Info {
-                Layout.alignment: Qt.AlignVCenter
-                barWindow: bar
-            }
+                // Keep the development surface available without occupying a keybind.
+                Widgets.ComponentGallery {
+                    Layout.alignment: Qt.AlignVCenter
+                    screen: bar.screen
+                }
 
-            // Keep the development surface available without occupying a keybind.
-            Widgets.ComponentGallery {
-                Layout.alignment: Qt.AlignVCenter
-                screen: bar.screen
-            }
+                Widgets.Menu {
+                    Layout.alignment: Qt.AlignVCenter
+                    barWindow: bar
+                }
 
-            Widgets.Menu {
-                Layout.alignment: Qt.AlignVCenter
-                barWindow: bar
-            }
+                Widgets.Dotfiles {
+                    Layout.alignment: Qt.AlignVCenter
+                }
 
-            Widgets.Dotfiles {
-                Layout.alignment: Qt.AlignVCenter
-            }
-
-            Widgets.Launcher {
-                Layout.alignment: Qt.AlignVCenter
-                screen: bar.screen
+                Widgets.Launcher {
+                    Layout.alignment: Qt.AlignVCenter
+                    screen: bar.screen
+                }
             }
 
         }

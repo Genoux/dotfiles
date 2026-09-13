@@ -38,9 +38,11 @@ Rectangle {
         return rowHeight;
     }
     radius: separator ? 0 : StyleTokens.radiusSm
-    color: separator
-        ? StyleOverlay.borderSubtle
-        : (mouseArea.containsMouse ? StyleTokens.alphaLight : StyleTokens.transparent)
+    // A menu row's hover fill is painted by its list's travelling indicator;
+    // only the separator keeps a colour of its own.
+    color: separator ? StyleOverlay.borderSubtle : StyleTokens.transparent
+
+    readonly property bool hovered: !separator && mouseArea.containsMouse
 
     Column {
         id: tileColumn
@@ -70,6 +72,7 @@ Rectangle {
         Text {
             width: parent.width
             text: action.label
+        textFormat: Text.PlainText
             color: Colors.base05
             opacity: action.actionEnabled ? 1.0 : StyleTokens.opacityDisabled
             font.family: StyleTokens.fontSans
@@ -91,6 +94,7 @@ Rectangle {
         anchors.rightMargin: action.paddingH
         anchors.verticalCenter: parent.verticalCenter
         text: action.label
+        textFormat: Text.PlainText
         color: Colors.base05
         opacity: action.actionEnabled ? 1.0 : StyleTokens.opacityDisabled
         font.family: StyleTokens.fontSans

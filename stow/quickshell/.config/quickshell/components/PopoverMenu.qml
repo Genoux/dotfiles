@@ -1,4 +1,5 @@
 import QtQuick
+import qs.components
 import qs.config
 
 PopoverPanel {
@@ -15,7 +16,13 @@ PopoverPanel {
 
     // One inset on all four sides: a tile is square-ish chrome, so unlike a
     // full-width list row it reads as off-centre the moment x and y disagree.
+    SlidingHighlight {
+        run: iconTileRow
+    }
+
     Row {
+        id: iconTileRow
+
         visible: menu.iconRow
         spacing: StylePopover.tileSpacing
         padding: StylePopover.contentPaddingV
@@ -37,7 +44,13 @@ PopoverPanel {
         }
     }
 
+    SlidingHighlight {
+        run: listColumn
+    }
+
     Column {
+        id: listColumn
+
         visible: !menu.iconRow
         spacing: StylePopover.listRowSpacing
         width: visible ? StylePopover.panelWidth : 0

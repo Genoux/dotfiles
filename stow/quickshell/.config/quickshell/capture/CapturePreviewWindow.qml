@@ -27,6 +27,8 @@ PanelWindow {
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "capture-preview"
 
+    onVisibleChanged: Services.PopoverCoordinator.registerGrabPassthrough(root, visible)
+
     anchors {
         bottom: true
         right: true

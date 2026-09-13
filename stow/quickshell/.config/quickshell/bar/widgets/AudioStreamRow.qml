@@ -37,8 +37,7 @@ Rectangle {
         anchors.leftMargin: StyleTokens.space10
         anchors.right: muteButton.left
         anchors.rightMargin: StyleTokens.space6
-        anchors.top: parent.top
-        anchors.topMargin: StyleTokens.space2
+        anchors.verticalCenter: muteButton.verticalCenter
         text: AudioState.streamLabel(row.node)
         color: row.muted ? Colors.base04 : Colors.base05
         font.family: StyleTokens.fontSans
@@ -50,12 +49,13 @@ Rectangle {
         id: muteButton
 
         anchors.right: parent.right
-        anchors.rightMargin: StylePopover.contentPaddingH - StylePopover.listRowInset - StylePopover.ghostPaddingH
-        anchors.verticalCenter: name.verticalCenter
+        anchors.rightMargin: StylePopover.contentPaddingH - StylePopover.listRowInset - StylePopover.iconButtonPadding
+        anchors.top: parent.top
+        anchors.topMargin: StyleTokens.space2
         iconSource: IconRegistry.volumeIcon(AudioState.volumeOf(row.node), row.muted, true)
         iconSize: StyleControl.iconSizeSm
-        paddingHorizontal: StylePopover.ghostPaddingH
-        paddingVertical: StyleTokens.space2
+        paddingHorizontal: StylePopover.iconButtonPadding
+        paddingVertical: StylePopover.iconButtonPadding
         interactive: true
         onClicked: AudioState.toggleMute(row.node)
     }

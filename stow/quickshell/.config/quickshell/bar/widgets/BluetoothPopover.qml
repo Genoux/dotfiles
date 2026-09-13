@@ -142,6 +142,10 @@ PopoverPanel {
                 boundsBehavior: Flickable.StopAtBounds
                 interactive: contentHeight > height
 
+                SlidingHighlight {
+                    run: deviceColumn
+                }
+
                 Column {
                     id: deviceColumn
 

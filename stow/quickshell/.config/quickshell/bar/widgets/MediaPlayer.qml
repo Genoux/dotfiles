@@ -138,6 +138,10 @@ BarGroup {
             implicitWidth: width
             height: contentRow.height
             radius: StyleTokens.radiusSm
+            // Fades in place rather than joining the transport buttons' run: the
+            // track area is a lone control of a different size and job, and a
+            // fill sliding between it and a skip button would imply the two are
+            // steps in one sequence.
             color: hoverHandler.hovered ? StyleTokens.alphaLight : StyleTokens.transparent
             onScrollTextChanged: scrollAnimation.restart()
 
@@ -189,7 +193,7 @@ BarGroup {
                         text: mediaInfo.shouldScroll ? mediaInfo.scrollText + mediaInfo.scrollText : root.trackText
                         color: Colors.base05
                         font.family: StyleTokens.fontMono
-                        font.pixelSize: StyleTokens.fontSizeMedia
+                        font.pixelSize: StyleTokens.fontSizeXs
 
                         // A Timer is not tied to the frame clock: at 17ms against
                         // a 144Hz panel it landed on every second or third frame in
@@ -254,7 +258,7 @@ BarGroup {
 
                 text: root.trackText
                 font.family: StyleTokens.fontMono
-                font.pixelSize: StyleTokens.fontSizeMedia
+                font.pixelSize: StyleTokens.fontSizeXs
             }
 
             MouseArea {
@@ -292,6 +296,15 @@ BarGroup {
             width: root.controlsExpanded ? controlsRow.implicitWidth + StyleTokens.space3 : 0
             clip: true
 
+            // The three transport buttons are the run of peers here. The track
+            // label beside them is not one -- it is a different size with a
+            // different job, so a fill sliding onto it would claim a sequence
+            // that is not there.
+            SlidingHighlight {
+                run: controlsRow
+                opacity: root.controlsExpanded && target ? 1 : 0
+            }
+
             Row {
                 id: controlsRow
 
@@ -305,6 +318,7 @@ BarGroup {
                     anchors.verticalCenter: parent.verticalCenter
                     iconSource: IconRegistry.mediaIcon("skip-backward")
                     iconSize: StyleControl.iconSizeSm
+                    hoverBackground: StyleTokens.transparent
                     interactive: root.controlsExpanded && root.canGoPrevious
                     onClicked: Services.MediaPlayers.previous()
                 }
@@ -313,6 +327,7 @@ BarGroup {
                     anchors.verticalCenter: parent.verticalCenter
                     iconSource: IconRegistry.mediaIcon(player && player.isPlaying ? "pause" : "play")
                     iconSize: StyleControl.iconSizeSm
+                    hoverBackground: StyleTokens.transparent
                     interactive: root.controlsExpanded && root.canTogglePlayback
                     onClicked: Services.MediaPlayers.togglePlayback()
                 }
@@ -321,6 +336,7 @@ BarGroup {
                     anchors.verticalCenter: parent.verticalCenter
                     iconSource: IconRegistry.mediaIcon("skip-forward")
                     iconSize: StyleControl.iconSizeSm
+                    hoverBackground: StyleTokens.transparent
                     interactive: root.controlsExpanded && root.canGoNext
                     onClicked: Services.MediaPlayers.next()
                 }

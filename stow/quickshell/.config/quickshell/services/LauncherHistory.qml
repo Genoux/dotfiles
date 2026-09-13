@@ -22,13 +22,18 @@ Singleton {
         return ranks
     }
 
-    // id -> { name, haystack }. Rebuilt only when the installed entry set
+    // id -> { entry, name, haystack }. Rebuilt only when the installed entry set
     // changes; joining and lowercasing every desktop entry per keystroke was
-    // the second-largest cost in the filter.
+    // the second-largest cost in the filter. Holding the entry here rather than
+    // calling DesktopEntries.byId also makes every consumer's binding depend on
+    // the entry set: a rescan deletes the old DesktopEntry objects, so a cached
+    // array of them left unrefreshed is a segfault the next time a delegate
+    // writes modelData.
     readonly property var searchIndex: {
         const index = new Map()
         for (const entry of DesktopEntries.applications.values) {
             index.set(entry.id, {
+                entry: entry,
                 name: String(entry.name ?? "").toLowerCase(),
                 haystack: [
                     entry.name,
@@ -76,9 +81,8 @@ Singleton {
 
     function recentEntries() {
         return recentIds
-            .map((entryId) => DesktopEntries.byId(entryId))
-            // An uninstalled app lingers in history; byId hands back a null
-            // QObject for it, which is falsy but compares unequal to JS null.
+            // An uninstalled app lingers in history and has no index entry.
+            .map((entryId) => searchIndex.get(entryId)?.entry)
             .filter((entry) => !!entry)
     }
 

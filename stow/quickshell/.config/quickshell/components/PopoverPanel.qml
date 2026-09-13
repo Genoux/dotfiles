@@ -63,14 +63,20 @@ Item {
     enabled: active
     transformOrigin: Item.Bottom
 
-    function animatePanel() {
-        if (!active)
+    // The pulse acknowledges the panel changing shape. A tab or month change
+    // that leaves it exactly the same size has nothing to acknowledge, and a 1%
+    // scale on unchanged chrome reads as a wobble rather than a transition — so
+    // this follows the resize instead of being fired by hand at each call site,
+    // which could not know whether the new content was the same size.
+    function pulseOnResize() {
+        if (!active || !displaying || panelMotion.running || panelExit.running)
             return;
-        panelExit.stop();
-        panelMotion.stop();
         scale = StylePopover.panelStartScale;
-        panelMotion.start();
+        panelMotion.restart();
     }
+
+    onImplicitWidthChanged: pulseOnResize()
+    onImplicitHeightChanged: pulseOnResize()
 
     function updateVisibility() {
         if (active) {

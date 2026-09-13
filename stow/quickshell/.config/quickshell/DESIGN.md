@@ -101,8 +101,15 @@ The type system is compact and practical. Weight and colour create hierarchy bef
 - **Title** (`fontSizeLg`, 16px): popover headers.
 - **Supporting title** (`fontSizeMd`, 14px): calendar and compact secondary headings.
 - **Body** (`fontSizeSm`, 12px): controls, rows, bar labels, and ordinary content.
-- **Eyebrow** (`fontSizeXs`, 10px): uppercase section labels and tile captions.
-- **Media microcopy** (`fontSizeMedia`, 11px): the constrained media strip only.
+- **Eyebrow** (`fontSizeXs`, 11px): uppercase section labels, captions, and metadata.
+
+**The 11px Floor Rule.** No text renders below `fontSizeXs`. Every surface here
+sits over a wallpaper, and at 10px SF Pro loses the stem contrast that separates
+a word from a smudge — the shell can spend a pixel on legibility without
+spending one on every other size. The old 11px media microcopy size folded into
+this step; do not reintroduce a per-surface type size. A value below the floor is
+only legitimate when it is not text: `StylePopover.systemInfoArtSize` (8px) is a
+mono glyph mosaic drawing a logo, and it says so at its definition.
 
 **The Smallest Useful Type Rule.** New text starts at `fontSizeSm`. Use `fontSizeXs` only for short metadata or structural labels, never for primary actions or long prose.
 
@@ -144,8 +151,13 @@ toward each other and reads worse than uneven boxes ever did.
   shrinks the *icon* and keeps the *box*.
 - A widget that pads its way to a different size breaks the hover-pill rhythm of
   every neighbour. Set the floor instead, and delete the padding override.
-- `minimumHeight` is the exception to raising a default: its 20px floor serves
-  dense popover rows on `paddingVertical: space2`. Raise it on the widget.
+- `Button` enforces the square itself: with no label it sizes both axes from
+  `iconBoxSize`, the larger of its two paddings. A ghost control pads wider
+  horizontally so its glyph overhangs the content margin, and that overhang must
+  not flatten the fill into a lozenge.
+- Both floors track the button's own `iconSize`, not the standard one. Shrink the
+  icon and the box follows it down squarely; hold the standard box by raising
+  `minimumHeight`/`minimumWidth` on the widget, the way `SystemTray` does.
 
 **The Named Metric Rule.** Feature code references the domain meaning (`StylePopover.contentPaddingH`), not merely an equivalent primitive (`StyleTokens.space16`). Domain style files are where token values acquire intent.
 
@@ -181,8 +193,67 @@ Every structural stroke is `StyleTokens.borderWidth` (1px). Create hierarchy thr
 - Use `PillButton` for compact toggles inside panels.
 - Use `PopoverAction` for menu rows and stacked action tiles.
 - Use `ThemedIcon` for rendered icons. Let `IconRegistry` decide between bundled SVG and Freedesktop sources.
-- Hover and selection use `StyleTokens.alphaLight`, `motionFeedbackDuration`, and `easeFade` for color changes.
+- Hover and selection use `StyleTokens.alphaLight`, `motionFeedbackDuration`, and `easeFade`. A lone control fades that fill in place; a control standing in a run of peers does not — see The Travelling Fill.
 - Disabled content uses `StyleTokens.opacityDisabled`, not a hardcoded grey.
+
+### The Travelling Fill
+
+**Neighbours share one hover fill, and it moves.** Wherever sibling controls sit
+in a single run — bar widgets, workspace pills, list rows, menu rows, tray
+icons, segmented tabs — one indicator travels between them rather than each
+lighting up and going dark on its own. The movement is the meaning: a fill that
+appears in place says *this one*, a fill that travels says *this one rather than
+the one you were on*, which is what a row of siblings actually is.
+
+`SlidingHighlight { run: <container> }` is the whole integration. It finds the
+hovered peer itself and keeps it for `motionHoverGrace` after the pointer
+leaves — long enough to cross the seam between two neighbours without blinking,
+short enough that coming to rest on a title or empty space lets go.
+
+A run need not be one flat list. Anything under `run` that reports `hovered` is
+a peer; anything that does not is a grouping to look inside, so a calendar's
+column of week rows works with the cells two levels down. Position is summed up
+the parent chain, so a run that is centred, padded, or nested needs no help from
+the call site. Declare it *before* the container so it paints behind, and in
+the same coordinate space as the container's children — a `Row` or `Column`
+positions every child it has, so the indicator cannot live inside one. Leave
+`run` unset and drive `target` by hand for a control with a *selected* item
+rather than a hovered one, as `SegmentedControl` does.
+
+Children in a run must not paint their own hover fill. `HoverRow` clears
+`hoverBackground` on its children for you; elsewhere set the row's colour to
+transparent and expose `readonly property bool hovered`.
+
+**What stays behind.** State that outlasts the pointer is not hover and one
+travelling indicator cannot express it alongside hover: `Button.active` while a
+popover is open, an expanded `NetworkRow`, an armed capture tile, today's date
+in the calendar. Those keep their own fill, and a peer that carries one excludes
+itself from the run by reporting `hovered: false`. So does anything that is not a peer — a `BarGroup` carrying its
+own border, a hover-reveal strip like `RowActions` — because a fill that slides
+between unrelated things claims a sequence that is not there.
+
+Geometry uses `easeStandard` and the fade uses `easeFade`, both at
+`motionFeedbackDuration`. The indicator follows a peer that resizes under it,
+which bar widgets and workspace pills both do on hover.
+
+**Two ways to break it, both by touching geometry.** The indicator's position is
+a live binding; that is the whole mechanism, and both failures come from
+disturbing it.
+
+*Never assign `x` or `y` at a call site.* A run that is centred or padded sits
+at an offset from the indicator's parent, and correcting for that by assigning
+`x` replaces the binding that does the travelling — the fill parks at the run's
+origin and never moves again. `SlidingHighlight` carries `runOffsetX`/`runOffsetY`
+for exactly this, so the caller never needs to know.
+
+*Never parent it into a container that sizes from `childrenRect`.* The
+indicator's animated width becomes the container's width, which moves the run,
+which moves the indicator: a loop with an animation in it, so it never settles
+and burns a core indefinitely. Qt reports no binding loop for it. `BarGroup`
+sizes this way, so `SystemTray` wraps its indicator and row in an `Item` sized
+from the row alone. `PopoverPanel` is safe because it sizes from children's
+*implicit* geometry and the indicator's implicit size is zero. When in doubt,
+wrap — the same shape `HoverRow` already uses.
 
 ### Levels and continuous values
 

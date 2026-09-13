@@ -73,7 +73,7 @@ Singleton {
     Process {
         id: fetchProcess
 
-        command: ["bash", "-lc", `
+        command: ["bash", "-c", `
             fastfetch --logo none --pipe --separator '${root.separator}' \
                 --structure Title:Host:CPU:GPU:Display:Memory:OS:Kernel:WM:Uptime || exit $?
             df -h / | awk 'NR==2 {printf "Storage=|=%s / %s (%s)\\n", $3, $2, $5}'
@@ -157,7 +157,7 @@ Singleton {
     Process {
         id: artProcess
 
-        command: ["bash", "-lc",
+        command: ["bash", "-c",
             `~/.config/fastfetch/scripts/bonsai.sh -n -L 20 -g ${root.gridWidth},${root.gridHeight} -T -s ${root.artSeed} 2>/dev/null`]
 
         stdout: StdioCollector {

@@ -16,6 +16,18 @@ Item {
     signal launch(var entry)
     signal close
 
+    onActiveChanged: {
+        if (!active)
+            results.cancelFlick()
+    }
+
+    function resetScroll() {
+        results.cancelFlick()
+        results.currentIndex = 0
+        results.forceLayout()
+        results.positionViewAtBeginning()
+    }
+
     readonly property int listHeight: filteredEntries.length === 0
         ? StyleLauncher.emptyHeight
         : Math.min(
@@ -120,6 +132,7 @@ Item {
                 // them on each keystroke is the expensive part of retyping.
                 reuseItems: true
                 boundsBehavior: Flickable.StopAtBounds
+                interactive: root.active
 
                 highlight: Rectangle {
                     radius: StyleTokens.radiusMd
@@ -171,6 +184,7 @@ Item {
 
                     MouseArea {
                         anchors.fill: parent
+                        enabled: root.active
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         // The list scrolls under a stationary cursor during

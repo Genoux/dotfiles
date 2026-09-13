@@ -141,7 +141,7 @@ Item {
 
         HyprlandFocusGrab {
             active: root.open && PopoverCoordinator.current === root
-            windows: [root.barWindow, overlay]
+            windows: [root.barWindow, overlay].concat(PopoverCoordinator.grabPassthroughWindows)
             onCleared: {
                 if (PopoverCoordinator.current === root)
                     root.open = false;
