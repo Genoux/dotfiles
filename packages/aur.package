@@ -40,8 +40,6 @@ http-parser
 
 # --- Dev tools / CLIs ---
 openai-codex-bin
-opencode-bin
-opencode-desktop-bin
 cliamp-bin
 fabric-ai
 claude-desktop-extra
