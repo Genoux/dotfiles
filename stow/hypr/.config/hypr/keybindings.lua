@@ -133,8 +133,7 @@ hl.bind(mainMod .. " + CTRL + SHIFT + F10", hl.dsp.exec_cmd(paths.shellQuote(pat
 
 hl.bind("SUPER + c", hl.dsp.exec_cmd("claude-desktop"))
 hl.bind("SUPER + SHIFT + c", hl.dsp.exec_cmd(terminal .. " -e claude"))
-hl.bind("SUPER + z", hl.dsp.exec_cmd(terminal .. " --title clipse -e clipse"))
-hl.bind("SUPER + h", hl.dsp.exec_cmd("caprine"))
+hl.bind("SUPER + z", hl.dsp.exec_cmd("quickshell ipc call clipboard toggle"))
 hl.bind("SUPER + grave", function()
   if hl.plugin.hyprexpo ~= nil then
     hl.plugin.hyprexpo.expo("toggle")
