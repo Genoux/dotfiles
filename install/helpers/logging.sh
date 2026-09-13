@@ -10,10 +10,12 @@ export DOTFILES_DAILY_LOG="$DOTFILES_LOG_DIR/dotfiles.log"
 init_logging() {
     local log_type="${1:-daily}"  # install or daily
 
-    # A live monitor (install.sh) tails the current file; nested scripts run
-    # via run_logged must keep writing there, or the progress screen freezes
-    # while their output lands in another, freshly truncated file.
-    if [[ -n "${DOTFILES_LOG_MONITOR_PID:-}" ]] && kill -0 "$DOTFILES_LOG_MONITOR_PID" 2>/dev/null; then
+    # A session started by a parent process (install.sh) owns the log; nested
+    # scripts run via run_logged must keep writing there, or the progress
+    # screen freezes while their output lands in another, truncated file.
+    # `dotfiles install` execs install.sh, which keeps $$, so it may re-init.
+    if [[ -n "${DOTFILES_LOG_SESSION_PID:-}" && "$DOTFILES_LOG_SESSION_PID" != "$$" ]] \
+        && kill -0 "$DOTFILES_LOG_SESSION_PID" 2>/dev/null; then
         return 0
     fi
 
@@ -33,8 +35,8 @@ init_logging() {
         return 1
     }
     
-    # Export start time
     export DOTFILES_SESSION_START=$(date +%s)
+    export DOTFILES_LOG_SESSION_PID=$$
 }
 
 # Log a message to file
@@ -47,185 +49,117 @@ log_to_file() {
     fi
 }
 
-# Start live log monitor (improved with better scrolling)
-start_log_monitor() {
-    # Get terminal dimensions
-    local term_height=$(tput lines 2>/dev/null || echo 24)
-    local term_width=$(tput cols 2>/dev/null || echo 80)
-    local log_lines=$((term_height - 4))  # More space for logs
+# Strip ANSI escapes and carriage-return redraws so the log stays plain text.
+# pacman/yay/makepkg paint progress bars with \r; only the final state of each
+# line is worth keeping.
+strip_terminal_codes() {
+    # LC_ALL=C: byte ranges like [@-~] silently match nothing under UTF-8 collation.
+    LC_ALL=C sed -u -e 's/\x1b\[[0-9;?]*[ -/]*[@-~]//g' -e 's/\x1b[()][0-9A-Za-z]//g' -e 's/.*\r//'
+}
 
-    # Use alternate screen and hide cursor
+# The monitor belongs to the process that started it. Scripts nested through
+# run_logged inherit DOTFILES_LOG_MONITOR_PID and have stdout pointed at the log,
+# so letting them start or stop a monitor would draw the screen into the log.
+_owns_log_monitor() {
+    [[ "${DOTFILES_LOG_MONITOR_OWNER:-}" == "$$" ]]
+}
+
+_log_monitor_running() {
+    [[ -n "${DOTFILES_LOG_MONITOR_PID:-}" ]] && kill -0 "$DOTFILES_LOG_MONITOR_PID" 2>/dev/null
+}
+
+_render_log_monitor_frame() {
+    local spinner="$1"
+    local term_height term_width
+    term_height=$(tput lines 2>/dev/null || echo 24)
+    term_width=$(tput cols 2>/dev/null || echo 80)
+    local visible_lines=$((term_height - 5))
+    local text_width=$((term_width - 4))
+
+    local current_step
+    current_step=$(grep -o "Starting: .*" "$DOTFILES_LOG_FILE" 2>/dev/null | tail -1 | sed -e 's/^Starting: //' -e 's|.*/||' -e 's/\.sh$//')
+
+    # printf -v, not $(...): command substitution drops the trailing newlines.
+    local frame row log_line
+    printf -v frame '\033[H\033[2K\n\033[2K  \033[1m%s\033[0m %s\n\033[2K\n' "$spinner" "${current_step:-Preparing}"
+    while IFS= read -r log_line; do
+        printf -v row '\033[2K  \033[90m%s\033[0m\n' "${log_line:0:$text_width}"
+        frame+="$row"
+    done < <(tail -n "$visible_lines" "$DOTFILES_LOG_FILE" 2>/dev/null | strip_terminal_codes)
+    frame+=$'\033[J'
+
+    printf '%s' "$frame"
+}
+
+start_log_monitor() {
+    [[ -t 1 ]] || return 0
+    _log_monitor_running && return 0
+
     tput smcup 2>/dev/null || true
-    tput civis 2>/dev/null || true  # Hide cursor
+    tput civis 2>/dev/null || true
     clear
 
     (
-        # Disable error handling in monitor subprocess
         set +eEo pipefail
-        trap - ERR  # Clear inherited ERR trap
+        trap - ERR
 
         local spinners=("⠋" "⠙" "⠹" "⠸" "⠼" "⠴" "⠦" "⠧" "⠇" "⠏")
         local spinner_index=0
-
-        # Store previous log content to detect changes
-        local prev_log_content=""
-        local prev_log_lines=0
-        
         while true; do
-            # Get current step
-            local current_step=$(grep -o "Starting: .*" "$DOTFILES_LOG_FILE" 2>/dev/null | tail -1 | sed 's/Starting: //' | sed 's/\.sh$//' || echo "dotfiles")
-
-            # Get current log content
-            local current_log_content=""
-            if [[ -f "$DOTFILES_LOG_FILE" ]]; then
-                current_log_content=$(tail -n $log_lines "$DOTFILES_LOG_FILE" 2>/dev/null)
-            fi
-            local current_log_lines=$(echo "$current_log_content" | wc -l)
-
-            # Only redraw if content changed or first run
-            if [[ "$current_log_content" != "$prev_log_content" ]] || [[ $prev_log_lines -eq 0 ]]; then
-                # Clear screen only when content changes
-                tput cup 0 0 2>/dev/null
-                tput ed 2>/dev/null
-
-                # Print spinner line (white)
-                local status_line="${spinners[$spinner_index]} Installing ${current_step}..."
-                if [ ${#status_line} -gt $term_width ]; then
-                    status_line="${status_line:0:$term_width}"
-                fi
-                printf "\033[97m%s\033[0m\n" "$status_line"
-
-                # Show help text
-                printf "\033[90mPress Ctrl+C to stop installation\033[0m\n"
-                echo
-
-                # Print log lines with better formatting
-                echo "$current_log_content" | while IFS= read -r line; do
-                    # Highlight package-related lines in blue for better visibility
-                    if [[ "$line" =~ \[PACMAN\]|\[YAY\] ]]; then
-                        printf "\033[94m%s\033[0m\n" "${line:0:$term_width}"
-                    elif [[ "$line" =~ Starting:|Completed:|Failed: ]]; then
-                        printf "\033[92m%s\033[0m\n" "${line:0:$term_width}"
-                    else
-                        printf "\033[90m%s\033[0m\n" "${line:0:$term_width}"
-                    fi
-                done
-
-                # Update previous content
-                prev_log_content="$current_log_content"
-                prev_log_lines=$current_log_lines
-            else
-                # Just update spinner position without redrawing
-                tput cup 0 0 2>/dev/null
-                local status_line="${spinners[$spinner_index]} Installing ${current_step}..."
-                if [ ${#status_line} -gt $term_width ]; then
-                    status_line="${status_line:0:$term_width}"
-                fi
-                printf "\033[97m%s\033[0m" "$status_line"
-                tput el 2>/dev/null  # Clear to end of line
-            fi
-
-            # Next spinner
-            spinner_index=$(( (spinner_index + 1) % ${#spinners[@]} ))
-            sleep "${DOTFILES_LOG_REFRESH_RATE:-0.1}"  # Configurable refresh rate (default: 0.1s)
+            _render_log_monitor_frame "${spinners[$spinner_index]}"
+            spinner_index=$(((spinner_index + 1) % ${#spinners[@]}))
+            sleep "${DOTFILES_LOG_REFRESH_RATE:-0.2}"
         done
     ) &
     export DOTFILES_LOG_MONITOR_PID=$!
+    export DOTFILES_LOG_MONITOR_OWNER=$$
 }
 
-# Stop live log monitor
 stop_log_monitor() {
-    local keep_visible="${1:-false}"
+    local show_log_tail="${1:-false}"
 
-    if [ -n "${DOTFILES_LOG_MONITOR_PID:-}" ]; then
-        kill $DOTFILES_LOG_MONITOR_PID 2>/dev/null || true
-        wait $DOTFILES_LOG_MONITOR_PID 2>/dev/null || true
-        unset DOTFILES_LOG_MONITOR_PID
-    fi
+    _owns_log_monitor || return 0
 
-    # Restore terminal
-    tput cnorm 2>/dev/null || true  # Show cursor
-    tput rmcup 2>/dev/null || true  # Exit alternate screen
+    kill "$DOTFILES_LOG_MONITOR_PID" 2>/dev/null || true
+    wait "$DOTFILES_LOG_MONITOR_PID" 2>/dev/null || true
+    unset DOTFILES_LOG_MONITOR_PID DOTFILES_LOG_MONITOR_OWNER
 
-    # If keep_visible, show the full log with colors (scrollable)
-    if [[ "$keep_visible" == "true" ]] && [[ -f "$DOTFILES_LOG_FILE" ]]; then
-        clear
-        # Display entire log with colors - terminal scrollback allows scrolling up
-        while IFS= read -r line; do
-            # Highlight package-related lines in blue
-            if [[ "$line" =~ \[PACMAN\]|\[YAY\] ]]; then
-                printf "\033[94m%s\033[0m\n" "$line"
-            elif [[ "$line" =~ Starting:|Completed:|Failed: ]]; then
-                printf "\033[92m%s\033[0m\n" "$line"
-            elif [[ "$line" =~ ===.*=== ]]; then
-                printf "\033[1m%s\033[0m\n" "$line"
-            else
-                printf "\033[90m%s\033[0m\n" "$line"
-            fi
-        done < "$DOTFILES_LOG_FILE"
-        echo
-    else
-        clear
+    tput cnorm 2>/dev/null || true
+    tput rmcup 2>/dev/null || true
+
+    if [[ "$show_log_tail" == "true" ]] && [[ -f "$DOTFILES_LOG_FILE" ]]; then
+        tail -n 30 "$DOTFILES_LOG_FILE" | strip_terminal_codes
+        printf '\n\033[90mFull log: %s\033[0m\n' "$DOTFILES_LOG_FILE"
     fi
 }
 
-# Run a command with logging
 run_logged() {
     local script="$1"
     shift
-    local args=("$@")
-
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting: $script" >> "$DOTFILES_LOG_FILE"
-
-    # Run script with unbuffered output for real-time log updates
-    # Use stdbuf to disable buffering, or fall back to regular redirect
-    if command -v stdbuf &>/dev/null; then
-        # Force line buffering for better real-time output
-        stdbuf -oL -eL bash "$script" "${args[@]}" </dev/null >> "$DOTFILES_LOG_FILE" 2>&1
-        local exit_code=$?
-    else
-        # Fallback: use script command for pseudo-terminal (forces unbuffered output)
-        script -q -c "bash '$script' ${args[*]}" /dev/null >> "$DOTFILES_LOG_FILE" 2>&1
-        local exit_code=$?
-    fi
-
-    if [ $exit_code -eq 0 ]; then
-        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Completed: $script" >> "$DOTFILES_LOG_FILE"
-    else
-        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Failed: $script (exit code: $exit_code)" >> "$DOTFILES_LOG_FILE"
-    fi
-
-    return $exit_code
+    run_command_logged "$script" bash "$script" "$@"
 }
 
-# Run a command with real-time logging and ANSI stripping
 run_command_logged() {
     local step_name="$1"
     shift
-    local command=("$@")
 
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting: $step_name" >> "$DOTFILES_LOG_FILE"
 
+    # `|| true` keeps set -e/pipefail callers from exiting before the command's
+    # own status is read from PIPESTATUS.
     local exit_code=0
-
-    # Use stdbuf for unbuffered output and sed to strip ANSI escape codes
-    # Redirect stdin from /dev/null to ensure commands run non-interactively
-    if command -v stdbuf &>/dev/null; then
-        stdbuf -oL -eL "${command[@]}" < /dev/null 2>&1 | sed -u 's/\x1b\[[0-9;]*[a-zA-Z]//g' >> "$DOTFILES_LOG_FILE"
+    {
+        stdbuf -oL -eL "$@" </dev/null 2>&1 | strip_terminal_codes >> "$DOTFILES_LOG_FILE"
         exit_code=${PIPESTATUS[0]}
-    else
-        # Fallback: use script with col to strip control characters
-        script -q -e -c "${command[*]}" /dev/null < /dev/null 2>&1 | col -b >> "$DOTFILES_LOG_FILE"
-        exit_code=${PIPESTATUS[0]}
-    fi
+    } || true
 
-    if [ $exit_code -eq 0 ]; then
+    if [ "$exit_code" -eq 0 ]; then
         echo "[$(date '+%Y-%m-%d %H:%M:%S')] Completed: $step_name" >> "$DOTFILES_LOG_FILE"
     else
         echo "[$(date '+%Y-%m-%d %H:%M:%S')] Failed: $step_name (exit code: $exit_code)" >> "$DOTFILES_LOG_FILE"
     fi
 
-    return $exit_code
+    return "$exit_code"
 }
 
 # Finish logging session
