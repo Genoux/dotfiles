@@ -1,8 +1,4 @@
-hl.window_rule({
-  name = "xwayland-empty-nofocus",
-  no_focus = true,
-  match = { class = "^$", title = "^$", xwayland = true, float = true, fullscreen = false, pin = false },
-})
+hl.window_rule({ name = "xwayland-empty-nofocus", no_focus = true, match = { class = "^$", title = "^$", xwayland = true, float = true, fullscreen = false, pin = false }, })
 
 hl.window_rule({
   name = "xwayland-float-opaque",
@@ -32,7 +28,7 @@ hl.window_rule({ name = "modal-confirm-replace", float = true, match = { title =
 hl.window_rule({ name = "modal-file-operation-progress", float = true, match = { title = "^(File Operation Progress)$" } })
 hl.window_rule({ name = "system-info", float = true, center = true, size = "1016 480", match = { class = "^(system-info)$" } })
 hl.window_rule({ name = "caprine", float = true, center = true, size = "490 700", match = { class = "^(Caprine)$" } })
-hl.window_rule({ name = "calcurse", float = true, size = "1000 800", center = true, match = { class = "^(calcurse)$" } })
+hl.window_rule({ name = "calcurse", float = true, size = "1000 800", center = true, match = { title = "^(calcurse)$" } })
 hl.window_rule({ name = "mpv", float = true, center = true, size = "(monitor_w*0.3) (monitor_h*0.3)", pin = true, match = { class = "^(mpv)$" } })
 hl.window_rule({ name = "live-cam", float = true, center = true, size = "1280 720", match = { initial_title = ".*cam\\.jbroom\\.ca.*" } })
 hl.window_rule({ name = "bluetui", float = true, center = true, size = "700 700", match = { title = "^(bluetui)$" } })
