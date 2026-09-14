@@ -23,7 +23,11 @@ Item {
     // Keep application artwork full-size while giving first-party symbolic
     // assets the optical inset used throughout the shell.
     readonly property real baseScale: symbolic ? StyleControl.symbolicIconVisualScale : 1
-    readonly property int drawSize: Math.round(size * baseScale)
+    readonly property real devicePixelRatio: Screen.devicePixelRatio || 1
+    // Rounding in logical pixels is not enough: under a fractional screen scale
+    // a whole logical size still lands mid-device-pixel (14 at 1.25 wants 17.5),
+    // and a 1px symbolic stroke resampled across two pixels reads as thicker.
+    readonly property real drawSize: Math.round(size * baseScale * devicePixelRatio) / devicePixelRatio
 
     implicitWidth: size
     implicitHeight: size
