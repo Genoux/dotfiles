@@ -58,5 +58,6 @@ configure_bluetooth_autoenable() {
     return 1
 }
 
-configure_bluetooth_autoenable "$BLUETOOTH_MAIN_CONF"
+configure_bluetooth_autoenable "$BLUETOOTH_MAIN_CONF" || exit 1
+sudo systemctl enable --now bluetooth.service
 

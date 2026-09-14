@@ -1,4 +1,5 @@
 def _run_bluetooth_script(sandbox, conf_path):
+    sandbox.stub("systemctl", "")
     return sandbox.run(
         f"""
 export DOTFILES_HELPERS_LOADED=true
@@ -54,3 +55,11 @@ def test_missing_file_is_not_an_error(sandbox):
     conf = sandbox.root / "does-not-exist.conf"
     result = _run_bluetooth_script(sandbox, conf)
     assert "exit=0" in result.stdout, result.stderr
+
+
+def test_enables_bluetooth_daemon(sandbox):
+    conf = sandbox.root / "main.conf"
+    conf.write_text("[Policy]\nAutoEnable=true\n")
+    result = _run_bluetooth_script(sandbox, conf)
+    assert "exit=0" in result.stdout, result.stderr
+    assert "systemctl enable --now bluetooth.service" in sandbox.calls()
