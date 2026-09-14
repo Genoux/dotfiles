@@ -33,11 +33,10 @@ lock_running() {
 wait_for_hyprland || sleep 2
 hyprctl dispatch 'hl.dsp.dpms("on")' >/dev/null 2>&1 || true
 
-# Never kill an existing session-lock client: killing it makes Hyprland throw the
-# OOPSI "lockscreen died" screen on resume. The lock started by before_sleep_cmd
-# should survive suspend; only start one if it is somehow missing.
+# ext-session-lock-v1 keeps the session locked if its client dies; killing a
+# healthy lock here triggers Hyprland's lockscreen-crashed fallback.
 if ! lock_running; then
-    "$HOME/.local/bin/system-lock" >/dev/null 2>&1 &
+    "$HOME/.local/bin/system-lock" &
 fi
 
 sleep 1

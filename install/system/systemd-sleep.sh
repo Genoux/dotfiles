@@ -47,6 +47,13 @@ if systemctl list-unit-files | grep -q "nvidia-suspend.service"; then
     fi
 fi
 
+for retired_hook in ags-restart hyprland-restart; do
+    if [[ -e "/usr/lib/systemd/system-sleep/$retired_hook" ]]; then
+        sudo rm -f "/usr/lib/systemd/system-sleep/$retired_hook"
+        log_success "Removed retired sleep hook: $retired_hook"
+    fi
+done
+
 # Install system-sleep hooks (for hibernate, etc.)
 if [[ -d "$SYSTEM_DIR/systemd/system-sleep" ]]; then
     for file in "$SYSTEM_DIR/systemd/system-sleep"/*; do
