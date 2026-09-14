@@ -11,12 +11,13 @@ BarGroup {
 
     readonly property var player: Services.MediaPlayers.player
     readonly property string currentTrackText: Services.MediaPlayers.hasTrackMetadata(player) ? `${player.trackTitle} - ${player.trackArtist}` : ""
-    readonly property bool shouldShow: !!player?.isPlaying && currentTrackText.length > 0
+    readonly property bool shouldShow: !!player && currentTrackText.length > 0
     property string trackText: ""
     readonly property bool canGoPrevious: Services.MediaPlayers.canGoPrevious
     readonly property bool canGoNext: Services.MediaPlayers.canGoNext
     readonly property bool canTogglePlayback: Services.MediaPlayers.canTogglePlayback
     property bool controlsExpanded: false
+    property real revealProgress: shouldShow ? 1 : 0
 
     function playerMatchTokens(player) {
         const desktopEntry = String(player.desktopEntry || "").replace(/\.desktop$/i, "").toLowerCase();
@@ -85,13 +86,22 @@ BarGroup {
     Component.onCompleted: trackText = currentTrackText
 
     opacity: shouldShow ? 1 : 0
-    visible: shouldShow || opacity > 0
+    implicitWidth: (contentWidth + StyleGroup.chromeInset * 2) * revealProgress
+    visible: shouldShow || revealProgress > 0 || opacity > 0
     enabled: shouldShow
+    clip: true
+
+    Behavior on revealProgress {
+        NumberAnimation {
+            duration: root.shouldShow ? StyleMedia.enterDuration : StyleMedia.exitDuration
+            easing.type: Easing.InOutCubic
+        }
+    }
 
     Behavior on opacity {
         NumberAnimation {
-            duration: root.shouldShow ? StyleTokens.motionEnterDuration : StyleTokens.motionExitDuration
-            easing.type: StyleTokens.easeFade
+            duration: root.shouldShow ? StyleMedia.enterDuration : StyleMedia.exitDuration
+            easing.type: Easing.InOutCubic
         }
     }
 

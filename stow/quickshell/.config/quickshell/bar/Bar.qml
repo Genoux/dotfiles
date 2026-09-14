@@ -95,8 +95,8 @@ PanelWindow {
                 id: mediaPlayer
 
                 Layout.alignment: Qt.AlignVCenter
-                Layout.leftMargin: mediaPlayer.visible ? StyleTokens.space2 : 0
-                Layout.rightMargin: mediaPlayer.visible ? StyleTokens.space2 : 0
+                Layout.leftMargin: StyleTokens.space2 * mediaPlayer.revealProgress
+                Layout.rightMargin: StyleTokens.space2 * mediaPlayer.revealProgress
             }
 
             // One run of neighbours, one travelling fill. These are every
