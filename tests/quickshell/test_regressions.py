@@ -76,6 +76,131 @@ for (const candidate of [null, {}, {trackTitle:'Song'}, {trackTitle:'Unknown',tr
 assert.equal(hasTrackMetadata({trackTitle:'Song',trackArtist:'Artist'}), true);
 ''')
 
+    def test_media_selection_and_fallback(self):
+        functions = ['playerKey', 'keysMatch', 'hasTrackMetadata', 'isProxyPlayer',
+                     'pushRecentPlaying', 'stackRank', 'pickByStackOrder',
+                     'pickActivePlayer', 'notePlayerPlaying', 'markPlayerInteracted',
+                     'next', 'previous', 'togglePlayback']
+        self.run_js("""
+const assert = require('node:assert/strict');
+let recentPlayingKeys = [], activePlayers = [], player;
+const recentPlayingMax = 12;
+function markPlayerActivity() {}
+""" + ''.join(qml_function('services/MediaPlayers.qml', name) for name in functions) + """
+const a = {dbusName:'org.mpris.MediaPlayer2.browser.instance1', isPlaying:true,
+           trackTitle:'First', trackArtist:'Artist'};
+const b = {...a, dbusName:'org.mpris.MediaPlayer2.browser.instance10', trackTitle:'Second'};
+activePlayers = [a, b];
+notePlayerPlaying(a); notePlayerPlaying(b);
+assert.equal(pickActivePlayer(), b);
+markPlayerInteracted(a);
+assert.equal(pickActivePlayer(), a);
+a.trackTitle = 'Next song';
+assert.equal(pickActivePlayer(), a);
+a.isPlaying = false;
+assert.equal(pickActivePlayer(), b);
+a.isPlaying = true; notePlayerPlaying(a);
+assert.equal(pickActivePlayer(), a);
+a.trackArtist = '';
+assert.equal(pickActivePlayer(), b);
+a.trackArtist = 'Artist';
+assert.equal(pickActivePlayer(), a);
+activePlayers = [b];
+assert.equal(pickActivePlayer(), b);
+b.isPlaying = false;
+assert.equal(pickActivePlayer(), b);
+const camera = {dbusName:'org.mpris.MediaPlayer2.chromium', isPlaying:true,
+                trackTitle:'Camera1 - Live - Frigate', trackArtist:''};
+activePlayers = [camera, b];
+notePlayerPlaying(camera);
+assert.equal(pickActivePlayer(), b);
+b.isPlaying = true;
+assert.equal(pickActivePlayer(), b);
+b.isPlaying = false;
+assert.equal(pickActivePlayer(), b);
+activePlayers = [];
+assert.equal(pickActivePlayer(), null);
+assert.equal(keysMatch(a.dbusName, b), false);
+const before = recentPlayingKeys.slice();
+notePlayerPlaying({...a, dbusName:'org.mpris.MediaPlayer2.playerctld'});
+assert.deepEqual(recentPlayingKeys, before);
+player = a;
+a.canGoNext = false;
+next(); assert.deepEqual(recentPlayingKeys, before);
+a.canGoNext = true;
+let called = false;
+a.next = () => {called = true};
+next(); assert.equal(called, true);
+""")
+
+    def test_media_pause_expires_at_deadline(self):
+        self.run_js("""
+const assert = require('node:assert/strict');
+const entries = {player:1000}, graceMs = 60000;
+let clockTick = 60999;
+""" + qml_function('services/MediaPause.qml', 'isStale') + """
+assert.equal(isStale('player', false), false);
+clockTick++;
+assert.equal(isStale('player', false), true);
+assert.equal(isStale('player', true), false);
+""")
+
+    def test_media_pause_interaction_and_resume(self):
+        self.run_js("""
+const assert = require('node:assert/strict');
+let entries = {}, clockTick = 1000, now = 1000;
+const graceMs = 60000;
+Date.now = () => now;
+function persist(next) { entries = next; }
+""" + ''.join(qml_function('services/MediaPause.qml', name)
+              for name in ['seedActivity', 'noteActivity', 'isStale']) + """
+seedActivity('player', false);
+now = clockTick = 60000;
+assert.equal(isStale('player', false), false);
+noteActivity('player', false);
+clockTick = 61000;
+assert.equal(isStale('player', false), false);
+clockTick = 120000;
+assert.equal(isStale('player', false), true);
+noteActivity('player', true);
+assert.equal(isStale('player', true), false);
+assert.equal(entries.player, undefined);
+now = clockTick = 130000;
+noteActivity('player', false);
+now = clockTick = 160000;
+seedActivity('player', false);
+assert.equal(entries.player, 130000);
+clockTick = 190000;
+assert.equal(isStale('player', false), true);
+""")
+
+    def test_media_availability_uses_standard_player_state(self):
+        self.run_js("""
+const assert = require('node:assert/strict');
+const MprisPlaybackState = {Stopped:0, Paused:1, Playing:2};
+""" + qml_function('services/MediaPlayers.qml', 'isProxyPlayer')
+            + qml_function('services/MediaPlayers.qml', 'isAvailablePlayer') + """
+for (const name of ['browser-one', 'browser-two', 'music-app']) {
+    const candidate = {dbusName:name, playbackState:1, isPlaying:false,
+                       canControl:true, canPlay:true};
+    assert.equal(isAvailablePlayer(candidate), true);
+    candidate.canPlay = false;
+    assert.equal(isAvailablePlayer(candidate), false);
+    candidate.canPlay = true;
+    candidate.canControl = false;
+    assert.equal(isAvailablePlayer(candidate), false);
+    candidate.playbackState = 2;
+    candidate.isPlaying = true;
+    assert.equal(isAvailablePlayer(candidate), true);
+    candidate.playbackState = 0;
+    candidate.isPlaying = false;
+    assert.equal(isAvailablePlayer(candidate), false);
+}
+assert.equal(isAvailablePlayer(null), false);
+assert.equal(isAvailablePlayer({dbusName:'org.mpris.MediaPlayer2.playerctld',
+                               playbackState:2, isPlaying:true}), false);
+""")
+
 
 class PrivacyRegressions(unittest.TestCase):
     def microphone_names(self, outputs, sources):

@@ -9,13 +9,10 @@ Singleton {
     id: root
 
     readonly property string statePath: `${ShellActions.stateDir}/media-pause.json`
-    // Browsers register MPRIS per process, not per tab: closing the tab leaves the
-    // player on the bus as Paused, holding the last track until the browser quits.
-    // Nothing it reports separates that corpse from a real pause — it still claims
-    // CanPlay and CanControl — so idle time is the only signal left. The clock
-    // lives on disk because a config reload would otherwise hand every ghost a
-    // fresh grace period, which also makes the widget impossible to verify.
-    readonly property int graceMs: 10 * 60 * 1000
+    // Browsers can retain playable MPRIS metadata after a tab closes. This bounds
+    // stale controls when a source never reports that its media session has ended.
+    // Persisting the clock prevents a shell reload from renewing that grace period.
+    readonly property int graceMs: 60 * 1000
     property var entries: ({})
     property bool hydrated: false
     property bool bootReady: false
@@ -45,6 +42,7 @@ Singleton {
     // answer that changes once, so wake exactly when the soonest entry expires.
     function scheduleExpiry() {
         const now = Date.now();
+        clockTick = now;
         const pending = Object.keys(entries).map((key) => {
             return graceMs - (now - entries[key]);
         }).filter((remaining) => {
@@ -101,7 +99,7 @@ Singleton {
             return false;
 
         const since = entries[key];
-        return since !== undefined && (clockTick - since) > graceMs;
+        return since !== undefined && (clockTick - since) >= graceMs;
     }
 
     // A player already paused when the shell starts keeps whatever clock it had, or
