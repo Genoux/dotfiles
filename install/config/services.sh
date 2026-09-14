@@ -10,6 +10,13 @@ if ! systemctl --user daemon-reload; then
     exit 1
 fi
 
+for retired_unit in swaync.service mako.service dunst.service; do
+    if [[ "$(systemctl --user show -p LoadState --value "$retired_unit")" == "loaded" ]]; then
+        systemctl --user disable --now "$retired_unit"
+        log_info "$retired_unit disabled so Quickshell can own notifications"
+    fi
+done
+
 shopt -s nullglob
 for unit_file in "$DOTFILES_DIR"/stow/*/.config/systemd/user/*.service "$DOTFILES_DIR"/stow/*/.config/systemd/user/*.timer; do
     unit="$(basename "$unit_file")"
