@@ -19,3 +19,6 @@ image/webp=imv.desktop
 image/gif=imv.desktop
 image/bmp=imv.desktop
 image/tiff=imv.desktop
+x-scheme-handler/grokbot=grok-bot.desktop
+x-scheme-handler/sand=grok-bot.desktop
+x-scheme-handler/codex=chatgpt.desktop
