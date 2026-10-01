@@ -38,7 +38,6 @@ Singleton {
 
     readonly property var captureIcons: ({
         "idle": "gnome-photos-symbolic",
-        "recording": "media-record-symbolic",
         "shot-region": "crop-symbolic",
         "shot-window": "window-symbolic",
         "shot-screen": "video-display-symbolic",

@@ -37,6 +37,17 @@ Singleton {
 
     readonly property string latestPath: captures.length > 0 ? captures[0] : ""
 
+    // One clock for the bar pill and the popover, so the two never disagree.
+    // It restarts with the shell: the session's start time is not persisted.
+    readonly property bool recording: Privacy.recording
+    readonly property bool recordingPaused: Privacy.paused
+    property int recordingSeconds: 0
+
+    onRecordingChanged: {
+        if (recording)
+            recordingSeconds = 0;
+    }
+
     function nameOf(path) {
         return String(path ?? "").split("/").pop();
     }
@@ -158,11 +169,37 @@ Singleton {
         ]);
     }
 
+    function formatDuration(totalSeconds) {
+        const pad = (value) => String(value).padStart(2, "0");
+        const hours = Math.floor(totalSeconds / 3600);
+        const clock = pad(Math.floor((totalSeconds % 3600) / 60)) + ":" + pad(totalSeconds % 60);
+        return hours > 0 ? pad(hours) + ":" + clock : clock;
+    }
+
+    function runRecorder(args) {
+        Quickshell.execDetached([ShellActions.localBin + "system-screenrecord"].concat(args));
+    }
+
     function record(scope) {
-        const command = [ShellActions.localBin + "system-screenrecord", scope];
-        if (audioEnabled)
-            command.push("audio");
-        Quickshell.execDetached(command);
+        runRecorder(audioEnabled ? [scope, "audio"] : [scope]);
+    }
+
+    function togglePause() {
+        runRecorder(["pause"]);
+    }
+
+    function stopRecording() {
+        // Drops the live state at once; the script still has to finalise the
+        // file, and the bar should not look like it is recording meanwhile.
+        Privacy.stopping = true;
+        runRecorder(["stop"]);
+    }
+
+    Timer {
+        interval: 1000
+        running: root.recording && !root.recordingPaused
+        repeat: true
+        onTriggered: root.recordingSeconds++
     }
 
     Timer {

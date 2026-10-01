@@ -14,7 +14,9 @@ PopoverPanel {
     readonly property int recordTab: 1
     readonly property int tileRowWidth: popoverWidth - StylePopover.listRowInset * 2
 
-    property int tab: shotTab
+    // A live session opens on its controls; otherwise the panel opens on Shot.
+    readonly property int restingTab: Services.CaptureState.recording ? recordTab : shotTab
+    property int tab: restingTab
 
     readonly property var shotEntries: [
         { "label": "Region", "icon": "shot-region", "mode": "region" },
@@ -34,7 +36,23 @@ PopoverPanel {
 
     onDismissFinished: {
         if (!active)
-            tab = shotTab
+            tab = restingTab
+    }
+    onRestingTabChanged: {
+        if (!active)
+            tab = restingTab
+    }
+
+    // A session that ends while the panel is open would swap the record tiles
+    // in under the pointer, and a click aimed at Pause would land on Screen
+    // and start a new recording. Closing is the only safe answer.
+    Connections {
+        target: Services.CaptureState
+
+        function onRecordingChanged() {
+            if (!Services.CaptureState.recording && root.active)
+                root.dismissRequested()
+        }
     }
 
     // PopoverAction's stacked tile is a fixed 72px built for a compact icon row
@@ -220,7 +238,7 @@ PopoverPanel {
 
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.top: parent.top
-                    visible: root.tab === root.recordTab
+                    visible: root.tab === root.recordTab && !Services.CaptureState.recording
                     spacing: StyleTokens.space4
 
                     Repeater {
@@ -246,6 +264,87 @@ PopoverPanel {
                                 Services.CaptureState.record(modelData.mode)
                                 root.dismissRequested()
                             }
+                        }
+                    }
+                }
+
+                // The Record tab becomes the session while one runs: the same
+                // three columns as the tiles it replaces, so the panel keeps
+                // its shape and only the contents change. The first column is
+                // read-out, not an action, so it carries no hover and the
+                // travelling fill skips it.
+                SlidingHighlight {
+                    run: sessionRow
+                }
+
+                Row {
+                    id: sessionRow
+
+                    readonly property int columnWidth: (root.tileRowWidth - StyleTokens.space4 * 2) / 3
+                    readonly property bool paused: Services.CaptureState.recordingPaused
+
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.top: parent.top
+                    visible: root.tab === root.recordTab && Services.CaptureState.recording
+                    spacing: StyleTokens.space4
+
+                    Item {
+                        width: sessionRow.columnWidth
+                        height: StylePopover.tileHeight
+
+                        // Mirrors a tile: a 20px line where the glyph sits,
+                        // then the label on the tiles' own baseline.
+                        Column {
+                            anchors.centerIn: parent
+                            spacing: StyleTokens.space4
+
+                            Text {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                height: StylePopover.tileIconSize
+                                text: Services.CaptureState.formatDuration(Services.CaptureState.recordingSeconds)
+                                color: sessionRow.paused ? Colors.base04 : Colors.base06
+                                font.family: StyleTokens.fontMono
+                                font.pixelSize: StyleTokens.fontSizeLg
+                                verticalAlignment: Text.AlignVCenter
+                            }
+
+                            Row {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                spacing: StyleTokens.space4
+
+                                RecordingDot {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    implicitWidth: StyleTokens.space6
+                                    implicitHeight: StyleTokens.space6
+                                    paused: sessionRow.paused
+                                }
+
+                                Text {
+                                    text: sessionRow.paused ? "Paused" : "Recording"
+                                    color: Colors.base04
+                                    font.family: StyleTokens.fontSans
+                                    font.pixelSize: StyleTokens.fontSizeXs
+                                }
+                            }
+                        }
+                    }
+
+                    CaptureTile {
+                        width: sessionRow.columnWidth
+                        label: sessionRow.paused ? "Resume" : "Pause"
+                        iconKey: sessionRow.paused ? "resume" : "pause"
+                        onActivated: Services.CaptureState.togglePause()
+                    }
+
+                    // Dismisses: stopping hands the file to the preview card,
+                    // which is where attention goes next.
+                    CaptureTile {
+                        width: sessionRow.columnWidth
+                        label: "Stop"
+                        iconKey: "stop"
+                        onActivated: {
+                            Services.CaptureState.stopRecording()
+                            root.dismissRequested()
                         }
                     }
                 }
