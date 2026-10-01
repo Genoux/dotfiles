@@ -86,7 +86,8 @@ hl.layer_rule({ name = "flow-island", blur = true, blur_popups = true, ignore_al
 
 hl.window_rule({
   name = "idleon-game",
-  size = "(monitor_w-14) (monitor_h-52)",
+  -- idleon-desktop's inject.js letterboxes the canvas to 16:9; any wider window shows side bars
+  size = "((monitor_h-52)*16/9) (monitor_h-52)",
   center = true,
   float = true,
   opacity = "1.0",
