@@ -68,13 +68,16 @@ Singleton {
         previewVisible = false;
     }
 
+    function fileUri(path) {
+        return "file://" + path.split("/").map(segment => encodeURIComponent(segment).replace(/'/g, "%27")).join("/");
+    }
+
     function copy(path) {
         if (!path)
             return;
 
         if (isVideo(path)) {
-            const uri = "file://" + path.split("/").map(segment => encodeURIComponent(segment)).join("/");
-            Quickshell.execDetached(["wl-copy", "--type", "text/uri-list", uri + "\r\n"]);
+            Quickshell.execDetached(["wl-copy", "--type", "text/uri-list", fileUri(path) + "\r\n"]);
         } else {
             Quickshell.execDetached(["sh", "-c", 'wl-copy --type image/png < "$1"', "sh", path]);
         }
@@ -93,6 +96,22 @@ Singleton {
             return;
 
         Quickshell.execDetached(["xdg-open", path]);
+        remove(path);
+    }
+
+    // FileManager1 rather than xdg-open on the folder: it opens the folder with
+    // the file already selected, in whichever file manager owns the name.
+    function reveal(path) {
+        if (!path)
+            return;
+
+        Quickshell.execDetached([
+            "gdbus", "call", "--session",
+            "--dest", "org.freedesktop.FileManager1",
+            "--object-path", "/org/freedesktop/FileManager1",
+            "--method", "org.freedesktop.FileManager1.ShowItems",
+            "['" + fileUri(path) + "']", ""
+        ]);
         remove(path);
     }
 

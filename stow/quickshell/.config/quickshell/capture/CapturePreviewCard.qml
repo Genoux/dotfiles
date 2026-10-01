@@ -273,6 +273,12 @@ Rectangle {
         }
 
         CardAction {
+            visible: root.isVideo
+            iconSource: IconRegistry.captureIcon("folder")
+            onClicked: Services.CaptureState.reveal(root.path)
+        }
+
+        CardAction {
             iconSource: root.isVideo
                 ? IconRegistry.captureIcon("play")
                 : IconRegistry.captureIcon("edit")
