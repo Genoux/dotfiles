@@ -183,12 +183,12 @@ Singleton {
 
         const parts = canvas.split(/\u001b\[([0-9;]*)m/)
         let markup = ""
-        let color = ""
+        let color = Colors.base07
 
         for (let index = 0; index < parts.length; index++) {
             if (index % 2 === 1) {
                 const code = parts[index].split(";").pop()
-                color = code === "0" || code === "" ? "" : (root.ansiPalette[code] || color)
+                color = code === "0" || code === "" ? Colors.base07 : (root.ansiPalette[code] || color)
                 continue
             }
             const chunk = parts[index]
