@@ -12,7 +12,12 @@ if [[ ! -d "$OUTPUT_DIR" ]]; then
 fi
 
 SCOPE="$1"
-TEMP_VIDEO="/tmp/screenrecord-video.mp4"
+# Neither recorder can pause, and SIGSTOP leaves a frozen frame the length of
+# the pause plus an overrun audio stream. Each pause closes a segment instead;
+# stop joins them losslessly, which works because every segment is encoded
+# with the same arguments, saved in SESSION_ARGS.
+SESSION_DIR="/tmp/screenrecord-session"
+SESSION_ARGS="$SESSION_DIR/args"
 STATE_FILE="/tmp/screenrecord.state"
 MODULE_FILE="/tmp/screenrecord-modules"
 MIX_SINK="screenrecord-mix"
@@ -36,6 +41,18 @@ mark_active() {
 
 mark_inactive() {
   printf '0\n' >"$STATE_FILE"
+}
+
+mark_paused() {
+  printf 'paused\n' >"$STATE_FILE"
+}
+
+segments() {
+  find "$SESSION_DIR" -maxdepth 1 -name 'segment-*.mp4' 2>/dev/null | sort -V
+}
+
+segment_count() {
+  segments | wc -l
 }
 
 unload_mix() {
@@ -132,7 +149,7 @@ detect_encoder() {
 launch_recorder() {
   local logfile="$1"
   shift
-  "$@" >"$logfile" 2>&1 &
+  "$@" >"$logfile" 2>&1 9>&- &
   RECORDER_PID=$!
 }
 
@@ -142,15 +159,15 @@ recorder_alive() {
 
 start_screenrecording() {
   local logfile="/tmp/screenrecord-$$.log"
-  local pid encoder
+  local pid encoder segment
   local -a extra=("$@")
   local -a wf_cmd wl_cmd
 
   encoder=$(detect_encoder)
-  rm -f "$TEMP_VIDEO"
+  segment="$SESSION_DIR/segment-$(($(segment_count) + 1)).mp4"
 
-  wf_cmd=(wf-recorder -f "$TEMP_VIDEO")
-  wl_cmd=(wl-screenrec -f "$TEMP_VIDEO")
+  wf_cmd=(wf-recorder -f "$segment")
+  wl_cmd=(wl-screenrec -f "$segment")
   if $RECORD_AUDIO; then
     if [[ -n "$AUDIO_DEVICE" ]]; then
       wf_cmd+=("--audio=$AUDIO_DEVICE")
@@ -192,9 +209,15 @@ start_screenrecording() {
     local error
     error=$(tail -5 "$logfile" 2>/dev/null | head -3)
     notify-send "Screen recording failed" "${error:-Unknown error}" -u critical -t 5000
-    rm -f "$logfile" "$TEMP_VIDEO"
+    rm -f "$logfile" "$segment"
     unload_mix
-    mark_inactive
+    # A failed resume must not cost the segments already on disk.
+    if (($(segment_count) > 0)); then
+      mark_paused
+    else
+      rm -rf "$SESSION_DIR"
+      mark_inactive
+    fi
     return 1
   fi
 
@@ -202,31 +225,85 @@ start_screenrecording() {
   announce started
 }
 
+begin_session() {
+  local geometry="$1"
+  rm -rf "$SESSION_DIR"
+  mkdir -p "$SESSION_DIR"
+  printf '%s\n%s\n' "$geometry" "$RECORD_AUDIO" >"$SESSION_ARGS"
+  start_screenrecording ${geometry:+-g "$geometry"}
+}
+
+resume_screenrecording() {
+  local geometry audio
+  { read -r geometry; read -r audio; } <"$SESSION_ARGS"
+  # A segment without the audio track the others have would break the
+  # stream-copy join, so stay paused instead.
+  if [[ "$audio" == "true" ]] && ! enable_audio; then
+    unload_mix
+    notify-send "Could not resume recording" "Audio setup failed; still paused" -u critical -t 4000
+    return 1
+  fi
+  start_screenrecording ${geometry:+-g "$geometry"}
+}
+
 wait_for_recorders() {
   local i
-  for i in 1 2 3 4 5; do
+  # The recorder writes the mp4 index on exit; moving or joining the segment
+  # before then leaves an unplayable file.
+  for i in {1..60}; do
     pgrep -x wl-screenrec >/dev/null || pgrep -x wf-recorder >/dev/null || return 0
     sleep 0.05
   done
 }
 
-stop_screenrecording() {
-  mark_inactive
+end_segment() {
   pkill -x wl-screenrec
   pkill -x wf-recorder
   unload_mix
   wait_for_recorders
   sleep 0.05
+}
 
-  local final_file="$OUTPUT_DIR/screenrecording-$(date +'%Y-%m-%d_%H-%M-%S').mp4"
-  mv "$TEMP_VIDEO" "$final_file" 2>/dev/null
+pause_screenrecording() {
+  mark_paused
+  end_segment
+}
+
+save_session() {
+  mark_inactive
+  local stamp final_file
+  local -a parts
+  stamp=$(date +'%Y-%m-%d_%H-%M-%S')
+  final_file="$OUTPUT_DIR/screenrecording-$stamp.mp4"
+  mapfile -t parts < <(segments)
+
+  if ((${#parts[@]} == 1)); then
+    mv "${parts[0]}" "$final_file" 2>/dev/null
+  elif ((${#parts[@]} > 1)); then
+    printf "file '%s'\n" "${parts[@]}" >"$SESSION_DIR/concat.txt"
+    if ! ffmpeg -loglevel error -y -f concat -safe 0 -i "$SESSION_DIR/concat.txt" -c copy "$final_file"; then
+      rm -f "$final_file" "$SESSION_DIR/concat.txt" "$SESSION_ARGS"
+      mv "$SESSION_DIR" "$OUTPUT_DIR/screenrecording-$stamp-segments"
+      notify-send "Screen recording not joined" "Segments kept in $OUTPUT_DIR/screenrecording-$stamp-segments" -u critical -t 5000
+      return 1
+    fi
+  fi
 
   if [[ -f "$final_file" ]]; then
+    rm -rf "$SESSION_DIR"
     announce saved "$final_file"
+  elif ((${#parts[@]} > 0)); then
+    notify-send "Screen recording not saved" "Segments kept in $SESSION_DIR" -u critical -t 5000
   else
-    rm -f "$TEMP_VIDEO"
+    rm -rf "$SESSION_DIR"
     notify-send "Screen recording failed" "No video file created" -u critical -t 3000
   fi
+}
+
+stop_screenrecording() {
+  mark_inactive
+  end_segment
+  save_session
 }
 
 enable_audio() {
@@ -237,22 +314,46 @@ screenrecording_active() {
   pgrep -x wl-screenrec >/dev/null || pgrep -x wf-recorder >/dev/null
 }
 
+# `pause` toggles between pausing and resuming; any other scope while a
+# session is live or paused stops and saves it.
+state=$(<"$STATE_FILE")
+
+# Serialises clicks: a stop landing mid-resume would delete the session the
+# resume is about to record into. Recorders close fd 9 so they never hold it.
+exec 9>/tmp/screenrecord.lock
+flock -n 9 || exit 0
+
 if screenrecording_active; then
-  stop_screenrecording
-elif [[ -f "$STATE_FILE" ]] && grep -qx 1 "$STATE_FILE"; then
-  mark_inactive
+  if [[ "$SCOPE" == "pause" ]]; then
+    pause_screenrecording
+  else
+    stop_screenrecording
+  fi
+elif [[ "$state" == "paused" ]]; then
+  if [[ "$SCOPE" == "pause" ]]; then
+    resume_screenrecording
+  else
+    save_session
+  fi
+elif [[ "$state" == "1" ]]; then
+  # The recorder died on its own; keep whatever it already wrote.
   unload_mix
-elif [[ "$SCOPE" == "stop" ]]; then
+  if (($(segment_count) > 0)); then
+    save_session
+  else
+    mark_inactive
+  fi
+elif [[ "$SCOPE" == "stop" || "$SCOPE" == "pause" ]]; then
   exit 0
 elif [[ "$SCOPE" == "fullscreen" ]]; then
   [[ "$2" == "audio" ]] && enable_audio
-  start_screenrecording
+  begin_session ""
 elif [[ "$SCOPE" == "output" ]]; then
   output=$(slurp -o) || exit 1
   [[ "$2" == "audio" ]] && enable_audio
-  start_screenrecording -g "$output"
+  begin_session "$output"
 else
   region=$(slurp) || exit 1
   [[ "$2" == "audio" ]] && enable_audio
-  start_screenrecording -g "$region"
+  begin_session "$region"
 fi

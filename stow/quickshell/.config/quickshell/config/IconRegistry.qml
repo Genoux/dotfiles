@@ -54,6 +54,9 @@ Singleton {
         "edit": "edit-select-invert-symbolic",
         "play": "media-playback-start-symbolic",
         "discard": "user-trash-symbolic",
+        "pause": "media-playback-pause-symbolic",
+        "resume": "media-playback-start-symbolic",
+        "stop": "media-playback-stop-symbolic",
     })
 
     function captureIcon(name) {

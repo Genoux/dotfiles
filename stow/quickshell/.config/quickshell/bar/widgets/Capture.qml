@@ -15,8 +15,11 @@ Button {
     property bool hoverArmed: false
     property color displayForeground: Colors.base05
     readonly property bool recording: Privacy.recording
+    readonly property bool paused: Privacy.paused
     readonly property bool visualRecording: recording || collapsing
-    readonly property bool expanded: hoverArmed && recording
+    // Held open while paused: the frozen timer and resume button are the only
+    // sign the session is still live.
+    readonly property bool expanded: recording && (hoverArmed || paused)
     readonly property color trailForeground: Colors.base05
     property color recordingColor: StyleRecording.fill
     property int elapsedSeconds: 0
@@ -43,15 +46,27 @@ Button {
         return pad2(minutes) + ":" + pad2(seconds);
     }
 
+    function showPauseState() {
+        pulseAnimation.stop();
+        if (paused) {
+            recordingColor = StyleRecording.paused;
+            return;
+        }
+        recordingColor = StyleRecording.fill;
+        pulseAnimation.start();
+    }
+
+    function hits(item, mouse) {
+        return root.trailReveal > 0 && item.contains(item.mapFromItem(root, mouse.x, mouse.y));
+    }
+
     function beginRecording() {
         hideAnimation.stop();
         collapsing = false;
         elapsedSeconds = 0;
         elapsedTimer.restart();
-        pulseAnimation.stop();
-        recordingColor = StyleRecording.fill;
         displayForeground = trailForeground;
-        pulseAnimation.start();
+        showPauseState();
         hoverArmed = false;
         revealTimer.stop();
         if (root.hovered)
@@ -83,8 +98,15 @@ Button {
     clipContent: true
     trailGap: StyleTokens.space2
     trailPaddingRight: StyleTokens.space3
-    trailWidth: durationLabel.implicitWidth
+    trailWidth: trailRow.implicitWidth
+    // The base Button's MouseArea sits above its trail, so the trail controls
+    // are hit-tested here rather than given MouseAreas of their own. Anywhere
+    // else on the pill stops, as it did before pause existed.
     onClicked: (mouse) => {
+        if (root.recording && root.hits(pauseIcon, mouse)) {
+            runRecorder(["pause"]);
+            return;
+        }
         if (root.recording || root.collapsing || Privacy.rawRecording) {
             Privacy.stopping = true;
             runRecorder(["stop"]);
@@ -97,6 +119,10 @@ Button {
             root.beginRecording();
         else
             root.endRecording();
+    }
+    onPausedChanged: {
+        if (root.recording)
+            root.showPauseState();
     }
     onHoveredChanged: {
         if (hovered && recording) {
@@ -111,17 +137,37 @@ Button {
             root.beginRecording();
     }
 
-    Text {
-        id: durationLabel
+    Row {
+        id: trailRow
 
         anchors.verticalCenter: parent.verticalCenter
-        text: root.formatElapsed(root.elapsedSeconds)
-        color: root.trailForeground
+        spacing: StyleTokens.space2
         opacity: root.trailReveal
-        font.family: StyleTokens.fontMono
-        font.pixelSize: StyleBar.labelFontSize
-        height: root.labelLineHeight
-        verticalAlignment: Text.AlignVCenter
+
+        Text {
+            text: root.formatElapsed(root.elapsedSeconds)
+            color: root.trailForeground
+            font.family: StyleTokens.fontMono
+            font.pixelSize: StyleBar.labelFontSize
+            height: root.labelLineHeight
+            verticalAlignment: Text.AlignVCenter
+        }
+
+        ThemedIcon {
+            id: pauseIcon
+
+            anchors.verticalCenter: parent.verticalCenter
+            source: IconRegistry.captureIcon(root.paused ? "resume" : "pause")
+            tint: root.trailForeground
+            size: root.iconSize
+        }
+
+        ThemedIcon {
+            anchors.verticalCenter: parent.verticalCenter
+            source: IconRegistry.captureIcon("stop")
+            tint: root.trailForeground
+            size: root.iconSize
+        }
     }
 
     BarPopover {
@@ -219,7 +265,7 @@ Button {
         id: elapsedTimer
 
         interval: 1000
-        running: root.recording
+        running: root.recording && !root.paused
         repeat: true
         triggeredOnStart: false
         onTriggered: root.elapsedSeconds++

@@ -17,13 +17,17 @@ Singleton {
     property string screenSource: ""
     property int recordRevision: 0
     readonly property string recordStatePath: "/tmp/screenrecord.state"
-    readonly property bool scriptRecording: {
+    readonly property string recordState: {
         const _ = recordRevision;
-        return recordStateFile.loaded && recordStateFile.text().trim() === "1";
+        return recordStateFile.loaded ? recordStateFile.text().trim() : "";
     }
+    // A paused session has no recorder process, so only the state file knows
+    // it is still live.
+    readonly property bool scriptRecording: recordState === "1" || recordState === "paused"
+    readonly property bool paused: recording && recordState === "paused"
     readonly property bool rawRecording: scriptRecording || processRecording
     readonly property bool recording: rawRecording && !stopping
-    readonly property bool screenAccess: monitorScreenAccess || recording
+    readonly property bool screenAccess: monitorScreenAccess || (recording && !paused)
     readonly property bool anyActive: webcam || mic || screenAccess
 
     onRawRecordingChanged: {
