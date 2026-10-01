@@ -229,8 +229,6 @@ export PATH=/home/john/.opencode/bin:$PATH
 # bun
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
-# GitHub Packages auth for the private @inbeat scope (ib create, bun install)
-command -v gh >/dev/null && export NODE_AUTH_TOKEN="$(gh auth token 2>/dev/null)"
 
 export PATH="$HOME/.local/bin:$PATH"
 export PATH="$HOME/.cargo/bin:$PATH"
