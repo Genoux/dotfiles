@@ -162,12 +162,6 @@ PanelWindow {
                     barWindow: bar
                 }
 
-                // Keep the development surface available without occupying a keybind.
-                Widgets.ComponentGallery {
-                    Layout.alignment: Qt.AlignVCenter
-                    screen: bar.screen
-                }
-
                 Widgets.Menu {
                     Layout.alignment: Qt.AlignVCenter
                     barWindow: bar
