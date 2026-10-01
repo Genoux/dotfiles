@@ -27,8 +27,11 @@ Singleton {
     readonly property bool paused: recording && recordState === "paused"
     readonly property bool rawRecording: scriptRecording || processRecording
     readonly property bool recording: rawRecording && !stopping
-    readonly property bool screenAccess: monitorScreenAccess || (recording && !paused)
-    readonly property bool anyActive: webcam || mic || screenAccess
+    // Another app has the screen. Our own recorder is excluded because the
+    // capture pill already announces it.
+    // ponytail: also hides a portal screencast running alongside our own
+    // recording; split the monitor's screen flag if that ever matters.
+    readonly property bool screenShared: monitorScreenAccess && !rawRecording
 
     onRawRecordingChanged: {
         if (!rawRecording)

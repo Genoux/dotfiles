@@ -194,7 +194,7 @@ No `hyprctl` subprocess bridge — uses Quickshell's built-in Hyprland IPC.
 
 | Service | Mechanism | Output |
 |---------|-----------|--------|
-| `Privacy` | Long-running `privacy-monitor.sh` process | `webcam`, `mic`, `screenrecord`, `anyActive` |
+| `Privacy` | Long-running `privacy-monitor.sh` process | `webcam`, `mic`, `recording`, `paused`, `screenShared` |
 | `TrayFocus` | Tray click handler | activate → MPRIS raise → Hyprland window focus |
 | `Keyboard` | `hyprctl devices -j` + IPC events | Current layout; toggles via `system-switch-keyboard` |
 | `Network` | `ip route get 8.8.8.8` poll | Default route interface for icon state |

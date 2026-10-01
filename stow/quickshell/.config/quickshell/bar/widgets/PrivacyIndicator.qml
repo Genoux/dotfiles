@@ -5,11 +5,17 @@ import qs.components
 import qs.config
 import qs.services
 
-Row {
+Item {
     id: root
 
     property var barWindow: null
-    property string tooltipText: ""
+    // Bound, not set on hover: a source that starts or stops while the
+    // pointer rests on the dot must show up in the open tooltip.
+    readonly property string tooltipText: [
+        Privacy.webcam ? describe("Camera", Privacy.webcamSource) : "",
+        Privacy.mic ? describe("Microphone", Privacy.micSource) : "",
+        Privacy.screenShared ? describe("Screen", Privacy.screenSource) : ""
+    ].filter(line => line.length > 0).join("\n")
     property bool tooltipVisible: false
     property bool tooltipPresented: false
     property real _centerX: 0
@@ -19,11 +25,18 @@ Row {
             tooltipPresented = true;
     }
 
-    function showTooltip(button, source, fallback) {
-        const label = source.length > 0 ? source : fallback;
-        const pt = button.mapToItem(null, button.width / 2, 0);
-        root._centerX = pt.x;
-        root.tooltipText = label;
+    readonly property bool active: Privacy.webcam || Privacy.mic || Privacy.screenShared
+    // One dot for everything, coloured by the most sensitive source.
+    readonly property color dotColor: Privacy.webcam ? StylePrivacy.camera
+        : Privacy.mic ? StylePrivacy.microphone
+        : StylePrivacy.screen
+
+    function describe(label, source) {
+        return source.length > 0 ? label + " · " + source : label;
+    }
+
+    function showTooltip() {
+        root._centerX = root.mapToItem(null, root.width / 2, 0).x;
         root.tooltipVisible = true;
     }
 
@@ -31,39 +44,50 @@ Row {
         root.tooltipVisible = false;
     }
 
-    function hideTooltipIfNeeded() {
-        if (!webcamButton.hovered && !micButton.hovered && !screenButton.hovered)
-            root.hideTooltip();
+    visible: active || width > 0
+    implicitWidth: active ? StyleControl.buttonHeight : 0
+    implicitHeight: StyleControl.buttonHeight
+    width: implicitWidth
+    height: implicitHeight
+    opacity: active ? 1 : 0
+    onActiveChanged: {
+        if (!active)
+            hideTooltip();
     }
 
-    visible: Privacy.anyActive || webcamSlot.width > 0 || micSlot.width > 0 || screenSlot.width > 0
-    spacing: StyleTokens.space1
-
-    component IndicatorSlot: Item {
-        id: slot
-
-        property bool active: false
-        default property alias content: slot.data
-
-        visible: active || width > 0
-        width: active ? StyleControl.buttonWidth : 0
-        height: StyleControl.buttonHeight
-        clip: true
-        opacity: active ? 1 : 0
-
-        Behavior on width {
-            NumberAnimation {
-                duration: slot.active ? StyleTokens.motionEnterDuration : StyleTokens.motionExitDuration
-                easing.type: StyleTokens.easeStandard
-            }
+    Behavior on implicitWidth {
+        NumberAnimation {
+            duration: root.active ? StyleTokens.motionEnterDuration : StyleTokens.motionExitDuration
+            easing.type: StyleTokens.easeStandard
         }
+    }
 
-        Behavior on opacity {
-            NumberAnimation {
-                duration: slot.active ? StyleTokens.motionEnterDuration : StyleTokens.motionExitDuration
+    Behavior on opacity {
+        NumberAnimation {
+            duration: root.active ? StyleTokens.motionEnterDuration : StyleTokens.motionExitDuration
+            easing.type: StyleTokens.easeFade
+        }
+    }
+
+    Rectangle {
+        anchors.centerIn: parent
+        width: StylePrivacy.dotSize
+        height: StylePrivacy.dotSize
+        radius: width / 2
+        color: root.dotColor
+
+        Behavior on color {
+            ColorAnimation {
+                duration: StyleTokens.motionFeedbackDuration
                 easing.type: StyleTokens.easeFade
             }
         }
+    }
+
+    MouseArea {
+        anchors.fill: parent
+        hoverEnabled: true
+        onContainsMouseChanged: containsMouse ? root.showTooltip() : root.hideTooltip()
     }
 
     HyprlandFocusGrab {
@@ -104,72 +128,6 @@ Row {
 
             PopoverLabel {
                 text: root.tooltipText
-            }
-        }
-    }
-
-    IndicatorSlot {
-        id: webcamSlot
-
-        active: Privacy.webcam
-
-        Button {
-            id: webcamButton
-
-            iconSource: IconRegistry.barControlIcon("camera")
-            background: StylePrivacy.webcamFill
-            hoverBackground: StylePrivacy.webcamFill
-            borderWidth: StyleTokens.borderWidth
-            borderColor: StylePrivacy.webcamBorder
-            onHoveredChanged: {
-                if (hovered)
-                    root.showTooltip(webcamButton, Privacy.webcamSource, "Camera");
-                else
-                    root.hideTooltipIfNeeded();
-            }
-        }
-    }
-
-    IndicatorSlot {
-        id: micSlot
-
-        active: Privacy.mic
-
-        Button {
-            id: micButton
-
-            iconSource: IconRegistry.barControlIcon("microphone")
-            background: StylePrivacy.micFill
-            hoverBackground: StylePrivacy.micFill
-            borderWidth: StyleTokens.borderWidth
-            borderColor: StylePrivacy.micBorder
-            onHoveredChanged: {
-                if (hovered)
-                    root.showTooltip(micButton, Privacy.micSource, "Microphone");
-                else
-                    root.hideTooltipIfNeeded();
-            }
-        }
-    }
-
-    IndicatorSlot {
-        id: screenSlot
-
-        active: Privacy.screenAccess
-
-        Button {
-            id: screenButton
-
-            iconSource: IconRegistry.barControlIcon("display")
-            background: StylePrivacy.screenFill
-            hoverBackground: StylePrivacy.screenFill
-            borderWidth: StyleTokens.borderWidth
-            borderColor: StylePrivacy.screenBorder
-            onHoveredChanged: {
-                if (hovered)
-                    root.showTooltip(screenButton, Privacy.screenSource, Privacy.recording ? "Recording" : "Screen sharing");
-                else
-                    root.hideTooltipIfNeeded();
             }
         }
     }

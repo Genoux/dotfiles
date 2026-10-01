@@ -42,7 +42,7 @@ Quickshell also provides: `Quickshell.Hyprland`, `Quickshell.Wayland`, `Quickshe
 
 | Service | Mechanism | Output |
 |---------|-----------|--------|
-| `Privacy` | Long-running `privacy-monitor.sh` | `webcam`, `mic`, `screenrecord`, `anyActive` |
+| `Privacy` | Long-running `privacy-monitor.sh` | `webcam`, `mic`, `recording`, `paused`, `screenShared` |
 | `TrayFocus` | Tray click handler | activate → MPRIS raise → Hyprland focus |
 | `Keyboard` | `hyprctl devices -j` + IPC | Layout; toggles via `system-switch-keyboard` |
 | `Network` | `ip route get 8.8.8.8` poll (5s) | Default route interface |
