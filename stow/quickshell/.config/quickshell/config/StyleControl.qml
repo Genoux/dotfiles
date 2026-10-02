@@ -51,4 +51,11 @@ Singleton {
     readonly property int segmentHeight: 36
     readonly property int segmentInset: StyleTokens.space4
     readonly property int segmentTrackRadius: StyleTokens.radiusMd
+
+    // Level bar -- a volume or brightness control as one rounded bar: tall enough
+    // to grab, with the glyph inset in the fill that grows from it.
+    readonly property int levelBarHeight: 36
+    readonly property int levelBarIconSize: 22
+    // Air between the value and the end of the fill it rides.
+    readonly property int levelBarValuePadding: StyleTokens.space12
 }

@@ -23,6 +23,9 @@ Singleton {
     // PwObjectTracker rebinds, the node's volume arrives, and its ready flag
     // flickers on the way through.
     readonly property int settleDelay: 600
+    // How long a change made from the shell's own controls stays unannounced: the
+    // audio server's echo of the write arrives after the write itself.
+    readonly property int suppressDelay: 800
     readonly property color stepEmpty: Qt.rgba(1, 1, 1, 0.2)
     readonly property color stepFilled: Qt.rgba(1, 1, 1, 1)
     readonly property color border: StyleTokens.alphaLight

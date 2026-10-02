@@ -175,7 +175,7 @@ Depth is a hybrid of compositor blur, translucent QML surfaces, a quiet border, 
 
 - `PopoverPanel` is the standard bar-attached elevated surface.
 - `OverlayPanel` is for the centered launcher surface with its distinct reveal contract.
-- Both use `StyleOverlay.surface`, `surfaceBorder`, and `shadow`.
+- Both use `StyleOverlay.surface` and `shadow`, with no outline.
 - Keep shadows ambient. They separate a floating surface from a varied wallpaper; they are not decoration.
 - Do not add nested card shadows inside a popover. Use spacing, muted text, or `PopoverSeparator` for internal hierarchy.
 

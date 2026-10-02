@@ -47,7 +47,10 @@ PopoverPanel {
         }
     }
 
-    onTabChanged: Qt.callLater(root.revealSelected)
+    onTabChanged: {
+        Qt.callLater(root.revealSelected)
+        listFade.restart()
+    }
 
     onDismissFinished: {
         if (!active)
@@ -118,69 +121,41 @@ PopoverPanel {
                 }
             }
 
-            // Level band — the glyph is the mute toggle, so the control that
-            // shows the level is also the one that silences it.
+            // Level band -- one pill carrying the level; its glyph is the mute
+            // toggle, so the control that shows the level is also the one that
+            // silences it.
             Item {
                 width: parent.width
-                implicitHeight: StylePopover.levelBandHeight
+                // In the island the gap below the bar is the list's own top
+                // padding, the same as the gap the segment band leaves above it.
+                implicitHeight: StyleControl.levelBarHeight + (root.embedded ? 0 : StylePopover.contentPaddingV * 2)
                 height: implicitHeight
 
-                Button {
-                    id: muteButton
+                LevelBar {
+                    id: levelBar
 
                     anchors.left: parent.left
-                    anchors.leftMargin: StylePopover.contentPaddingH - StylePopover.ghostPaddingH
-                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.leftMargin: root.fillInset
+                    anchors.right: parent.right
+                    anchors.rightMargin: root.fillInset
+                    anchors.top: parent.top
+                    anchors.topMargin: root.embedded ? 0 : StylePopover.contentPaddingV
+                    enabled: !!root.bandNode
+                    value: root.bandVolume
+                    muted: root.bandMuted
                     iconSource: root.onInput
                         ? IconRegistry.barControlIcon("microphone")
                         : IconRegistry.volumeIcon(root.bandVolume, root.bandMuted, AudioState.hasSink)
-                    iconSize: StyleControl.iconSize
-                    paddingHorizontal: StylePopover.ghostPaddingH
-                    paddingVertical: StylePopover.ghostPaddingV
-                    foreground: root.bandMuted ? Colors.base04 : Colors.base05
-                    interactive: !!root.bandNode
-                    onClicked: AudioState.toggleMute(root.bandNode)
-                }
-
-                // Fixed width so the band does not re-flow between "5%" and
-                // "100%" while the slider is being dragged through them.
-                Text {
-                    id: readout
-
-                    anchors.right: parent.right
-                    anchors.rightMargin: StylePopover.contentPaddingH
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: StyleTokens.space20 + StyleTokens.space12
-                    text: root.bandNode ? Math.round(levelSlider.shownValue * 100) + "%" : "—"
-                    color: Colors.base04
-                    font.family: StyleTokens.fontSans
-                    font.pixelSize: StyleTokens.fontSizeXs
-                    horizontalAlignment: Text.AlignRight
-                }
-
-                Slider {
-                    id: levelSlider
-
-                    anchors.left: muteButton.right
-                    anchors.leftMargin: StyleTokens.space6
-                    anchors.right: readout.left
-                    anchors.rightMargin: StyleTokens.space10
-                    anchors.verticalCenter: parent.verticalCenter
-                    value: root.bandVolume
-                    opacity: root.bandMuted ? StyleTokens.opacityDisabled : 1
                     onMoved: (level) => AudioState.setVolume(root.bandNode, level)
-
-                    Behavior on opacity {
-                        NumberAnimation {
-                            duration: StyleTokens.motionFeedbackDuration
-                            easing.type: StyleTokens.easeFade
-                        }
-                    }
+                    onIconClicked: AudioState.toggleMute(root.bandNode)
                 }
             }
 
+            // The slider and the list already read as two bands from their
+            // spacing; in the island a second rule is only noise.
             PopoverSeparator {
                 width: parent.width
+                visible: !root.embedded
             }
 
             Item {
@@ -207,6 +182,17 @@ PopoverPanel {
                     clip: true
                     boundsBehavior: Flickable.StopAtBounds
                     interactive: contentHeight > height
+
+                    // The rows change in place when a tab is picked, so the new
+                    // list fades in over them instead of snapping.
+                    NumberAnimation on opacity {
+                        id: listFade
+
+                        from: 0
+                        to: 1
+                        duration: StyleIsland.resizeDuration
+                        easing.type: StyleTokens.easeFade
+                    }
 
                     SlidingHighlight {
                         run: listColumn

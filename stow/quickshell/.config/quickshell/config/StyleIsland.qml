@@ -24,7 +24,6 @@ Singleton {
     // The same distance again between the last content and the dock's track, on
     // every page: the track's own inset already supplies `footerInset` of it.
     readonly property int dockGap: edgeInset
-
     // Compact pill
     readonly property int compactHeight: 34
     readonly property int compactPaddingH: StyleTokens.space12
@@ -35,22 +34,35 @@ Singleton {
     // "top", `align` is "left", "center" or "right". The surface floats off the
     // screen edge by the bar's own margin, and windows are held clear of it by a
     // spacing step beyond that.
-    readonly property string edge: "bottom"
+    readonly property string edge: "top"
     readonly property string align: "center"
     readonly property bool atTop: edge === "top"
     readonly property int edgeMargin: StyleBar.margin
     readonly property int reservedHeight: edgeMargin + compactHeight + StyleTokens.space4
+    // The wide bar: the island stretched across the screen. Tall enough for the
+    // workspaces and tray it carries, which are the old bar's own widgets.
+    // The same air above, below and to either side of the widgets.
+    readonly property int wideInset: 0
+    readonly property int wideHeight: StyleBar.estimatedContentHeight + wideInset * 2
+    readonly property int wideReservedHeight: edgeMargin + wideHeight + StyleTokens.space4
+    // One gap between every widget in the bar, the media player and the clock
+    // included.
+    readonly property int wideSpacing: StyleTokens.space6
+    // Squarer than the pill, with no surface of its own: the widgets sit directly
+    // on the screen, like the old bar's.
+    readonly property int wideRadius: StyleTokens.radiusMd
+    readonly property color wideSurface: StyleTokens.transparent
     // The layer window must contain the largest expanded state plus its
     // shadow; input outside the surface is masked away, so the slack is inert.
     readonly property int shadowMargin: StylePopover.shadowRadius + StyleTokens.space8
     readonly property int expandedMaxHeight: 900
     // Softer than the 12px panel radius because this surface is a pill first;
     // the radius follows its height up to this cap, so the morph never snaps.
-    readonly property int expandedRadius: StyleTokens.space20 + StyleTokens.space4
-    // Denser than a bar popover's glass, but still see-through: the island is
-    // tall enough to span two windows, and at the shared 30% a bright one behind
-    // it washes the text out into a grey gradient.
-    readonly property color surface: Qt.rgba(8 / 255, 8 / 255, 8 / 255, 0.55)
+    readonly property int expandedRadius: StyleTokens.space20 + StyleTokens.space2
+    // Glass over the compositor's blur, denser than a bar popover's: the island
+    // is tall enough to span two windows, and a bright one behind it would
+    // wash the text out.
+    readonly property color surface: Qt.rgba(8 / 255, 8 / 255, 8 / 255, 0.6)
     // Expanded layout. The island is one width for every page, so it never
     // resizes sideways, and a page's full-width rules reach its edges.
     readonly property int pageWidth: StylePopover.panelWidth

@@ -36,14 +36,9 @@ Item {
         id: panel
 
         anchors.fill: parent
-        // The launcher fills the island the way the dock does, so it keeps the
-        // dock's own inset from every edge. The island already leaves
-        // pageInsetTop above a page, which the top padding takes back.
-        padding: StyleIsland.fillInset
-        spacing: StyleIsland.fillInset
-        // Concentric with the island: its radius less the gap to its edge.
-        fieldRadius: StyleIsland.expandedRadius - StyleIsland.fillInset
-        topPadding: StyleIsland.fillInset - StyleIsland.pageInsetTop
+        // The island already leaves pageInsetTop above a page, which the top
+        // padding takes back, so the field sits the launcher's own inset down.
+        topPadding: StyleLauncher.padding - StyleIsland.pageInsetTop
         bottomPadding: StyleIsland.footerFadeEnd + StyleIsland.footerFadeLength
         listMaxHeight: StyleLauncher.listMaxHeight + StyleIsland.footerHeight
         filteredEntries: root.filteredEntries

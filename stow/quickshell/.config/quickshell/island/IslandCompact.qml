@@ -70,6 +70,7 @@ Item {
             height: width
             radius: StyleIsland.activityArtRadius
             source: Services.MediaPlayers.artUrl(root.player)
+                isIcon: Services.MediaPlayers.isSiteIcon(root.player)
         }
 
         RecordingDot {

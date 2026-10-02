@@ -64,6 +64,7 @@ Item {
                 Layout.preferredHeight: StyleIsland.artSize
                 radius: StyleIsland.artRadius
                 source: Services.MediaPlayers.artUrl(root.player)
+                isIcon: Services.MediaPlayers.isSiteIcon(root.player)
             }
 
             ColumnLayout {
@@ -97,7 +98,7 @@ Item {
                     Layout.preferredWidth: sourceRow.implicitWidth
                     Layout.preferredHeight: sourceRow.implicitHeight
                     Layout.topMargin: StyleTokens.space2
-                    visible: !!root.player
+                    visible: !!root.player && root.canChoose
 
                     RowLayout {
                         id: sourceRow

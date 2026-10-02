@@ -70,29 +70,6 @@ Item {
         }
     }
 
-    function iconFor(id) {
-        switch (id) {
-        case "home":
-            return IconRegistry.themeIcon("user-home-symbolic");
-        case "launcher":
-            return IconRegistry.barControlIcon("launcher");
-        case "media":
-            return IconRegistry.themeIcon("audio-x-generic-symbolic");
-        case "sound":
-            return IconRegistry.volumeIcon(Services.AudioState.sinkVolume, Services.AudioState.sinkMuted, Services.AudioState.hasSink);
-        case "network":
-            return IconRegistry.networkIcon(Services.Network.iconKey);
-        case "bluetooth":
-            return IconRegistry.bluetoothIcon(true);
-        case "clipboard":
-            return IconRegistry.themeIcon("edit-paste-symbolic");
-        case "more":
-            return IconRegistry.themeIcon("view-more-symbolic");
-        default:
-            return "";
-        }
-    }
-
     function syncPageSize() {
         const page = pageLoader.item;
         if (!page)
@@ -290,59 +267,12 @@ Item {
             radius: StyleIsland.footerTrackRadius
             color: StyleTokens.alphaHairline
 
-            Item {
+            DockTabs {
                 anchors.fill: parent
                 anchors.margins: StyleIsland.footerTrackPadding
-
-                SlidingHighlight {
-                    radius: StyleIsland.footerTabRadius
-                    target: tabRepeater.count > 0 && root.tabIndex >= 0 ? tabRepeater.itemAt(root.tabIndex) : null
-                }
-
-                SlidingHighlight {
-                    run: tabRow
-                    radius: StyleIsland.footerTabRadius
-                }
-
-                Row {
-                    id: tabRow
-
-                    spacing: StyleIsland.footerTrackPadding
-
-                    Repeater {
-                        id: tabRepeater
-
-                        model: root.tabs
-
-                        Item {
-                            id: tab
-
-                            required property string modelData
-
-                            readonly property bool selected: modelData === root.shownTab
-                            // The selected tab carries its own fill, so it is not a
-                            // peer of the travelling hover fill.
-                            readonly property bool hovered: !selected && icon.hovered
-
-                            width: StyleIsland.footerTabSize
-                            height: StyleIsland.footerTabSize
-
-                            Button {
-                                id: icon
-
-                                anchors.fill: parent
-                                iconSource: root.iconFor(tab.modelData)
-                                foreground: tab.selected ? Colors.base05 : Colors.base04
-                                hoverBackground: StyleTokens.transparent
-                                minimumWidth: 0
-                                minimumHeight: 0
-                                interactive: true
-                                Accessible.name: tab.modelData
-                                onClicked: root.pageSelected(tab.modelData)
-                            }
-                        }
-                    }
-                }
+                tabs: root.tabs
+                currentTab: root.shownTab
+                onTabSelected: (tab) => root.pageSelected(tab)
             }
         }
     }

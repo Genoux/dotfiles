@@ -92,22 +92,14 @@ Item {
             }
         }
 
-        RowLayout {
+        LevelBar {
             Layout.fillWidth: true
-            spacing: StyleTokens.space8
-
-            Button {
-                iconSource: IconRegistry.volumeIcon(Services.AudioState.sinkVolume, Services.AudioState.sinkMuted, Services.AudioState.hasSink)
-                interactive: Services.AudioState.hasSink
-                onClicked: Services.AudioState.toggleMute(Services.AudioState.sink)
-            }
-
-            Slider {
-                Layout.fillWidth: true
-                enabled: Services.AudioState.hasSink
-                value: Services.AudioState.sinkVolume
-                onMoved: (level) => Services.AudioState.setVolume(Services.AudioState.sink, level)
-            }
+            enabled: Services.AudioState.hasSink
+            value: Services.AudioState.sinkVolume
+            muted: Services.AudioState.sinkMuted
+            iconSource: IconRegistry.volumeIcon(Services.AudioState.sinkVolume, Services.AudioState.sinkMuted, Services.AudioState.hasSink)
+            onMoved: (level) => Services.AudioState.setVolume(Services.AudioState.sink, level)
+            onIconClicked: Services.AudioState.toggleMute(Services.AudioState.sink)
         }
 
         Rectangle {
@@ -143,6 +135,7 @@ Item {
                     Layout.preferredHeight: StyleIsland.miniArtSize
                     radius: StyleTokens.radiusXs
                     source: Services.MediaPlayers.artUrl(root.player)
+                isIcon: Services.MediaPlayers.isSiteIcon(root.player)
                 }
 
                 Column {

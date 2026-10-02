@@ -46,9 +46,9 @@ Singleton {
         return /^(unknown(?: artist| title| track)?|n\/a)$/i.test(text) ? "" : text;
     }
 
-    // Browsers report no artwork for a video, but the tab's address names it.
-    // mqdefault is the clean 16:9 frame: hqdefault carries letterbox bars that
-    // a square crop would keep.
+    // Browsers report no artwork, but the tab's address names what is playing.
+    // For YouTube that is the video's own thumbnail; mqdefault is the clean 16:9
+    // frame, where hqdefault carries letterbox bars that a square crop would keep.
     function artUrl(candidate) {
         const reported = String(candidate?.trackArtUrl ?? "");
         if (reported.length > 0)
@@ -56,7 +56,17 @@ Singleton {
 
         const address = String(candidate?.metadata?.["xesam:url"] ?? "");
         const video = address.match(/(?:youtube\.com\/(?:watch\?(?:[^#]*&)?v=|shorts\/|embed\/|live\/)|youtu\.be\/)([\w-]{11})/);
-        return video ? `https://i.ytimg.com/vi/${video[1]}/mqdefault.jpg` : "";
+        if (video)
+            return `https://i.ytimg.com/vi/${video[1]}/mqdefault.jpg`;
+
+        // Any other page names only its site, so the site's icon stands in for
+        // the art. A PNG service rather than /favicon.ico, which Qt may not decode.
+        const site = address.match(/^https?:\/\/([^/?#]+)/);
+        return site ? `https://www.google.com/s2/favicons?domain=${site[1]}&sz=128` : "";
+    }
+
+    function isSiteIcon(candidate) {
+        return artUrl(candidate).startsWith("https://www.google.com/s2/favicons");
     }
 
     function trackLabel(candidate) {

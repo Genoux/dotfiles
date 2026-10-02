@@ -6,10 +6,9 @@ import qs.services
 
 // One selectable device in the output or input list.
 //
-// Not a PopoverAction: that component's row mode renders a label only — its icon
-// lives in the stacked tile branch — and a selection gutter has to be reserved
-// for every row in the group, not just the chosen one, or the labels sit at two
-// different insets. Both are group facts PopoverAction has no notion of.
+// Not a PopoverAction: that component's row mode renders a label only, and its
+// icon lives in the stacked tile branch. This row ends in a check for the
+// current device, which PopoverAction has no notion of.
 Rectangle {
     id: row
 
@@ -33,45 +32,46 @@ Rectangle {
         }
     }
 
-    // The gutter is always reserved so every label starts at the same inset; only
-    // the fill inside it says which device is current.
-    Item {
-        id: marker
-
+    Text {
         anchors.left: parent.left
         anchors.leftMargin: StylePopover.contentPaddingH - row.x
-        anchors.verticalCenter: parent.verticalCenter
-        width: StyleTokens.space6
-        height: width
-
-        Rectangle {
-            anchors.centerIn: parent
-            width: parent.width
-            height: parent.height
-            radius: width / 2
-            color: row.selected ? Colors.base05 : StyleTokens.transparent
-
-            Behavior on color {
-                ColorAnimation {
-                    duration: StyleTokens.motionFeedbackDuration
-                    easing.type: StyleTokens.easeFade
-                }
-            }
-        }
-    }
-
-    Text {
-        anchors.left: marker.right
-        anchors.leftMargin: StyleTokens.space10
-        anchors.right: parent.right
-        anchors.rightMargin: StylePopover.contentPaddingH - row.x
+        anchors.right: check.left
+        anchors.rightMargin: StyleTokens.space8
         anchors.verticalCenter: parent.verticalCenter
         text: AudioState.label(row.node)
-        color: row.selected ? Colors.base05 : Colors.base04
+        color: row.selected ? Colors.base06 : Colors.base04
         font.family: StyleTokens.fontSans
         font.pixelSize: StyleTokens.fontSizeSm
         font.weight: row.selected ? Font.DemiBold : Font.Normal
         elide: Text.ElideRight
+
+        Behavior on color {
+            ColorAnimation {
+                duration: StyleTokens.motionFeedbackDuration
+                easing.type: StyleTokens.easeFade
+            }
+        }
+    }
+
+    // The current device says so at the row's end, where the eye finishes a
+    // line, rather than in a gutter every other row has to keep empty.
+    ThemedIcon {
+        id: check
+
+        anchors.right: parent.right
+        anchors.rightMargin: StylePopover.contentPaddingH - row.x
+        anchors.verticalCenter: parent.verticalCenter
+        size: StyleControl.iconSizeSm
+        source: IconRegistry.themeIcon("object-select-symbolic")
+        tint: Colors.base05
+        opacity: row.selected ? 1 : 0
+
+        Behavior on opacity {
+            NumberAnimation {
+                duration: StyleTokens.motionFeedbackDuration
+                easing.type: StyleTokens.easeFade
+            }
+        }
     }
 
     MouseArea {

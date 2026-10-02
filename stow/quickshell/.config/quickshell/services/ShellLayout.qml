@@ -12,6 +12,10 @@ Singleton {
     signal closeRequested()
 
     readonly property bool island: persisted.island
+    // The island stretched into a full-width bar. Only meaningful in island
+    // mode; the choice is kept while the old bar is showing, so going back to
+    // the island returns to whichever shape it had.
+    readonly property bool wide: persisted.island && persisted.wide
 
     // 0 is the bar, 1 is the island. Both surfaces exist while it is between, and
     // each fades by its own share of it, so the switch is one motion rather than
@@ -36,6 +40,19 @@ Singleton {
 
         persisted.island = value;
         stateFile.writeAdapter();
+    }
+
+    function setWide(value) {
+        if (persisted.island && persisted.wide === value)
+            return;
+
+        persisted.island = true;
+        persisted.wide = value;
+        stateFile.writeAdapter();
+    }
+
+    function toggleWide() {
+        setWide(!wide);
     }
 
     function toggleIsland() {
@@ -68,6 +85,7 @@ Singleton {
             id: persisted
 
             property bool island: false
+            property bool wide: false
         }
     }
 }

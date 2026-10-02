@@ -56,6 +56,7 @@ PanelWindow {
 
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
+            opacity: Services.ShellLayout.barReveal
             spacing: StyleTokens.space6
 
             Widgets.Workspaces {

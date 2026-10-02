@@ -54,7 +54,7 @@ Singleton {
         // so readiness cannot gate that one and the settle window has to.
         const worthShowing = swapped
             ? root.sinkTookOver()
-            : !settleTimer.running && root.sinkReady
+            : !settleTimer.running && !suppressTimer.running && root.sinkReady
                 && (nextVolume !== root._lastVolume || nextMuted !== root._lastMuted)
 
         if (!root.initializing && worthShowing)
@@ -77,6 +77,12 @@ Singleton {
             return false
 
         return Pipewire.nodes.values.some(node => node.id === root._baselineSinkId)
+    }
+
+    // The widgets show the level themselves, so a change they make is not worth a
+    // second announcement.
+    function suppress() {
+        suppressTimer.restart()
     }
 
     function show() {
@@ -105,6 +111,13 @@ Singleton {
         id: settleTimer
 
         interval: StyleOsd.settleDelay
+        repeat: false
+    }
+
+    Timer {
+        id: suppressTimer
+
+        interval: StyleOsd.suppressDelay
         repeat: false
     }
 

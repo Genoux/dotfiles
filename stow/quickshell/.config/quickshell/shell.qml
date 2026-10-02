@@ -86,6 +86,10 @@ ShellRoot {
             Services.ShellLayout.requestPage(pageId)
         }
 
+        function toggleWideBar(): void {
+            Services.ShellLayout.toggleWide()
+        }
+
         function closeIsland(): void {
             Services.ShellLayout.closeRequested()
         }
@@ -112,15 +116,6 @@ ShellRoot {
         model: Services.ShellLayout.islandPresent ? Quickshell.screens : []
 
         Island {
-            required property var modelData
-            screen: modelData
-        }
-    }
-
-    Variants {
-        model: Services.ShellLayout.islandPresent ? Quickshell.screens : []
-
-        IslandDock {
             required property var modelData
             screen: modelData
         }

@@ -11,6 +11,10 @@ Item {
 
     property string source: ""
     property int radius: StyleTokens.radiusSm
+    // An icon rather than a picture: it sits inside the tile with air round it
+    // instead of running to the edge.
+    property bool isIcon: false
+    readonly property int inset: isIcon ? Math.round(width / 6) : 0
 
     Rectangle {
         anchors.fill: parent
@@ -32,9 +36,10 @@ Item {
         id: art
 
         anchors.fill: parent
+        anchors.margins: root.inset
         visible: false
         source: root.width > 0 ? root.source : ""
-        fillMode: Image.PreserveAspectCrop
+        fillMode: root.isIcon ? Image.PreserveAspectFit : Image.PreserveAspectCrop
         asynchronous: true
         sourceSize: Qt.size(root.width * 2, root.height * 2)
     }
@@ -43,12 +48,14 @@ Item {
         id: roundedMask
 
         anchors.fill: parent
-        radius: root.radius
+        anchors.margins: root.inset
+        radius: Math.max(0, root.radius - root.inset)
         visible: false
     }
 
     OpacityMask {
         anchors.fill: parent
+        anchors.margins: root.inset
         source: art
         maskSource: roundedMask
         opacity: art.status === Image.Ready ? 1 : 0

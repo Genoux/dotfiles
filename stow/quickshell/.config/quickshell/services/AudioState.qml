@@ -148,6 +148,18 @@ Singleton {
         if (!node?.audio)
             return
 
+        VolumeOsd.suppress()
+        writeVolume(node, volume)
+    }
+
+    // Scrolling the bar icon or the island pill shows no level of its own, so
+    // unlike setVolume it leaves the OSD to announce the change.
+    function stepSinkVolume(direction) {
+        if (direction && root.sink?.audio)
+            root.writeVolume(root.sink, root.sinkVolume + direction * StyleControl.sliderStep)
+    }
+
+    function writeVolume(node, volume) {
         const next = Math.max(0, Math.min(1, volume))
         pendingVolumeNodeId = node.id
         pendingVolume = next
@@ -163,15 +175,11 @@ Singleton {
             Quickshell.execDetached(["wpctl", "set-mute", String(node.id), "0"])
     }
 
-    function stepSinkVolume(direction) {
-        if (direction && root.sink)
-            root.setVolume(root.sink, root.sinkVolume + direction * StyleControl.sliderStep)
-    }
-
     function toggleMute(node) {
         if (!node?.audio)
             return
 
+        VolumeOsd.suppress()
         Quickshell.execDetached(["wpctl", "set-mute", String(node.id), "toggle"])
     }
 

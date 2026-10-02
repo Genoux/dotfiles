@@ -6,9 +6,16 @@ import QtQuick
 import qs
 
 Singleton {
+    // The launcher looks the same wherever it opens: in the island, or centred on
+    // the screen. So its metrics are the island's own -- its fills' inset and
+    // gap, and corners concentric with its surface. Only the width differs: the
+    // island page is as wide as the dock, the window is free to be roomier.
     readonly property int width: 600
-    readonly property int padding: StyleTokens.space10
-    readonly property int spacing: StyleTokens.space4
+    readonly property int padding: StyleIsland.fillInset
+    readonly property int spacing: StyleIsland.fillInset
+    readonly property int surfaceRadius: StyleIsland.expandedRadius
+    readonly property int fieldRadius: surfaceRadius - padding
+    readonly property color surfaceColor: StyleOverlay.surface
     readonly property int searchHeight: 40
     readonly property int resultHeight: 40
     readonly property int emptyHeight: 200

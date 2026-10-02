@@ -7,7 +7,7 @@ Item {
 
     property bool active: false
     property color surfaceColor: StyleOverlay.surface
-    property color surfaceBorderColor: StyleOverlay.surfaceBorder
+    property int radius: StyleTokens.radiusMd
 
     default property alias content: contentLayer.data
 
@@ -51,10 +51,8 @@ Item {
         id: surface
 
         anchors.fill: parent
-        radius: StyleTokens.radiusMd
+        radius: root.radius
         color: root.surfaceColor
-        border.width: StyleTokens.borderWidth
-        border.color: root.surfaceBorderColor
         opacity: root.revealOpacityValue
     }
 

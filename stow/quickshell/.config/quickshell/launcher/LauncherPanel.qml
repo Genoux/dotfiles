@@ -16,7 +16,7 @@ Item {
     // list runs under the footer menu.
     property int padding: StyleLauncher.padding
     property int spacing: StyleLauncher.spacing
-    property int fieldRadius: StyleTokens.radiusMd
+    property int fieldRadius: StyleLauncher.fieldRadius
     property int topPadding: padding
     property int bottomPadding: StyleLauncher.padding
     property int listMaxHeight: StyleLauncher.listMaxHeight

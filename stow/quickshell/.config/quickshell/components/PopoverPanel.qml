@@ -1,6 +1,7 @@
 import Qt5Compat.GraphicalEffects
 import QtQuick
 import qs.config
+import qs.services as Services
 
 // Popover panel surface — floats above the bar with all four corners rounded.
 // Uses the translucent overlay material: the Hyprland layer rule for the quickshell
@@ -91,6 +92,9 @@ Item {
     implicitHeight: Math.max(StylePopover.minHeight, contentHeight) + chromePadding * 2 + bottomInset
     width: implicitWidth
     height: implicitHeight
+
+    // In the wide bar a popover wears the same corners as the launcher.
+    readonly property int surfaceRadius: Services.ShellLayout.wide ? StyleLauncher.surfaceRadius : StyleTokens.radiusMd
 
     opacity: embedded || displaying ? 1 : 0
     enabled: active
@@ -195,10 +199,8 @@ Item {
 
         visible: !panel.embedded
         anchors.fill: parent
-        radius: StyleTokens.radiusMd
+        radius: panel.surfaceRadius
         color: StyleOverlay.surface
-        border.width: StyleTokens.borderWidth
-        border.color: StyleOverlay.surfaceBorder
     }
 
     Item {

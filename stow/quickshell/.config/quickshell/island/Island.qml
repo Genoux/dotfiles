@@ -1,11 +1,12 @@
 // One floating surface at the bottom of the screen that is the time when idle,
 // the time plus what is live when something is, and every panel when clicked.
 
-import Qt5Compat.GraphicalEffects
 import QtQuick
 import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Wayland
+import qs.bar.widgets as Widgets
+import qs.components
 import qs.config
 import qs.services as Services
 
@@ -15,6 +16,8 @@ PanelWindow {
     id: root
 
     property bool expanded: false
+    readonly property bool wide: Services.ShellLayout.wide
+    readonly property var hyprMonitor: Hyprland.monitorFor(screen)
     property string pageId: "home"
     property var motion: StyleIsland.closeMotion
     readonly property bool wantsKeyboard: expanded && !!expandedLoader.item && expandedLoader.item.wantsKeyboard
@@ -43,9 +46,14 @@ PanelWindow {
             open(targetPageId);
     }
 
+    onWideChanged: {
+        if (!expanded)
+            motion = StyleIsland.restingMotion;
+
+    }
     color: StyleTokens.transparent
     exclusionMode: Services.ShellLayout.island ? ExclusionMode.Normal : ExclusionMode.Ignore
-    exclusiveZone: StyleIsland.reservedHeight
+    exclusiveZone: root.wide ? StyleIsland.wideReservedHeight : StyleIsland.reservedHeight
     implicitHeight: Math.min(StyleIsland.expandedMaxHeight + StyleIsland.edgeMargin + StyleIsland.shadowMargin, screen ? screen.height : Number.MAX_VALUE)
     // Spans the screen and is masked to the surface, so the island can sit at
     // any alignment without the window moving, and the edge it reserves is the
@@ -83,7 +91,7 @@ PanelWindow {
 
     Connections {
         function onToggleRequested(targetScreen) {
-            if (targetScreen === root.screen)
+            if (targetScreen === root.screen && !root.wide)
                 root.toggleOn("clipboard");
 
         }
@@ -99,7 +107,7 @@ PanelWindow {
 
     Connections {
         function onToggleRequested(targetScreen) {
-            if (targetScreen === root.screen)
+            if (targetScreen === root.screen && !root.wide)
                 root.toggleOn("power");
 
         }
@@ -129,35 +137,38 @@ PanelWindow {
         anchors.leftMargin: StyleIsland.edgeMargin
         anchors.rightMargin: StyleIsland.edgeMargin
         opacity: Services.ShellLayout.islandReveal
-        width: root.expanded ? expandedWidth : compact.implicitWidth
-        height: root.expanded ? expandedHeight : StyleIsland.compactHeight
-
-        DropShadow {
-            anchors.fill: surface
-            source: surface
-            horizontalOffset: 0
-            verticalOffset: 0
-            radius: StylePopover.shadowRadius
-            samples: StylePopover.shadowSamples
-            color: StyleOverlay.shadow
-            transparentBorder: true
-        }
+        width: root.expanded ? expandedWidth : (root.wide ? root.width - StyleIsland.edgeMargin * 2 : compact.implicitWidth)
+        height: root.expanded ? expandedHeight : (root.wide ? StyleIsland.wideHeight : StyleIsland.compactHeight)
 
         Rectangle {
-            // No outline, deliberately: the shared 1% one is below what an 8-bit
-            // alpha channel can antialias, so along a curve it renders as a
-            // dotted ring around the pill.
+            // No outline and no shadow, deliberately: both antialias into a
+            // soft rim along a curve, and a shadow that crosses the compositor's
+            // blur threshold blurs a halo that picks up a bright window behind.
 
             id: surface
 
             anchors.fill: parent
-            radius: Math.min(height / 2, StyleIsland.expandedRadius)
-            color: StyleIsland.surface
+            radius: root.wide && !root.expanded ? StyleIsland.wideRadius : Math.min(height / 2, StyleIsland.expandedRadius)
+            color: root.wide && !root.expanded ? StyleIsland.wideSurface : StyleIsland.surface
+
+            Behavior on radius {
+                NumberAnimation {
+                    duration: StyleIsland.resizeDuration
+                    easing.type: StyleIsland.plainEasing
+                }
+            }
+
+            Behavior on color {
+                ColorAnimation {
+                    duration: StyleIsland.resizeDuration
+                    easing.type: StyleIsland.plainEasing
+                }
+            }
         }
 
         MouseArea {
             anchors.fill: parent
-            enabled: !root.expanded
+            enabled: !root.expanded && !root.wide
             acceptedButtons: Qt.LeftButton | Qt.MiddleButton
             cursorShape: Qt.PointingHandCursor
             onClicked: (mouse) => {
@@ -181,10 +192,111 @@ PanelWindow {
             Keys.onEscapePressed: root.collapse()
 
             Veil {
+                id: barVeil
+
+                anchors.left: parent.left
+                anchors.leftMargin: StyleIsland.wideInset
+                anchors.verticalCenter: parent.verticalCenter
+                width: barLoader.item ? barLoader.item.implicitWidth : 0
+                height: barLoader.item ? barLoader.item.implicitHeight : 0
+                veil: root.wide && !root.expanded ? 0 : 1
+
+                Loader {
+                    id: barLoader
+
+                    active: root.wide || barVeil.visible
+
+                    sourceComponent: Row {
+                        spacing: StyleIsland.wideSpacing
+
+                        Widgets.Workspaces {
+                            anchors.verticalCenter: parent.verticalCenter
+                            hyprMonitor: root.hyprMonitor
+                        }
+
+                        Widgets.SystemTray {
+                            anchors.verticalCenter: parent.verticalCenter
+                            barWindow: root
+                        }
+                    }
+                }
+            }
+
+            // The old bar's own widgets, so each opens its popover over its
+            // button the way it does there rather than expanding the island.
+            Veil {
+                id: controlsVeil
+
+                anchors.right: parent.right
+                anchors.rightMargin: StyleIsland.wideInset
+                anchors.verticalCenter: parent.verticalCenter
+                width: controlsLoader.item ? controlsLoader.item.implicitWidth : 0
+                height: controlsLoader.item ? controlsLoader.item.implicitHeight : 0
+                veil: barVeil.veil
+
+                Loader {
+                    id: controlsLoader
+
+                    active: root.wide || controlsVeil.visible
+
+                    sourceComponent: Row {
+                        spacing: StyleIsland.wideSpacing
+
+                        Widgets.MediaPlayer {
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+
+                        // One run of peers with the clock in it, as in the old
+                        // bar, so the icons and the time share a size, a rhythm
+                        // and one travelling hover fill.
+                        HoverRow {
+                            anchors.verticalCenter: parent.verticalCenter
+                            spacing: StyleIsland.wideSpacing
+
+                            Widgets.Launcher {
+                                screen: root.screen
+                            }
+
+                            Widgets.Volume {
+                                barWindow: root
+                            }
+
+                            Widgets.Network {
+                                barWindow: root
+                            }
+
+                            Widgets.Bluetooth {
+                                barWindow: root
+                            }
+
+                            Widgets.Clipboard {
+                                barWindow: root
+                            }
+
+                            Widgets.Capture {
+                                screen: root.screen
+                                barWindow: root
+                            }
+
+                            Widgets.Clock {
+                                barWindow: root
+                            }
+
+                            Widgets.MoreMenu {
+                                barWindow: root
+                            }
+                        }
+                    }
+                }
+            }
+
+            Veil {
+                id: compactVeil
+
                 anchors.centerIn: parent
                 width: compact.implicitWidth
                 height: compact.implicitHeight
-                veil: root.expanded ? 1 : 0
+                veil: root.expanded || root.wide ? 1 : 0
 
                 IslandCompact {
                     id: compact
