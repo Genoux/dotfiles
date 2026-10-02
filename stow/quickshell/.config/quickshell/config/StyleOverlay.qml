@@ -15,7 +15,13 @@ Singleton {
     // Rules and edges *inside* a surface — separators, input outlines, the
     // selected-row border.
     readonly property color borderSubtle: StyleTokens.alphaHairline
-    readonly property color shadow: Qt.rgba(0, 0, 0, 0.2)
+    // Kept under the compositor's blur threshold: Hyprland's layer rules for the
+    // quickshell namespaces blur wherever alpha exceeds ignore_alpha (0.1, in
+    // windowrules.lua). A shadow that crosses it blurs a halo around the surface,
+    // which bleeds a light window behind into a pale, pixelated outline. The
+    // shadow's alpha peaks at half its colour's at the surface edge, so 0.14
+    // stays below 0.1 everywhere outside it.
+    readonly property color shadow: Qt.rgba(0, 0, 0, 0.14)
     readonly property real hiddenScale: 0.98
     readonly property int showDuration: StyleTokens.motionEnterDuration
     readonly property int hideDuration: StyleTokens.motionExitDuration

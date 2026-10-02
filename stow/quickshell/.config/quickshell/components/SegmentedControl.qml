@@ -15,29 +15,25 @@ Item {
 
     property var labels: []
     property color textColor: Colors.base04
-    property color selectedTextColor: Colors.base05
+    property color selectedTextColor: Colors.base06
     // Controlled, not self-managing: the owner holds the current index and this
     // only asks for a new one. Assigning currentIndex from inside would overwrite
     // the owner's binding on first click, and every later programmatic change —
     // resetting the tab when the panel closes, say — would move the content while
     // leaving the segments showing the stale one.
     property int currentIndex: 0
-    // The track breathes by the same amount inside and between segments, so
-    // selected tabs sit on one consistent four-sided spacing grid.
-    readonly property int segmentGap: StyleTokens.space4
-    readonly property real segmentRadius: Math.max(0, StyleTokens.radiusSm - segmentGap)
+    readonly property int segmentGap: StyleControl.segmentInset
+    readonly property real segmentRadius: Math.max(0, StyleControl.segmentTrackRadius - segmentGap)
 
     signal segmentSelected(int index)
 
-    implicitHeight: StylePopover.segmentBarHeight
+    implicitHeight: StyleControl.segmentHeight
     height: implicitHeight
 
     Rectangle {
         anchors.fill: parent
-        radius: StyleTokens.radiusSm
+        radius: StyleControl.segmentTrackRadius
         color: StyleTokens.alphaHairline
-        border.width: StyleTokens.borderWidth
-        border.color: StyleOverlay.borderSubtle
     }
 
     // Shares the row's rect without being laid out by it: a Row positions every
@@ -98,6 +94,13 @@ Item {
                     font.family: StyleTokens.fontSans
                     font.pixelSize: StyleTokens.fontSizeSm
                     font.weight: segment.selected ? Font.DemiBold : Font.Normal
+
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: StyleTokens.motionFeedbackDuration
+                            easing.type: StyleTokens.easeFade
+                        }
+                    }
                 }
 
                 MouseArea {

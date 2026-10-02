@@ -39,7 +39,7 @@ Rectangle {
         id: marker
 
         anchors.left: parent.left
-        anchors.leftMargin: StylePopover.contentPaddingH - StylePopover.listRowInset
+        anchors.leftMargin: StylePopover.contentPaddingH - row.x
         anchors.verticalCenter: parent.verticalCenter
         width: StyleTokens.space6
         height: width
@@ -64,7 +64,7 @@ Rectangle {
         anchors.left: marker.right
         anchors.leftMargin: StyleTokens.space10
         anchors.right: parent.right
-        anchors.rightMargin: StylePopover.contentPaddingH - StylePopover.listRowInset
+        anchors.rightMargin: StylePopover.contentPaddingH - row.x
         anchors.verticalCenter: parent.verticalCenter
         text: AudioState.label(row.node)
         color: row.selected ? Colors.base05 : Colors.base04

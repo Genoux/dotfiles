@@ -7,7 +7,9 @@ import qs.services
 PopoverPanel {
     id: root
 
-    readonly property int popoverWidth: StylePopover.systemMonitorWidth
+    flushBottom: true
+
+    property int popoverWidth: StylePopover.systemMonitorWidth
     property string sortKey: "cpu"
     property bool sortAscending: false
     readonly property var visibleProcesses: {
@@ -108,7 +110,7 @@ PopoverPanel {
             PopoverHeader {
                 width: parent.width
                 title: "System"
-                horizontalPadding: StylePopover.systemHeaderPaddingH
+                horizontalPadding: root.embedded ? StylePopover.contentPaddingH : StylePopover.systemHeaderPaddingH
 
                 Row {
                     spacing: StyleTokens.space8
@@ -217,6 +219,7 @@ PopoverPanel {
             Item {
                 width: parent.width
                 height: StylePopover.systemProcessListHeight
+                    + (root.embedded ? StyleIsland.pagePaddingBottom - processColumn.bottomPadding : 0)
 
                 PopoverMessage {
                     anchors.fill: parent
@@ -245,8 +248,8 @@ PopoverPanel {
 
                             required property var modelData
 
-                            x: StylePopover.listRowInset
-                            width: root.popoverWidth - StylePopover.listRowInset * 2
+                            x: root.fillInset
+                            width: root.popoverWidth - root.fillInset * 2
                             height: StylePopover.systemProcessRowHeight
                             radius: StyleTokens.radiusSm
                             color: StyleTokens.transparent
@@ -266,7 +269,7 @@ PopoverPanel {
 
                             Text {
                                 anchors.left: parent.left
-                                anchors.leftMargin: StylePopover.contentPaddingH - StylePopover.listRowInset
+                                anchors.leftMargin: StylePopover.contentPaddingH - processRow.x
                                 anchors.right: values.left
                                 anchors.rightMargin: StyleTokens.space6
                                 anchors.verticalCenter: parent.verticalCenter
@@ -281,7 +284,7 @@ PopoverPanel {
                                 id: values
 
                                 anchors.right: parent.right
-                                anchors.rightMargin: StylePopover.contentPaddingH - StylePopover.listRowInset
+                                anchors.rightMargin: StylePopover.contentPaddingH - processRow.x
                                 anchors.verticalCenter: parent.verticalCenter
                                 spacing: StyleTokens.space12
 

@@ -133,6 +133,14 @@ its content, and every band picks the right one.
   fill's own edge, which lands it back on `contentPaddingH` from the panel and
   under the header title.
 
+**In the island** the two insets are one: `StyleIsland.padding`, which is
+`contentPaddingH`. Rows, tiles and segment tracks sit on it like the header does,
+so a list is inset exactly like a grid; text inside a fill is still offset by
+`contentPaddingH - listRowInset`. That single value drives every page, list and
+grid; `edgeInset` (half of it) is the margin of what hugs the island's edge, the
+dock and the launcher. To loosen or tighten the whole island, change
+`StylePopover.contentPaddingH`.
+
 Fills share one edge, text shares another. Insetting a segment track on
 `contentPaddingH` is the easy mistake: it is content, not chrome, so it belongs
 on the fill edge with the rows beneath it.

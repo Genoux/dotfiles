@@ -8,7 +8,9 @@ import qs.services
 PopoverPanel {
     id: root
 
-    readonly property int popoverWidth: StylePopover.systemInfoWidth
+    flushBottom: true
+
+    property int popoverWidth: StylePopover.systemInfoWidth
     readonly property string operatingSystem: SystemInfo.software.find(row => row.label === "OS")?.value ?? ""
     readonly property string machineModel: SystemInfo.hardware.find(row => row.label === "PC")?.value ?? ""
 
@@ -24,7 +26,8 @@ PopoverPanel {
     // so the panel would size to the content and drop the inset. This carries it.
     Item {
         implicitWidth: root.popoverWidth
-        implicitHeight: content.implicitHeight + StylePopover.contentPaddingH * 2
+        implicitHeight: content.implicitHeight + StylePopover.contentPaddingH
+            + (root.embedded ? StyleIsland.pagePaddingBottom : StylePopover.contentPaddingH)
         width: implicitWidth
         height: implicitHeight
 

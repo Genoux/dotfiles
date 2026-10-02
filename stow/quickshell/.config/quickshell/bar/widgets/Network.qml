@@ -8,22 +8,7 @@ Button {
 
     required property var barWindow
 
-    // The bar states which link is carrying traffic, not how strong it is —
-    // strength is a comparison, and comparing belongs in the panel. The active
-    // icon theme supplies a purpose-drawn small symbolic mark.
-    readonly property var networkIconSource: {
-        const type = Services.Network.linkType;
-        const online = Services.Network.isOnline;
-        if (type === "wireless")
-            return IconRegistry.networkIcon(online ? "wireless" : "wireless-offline");
-
-        if (type === "wired")
-            return IconRegistry.networkIcon(online ? "wired" : "wired-offline");
-
-        return IconRegistry.networkIcon(online ? "wired" : "offline");
-    }
-
-    iconSource: networkIconSource
+    iconSource: IconRegistry.networkIcon(Services.Network.iconKey)
     interactive: true
     active: popover.open
     onClicked: popover.toggle()

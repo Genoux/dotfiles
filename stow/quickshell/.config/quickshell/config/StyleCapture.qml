@@ -54,7 +54,9 @@ Singleton {
     // Both segments hold one tile row, so the band needs no slack for either.
     // Bottom padding only: the segment band above already closes on
     // segmentBandPaddingBottom, and adding air on this side of the same seam
-    // would make the gap under the tabs twice the padding beside the tiles.
+    // would make the gap under the tabs twice the padding beside the tiles. The
+    // island leaves its own page padding under the page, so it takes the tiles
+    // alone.
     readonly property int bodyHeight: StylePopover.tileHeight
         + StylePopover.contentPaddingV
 }

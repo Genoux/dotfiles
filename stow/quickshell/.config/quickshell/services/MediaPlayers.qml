@@ -8,7 +8,14 @@ Singleton {
     id: root
 
     readonly property int recentPlayingMax: 12
+    // A track longer than this is a live stream. They report a length near the
+    // integer limit.
+    readonly property int liveStreamSeconds: 86400
     property var recentPlayingKeys: []
+    // The reader's explicit choice. It outranks everything until another player
+    // starts playing or this one goes away; set from handlers, never from the
+    // binding that reads it.
+    property string pinnedPlayerKey: ""
     readonly property var activePlayers: Mpris.players.values.filter((candidate) => {
         return isAvailablePlayer(candidate) && !isStalePaused(candidate);
     })
@@ -34,11 +41,39 @@ Singleton {
         return candidate.isPlaying || (candidate.canControl && candidate.canPlay);
     }
 
+    function cleanField(value) {
+        const text = String(value ?? "").trim();
+        return /^(unknown(?: artist| title| track)?|n\/a)$/i.test(text) ? "" : text;
+    }
+
+    // Browsers report no artwork for a video, but the tab's address names it.
+    // mqdefault is the clean 16:9 frame: hqdefault carries letterbox bars that
+    // a square crop would keep.
+    function artUrl(candidate) {
+        const reported = String(candidate?.trackArtUrl ?? "");
+        if (reported.length > 0)
+            return reported;
+
+        const address = String(candidate?.metadata?.["xesam:url"] ?? "");
+        const video = address.match(/(?:youtube\.com\/(?:watch\?(?:[^#]*&)?v=|shorts\/|embed\/|live\/)|youtu\.be\/)([\w-]{11})/);
+        return video ? `https://i.ytimg.com/vi/${video[1]}/mqdefault.jpg` : "";
+    }
+
+    function trackLabel(candidate) {
+        return [candidate?.trackTitle, candidate?.trackArtist].map(cleanField).filter(text => text.length > 0).join(" - ");
+    }
+
+    // A title is enough: podcasts and episodes carry no artist, and requiring
+    // one made a playing Spotify episode and a browser tab equally "without
+    // metadata", leaving the choice between them to whichever played last.
     function hasTrackMetadata(candidate) {
-        return [candidate?.trackTitle, candidate?.trackArtist].every(value => {
-            const text = String(value ?? "").trim();
-            return text.length > 0 && !/^(unknown(?: artist| title| track)?|n\/a)$/i.test(text);
-        });
+        return cleanField(candidate?.trackTitle).length > 0;
+    }
+
+    // A camera feed or radio has no end to seek to, so it is not a track. It
+    // never wins on its own; the switcher can still choose it.
+    function isLiveStream(candidate) {
+        return !!candidate?.lengthSupported && candidate.length >= liveStreamSeconds;
     }
 
     function isStalePaused(candidate) {
@@ -123,27 +158,47 @@ Singleton {
         if (pruned.length !== recentPlayingKeys.length)
             recentPlayingKeys = pruned;
 
+        if (!active.some(candidate => keysMatch(pinnedPlayerKey, candidate)))
+            pinnedPlayerKey = "";
+
         MediaPause.prune(Mpris.players.values.filter((candidate) => {
             return tracksPauseClock(candidate);
         }).map(playerKey));
     }
 
     function pickActivePlayer() {
-        const playing = activePlayers.filter(candidate => candidate.isPlaying);
+        const pinned = activePlayers.find(candidate => keysMatch(pinnedPlayerKey, candidate));
+        if (pinned)
+            return pinned;
+
+        const tracks = activePlayers.filter(candidate => !isLiveStream(candidate));
+        const playing = tracks.filter(candidate => candidate.isPlaying);
         const displayable = playing.filter(hasTrackMetadata);
         if (displayable.length)
             return pickByStackOrder(displayable);
-        const paused = activePlayers.filter(hasTrackMetadata);
+        const paused = tracks.filter(hasTrackMetadata);
         if (paused.length)
             return pickByStackOrder(paused);
         if (playing.length)
             return pickByStackOrder(playing);
-        return pickByStackOrder(activePlayers);
+        return pickByStackOrder(tracks);
+    }
+
+    function selectPlayer(candidate) {
+        if (!candidate || isProxyPlayer(candidate))
+            return;
+
+        pinnedPlayerKey = playerKey(candidate);
+        markPlayerInteracted(candidate);
     }
 
     function notePlayerPlaying(candidate) {
-        if (candidate?.isPlaying && !isProxyPlayer(candidate))
-            pushRecentPlaying(candidate);
+        if (!candidate?.isPlaying || isProxyPlayer(candidate))
+            return;
+
+        if (!keysMatch(pinnedPlayerKey, candidate))
+            pinnedPlayerKey = "";
+        pushRecentPlaying(candidate);
     }
 
     function markPlayerInteracted(candidate = player) {
@@ -154,8 +209,7 @@ Singleton {
         markPlayerActivity(candidate);
     }
 
-    function previous() {
-        const target = player;
+    function previous(target = player) {
         if (!target?.canGoPrevious)
             return;
 
@@ -163,8 +217,7 @@ Singleton {
         target.previous();
     }
 
-    function togglePlayback() {
-        const target = player;
+    function togglePlayback(target = player) {
         if (!target || !(target.isPlaying ? target.canPause : target.canPlay))
             return;
 
@@ -175,8 +228,7 @@ Singleton {
             target.play();
     }
 
-    function next() {
-        const target = player;
+    function next(target = player) {
         if (!target?.canGoNext)
             return;
 

@@ -10,6 +10,9 @@ import qs.services as Services
 PopoverPanel {
     id: root
 
+    flushBottom: true
+    underFooter: true
+
     readonly property int popoverWidth: StylePopover.panelWidth
 
     // The list only polls at speed while it is on screen, and a passphrase
@@ -121,7 +124,7 @@ PopoverPanel {
 
                 visible: WifiState.powered
                 width: parent.width
-                height: visible ? Math.min(networkColumn.implicitHeight, StylePopover.listMaxHeight) : 0
+                height: visible ? Math.min(networkColumn.implicitHeight, StylePopover.listMaxHeight + root.listReach) : 0
                 contentWidth: width
                 contentHeight: networkColumn.implicitHeight
                 clip: true
@@ -136,8 +139,8 @@ PopoverPanel {
                     id: networkColumn
 
                     width: networkList.width
-                    topPadding: StylePopover.contentPaddingV
-                    bottomPadding: StylePopover.contentPaddingV
+                    topPadding: root.listStartPadding
+                    bottomPadding: root.listEndPadding
                     spacing: StylePopover.listRowSpacing
 
                     PopoverSection {
@@ -154,8 +157,8 @@ PopoverPanel {
                         NetworkRow {
                             required property var modelData
 
-                            x: StylePopover.listRowInset
-                            width: networkColumn.width - StylePopover.listRowInset * 2
+                            x: root.fillInset
+                            width: networkColumn.width - root.fillInset * 2
                             network: modelData
                         }
                     }
@@ -173,8 +176,8 @@ PopoverPanel {
                         NetworkRow {
                             required property var modelData
 
-                            x: StylePopover.listRowInset
-                            width: networkColumn.width - StylePopover.listRowInset * 2
+                            x: root.fillInset
+                            width: networkColumn.width - root.fillInset * 2
                             network: modelData
                         }
                     }
@@ -212,8 +215,8 @@ PopoverPanel {
                         NetworkRow {
                             required property var modelData
 
-                            x: StylePopover.listRowInset
-                            width: networkColumn.width - StylePopover.listRowInset * 2
+                            x: root.fillInset
+                            width: networkColumn.width - root.fillInset * 2
                             network: modelData
                         }
                     }

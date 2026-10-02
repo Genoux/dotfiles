@@ -23,7 +23,7 @@ PopoverPanel {
         + StylePopover.separatorHeight
         + StylePopover.weatherAxisHeight
         + forecastRowCount * StylePopover.forecastRowHeight
-        + StylePopover.contentPaddingV
+        + (embedded ? 0 : StylePopover.contentPaddingV)
 
     // Shared column geometry — the axis labels in the section header must land
     // exactly on the ends of the track in the rows below, or the scale they
@@ -105,7 +105,7 @@ PopoverPanel {
             id: weatherContent
 
             width: root.popoverWidth
-            bottomPadding: StylePopover.contentPaddingV
+            bottomPadding: root.embedded ? 0 : StylePopover.contentPaddingV
             spacing: 0
             visible: WeatherState.hasData
 

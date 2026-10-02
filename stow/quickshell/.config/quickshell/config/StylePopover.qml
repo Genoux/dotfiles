@@ -137,13 +137,11 @@ Singleton {
     // a segmented control choosing which domain the panel is showing. The band is
     // taller than a menu row because it stacks a label over a full-width control.
     readonly property int levelBandHeight: 52
-    readonly property int segmentBarHeight: 28
     // The header rule has ~16px of air above it, from the title centred in a 48px
     // header. Matching that below stops the rule reading as the tab bar's own
     // underline and lets it close the header instead.
     readonly property int segmentBandPaddingTop: StyleTokens.space16
     readonly property int segmentBandPaddingBottom: StyleTokens.space8
-    readonly property int segmentPaddingH: StyleTokens.space10
     // A stream row carries a name line over its own slider, so it needs more than
     // the two-line device row: a slider's hit area is taller than a caption.
     readonly property int streamRowHeight: 52

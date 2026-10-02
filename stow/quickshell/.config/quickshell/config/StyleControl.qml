@@ -43,4 +43,12 @@ Singleton {
     readonly property int toggleHeight: 18
     // Breathing room around the knob inside the track.
     readonly property int toggleInset: 2
+
+    // Segmented control — built like the island's tab dock: a borderless track,
+    // one gap round every segment, and a fill whose radius is the track's less
+    // that gap. A medium track with the base-unit gap lands the fill on the
+    // standard 8px fill radius and a 28px height, the same as a list row's.
+    readonly property int segmentHeight: 36
+    readonly property int segmentInset: StyleTokens.space4
+    readonly property int segmentTrackRadius: StyleTokens.radiusMd
 }

@@ -7,6 +7,9 @@ import qs.services
 PopoverPanel {
     id: root
 
+    flushBottom: true
+    underFooter: true
+
     readonly property int outputTab: 0
     readonly property int inputTab: 1
     readonly property int appsTab: 2
@@ -95,20 +98,20 @@ PopoverPanel {
 
             Item {
                 width: parent.width
-                implicitHeight: StylePopover.segmentBarHeight
-                    + StylePopover.segmentBandPaddingTop
-                    + StylePopover.segmentBandPaddingBottom
+                implicitHeight: StyleControl.segmentHeight
+                    + root.bandPaddingTop
+                    + root.bandPaddingBottom
                 height: implicitHeight
 
                 SegmentedControl {
                     id: segments
 
                     anchors.left: parent.left
-                    anchors.leftMargin: StylePopover.listRowInset
+                    anchors.leftMargin: root.fillInset
                     anchors.right: parent.right
-                    anchors.rightMargin: StylePopover.listRowInset
+                    anchors.rightMargin: root.fillInset
                     anchors.top: parent.top
-                    anchors.topMargin: StylePopover.segmentBandPaddingTop
+                    anchors.topMargin: root.bandPaddingTop
                     labels: ["Output", "Input", "Apps"]
                     currentIndex: root.tab
                     onSegmentSelected: (index) => root.tab = index
@@ -185,7 +188,7 @@ PopoverPanel {
                 readonly property bool empty: root.tab === root.appsTab ? AudioState.streamCount === 0
                     : (root.onInput ? AudioState.inputCount === 0 : AudioState.outputCount === 0)
                 implicitHeight: empty ? StylePopover.emptyStateHeight
-                    : Math.min(listColumn.implicitHeight, StylePopover.soundBodyMaxHeight)
+                    : Math.min(listColumn.implicitHeight, StylePopover.soundBodyMaxHeight + root.listReach)
                 height: implicitHeight
 
                 PopoverMessage {
@@ -213,8 +216,8 @@ PopoverPanel {
                         id: listColumn
 
                         width: list.width
-                        topPadding: StylePopover.contentPaddingV
-                        bottomPadding: StylePopover.contentPaddingV
+                        topPadding: root.listStartPadding
+                        bottomPadding: root.listEndPadding
                         spacing: StylePopover.listRowSpacing
 
                         Repeater {
@@ -225,8 +228,8 @@ PopoverPanel {
                             AudioDeviceRow {
                                 required property var modelData
 
-                                x: StylePopover.listRowInset
-                                width: listColumn.width - StylePopover.listRowInset * 2
+                                x: root.fillInset
+                                width: listColumn.width - root.fillInset * 2
                                 node: modelData
                                 visible: root.onInput
                                     ? AudioState.isInput(modelData)
@@ -249,8 +252,8 @@ PopoverPanel {
                             AudioStreamRow {
                                 required property var modelData
 
-                                x: StylePopover.listRowInset
-                                width: listColumn.width - StylePopover.listRowInset * 2
+                                x: root.fillInset
+                                width: listColumn.width - root.fillInset * 2
                                 node: modelData
                                 visible: root.tab === root.appsTab && AudioState.isPlaybackStream(modelData)
                             }

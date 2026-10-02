@@ -23,8 +23,8 @@ Singleton {
     property var processes: []
 
     readonly property string uptime: formatUptime(uptimeSeconds)
-    readonly property string memoryDetail: formatBytes(memoryUsedBytes) + " / " + formatBytes(memoryTotalBytes)
-    readonly property string diskDetail: formatBytes(diskUsedBytes) + " / " + formatBytes(diskTotalBytes)
+    readonly property string memoryDetail: formatUsage(memoryUsedBytes, memoryTotalBytes)
+    readonly property string diskDetail: formatUsage(diskUsedBytes, diskTotalBytes)
 
     function clampPercent(value) {
         return Math.max(0, Math.min(100, Number(value) || 0))
@@ -39,6 +39,13 @@ Singleton {
         const unit = Math.min(units.length - 1, Math.floor(Math.log(value) / Math.log(1024)))
         const scaled = value / Math.pow(1024, unit)
         return (scaled >= 10 || unit === 0 ? scaled.toFixed(0) : scaled.toFixed(1)) + " " + units[unit]
+    }
+
+    // The unit is stated once when both figures share it: "28 / 31 GiB".
+    function formatUsage(usedBytes, totalBytes) {
+        const [used, usedUnit] = formatBytes(usedBytes).split(" ")
+        const [total, totalUnit] = formatBytes(totalBytes).split(" ")
+        return usedUnit === totalUnit ? used + " / " + total + " " + totalUnit : used + " " + usedUnit + " / " + total + " " + totalUnit
     }
 
     function formatUptime(seconds) {

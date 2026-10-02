@@ -11,9 +11,40 @@ Item {
     property bool active: false
     property bool fitContent: false
     property bool displaying: false
+    // Rendered inside another surface (the island), which owns the chrome and
+    // the motion: the panel keeps its content, sizing and `active` lifecycle,
+    // and drops the surface, shadow, reveal scale and inset, so its rules run
+    // edge to edge.
+    property bool embedded: false
+    // An embedded page that ends on its own bottom edge (a list that scrolls to
+    // the island's footer, or a page with its own inset) opts out of the air the
+    // island otherwise leaves beneath a page's last row.
+    property bool flushBottom: false
+    // A list that carries on beneath the island's footer menu instead of ending
+    // above it. The page's height then includes the footer's, which is drawn
+    // over its tail, and `listReach` is how far the list runs past its fold.
+    property bool underFooter: false
+    readonly property int listReach: embedded && underFooter ? StyleIsland.footerHeight : 0
+    // The air above a list's first row and under its last, the same as a static
+    // page keeps under its header and above the dock.
+    readonly property int listStartPadding: embedded ? StyleIsland.fillPaddingTop : StylePopover.contentPaddingV
+    // Exactly the stretch the fade occupies, so a list scrolled to its end rests
+    // where the fade begins and its last row is never dimmed.
+    readonly property int listEndPadding: embedded && underFooter
+        ? StyleIsland.footerFadeEnd + StyleIsland.footerFadeLength
+        : StylePopover.contentPaddingV
+    // Where anything carrying a fill sits from the panel's sides: list rows, tiles
+    // and segmented controls. A bar popover floats its fills just inside the
+    // border; in the island they share the page's own padding, so a list is
+    // inset exactly like a grid.
+    readonly property int fillInset: embedded ? StyleIsland.fillInset : StylePopover.listRowInset
+    // The gap inside a band of tiles, and under the control that selects them.
+    readonly property int bandGap: embedded ? StyleIsland.tileGridGap : StyleTokens.space4
+    readonly property int bandPaddingTop: embedded ? StyleIsland.fillPaddingTop : StylePopover.segmentBandPaddingTop
+    readonly property int bandPaddingBottom: embedded ? bandGap : StylePopover.segmentBandPaddingBottom
 
     default property alias content: contentLayer.data
-    readonly property int chromePadding: StylePopover.padding
+    readonly property int chromePadding: embedded ? 0 : StylePopover.padding
 
     signal dismissFinished()
 
@@ -55,11 +86,13 @@ Item {
     readonly property real contentHeight: contentImplicitHeight
 
     implicitWidth: (fitContent ? contentWidth : Math.max(StylePopover.minWidth, contentWidth)) + chromePadding * 2
-    implicitHeight: Math.max(StylePopover.minHeight, contentHeight) + chromePadding * 2
+    readonly property int bottomInset: embedded && !flushBottom ? StyleIsland.pagePaddingBottom : 0
+
+    implicitHeight: Math.max(StylePopover.minHeight, contentHeight) + chromePadding * 2 + bottomInset
     width: implicitWidth
     height: implicitHeight
 
-    opacity: displaying ? 1 : 0
+    opacity: embedded || displaying ? 1 : 0
     enabled: active
     transformOrigin: Item.Bottom
 
@@ -69,7 +102,7 @@ Item {
     // this follows the resize instead of being fired by hand at each call site,
     // which could not know whether the new content was the same size.
     function pulseOnResize() {
-        if (!active || !displaying || panelMotion.running || panelExit.running)
+        if (embedded || !active || !displaying || panelMotion.running || panelExit.running)
             return;
         scale = StylePopover.panelStartScale;
         panelMotion.restart();
@@ -79,6 +112,13 @@ Item {
     onImplicitHeightChanged: pulseOnResize()
 
     function updateVisibility() {
+        if (embedded) {
+            displaying = active;
+            if (!active)
+                finishDismissal();
+            return;
+        }
+
         if (active) {
             const reopening = displaying;
             panelExit.stop();
@@ -104,6 +144,14 @@ Item {
     }
 
     onActiveChanged: updateVisibility()
+
+    // A host that is torn down with the panel open (the island being switched
+    // off) never sees it close, and the close handlers are what release the
+    // polling and scans a panel started.
+    Component.onDestruction: {
+        if (embedded && active)
+            active = false;
+    }
     Component.onCompleted: {
         if (active && !displaying)
             updateVisibility();
@@ -131,6 +179,7 @@ Item {
     }
 
     DropShadow {
+        visible: !panel.embedded
         anchors.fill: surface
         source: surface
         horizontalOffset: 0
@@ -144,6 +193,7 @@ Item {
     Rectangle {
         id: surface
 
+        visible: !panel.embedded
         anchors.fill: parent
         radius: StyleTokens.radiusMd
         color: StyleOverlay.surface
@@ -159,7 +209,7 @@ Item {
         x: chromePadding
         y: chromePadding
         width: parent.width - chromePadding * 2
-        height: parent.height - chromePadding * 2
+        height: parent.height - chromePadding * 2 - bottomInset
 
 
     }

@@ -10,12 +10,19 @@ import qs.config
 import qs.services as Services
 
 PanelWindow {
+    // Dismisses an open popover when the bar itself is clicked. The focus grab
+    // covers clicks outside the bar, but it deliberately treats the bar as
+    // inside the grab so other bar buttons keep working — leaving bar clicks
+    // unable to dismiss anything.
+
     id: bar
 
     readonly property var hyprMonitor: Hyprland.monitorFor(screen)
-
     readonly property int contentHeight: Math.max(StyleBar.estimatedContentHeight, leftRow.implicitHeight, windowTitle.implicitHeight, rightRow.implicitHeight)
 
+    // Only one surface holds the bottom edge at a time, so the compositor
+    // re-tiles once, at the start of a switch, instead of twice.
+    exclusionMode: Services.ShellLayout.island ? ExclusionMode.Ignore : ExclusionMode.Auto
     implicitHeight: contentHeight + StyleBar.topPadding + StyleBar.bottomPadding
     color: StyleBar.background
 
@@ -25,11 +32,6 @@ PanelWindow {
         right: true
     }
 
-    // Dismisses an open popover when the bar itself is clicked. The focus grab
-    // covers clicks outside the bar, but it deliberately treats the bar as
-    // inside the grab so other bar buttons keep working — leaving bar clicks
-    // unable to dismiss anything.
-    //
     // Declared first so it sits *below* the widgets: an interactive widget
     // consumes its own click and handles its own popover, while empty bar space
     // and non-interactive widgets (which accept no buttons) fall through to
@@ -73,8 +75,14 @@ PanelWindow {
 
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.verticalCenter: parent.verticalCenter
+            opacity: Services.ShellLayout.barReveal
             hyprMonitor: bar.hyprMonitor
             availableWidth: Math.max(0, rightRow.x - StyleTokens.space6 - windowTitle.x)
+
+            transform: Translate {
+                y: (1 - Services.ShellLayout.barReveal) * StyleIsland.handoverSlide
+            }
+
         }
 
         RowLayout {
@@ -83,6 +91,7 @@ PanelWindow {
             z: 1
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
+            opacity: Services.ShellLayout.barReveal
             spacing: StyleTokens.space1
 
             Widgets.PrivacyIndicator {
@@ -175,6 +184,11 @@ PanelWindow {
                     Layout.alignment: Qt.AlignVCenter
                     screen: bar.screen
                 }
+
+            }
+
+            transform: Translate {
+                y: (1 - Services.ShellLayout.barReveal) * StyleIsland.handoverSlide
             }
 
         }

@@ -6,6 +6,9 @@ import qs.services
 PopoverPanel {
     id: root
 
+    flushBottom: true
+    underFooter: true
+
     signal dismiss()
     readonly property var recentEntries: ClipboardHistory.entries.slice(0, 15)
     property int selectedIndex: -1
@@ -65,7 +68,7 @@ PopoverPanel {
             Flickable {
                 id: historyList
                 width: parent.width
-                height: Math.min(rows.implicitHeight, StylePopover.listMaxHeight)
+                height: Math.min(rows.implicitHeight, StylePopover.listMaxHeight + root.listReach)
                 contentWidth: width
                 contentHeight: rows.implicitHeight
                 clip: true
@@ -80,8 +83,8 @@ PopoverPanel {
                 Column {
                     id: rows
                     width: historyList.width
-                    topPadding: StylePopover.contentPaddingV
-                    bottomPadding: StylePopover.contentPaddingV
+                    topPadding: root.listStartPadding
+                    bottomPadding: root.listEndPadding
                     spacing: StylePopover.listRowSpacing
 
                     Repeater {
@@ -93,9 +96,9 @@ PopoverPanel {
                             required property var modelData
                             required property int index
 
-                            x: StylePopover.listRowInset
+                            x: root.fillInset
                             width: rows.width - x * 2
-                            paddingH: StylePopover.contentPaddingH - StylePopover.listRowInset
+                            paddingH: StylePopover.contentPaddingH - x
                             label: modelData.filePath ? "Image" : modelData.value.replace(/\s+/g, " ").trim()
                             actionEnabled: root.active && !ClipboardHistory.busy
                             onActivated: ClipboardHistory.copy(modelData)

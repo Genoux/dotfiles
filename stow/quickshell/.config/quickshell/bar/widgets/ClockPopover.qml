@@ -77,7 +77,6 @@ PopoverPanel {
         } else {
             root.displayMonth -= 1
         }
-        root.animatePanel()
     }
 
     function navigateNext() {
@@ -87,7 +86,6 @@ PopoverPanel {
         } else {
             root.displayMonth += 1
         }
-        root.animatePanel()
     }
 
     function jumpToToday() {
@@ -95,14 +93,13 @@ PopoverPanel {
             return
         root.displayYear = root.todayYear
         root.displayMonth = root.todayMonth
-        root.animatePanel()
     }
 
     Column {
         // Explicit width so PopoverPanel's implicitWidth is stable at build
         // time rather than waiting on childrenRect of unloaded positioners.
         width: root.calendarWidth
-        bottomPadding: StylePopover.contentPaddingV
+        bottomPadding: root.embedded ? 0 : StylePopover.contentPaddingV
         spacing: 0
 
         // Hero row: today's full date is the glanceable anchor, so it gets the

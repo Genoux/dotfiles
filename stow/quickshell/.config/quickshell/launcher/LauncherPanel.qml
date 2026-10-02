@@ -12,6 +12,14 @@ Item {
 
     required property var filteredEntries
     required property bool active
+    // The air under the last result. The island's page takes it to zero, so the
+    // list runs under the footer menu.
+    property int padding: StyleLauncher.padding
+    property int spacing: StyleLauncher.spacing
+    property int fieldRadius: StyleTokens.radiusMd
+    property int topPadding: padding
+    property int bottomPadding: StyleLauncher.padding
+    property int listMaxHeight: StyleLauncher.listMaxHeight
 
     signal launch(var entry)
     signal close
@@ -31,8 +39,8 @@ Item {
     readonly property int listHeight: filteredEntries.length === 0
         ? StyleLauncher.emptyHeight
         : Math.min(
-            filteredEntries.length * StyleLauncher.resultHeight + StyleLauncher.padding,
-            StyleLauncher.listMaxHeight
+            filteredEntries.length * StyleLauncher.resultHeight + bottomPadding,
+            listMaxHeight
         )
 
     // Typing breaks the declarative binding on `text`, so a reopen would keep
@@ -44,10 +52,10 @@ Item {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.topMargin: StyleLauncher.padding
-        anchors.leftMargin: StyleLauncher.padding
-        anchors.rightMargin: StyleLauncher.padding
-        spacing: StyleLauncher.spacing
+        anchors.topMargin: root.topPadding
+        anchors.leftMargin: root.padding
+        anchors.rightMargin: root.padding
+        spacing: root.spacing
 
         Controls.TextField {
             id: searchInput
@@ -72,7 +80,7 @@ Item {
             Accessible.name: placeholderText
 
             background: Rectangle {
-                radius: StyleTokens.radiusMd
+                radius: root.fieldRadius
                 color: StyleLauncher.searchBg
                 border.width: StyleTokens.borderWidth
                 border.color: StyleOverlay.borderSubtle
@@ -135,7 +143,7 @@ Item {
                 interactive: root.active
 
                 highlight: Rectangle {
-                    radius: StyleTokens.radiusMd
+                    radius: StyleTokens.radiusSm
                     color: StyleLauncher.selectedBg
                     border.width: StyleTokens.borderWidth
                     border.color: StyleOverlay.borderSubtle
@@ -147,7 +155,7 @@ Item {
 
                 footer: Item {
                     width: results.width
-                    height: StyleLauncher.padding
+                    height: root.bottomPadding
                 }
 
                 delegate: Item {

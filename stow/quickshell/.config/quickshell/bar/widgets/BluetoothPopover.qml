@@ -7,6 +7,9 @@ import qs.services
 PopoverPanel {
     id: root
 
+    flushBottom: true
+    underFooter: true
+
     readonly property int popoverWidth: StylePopover.panelWidth
 
     onActiveChanged: {
@@ -135,7 +138,7 @@ PopoverPanel {
 
                 visible: BluetoothState.enabled
                 width: parent.width
-                height: visible ? Math.min(deviceColumn.implicitHeight, StylePopover.listMaxHeight) : 0
+                height: visible ? Math.min(deviceColumn.implicitHeight, StylePopover.listMaxHeight + root.listReach) : 0
                 contentWidth: width
                 contentHeight: deviceColumn.implicitHeight
                 clip: true
@@ -150,8 +153,8 @@ PopoverPanel {
                     id: deviceColumn
 
                     width: deviceList.width
-                    topPadding: StylePopover.contentPaddingV
-                    bottomPadding: StylePopover.contentPaddingV
+                    topPadding: root.listStartPadding
+                    bottomPadding: root.listEndPadding
                     spacing: StylePopover.listRowSpacing
 
                     PopoverSection {
@@ -166,8 +169,8 @@ PopoverPanel {
                         BluetoothDeviceRow {
                             required property var modelData
 
-                            x: StylePopover.listRowInset
-                            width: deviceColumn.width - StylePopover.listRowInset * 2
+                            x: root.fillInset
+                            width: deviceColumn.width - root.fillInset * 2
                             device: modelData
                             visible: modelData.connected && !modelData.blocked
                         }
@@ -186,8 +189,8 @@ PopoverPanel {
                         BluetoothDeviceRow {
                             required property var modelData
 
-                            x: StylePopover.listRowInset
-                            width: deviceColumn.width - StylePopover.listRowInset * 2
+                            x: root.fillInset
+                            width: deviceColumn.width - root.fillInset * 2
                             device: modelData
                             visible: modelData.paired && !modelData.connected && !modelData.blocked
                         }
@@ -226,8 +229,8 @@ PopoverPanel {
                         BluetoothDeviceRow {
                             required property var modelData
 
-                            x: StylePopover.listRowInset
-                            width: deviceColumn.width - StylePopover.listRowInset * 2
+                            x: root.fillInset
+                            width: deviceColumn.width - root.fillInset * 2
                             device: modelData
                             visible: !modelData.paired && !modelData.connected && !modelData.blocked
                         }

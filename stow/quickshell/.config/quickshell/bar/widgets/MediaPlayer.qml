@@ -10,7 +10,7 @@ BarGroup {
     id: root
 
     readonly property var player: Services.MediaPlayers.player
-    readonly property string currentTrackText: Services.MediaPlayers.hasTrackMetadata(player) ? `${player.trackTitle} - ${player.trackArtist}` : ""
+    readonly property string currentTrackText: Services.MediaPlayers.hasTrackMetadata(player) ? Services.MediaPlayers.trackLabel(player) : ""
     readonly property bool shouldShow: !!player && currentTrackText.length > 0
     property string trackText: ""
     readonly property bool canGoPrevious: Services.MediaPlayers.canGoPrevious

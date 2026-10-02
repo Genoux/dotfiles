@@ -75,7 +75,7 @@ Rectangle {
         id: signalMeter
 
         anchors.left: parent.left
-        anchors.leftMargin: StylePopover.contentPaddingH - StylePopover.listRowInset
+        anchors.leftMargin: StylePopover.contentPaddingH - row.x
         anchors.top: parent.top
         anchors.topMargin: (StylePopover.listRowHeight - height) / 2
         filled: row.network.strength
@@ -116,7 +116,7 @@ Rectangle {
         id: rowActions
 
         anchors.right: parent.right
-        anchors.rightMargin: StylePopover.contentPaddingH - StylePopover.listRowInset
+        anchors.rightMargin: StylePopover.contentPaddingH - row.x
         anchors.top: parent.top
         anchors.topMargin: (StylePopover.listRowHeight - height) / 2
         hovered: hover.hovered
@@ -152,9 +152,9 @@ Rectangle {
 
         z: 2
         anchors.left: parent.left
-        anchors.leftMargin: StylePopover.contentPaddingH - StylePopover.listRowInset
+        anchors.leftMargin: StylePopover.contentPaddingH - row.x
         anchors.right: parent.right
-        anchors.rightMargin: StylePopover.contentPaddingH - StylePopover.listRowInset
+        anchors.rightMargin: StylePopover.contentPaddingH - row.x
         anchors.top: parent.top
         anchors.topMargin: StylePopover.listRowHeight
         height: StylePopover.fieldHeight

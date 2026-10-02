@@ -3,6 +3,7 @@ pragma Singleton
 import Quickshell
 import Quickshell.Services.Pipewire
 import QtQuick
+import qs.config
 
 // Audio devices, levels, and per-application streams.
 //
@@ -160,6 +161,11 @@ Singleton {
         // Nudging the level of something muted is a request to hear it.
         if (node.audio.muted && next > 0)
             Quickshell.execDetached(["wpctl", "set-mute", String(node.id), "0"])
+    }
+
+    function stepSinkVolume(direction) {
+        if (direction && root.sink)
+            root.setVolume(root.sink, root.sinkVolume + direction * StyleControl.sliderStep)
     }
 
     function toggleMute(node) {

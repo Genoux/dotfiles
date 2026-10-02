@@ -12,7 +12,7 @@ PopoverPanel {
     readonly property int popoverWidth: StylePopover.panelWidth
     readonly property int shotTab: 0
     readonly property int recordTab: 1
-    readonly property int tileRowWidth: popoverWidth - StylePopover.listRowInset * 2
+    readonly property int tileRowWidth: popoverWidth - fillInset * 2
 
     // A live session opens on its controls; otherwise the panel opens on Shot.
     readonly property int restingTab: Services.CaptureState.recording ? recordTab : shotTab
@@ -52,68 +52,6 @@ PopoverPanel {
         function onRecordingChanged() {
             if (!Services.CaptureState.recording && root.active)
                 root.dismissRequested()
-        }
-    }
-
-    // PopoverAction's stacked tile is a fixed 72px built for a compact icon row
-    // of four, which leaves this panel's two or three modes huddled in the
-    // middle. These are the panel's primary actions, so they divide its width.
-    component CaptureTile: Rectangle {
-        id: tile
-
-        required property string label
-        required property string iconKey
-        // A tile that holds a value rather than firing an action keeps a fill
-        // while that value is on, the way an open popover's bar button does.
-        property bool active: false
-
-        signal activated()
-
-        implicitHeight: StylePopover.tileHeight
-        height: implicitHeight
-        radius: StyleTokens.radiusSm
-        // Active keeps its own fill: it outlasts the pointer, so it is state
-        // rather than hover and one travelling indicator cannot express both.
-        color: active ? StyleTokens.alphaActive : StyleTokens.transparent
-
-        readonly property bool hovered: tileArea.containsMouse
-
-        Behavior on color {
-            ColorAnimation {
-                duration: StyleTokens.motionFeedbackDuration
-                easing.type: StyleTokens.easeFade
-            }
-        }
-
-        Column {
-            anchors.centerIn: parent
-            spacing: StyleTokens.space4
-
-            ThemedIcon {
-                anchors.horizontalCenter: parent.horizontalCenter
-                source: IconRegistry.captureIcon(tile.iconKey)
-                size: StylePopover.tileIconSize
-                tint: tile.active ? Colors.base05 : Colors.base04
-            }
-
-            Text {
-                width: tile.width
-                text: tile.label
-                color: Colors.base05
-                font.family: StyleTokens.fontSans
-                font.pixelSize: StyleTokens.fontSizeXs
-                horizontalAlignment: Text.AlignHCenter
-                elide: Text.ElideRight
-            }
-        }
-
-        MouseArea {
-            id: tileArea
-
-            anchors.fill: parent
-            hoverEnabled: true
-            cursorShape: Qt.PointingHandCursor
-            onClicked: tile.activated()
         }
     }
 
@@ -172,18 +110,18 @@ PopoverPanel {
 
             Item {
                 width: parent.width
-                implicitHeight: StylePopover.segmentBarHeight
-                    + StylePopover.segmentBandPaddingTop
-                    + StylePopover.segmentBandPaddingBottom
+                implicitHeight: StyleControl.segmentHeight
+                    + root.bandPaddingTop
+                    + root.bandPaddingBottom
                 height: implicitHeight
 
                 SegmentedControl {
                     anchors.left: parent.left
                     anchors.right: parent.right
-                    anchors.leftMargin: StylePopover.listRowInset
-                    anchors.rightMargin: StylePopover.listRowInset
+                    anchors.leftMargin: root.fillInset
+                    anchors.rightMargin: root.fillInset
                     anchors.top: parent.top
-                    anchors.topMargin: StylePopover.segmentBandPaddingTop
+                    anchors.topMargin: root.bandPaddingTop
                     labels: ["Shot", "Record"]
                     currentIndex: root.tab
                     onSegmentSelected: (index) => root.tab = index
@@ -195,7 +133,7 @@ PopoverPanel {
             // switch and the next click would land on a different tab.
             Item {
                 width: parent.width
-                height: StyleCapture.bodyHeight
+                height: root.embedded ? StylePopover.tileHeight : StyleCapture.bodyHeight
 
                 // Shot has no audio row, so its tiles centre in the taller
                 // body rather than top-aligning against a hole beneath them.
@@ -209,18 +147,18 @@ PopoverPanel {
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.top: parent.top
                     visible: root.tab === root.shotTab
-                    spacing: StyleTokens.space4
+                    spacing: root.bandGap
 
                     Repeater {
                         model: root.shotEntries
 
-                        CaptureTile {
+                        PopoverTile {
                             required property var modelData
 
-                            width: (root.tileRowWidth - StyleTokens.space4 * (root.shotEntries.length - 1))
+                            width: (root.tileRowWidth - root.bandGap * (root.shotEntries.length - 1))
                                 / root.shotEntries.length
                             label: modelData.label
-                            iconKey: modelData.icon
+                            iconSource: IconRegistry.captureIcon(modelData.icon)
                             onActivated: {
                                 Services.CaptureState.shoot(modelData.mode)
                                 root.dismissRequested()
@@ -239,22 +177,22 @@ PopoverPanel {
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.top: parent.top
                     visible: root.tab === root.recordTab && !Services.CaptureState.recording
-                    spacing: StyleTokens.space4
+                    spacing: root.bandGap
 
                     Repeater {
                         model: root.recordEntries
 
-                        CaptureTile {
+                        PopoverTile {
                             required property var modelData
 
                             readonly property bool isAudio: modelData.mode.length === 0
 
-                            width: (root.tileRowWidth - StyleTokens.space4 * (root.recordEntries.length - 1))
+                            width: (root.tileRowWidth - root.bandGap * (root.recordEntries.length - 1))
                                 / root.recordEntries.length
                             label: modelData.label
-                            iconKey: isAudio
+                            iconSource: IconRegistry.captureIcon(isAudio
                                 ? (Services.CaptureState.audioEnabled ? "audio-on" : "audio-off")
-                                : modelData.icon
+                                : modelData.icon)
                             active: isAudio && Services.CaptureState.audioEnabled
                             onActivated: {
                                 if (isAudio) {
@@ -280,13 +218,13 @@ PopoverPanel {
                 Row {
                     id: sessionRow
 
-                    readonly property int columnWidth: (root.tileRowWidth - StyleTokens.space4 * 2) / 3
+                    readonly property int columnWidth: (root.tileRowWidth - root.bandGap * 2) / 3
                     readonly property bool paused: Services.CaptureState.recordingPaused
 
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.top: parent.top
                     visible: root.tab === root.recordTab && Services.CaptureState.recording
-                    spacing: StyleTokens.space4
+                    spacing: root.bandGap
 
                     Item {
                         width: sessionRow.columnWidth
@@ -329,19 +267,19 @@ PopoverPanel {
                         }
                     }
 
-                    CaptureTile {
+                    PopoverTile {
                         width: sessionRow.columnWidth
                         label: sessionRow.paused ? "Resume" : "Pause"
-                        iconKey: sessionRow.paused ? "resume" : "pause"
+                        iconSource: IconRegistry.captureIcon(sessionRow.paused ? "resume" : "pause")
                         onActivated: Services.CaptureState.togglePause()
                     }
 
                     // Dismisses: stopping hands the file to the preview card,
                     // which is where attention goes next.
-                    CaptureTile {
+                    PopoverTile {
                         width: sessionRow.columnWidth
                         label: "Stop"
-                        iconKey: "stop"
+                        iconSource: IconRegistry.captureIcon("stop")
                         onActivated: {
                             Services.CaptureState.stopRecording()
                             root.dismissRequested()

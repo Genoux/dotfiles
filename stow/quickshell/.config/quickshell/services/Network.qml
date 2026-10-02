@@ -15,6 +15,19 @@ Singleton {
     property bool hasWired: false
     property bool hasWireless: false
 
+    // The key IconRegistry.networkIcon takes. It states which link is carrying
+    // traffic, not how strong it is: strength is a comparison, and comparing
+    // belongs in the panel.
+    readonly property string iconKey: {
+        if (linkType === "wireless")
+            return isOnline ? "wireless" : "wireless-offline"
+
+        if (linkType === "wired")
+            return isOnline ? "wired" : "wired-offline"
+
+        return isOnline ? "wired" : "offline"
+    }
+
     function iconForInterface(interfaceName) {
         if (!interfaceName)
             return "unknown"

@@ -23,7 +23,7 @@ Rectangle {
         id: appIcon
 
         anchors.left: parent.left
-        anchors.leftMargin: StylePopover.contentPaddingH - StylePopover.listRowInset
+        anchors.leftMargin: StylePopover.contentPaddingH - row.x
         anchors.verticalCenter: parent.verticalCenter
         size: StyleControl.iconSize
         source: IconRegistry.streamIcon(row.node?.properties)
@@ -49,7 +49,7 @@ Rectangle {
         id: muteButton
 
         anchors.right: parent.right
-        anchors.rightMargin: StylePopover.contentPaddingH - StylePopover.listRowInset - StylePopover.iconButtonPadding
+        anchors.rightMargin: StylePopover.contentPaddingH - row.x - StylePopover.iconButtonPadding
         anchors.top: parent.top
         anchors.topMargin: StyleTokens.space2
         iconSource: IconRegistry.volumeIcon(AudioState.volumeOf(row.node), row.muted, true)
@@ -65,7 +65,7 @@ Rectangle {
     Slider {
         anchors.left: name.left
         anchors.right: parent.right
-        anchors.rightMargin: StylePopover.contentPaddingH - StylePopover.listRowInset
+        anchors.rightMargin: StylePopover.contentPaddingH - row.x
         anchors.bottom: parent.bottom
         anchors.bottomMargin: StyleTokens.space2
         value: AudioState.volumeOf(row.node)

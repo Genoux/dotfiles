@@ -1,6 +1,5 @@
 import Quickshell
 import Quickshell.Wayland
-import Quickshell.Hyprland
 import QtQuick
 import qs.components
 import qs.config
@@ -22,7 +21,6 @@ PanelWindow {
     readonly property bool active: Services.Launcher.visible && Services.Launcher.screen === root.screen
 
     property bool displayed: false
-    property string pendingHistoryId: ""
 
     screen: root.screen
     visible: displayed
@@ -42,22 +40,14 @@ PanelWindow {
 
     function finishHide() {
         displayed = false
-        recordPendingLaunch()
+        Services.Launcher.recordPendingLaunch()
         Services.Launcher.finalizeClose()
-    }
-
-    function recordPendingLaunch() {
-        if (!pendingHistoryId)
-            return
-
-        Services.LauncherHistory.record(DesktopEntries.byId(pendingHistoryId))
-        pendingHistoryId = ""
     }
 
     onActiveChanged: {
         if (active) {
             surface.stopHide()
-            recordPendingLaunch()
+            Services.Launcher.recordPendingLaunch()
             panel.resetScroll()
             displayed = true
             surface.show()
@@ -89,35 +79,14 @@ PanelWindow {
             anchors.fill: parent
             filteredEntries: root.filteredEntries
             active: root.active
-            onLaunch: (entry) => root.launchEntry(entry)
+            onLaunch: (entry) => {
+                if (!entry || !root.active)
+                    return
+
+                Services.Launcher.launch(entry)
+                Services.Launcher.close()
+            }
             onClose: Services.Launcher.close()
         }
-    }
-
-    function launchEntry(entry) {
-        if (!entry || !active)
-            return
-
-        // Updating history reorders the model, so wait until the panel is hidden.
-        pendingHistoryId = entry.id
-        if (entry.runInTerminal)
-            root.launchInTerminal(entry)
-        else
-            // app2unit rather than entry.execute(): it puts the app in its own
-            // app.slice scope, so systemd-oomd can reclaim it individually
-            // instead of it inheriting the compositor's session-5.scope.
-            Quickshell.execDetached(["app2unit", "--", `${entry.id}.desktop`])
-        Services.Launcher.close()
-    }
-
-    // TUI apps get one window each: a second launch raises the existing one
-    // instead of spawning a duplicate. cliamp writes an IPC socket but only
-    // warns on a second instance, so nothing else enforces this.
-    function launchInTerminal(entry) {
-        const existing = Hyprland.toplevels.values.find(w => w.wayland?.appId === entry.id || w.lastIpcObject?.class === entry.id)
-        if (existing?.wayland)
-            existing.wayland.activate()
-        else
-            Quickshell.execDetached(["app2unit", "--", "kitty", "--class", entry.id, "-e", ...entry.command])
     }
 }

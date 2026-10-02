@@ -76,7 +76,7 @@ Rectangle {
         id: deviceIcon
 
         anchors.left: parent.left
-        anchors.leftMargin: StylePopover.contentPaddingH - StylePopover.listRowInset
+        anchors.leftMargin: StylePopover.contentPaddingH - row.x
         anchors.verticalCenter: parent.verticalCenter
         source: row.deviceIconSource
     }
@@ -113,7 +113,7 @@ Rectangle {
         id: rowActions
 
         anchors.right: parent.right
-        anchors.rightMargin: StylePopover.contentPaddingH - StylePopover.listRowInset
+        anchors.rightMargin: StylePopover.contentPaddingH - row.x
         anchors.verticalCenter: parent.verticalCenter
         hovered: hover.hovered
         showDisconnect: row.device.connected

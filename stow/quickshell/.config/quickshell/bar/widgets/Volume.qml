@@ -17,14 +17,7 @@ Button {
 
     // Adjusting the level is the one thing worth doing without opening anything.
     WheelHandler {
-        onWheel: (event) => {
-            const sink = Services.AudioState.sink;
-            if (!sink)
-                return;
-
-            const delta = event.angleDelta.y > 0 ? StyleControl.sliderStep : -StyleControl.sliderStep;
-            Services.AudioState.setVolume(sink, Services.AudioState.sinkVolume + delta);
-        }
+        onWheel: (event) => Services.AudioState.stepSinkVolume(Math.sign(event.angleDelta.y))
     }
 
     BarPopover {

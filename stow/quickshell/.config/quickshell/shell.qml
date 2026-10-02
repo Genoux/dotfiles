@@ -7,6 +7,7 @@ import qs.capture
 import qs.components
 // Loaded only when requested through the component-gallery IPC target.
 import qs.debug
+import qs.island
 import qs.launcher
 import qs.notifications
 import qs.osd
@@ -75,6 +76,22 @@ ShellRoot {
     }
 
     IpcHandler {
+        target: "shell"
+
+        function toggleIsland(): void {
+            Services.ShellLayout.toggleIsland()
+        }
+
+        function openIsland(pageId: string): void {
+            Services.ShellLayout.requestPage(pageId)
+        }
+
+        function closeIsland(): void {
+            Services.ShellLayout.closeRequested()
+        }
+    }
+
+    IpcHandler {
         target: "components"
 
         function toggle(): void {
@@ -83,9 +100,27 @@ ShellRoot {
     }
 
     Variants {
-        model: Quickshell.screens
+        model: Services.ShellLayout.barPresent ? Quickshell.screens : []
 
         Bar {
+            required property var modelData
+            screen: modelData
+        }
+    }
+
+    Variants {
+        model: Services.ShellLayout.islandPresent ? Quickshell.screens : []
+
+        Island {
+            required property var modelData
+            screen: modelData
+        }
+    }
+
+    Variants {
+        model: Services.ShellLayout.islandPresent ? Quickshell.screens : []
+
+        IslandDock {
             required property var modelData
             screen: modelData
         }
