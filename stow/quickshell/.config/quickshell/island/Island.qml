@@ -274,7 +274,9 @@ PanelWindow {
             // down, which cancels the press and swallows the click.
             MouseArea {
                 anchors.fill: parent
-                enabled: root.wide
+                // Hidden rather than disabled: a disabled MouseArea still owns the
+                // cursor over its area, and this one covers the pill (Qt 6.11).
+                visible: root.wide
                 acceptedButtons: Qt.AllButtons
                 onClicked: Services.PopoverCoordinator.closeCurrent()
             }
