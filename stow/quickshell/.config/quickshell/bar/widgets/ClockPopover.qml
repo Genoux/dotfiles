@@ -99,7 +99,6 @@ PopoverPanel {
         // Explicit width so PopoverPanel's implicitWidth is stable at build
         // time rather than waiting on childrenRect of unloaded positioners.
         width: root.calendarWidth
-        bottomPadding: root.embedded ? 0 : StylePopover.contentPaddingV
         spacing: 0
 
         // Hero row: today's full date is the glanceable anchor, so it gets the
@@ -127,164 +126,175 @@ PopoverPanel {
             implicitWidth: root.calendarWidth
         }
 
-        // Month nav: prev far left, title centered, next far right — the layout
-        // every desktop calendar converges on.
-        Item {
+        // The month and its grid sit as far below the separator as they sit
+        // from the sides and the bottom. In the island the dock's own gap
+        // already supplies part of the bottom.
+        Column {
             width: root.calendarWidth
-            height: StylePopover.calendarNavHeight
+            topPadding: root.padH
+            bottomPadding: root.padH - (root.embedded ? StyleIsland.dockGap : 0)
+            spacing: 0
 
-            // Centers the nav button on the outermost grid column below it
-            readonly property int navMargin: root.padH + (root.cellSize - StylePopover.calendarNavSize) / 2
+            // Month nav: prev far left, title centered, next far right — the layout
+            // every desktop calendar converges on.
+            Item {
+                width: root.calendarWidth
+                height: StylePopover.calendarNavHeight
 
-            Button {
-                anchors.left: parent.left
-                anchors.leftMargin: parent.navMargin
-                anchors.verticalCenter: parent.verticalCenter
-                width: StylePopover.calendarNavSize
-                height: StylePopover.calendarNavSize
-                radius: StyleControl.chipRadius
-                iconSource: IconRegistry.shellIcon("chevron-left")
-                iconSize: StyleControl.iconSizeMd
-                foreground: Colors.base05
-                interactive: true
-                onClicked: root.navigatePrev()
+                // Centers the nav button on the outermost grid column below it
+                readonly property int navMargin: root.padH + (root.cellSize - StylePopover.calendarNavSize) / 2
+
+                Button {
+                    anchors.left: parent.left
+                    anchors.leftMargin: parent.navMargin
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: StylePopover.calendarNavSize
+                    height: StylePopover.calendarNavSize
+                    radius: StyleControl.chipRadius
+                    iconSource: IconRegistry.shellIcon("chevron-left")
+                    iconSize: StyleControl.iconSizeMd
+                    foreground: Colors.base05
+                    interactive: true
+                    onClicked: root.navigatePrev()
+                }
+
+                Text {
+                    anchors.centerIn: parent
+                    text: Qt.locale().standaloneMonthName(root.displayMonth - 1) + " " + root.displayYear
+                    color: Colors.base05
+                    font.family: StyleTokens.fontSans
+                    font.pixelSize: StyleTokens.fontSizeMd
+                    font.weight: Font.DemiBold
+                }
+
+                Button {
+                    anchors.right: parent.right
+                    anchors.rightMargin: parent.navMargin
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: StylePopover.calendarNavSize
+                    height: StylePopover.calendarNavSize
+                    radius: StyleControl.chipRadius
+                    iconSource: IconRegistry.shellIcon("chevron-right")
+                    iconSize: StyleControl.iconSizeMd
+                    foreground: Colors.base05
+                    interactive: true
+                    onClicked: root.navigateNext()
+                }
+
             }
 
-            Text {
-                anchors.centerIn: parent
-                text: Qt.locale().standaloneMonthName(root.displayMonth - 1) + " " + root.displayYear
-                color: Colors.base05
-                font.family: StyleTokens.fontSans
-                font.pixelSize: StyleTokens.fontSizeMd
-                font.weight: Font.DemiBold
-            }
+            // Grid container — clips the slide animation
+            Item {
+                id: gridContainer
 
-            Button {
-                anchors.right: parent.right
-                anchors.rightMargin: parent.navMargin
-                anchors.verticalCenter: parent.verticalCenter
-                width: StylePopover.calendarNavSize
-                height: StylePopover.calendarNavSize
-                radius: StyleControl.chipRadius
-                iconSource: IconRegistry.shellIcon("chevron-right")
-                iconSize: StyleControl.iconSizeMd
-                foreground: Colors.base05
-                interactive: true
-                onClicked: root.navigateNext()
-            }
+                width: root.calendarWidth
+                height: StylePopover.calendarWeekdayRowHeight + root.cellSize * 6
+                clip: true
 
-        }
+                // Grid column: weekday headers + 6 week rows.
+                // This entire block slides + fades on month change.
+                Column {
+                    id: gridColumn
 
-        // Grid container — clips the slide animation
-        Item {
-            id: gridContainer
+                    width: parent.width
+                    spacing: 0
 
-            width: root.calendarWidth
-            height: StylePopover.calendarWeekdayRowHeight + root.cellSize * 6
-            clip: true
+                    Row {
+                        x: root.padH
 
-            // Grid column: weekday headers + 6 week rows.
-            // This entire block slides + fades on month change.
-            Column {
-                id: gridColumn
+                        Repeater {
+                            model: root.dayNames
 
-                width: parent.width
-                spacing: 0
+                            EyebrowLabel {
+                                required property var modelData
 
-                Row {
-                    x: root.padH
+                                width: root.cellSize
+                                height: StylePopover.calendarWeekdayRowHeight
+                                text: modelData
+                                font.pixelSize: StyleTokens.fontSizeSm
+                                horizontalAlignment: Text.AlignHCenter
+                            }
 
-                    Repeater {
-                        model: root.dayNames
-
-                        EyebrowLabel {
-                            required property var modelData
-
-                            width: root.cellSize
-                            height: StylePopover.calendarWeekdayRowHeight
-                            text: modelData
-                            font.pixelSize: StyleTokens.fontSizeSm
-                            horizontalAlignment: Text.AlignHCenter
                         }
 
                     }
 
-                }
+                    // Day grid — 6 rows × 7 cols
+                    Item {
+                        x: root.padH
+                        implicitWidth: dayGrid.implicitWidth
+                        implicitHeight: dayGrid.implicitHeight
+                        width: implicitWidth
+                        height: implicitHeight
 
-                // Day grid — 6 rows × 7 cols
-                Item {
-                    x: root.padH
-                    implicitWidth: dayGrid.implicitWidth
-                    implicitHeight: dayGrid.implicitHeight
-                    width: implicitWidth
-                    height: implicitHeight
+                        // The peers are the day cells, two levels down inside the week
+                        // rows.
+                        SlidingHighlight {
+                            run: dayGrid
+                            radius: StyleControl.chipRadius
+                        }
 
-                    // The peers are the day cells, two levels down inside the week
-                    // rows.
-                    SlidingHighlight {
-                        run: dayGrid
-                        radius: StyleControl.chipRadius
-                    }
+                        Column {
+                            id: dayGrid
+                            spacing: 0
 
-                    Column {
-                        id: dayGrid
-                        spacing: 0
+                            Repeater {
+                                model: 6
 
-                        Repeater {
-                            model: 6
+                                Row {
+                                    required property int index
 
-                            Row {
-                                required property int index
+                                    readonly property int rowStart: index * 7
 
-                                readonly property int rowStart: index * 7
+                                    Repeater {
+                                        model: 7
 
-                                Repeater {
-                                    model: 7
+                                        Item {
+                                            id: dayCell
 
-                                    Item {
-                                        id: dayCell
+                                            required property int index
 
-                                        required property int index
+                                            readonly property var cell: root.gridCells[parent.rowStart + index]
+                                            // Today already carries an accent fill, so it is not a peer
+                                            // the travelling highlight should claim.
+                                            readonly property bool hovered: cellHover.containsMouse && !isToday
 
-                                        readonly property var cell: root.gridCells[parent.rowStart + index]
-                                        // Today already carries an accent fill, so it is not a peer
-                                        // the travelling highlight should claim.
-                                        readonly property bool hovered: cellHover.containsMouse && !isToday
+                                            readonly property bool isToday: cell.currentMonth
+                                                && cell.day === root.todayDay
+                                                && root.displayMonth === root.todayMonth
+                                                && root.displayYear === root.todayYear
 
-                                        readonly property bool isToday: cell.currentMonth
-                                            && cell.day === root.todayDay
-                                            && root.displayMonth === root.todayMonth
-                                            && root.displayYear === root.todayYear
+                                            width: root.cellSize
+                                            height: root.cellSize
 
-                                        width: root.cellSize
-                                        height: root.cellSize
+                                            // Today: chip
+                                            Rectangle {
+                                                anchors.centerIn: parent
+                                                visible: dayCell.isToday
+                                                width: StylePopover.calendarDayCircle
+                                                height: StylePopover.calendarDayCircle
+                                                radius: StyleControl.chipRadius
+                                                color: StyleControl.chipFill
+                                            }
 
-                                        // Today: chip
-                                        Rectangle {
-                                            anchors.centerIn: parent
-                                            visible: dayCell.isToday
-                                            width: StylePopover.calendarDayCircle
-                                            height: StylePopover.calendarDayCircle
-                                            radius: StyleControl.chipRadius
-                                            color: StyleControl.chipFill
-                                        }
+                                            Text {
+                                                anchors.centerIn: parent
+                                                text: dayCell.cell.day
+                                                color: dayCell.isToday ? StyleControl.chipContent : Colors.base05
+                                                opacity: dayCell.cell.currentMonth ? 1 : StylePopover.calendarOtherMonthOpacity
+                                                font.family: StyleTokens.fontSans
+                                                font.pixelSize: StyleTokens.fontSizeMd
+                                                font.weight: dayCell.isToday ? Font.DemiBold : Font.Normal
+                                                horizontalAlignment: Text.AlignHCenter
+                                            }
 
-                                        Text {
-                                            anchors.centerIn: parent
-                                            text: dayCell.cell.day
-                                            color: dayCell.isToday ? StyleControl.chipContent : Colors.base05
-                                            opacity: dayCell.cell.currentMonth ? 1 : StylePopover.calendarOtherMonthOpacity
-                                            font.family: StyleTokens.fontSans
-                                            font.pixelSize: StyleTokens.fontSizeMd
-                                            font.weight: dayCell.isToday ? Font.DemiBold : Font.Normal
-                                            horizontalAlignment: Text.AlignHCenter
-                                        }
+                                            MouseArea {
+                                                id: cellHover
 
-                                        MouseArea {
-                                            id: cellHover
+                                                anchors.fill: parent
+                                                hoverEnabled: true
+                                            }
 
-                                            anchors.fill: parent
-                                            hoverEnabled: true
                                         }
 
                                     }
@@ -294,29 +304,28 @@ PopoverPanel {
                             }
 
                         }
+                    }
 
+                }
+
+                // Wheel-only overlay: NoButton + hover disabled lets day-cell hover
+                // pass through underneath while still catching scroll.
+                MouseArea {
+                    anchors.fill: parent
+                    acceptedButtons: Qt.NoButton
+                    onWheel: wheel => {
+                        if (root.wheelLocked)
+                            return
+                        if (wheel.angleDelta.y < 0)
+                            root.navigateNext()
+                        else if (wheel.angleDelta.y > 0)
+                            root.navigatePrev()
+                        root.wheelLocked = true
+                        wheelUnlockTimer.restart()
                     }
                 }
 
             }
-
-            // Wheel-only overlay: NoButton + hover disabled lets day-cell hover
-            // pass through underneath while still catching scroll.
-            MouseArea {
-                anchors.fill: parent
-                acceptedButtons: Qt.NoButton
-                onWheel: wheel => {
-                    if (root.wheelLocked)
-                        return
-                    if (wheel.angleDelta.y < 0)
-                        root.navigateNext()
-                    else if (wheel.angleDelta.y > 0)
-                        root.navigatePrev()
-                    root.wheelLocked = true
-                    wheelUnlockTimer.restart()
-                }
-            }
-
         }
 
     }
