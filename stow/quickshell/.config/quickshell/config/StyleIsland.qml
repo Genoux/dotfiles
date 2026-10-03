@@ -31,6 +31,9 @@ Singleton {
     readonly property int compactSpacing: StyleTokens.space8
     readonly property int activityArtSize: 20
     readonly property int activityArtRadius: StyleTokens.radiusXs
+    // The recording island floats this far off the main one's flank: close
+    // enough to read as its companion, apart enough to read as a second shape.
+    readonly property int companionGap: StyleTokens.space8
     // Placement. Change these two to move the island: `edge` is "bottom" or
     // "top", `align` is "left", "center" or "right". The surface floats off the
     // screen edge by the bar's own margin, and windows are held clear of it by a

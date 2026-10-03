@@ -543,8 +543,40 @@ PanelWindow {
 
     }
 
+    // On the right-aligned island it sits on the left and opens leftward, so it
+    // never runs off the screen.
+    // The wide bar carries the recording in its own capture button instead.
+    Veil {
+        id: recordingVeil
+
+        LayoutMirroring.enabled: StyleIsland.align === "right"
+        LayoutMirroring.childrenInherit: true
+        anchors.left: morph.right
+        anchors.leftMargin: StyleIsland.companionGap
+        anchors.top: StyleIsland.atTop ? morph.top : undefined
+        anchors.bottom: StyleIsland.atTop ? undefined : morph.bottom
+        width: recordingPill.width
+        height: recordingPill.height
+        veil: Services.CaptureState.recording && !root.wideLayout ? 0 : 1
+
+        Behavior on veil {
+            NumberAnimation {
+                duration: StyleIsland.layoutFadeDuration
+                easing.type: StyleIsland.veilEasing
+            }
+        }
+
+        IslandRecording {
+            id: recordingPill
+        }
+    }
+
     mask: Region {
         item: morph
+
+        Region {
+            item: recordingVeil.visible ? recordingVeil : null
+        }
     }
 
 }
