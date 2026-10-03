@@ -62,7 +62,8 @@ PopoverPanel {
             Item {
                 width: parent.width
                 visible: Services.Network.hasWired
-                implicitHeight: StylePopover.listRowHeight
+                // The well sits as far from the separators as from the side.
+                implicitHeight: StylePopover.rowGlyphWellSize + StylePopover.contentPaddingH * 2
                 height: implicitHeight
 
                 Rectangle {
@@ -78,7 +79,7 @@ PopoverPanel {
 
                     ThemedIcon {
                         anchors.centerIn: parent
-                        source: IconRegistry.networkIcon("wired")
+                        source: IconRegistry.networkIcon("ethernet")
                         tint: StyleControl.chipContent
                     }
                 }

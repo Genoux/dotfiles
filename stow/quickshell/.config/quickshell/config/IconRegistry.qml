@@ -155,6 +155,8 @@ Singleton {
             // using it for Ethernet keeps the bar cleaner than a topology icon.
             "wired": "network-wireless-signal-excellent-symbolic",
             "wired-offline": "network-wireless-offline-symbolic",
+            // The panel's cable row names the medium itself, so it shows one.
+            "ethernet": "network-wired-symbolic",
             "offline": "network-wireless-offline-symbolic",
         }
         return themeIcon(icons[name] ?? "network-wireless-offline-symbolic")
