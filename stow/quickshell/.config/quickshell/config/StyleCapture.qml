@@ -25,12 +25,6 @@ Singleton {
     // Long enough to read the check as confirmation, short enough that the card
     // is not still sitting there once you have believed it.
     readonly property int copiedHold: 700
-    // Stronger than the shared surface hairline on purpose. Every other panel
-    // is a translucent dark surface, so 1-2% white reads against it. This card
-    // is a photograph edge to edge, and a 2% stroke has nothing to sit against
-    // — it vanishes into whatever was on screen. Still one pixel, per the
-    // border rule: the alpha carries it, not the width.
-    readonly property color border: Qt.rgba(1, 1, 1, 0.08)
     readonly property int posterWidth: cardWidth
 
     // Hover turns the thumbnail into a frosted backdrop for the actions. Keep

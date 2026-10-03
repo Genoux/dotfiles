@@ -1,7 +1,7 @@
 hl.layer_rule({
   name = "no-anim-quickshell-popover",
   no_anim = true,
-  match = { namespace = "^(quickshell-popover)$" },
+  match = { namespace = "^(quickshell-popover|quickshell-island)$" },
 })
 
 hl.layer_rule({

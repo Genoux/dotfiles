@@ -7,9 +7,10 @@ import qs.config
 // bar buttons, marking it as a control inside a surface rather than on it.
 Button {
     fontSize: StyleTokens.fontSizeSm
-    foreground: Colors.base05
+    foreground: active ? StyleControl.chipContent : Colors.base05
     background: StyleTokens.alphaLight
     hoverBackground: StyleTokens.alphaActive
+    activeBackground: StyleControl.chipFill
     paddingHorizontal: StylePopover.pillPaddingH
     paddingVertical: StylePopover.pillPaddingV
     radius: height / 2

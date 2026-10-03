@@ -18,7 +18,6 @@ ColumnLayout {
         color: StyleManager.textColor
     }
     SegmentedControl {
-        selectedTextColor: StyleManager.textColor
         textColor: StyleManager.textColor
         Layout.fillWidth: true
         labels: ["Official repository", "AUR"]

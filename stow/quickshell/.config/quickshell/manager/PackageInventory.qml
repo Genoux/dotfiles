@@ -21,7 +21,6 @@ ColumnLayout {
         onTextChanged: root.pageIndex = 0
     }
     SegmentedControl {
-        selectedTextColor: StyleManager.textColor
         textColor: StyleManager.textColor
         Layout.fillWidth: true
         labels: ["Installed", "Tracked", "Missing", "Unlisted"]

@@ -43,16 +43,7 @@ Item {
                 PillButton {
                     text: Services.ShellLayout.wide ? "Island" : "Wide"
                     Accessible.name: Services.ShellLayout.wide ? "Switch to island" : "Switch to wide bar"
-                    onClicked: {
-                        Services.ShellLayout.toggleWide()
-                        Services.ShellLayout.closeRequested()
-                    }
-                }
-
-                PillButton {
-                    text: "Bar"
-                    Accessible.name: "Switch to bar"
-                    onClicked: Services.ShellLayout.setIsland(false)
+                    onClicked: Services.ShellLayout.toggleWide()
                 }
             }
         }

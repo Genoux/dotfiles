@@ -93,7 +93,7 @@ Item {
 
                 anchors.fill: parent
                 anchors.margins: -StyleLock.wallpaperBlurMax
-                source: StyleLock.wallpaperPath
+                source: StyleTokens.wallpaperPath
                 fillMode: Image.PreserveAspectCrop
                 asynchronous: true
                 visible: false

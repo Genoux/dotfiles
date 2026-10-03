@@ -98,9 +98,8 @@ Item {
     }
 
     implicitWidth: shownPageId === "info" ? StyleIsland.wideWidth : StyleIsland.pageWidth
-    implicitHeight: StyleIsland.pageInsetTop + pageHeight + (pageUnderFooter ? 0 : footer.height)
+    implicitHeight: pageHeight + (pageUnderFooter ? 0 : footer.height)
     width: implicitWidth
-    height: implicitHeight
 
     Component.onCompleted: shownPageId = pageId
 
@@ -155,10 +154,6 @@ Item {
     SequentialAnimation {
         id: pageIn
 
-        PauseAnimation {
-            duration: StyleIsland.pageSettleDelay
-        }
-
         NumberAnimation {
             target: root
             property: "pageVeil"
@@ -189,7 +184,6 @@ Item {
 
     Veil {
         anchors.horizontalCenter: parent.horizontalCenter
-        y: StyleIsland.pageInsetTop
         width: root.implicitWidth
         height: root.pageHeight
         veil: root.pageVeil
@@ -265,11 +259,10 @@ Item {
             anchors.fill: parent
             anchors.margins: StyleIsland.footerInset
             radius: StyleIsland.footerTrackRadius
-            color: StyleTokens.alphaHairline
+            color: StyleTokens.alphaLight
 
             DockTabs {
-                anchors.fill: parent
-                anchors.margins: StyleIsland.footerTrackPadding
+                anchors.centerIn: parent
                 tabs: root.tabs
                 currentTab: root.shownTab
                 onTabSelected: (tab) => root.pageSelected(tab)

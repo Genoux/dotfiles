@@ -245,6 +245,17 @@ Singleton {
             props["node.name"],
         ]
 
+        // Nothing identified it, but it is still audibly playing — say that much.
+        return appIcon(candidates) || volumeIcon(1, false, true)
+    }
+
+    // A media player names its app by desktop entry and by display name.
+    function playerIcon(player) {
+        return appIcon([player?.desktopEntry, player?.identity]) || themeIcon("audio-x-generic-symbolic")
+    }
+
+    // The icon of the first candidate that names an installed application.
+    function appIcon(candidates) {
         for (const candidate of candidates) {
             const entry = desktopEntryForClass(String(candidate ?? "").trim())
             if (entry?.icon) {
@@ -253,9 +264,7 @@ Singleton {
                     return resolved
             }
         }
-
-        // Nothing identified it, but it is still audibly playing — say that much.
-        return volumeIcon(1, false, true)
+        return ""
     }
 
     function iconNameForToplevel(toplevel) {

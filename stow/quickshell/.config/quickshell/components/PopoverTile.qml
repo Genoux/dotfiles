@@ -4,24 +4,25 @@ import qs.config
 
 // A panel's primary action: a glyph over a one-line label, sized by the caller
 // so a row of them divides its panel's width instead of huddling in the middle
-// of it (PopoverAction's stacked tile is a fixed 72px built for a row of four).
+// of it.
 Rectangle {
     id: tile
 
     required property string label
     required property var iconSource
-    // A tile that holds a value rather than firing an action keeps a fill
-    // while that value is on, the way an open popover's bar button does.
+    // A tile that holds a value rather than firing an action becomes the
+    // selected chip while that value is on.
     property bool active: false
 
     signal activated()
 
     implicitHeight: StylePopover.tileHeight
     height: implicitHeight
-    radius: StyleTokens.radiusSm
-    // Active keeps its own fill: it outlasts the pointer, so it is state
-    // rather than hover and one travelling indicator cannot express both.
-    color: active ? StyleTokens.alphaActive : StyleTokens.transparent
+    radius: StyleTokens.radiusMd
+    // No fill at rest: hover is the travelling SlidingHighlight behind the
+    // tile. Active outlasts the pointer, so it is state and one indicator
+    // cannot express both.
+    color: active ? StyleControl.chipFill : StyleTokens.transparent
 
     readonly property bool hovered: tileArea.containsMouse
 
@@ -40,13 +41,13 @@ Rectangle {
             anchors.horizontalCenter: parent.horizontalCenter
             source: tile.iconSource
             size: StylePopover.tileIconSize
-            tint: tile.active ? Colors.base05 : Colors.base04
+            tint: tile.active ? StyleControl.chipContent : Colors.base05
         }
 
         Text {
             width: tile.width
             text: tile.label
-            color: Colors.base05
+            color: tile.active ? StyleControl.chipContent : Colors.base05
             font.family: StyleTokens.fontSans
             font.pixelSize: StyleTokens.fontSizeXs
             horizontalAlignment: Text.AlignHCenter

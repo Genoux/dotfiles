@@ -53,10 +53,8 @@ Rectangle {
     // Fades as it travels, so a release past the threshold finishes a movement
     // already underway rather than cutting one short.
     opacity: 1 - Math.min(1, dragOffset / StyleNotification.dragRunway)
-    radius: StyleTokens.radiusMd
-    color: StyleNotification.surface
-    border.width: StyleTokens.borderWidth
-    border.color: StyleCapture.border
+    radius: StyleTokens.radiusLg
+    color: StyleOverlay.surface
 
     onHoldingChanged: {
         if (holding) {

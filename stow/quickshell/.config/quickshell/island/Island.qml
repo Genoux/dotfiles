@@ -1,5 +1,6 @@
-// One floating surface at the bottom of the screen that is the time when idle,
-// the time plus what is live when something is, and every panel when clicked.
+// One floating surface that is the time when idle, the time plus what is live
+// when something is, a notification when one arrives, and every panel when
+// clicked.
 
 import QtQuick
 import Quickshell
@@ -17,9 +18,29 @@ PanelWindow {
 
     property bool expanded: false
     readonly property bool wide: Services.ShellLayout.wide
+    // The shape the island is laid out in. It trails `wide`: the switch fades
+    // the island out, swaps the layout while nothing is drawn, and fades it
+    // back in, so no frame shows one shape resizing into the other.
+    property bool wideLayout: Services.ShellLayout.wide
+    property real presence: 1
     readonly property var hyprMonitor: Hyprland.monitorFor(screen)
     property string pageId: "home"
     property var motion: StyleIsland.closeMotion
+    // The notification the pill has opened into. Set by syncAlert rather than
+    // bound, so the motion is chosen before the shape starts moving.
+    property var alertNotification: null
+    readonly property bool alerting: alertNotification !== null
+    // The largest corner the shape may have: a panel is a rounded rect, a pill
+    // or a notification a capsule. The cap eases between the two, so the radius
+    // follows the animated height rather than lagging it through a Behavior.
+    property real radiusCap: expanded ? StyleIsland.expandedRadius : StyleIsland.alertRadius
+
+    Behavior on radiusCap {
+        NumberAnimation {
+            duration: StyleIsland.resizeDuration
+            easing.type: StyleIsland.plainEasing
+        }
+    }
     readonly property bool wantsKeyboard: expanded && !!expandedLoader.item && expandedLoader.item.wantsKeyboard
 
     // The motion set is chosen before `expanded` flips; see StyleIsland.
@@ -39,6 +60,22 @@ PanelWindow {
         expanded = false;
     }
 
+    // The newest notification, while the island is a resting pill on the screen
+    // it arrived on. An open panel is not interrupted; what arrived meanwhile
+    // shows once it closes.
+    function syncAlert() {
+        const notifications = Services.Notifications.notifications;
+        const next = Services.ShellLayout.islandAlerts && !expanded && Services.Notifications.screen === screen && notifications.length > 0
+            ? notifications[notifications.length - 1]
+            : null;
+        if (next === alertNotification)
+            return;
+
+        if (!expanded)
+            motion = next ? (alerting ? StyleIsland.restingMotion : StyleIsland.openMotion) : StyleIsland.closeMotion;
+        alertNotification = next;
+    }
+
     function toggleOn(targetPageId) {
         if (expanded && pageId === targetPageId)
             collapse();
@@ -46,14 +83,68 @@ PanelWindow {
             open(targetPageId);
     }
 
-    onWideChanged: {
-        if (!expanded)
-            motion = StyleIsland.restingMotion;
+    onExpandedChanged: syncAlert()
 
+    Connections {
+        function onNotificationsChanged() {
+            root.syncAlert();
+        }
+
+        target: Services.Notifications
+    }
+
+    Connections {
+        function onIslandAlertsChanged() {
+            root.syncAlert();
+        }
+
+        target: Services.ShellLayout
+    }
+
+    onWideChanged: layoutSwap.restart()
+    // Breaks the initial binding without changing the value. Left live, it
+    // follows ShellLayout a hop ahead of onWideChanged and swaps the layout
+    // before the island has faded out.
+    Component.onCompleted: wideLayout = wide
+
+    SequentialAnimation {
+        id: layoutSwap
+
+        NumberAnimation {
+            target: root
+            property: "presence"
+            to: 0
+            duration: StyleIsland.layoutFadeDuration
+            easing.type: StyleIsland.veilEasing
+        }
+
+        // An open panel closes here too, unseen, rather than resizing into
+        // the bar on screen.
+        ScriptAction {
+            script: {
+                root.collapseNow();
+                root.wideLayout = root.wide;
+            }
+        }
+
+        NumberAnimation {
+            target: root
+            property: "presence"
+            to: 1
+            duration: StyleIsland.layoutFadeDuration
+            easing.type: StyleIsland.veilEasing
+        }
+
+        ScriptAction {
+            script: {
+                if (!root.expanded && !root.alerting)
+                    root.motion = StyleIsland.closeMotion;
+            }
+        }
     }
     color: StyleTokens.transparent
-    exclusionMode: Services.ShellLayout.island ? ExclusionMode.Normal : ExclusionMode.Ignore
-    exclusiveZone: root.wide ? StyleIsland.wideReservedHeight : StyleIsland.reservedHeight
+    exclusionMode: ExclusionMode.Normal
+    exclusiveZone: StyleIsland.reservedHeight
     implicitHeight: Math.min(StyleIsland.expandedMaxHeight + StyleIsland.edgeMargin + StyleIsland.shadowMargin, screen ? screen.height : Number.MAX_VALUE)
     // Spans the screen and is masked to the surface, so the island can sit at
     // any alignment without the window moving, and the edge it reserves is the
@@ -62,11 +153,10 @@ PanelWindow {
     anchors.right: true
     anchors.top: StyleIsland.atTop
     anchors.bottom: !StyleIsland.atTop
-    // Same namespace as bar popovers on purpose: Hyprland's layer rule for it
-    // blurs the surface and skips the open/close animation, which would fight
-    // the morph. A namespace of its own would need an identical rule added to
-    // windowrules.lua for no behavioural difference.
-    WlrLayershell.namespace: "quickshell-popover"
+    // Its own namespace so Hyprland skips the open/close animation, which would
+    // fight the morph, and blurs behind it with a cut just under its own alpha
+    // (windowrules.lua).
+    WlrLayershell.namespace: "quickshell-island"
     // Only a page with a text field takes the keyboard; a display page leaves
     // typing with the focused window.
     WlrLayershell.keyboardFocus: root.wantsKeyboard ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
@@ -136,39 +226,23 @@ PanelWindow {
         anchors.right: StyleIsland.align === "right" ? parent.right : undefined
         anchors.leftMargin: StyleIsland.edgeMargin
         anchors.rightMargin: StyleIsland.edgeMargin
-        opacity: Services.ShellLayout.islandReveal
-        width: root.expanded ? expandedWidth : (root.wide ? root.width - StyleIsland.edgeMargin * 2 : compact.implicitWidth)
-        height: root.expanded ? expandedHeight : (root.wide ? StyleIsland.wideHeight : StyleIsland.compactHeight)
+        opacity: root.presence
+        width: root.expanded ? expandedWidth : root.alerting ? alert.implicitWidth : root.wideLayout ? root.width - StyleIsland.edgeMargin * 2 : compact.implicitWidth
+        height: root.expanded ? expandedHeight : root.alerting ? alert.implicitHeight : (root.wideLayout ? StyleIsland.wideHeight : StyleIsland.compactHeight)
 
+        // The wide bar has no glass of its own.
         Rectangle {
-            // No outline and no shadow, deliberately: both antialias into a
-            // soft rim along a curve, and a shadow that crosses the compositor's
-            // blur threshold blurs a halo that picks up a bright window behind.
-
             id: surface
 
             anchors.fill: parent
-            radius: root.wide && !root.expanded ? StyleIsland.wideRadius : Math.min(height / 2, StyleIsland.expandedRadius)
-            color: root.wide && !root.expanded ? StyleIsland.wideSurface : StyleIsland.surface
-
-            Behavior on radius {
-                NumberAnimation {
-                    duration: StyleIsland.resizeDuration
-                    easing.type: StyleIsland.plainEasing
-                }
-            }
-
-            Behavior on color {
-                ColorAnimation {
-                    duration: StyleIsland.resizeDuration
-                    easing.type: StyleIsland.plainEasing
-                }
-            }
+            visible: !root.wideLayout || root.expanded
+            radius: Math.min(height / 2, root.radiusCap)
+            color: StyleIsland.surface
         }
 
         MouseArea {
             anchors.fill: parent
-            enabled: !root.expanded && !root.wide
+            enabled: !root.expanded && !root.wide && !root.alerting
             acceptedButtons: Qt.LeftButton | Qt.MiddleButton
             cursorShape: Qt.PointingHandCursor
             onClicked: (mouse) => {
@@ -180,7 +254,7 @@ PanelWindow {
         }
 
         WheelHandler {
-            enabled: !root.expanded
+            enabled: !root.expanded && !root.alerting
             onWheel: (event) => {
                 return Services.AudioState.stepSinkVolume(Math.sign(event.angleDelta.y));
             }
@@ -191,6 +265,20 @@ PanelWindow {
             clip: true
             Keys.onEscapePressed: root.collapse()
 
+            // Dismisses an open popover when the bare bar is clicked. The focus
+            // grab treats the bar as inside the grab so its other buttons keep
+            // working, which leaves bar clicks unable to dismiss anything.
+            // Declared first so it sits below the widgets: an interactive one
+            // consumes its own click. Dismissing on `clicked`, not `pressed`:
+            // hiding a popover mid-press releases its grab while the pointer is
+            // down, which cancels the press and swallows the click.
+            MouseArea {
+                anchors.fill: parent
+                enabled: root.wide
+                acceptedButtons: Qt.AllButtons
+                onClicked: Services.PopoverCoordinator.closeCurrent()
+            }
+
             Veil {
                 id: barVeil
 
@@ -199,12 +287,15 @@ PanelWindow {
                 anchors.verticalCenter: parent.verticalCenter
                 width: barLoader.item ? barLoader.item.implicitWidth : 0
                 height: barLoader.item ? barLoader.item.implicitHeight : 0
-                veil: root.wide && !root.expanded ? 0 : 1
+                veil: root.wideLayout && !root.expanded ? 0 : 1
 
                 Loader {
                     id: barLoader
 
+                    // Built from the moment the bar is asked for, off the main thread,
+                    // so it is ready by the time the pill has gone.
                     active: root.wide || barVeil.visible
+                    asynchronous: true
 
                     sourceComponent: Row {
                         spacing: StyleIsland.wideSpacing
@@ -222,8 +313,21 @@ PanelWindow {
                 }
             }
 
-            // The old bar's own widgets, so each opens its popover over its
-            // button the way it does there rather than expanding the island.
+            Veil {
+                anchors.centerIn: parent
+                width: windowTitle.implicitWidth
+                height: windowTitle.implicitHeight
+                veil: barVeil.veil
+
+                Widgets.WindowTitle {
+                    id: windowTitle
+
+                    hyprMonitor: root.hyprMonitor
+                }
+            }
+
+            // Each widget opens its popover over its own button rather than
+            // expanding the island.
             Veil {
                 id: controlsVeil
 
@@ -238,6 +342,7 @@ PanelWindow {
                     id: controlsLoader
 
                     active: root.wide || controlsVeil.visible
+                    asynchronous: true
 
                     sourceComponent: Row {
                         spacing: StyleIsland.wideSpacing
@@ -246,9 +351,9 @@ PanelWindow {
                             anchors.verticalCenter: parent.verticalCenter
                         }
 
-                        // One run of peers with the clock in it, as in the old
-                        // bar, so the icons and the time share a size, a rhythm
-                        // and one travelling hover fill.
+                        // One run of peers with the clock in it, so the icons and
+                        // the time share a size, a rhythm and one travelling
+                        // hover fill.
                         HoverRow {
                             anchors.verticalCenter: parent.verticalCenter
                             spacing: StyleIsland.wideSpacing
@@ -278,8 +383,17 @@ PanelWindow {
                                 barWindow: root
                             }
 
+                            Widgets.Keyboard {
+                            }
+
+                            Widgets.Battery {
+                            }
+
                             Widgets.Clock {
                                 barWindow: root
+                            }
+
+                            Widgets.Dotfiles {
                             }
 
                             Widgets.MoreMenu {
@@ -296,7 +410,7 @@ PanelWindow {
                 anchors.centerIn: parent
                 width: compact.implicitWidth
                 height: compact.implicitHeight
-                veil: root.expanded || root.wide ? 1 : 0
+                veil: root.expanded || root.wideLayout || root.alerting ? 1 : 0
 
                 IslandCompact {
                     id: compact
@@ -320,18 +434,56 @@ PanelWindow {
             }
 
             Veil {
+                id: alertVeil
+
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.top: StyleIsland.atTop ? parent.top : undefined
+                anchors.bottom: StyleIsland.atTop ? undefined : parent.bottom
+                width: alert.implicitWidth
+                height: alert.implicitHeight
+                blurMax: StyleIsland.alertBlurMax
+                veil: root.alerting ? 0 : 1
+
+                IslandAlert {
+                    id: alert
+
+                    notification: root.alertNotification
+                }
+
+                Behavior on veil {
+                    SequentialAnimation {
+                        PauseAnimation {
+                            duration: root.motion.expandedPause
+                        }
+
+                        NumberAnimation {
+                            duration: root.motion.expandedDuration
+                            easing.type: StyleIsland.veilEasing
+                        }
+
+                    }
+
+                }
+
+            }
+
+            Veil {
                 id: expandedVeil
 
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.top: StyleIsland.atTop ? parent.top : undefined
                 anchors.bottom: StyleIsland.atTop ? undefined : parent.bottom
                 width: expandedLoader.item ? expandedLoader.item.width : 0
-                height: expandedLoader.item ? expandedLoader.item.height : 0
+                // The surface's animated height, not the page's: the dock is
+                // anchored to the bottom of this, so it rides the glass edge
+                // through a resize instead of jumping to where it will end up.
+                height: morph.height
                 veil: root.expanded ? 0 : 1
 
                 Loader {
                     id: expandedLoader
 
+                    height: parent.height
                     active: root.expanded || expandedVeil.visible
 
                     sourceComponent: IslandExpanded {
@@ -365,13 +517,6 @@ PanelWindow {
 
         }
 
-        transform: Scale {
-            origin.x: morph.width / 2
-            origin.y: StyleIsland.atTop ? 0 : morph.height
-            xScale: StyleIsland.arrivalScale + (1 - StyleIsland.arrivalScale) * Services.ShellLayout.islandReveal
-            yScale: xScale
-        }
-
         Behavior on width {
             NumberAnimation {
                 duration: root.motion.shapeDuration
@@ -391,7 +536,6 @@ PanelWindow {
                 onRunningChanged: {
                     if (!running && root.expanded)
                         root.motion = StyleIsland.restingMotion;
-
                 }
             }
 

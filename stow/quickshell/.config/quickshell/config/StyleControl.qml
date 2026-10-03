@@ -1,8 +1,18 @@
 import QtQuick
 import Quickshell
+import qs
 pragma Singleton
 
 Singleton {
+    // The current or selected thing: a segment, a dock tab, an active tile, a
+    // toggle that is on, a primary transport button. Solid light with dark
+    // content, so it is the one fill on a surface that is not translucent.
+    readonly property color chipFill: Colors.base07
+    readonly property color chipContent: Colors.base00
+    // Icon-sized chips and wells -- dock tabs, row glyphs, calendar days -- are
+    // rounded squares, not circles: a circle per row reads as a list of avatars.
+    readonly property int chipRadius: StyleTokens.radiusSm
+
     readonly property int iconSizeMd: 18
     readonly property int iconSize: 16
     readonly property int iconSizeSm: 13
@@ -29,33 +39,41 @@ Singleton {
     // Level slider — a track thin enough to read as a scale rather than a filled
     // bar, and a handle just wide enough to aim at. The 24px pointer floor is met
     // by the slider's hit area, not by the handle's own size.
-    readonly property int sliderTrackHeight: 4
+    readonly property int sliderTrackHeight: 6
     readonly property int sliderHandleSize: 12
     readonly property int sliderHitHeight: 24
     // One wheel notch. Coarse enough that a flick crosses the range, fine enough
     // to land on a level you meant.
     readonly property real sliderStep: 0.05
 
-    // Toggle — a real switch rather than a pill reading "On"/"Off". Track height
-    // sits between the eyebrow and body type sizes so it reads as a control in a
-    // header without outweighing the title beside it.
-    readonly property int toggleWidth: 34
-    readonly property int toggleHeight: 18
+    // Toggle — a real switch rather than a pill reading "On"/"Off".
+    readonly property int toggleWidth: 40
+    readonly property int toggleHeight: 24
     // Breathing room around the knob inside the track.
-    readonly property int toggleInset: 2
+    readonly property int toggleInset: 3
 
-    // Segmented control — built like the island's tab dock: a borderless track,
-    // one gap round every segment, and a fill whose radius is the track's less
-    // that gap. A medium track with the base-unit gap lands the fill on the
-    // standard 8px fill radius and a 28px height, the same as a list row's.
+    // Segmented control — built like the island's tab dock: a borderless
+    // rounded track, one gap round every segment, and a chip whose radius is the
+    // track's less that gap.
     readonly property int segmentHeight: 36
-    readonly property int segmentInset: StyleTokens.space4
+    readonly property int segmentInset: StyleTokens.space3
     readonly property int segmentTrackRadius: StyleTokens.radiusMd
 
-    // Level bar -- a volume or brightness control as one rounded bar: tall enough
-    // to grab, with the glyph inset in the fill that grows from it.
-    readonly property int levelBarHeight: 36
-    readonly property int levelBarIconSize: 22
-    // Air between the value and the end of the fill it rides.
-    readonly property int levelBarValuePadding: StyleTokens.space12
+    // Level bar -- a volume or brightness control as one glass slab, tall enough
+    // to grab, with the label and value inside it.
+    readonly property int levelBarHeight: 44
+    readonly property int levelBarRadius: StyleTokens.radiusMd
+    // The fill stacks on the track: 3% under 4% comes to the dock's 7%, so a
+    // full bar is the same tone as the dock and the cards beside it, and the
+    // empty part a shade lighter than the island.
+    readonly property color levelBarTrack: Qt.rgba(1, 1, 1, 0.03)
+    readonly property color levelBarFill: Qt.rgba(1, 1, 1, 0.04)
+    readonly property int levelBarPadding: StyleTokens.space16
+    readonly property int levelBarHandleWidth: 3
+    readonly property int levelBarHandleHeight: 20
+    // How far inside the fill's leading edge the handle sits.
+    readonly property int levelBarHandleInset: StyleTokens.space10
+    // The least air the handle keeps from the label and the value.
+    readonly property int levelBarHandleClearance: StyleTokens.space12
+    readonly property real levelBarScrubScale: 1.15
 }

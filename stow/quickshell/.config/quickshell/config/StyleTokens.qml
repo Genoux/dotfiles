@@ -11,13 +11,18 @@ import QtQuick
 // file may only hold a raw literal when the value is genuinely unique to that
 // surface and a comment says why.
 Singleton {
+    // The file lib/theme.sh points the wallpaper daemon at. The lock screen and
+    // the island's home card both draw it.
+    readonly property string wallpaperPath: Quickshell.env("HOME") + "/.config/hypr/wallpapers/current/current_wallpaper.jpg"
+
     readonly property string fontSans: "SF Pro Text"
     readonly property string fontMono: "JetBrainsMono Nerd Font Mono"
     readonly property string fontIcon: "JetBrainsMono Nerd Font"
     readonly property string fontEmoji: "Noto Color Emoji"
 
+    readonly property int fontSizeDisplay: 48
     readonly property int fontSizeXl: 32
-    readonly property int fontSizeLg: 16
+    readonly property int fontSizeLg: 18
     readonly property int fontSizeMd: 14
     // The floor, and the only size that moved off the original ramp: at 10px
     // eyebrows and metadata went illegible over a wallpaper. 11 is also what the
@@ -29,6 +34,8 @@ Singleton {
     readonly property int radiusXs: 4
     readonly property int radiusSm: 8
     readonly property int radiusMd: 12
+    readonly property int radiusLg: 16
+    readonly property int radiusXl: 22
 
     // Spacing is numeric, not t-shirt sized: a bar this dense needs ten steps,
     // and Sm/Md/Lg stops being readable past four. The step IS the pixel value,
@@ -71,26 +78,18 @@ Singleton {
     readonly property int easePulse: Easing.InOutSine
 
     readonly property color transparent: "transparent"
-    // The interaction tint. One value, everywhere: hover fill, resting pill
-    // fill, selected row. Its faintness is the point — the bar sits over a
-    // wallpaper and a heavier tint reads as a hole punched in the panel.
-    readonly property color alphaLight: Qt.rgba(1, 1, 1, 0.03)
-    // The structural hairline: separators, internal borders, selected chrome.
-    readonly property color alphaHairline: Qt.rgba(1, 1, 1, 0.02)
-    // A bar control whose panel is OPEN. Heavier than the hover tint, because
-    // hover says "you are pointing at this" and open says "this is the thing on
-    // screen right now" — at equal alpha the two are indistinguishable. It holds
-    // roughly 2.3x alphaLight, so move the pair together or the states merge.
-    // Both are deliberately faint: the bar sits over a wallpaper, and a tint
-    // heavy enough to hide it reads as a patch stuck on rather than a lit
-    // control. At 0.12 the wallpaper stopped dead at the pill's edge.
-    readonly property color alphaActive: Qt.rgba(1, 1, 1, 0.07)
+    // White overlays on the glass surface. Each step reads as a distinct state,
+    // so move them together or neighbouring states merge.
+    // Faintest: separators and recessed edges.
+    readonly property color alphaHairline: Qt.rgba(1, 1, 1, 0.06)
+    // The resting well: tracks, tiles, icon buttons, hover fill.
+    readonly property color alphaLight: Qt.rgba(1, 1, 1, 0.07)
+    // A hovered or pressed well, and a bar control whose panel is open.
+    readonly property color alphaActive: Qt.rgba(1, 1, 1, 0.12)
 
     // Disabled is opacity, never a greyed colour — the palette is wallpaper
     // derived, so a hardcoded grey would drift out of theme on every wallpaper.
     readonly property real opacityDisabled: 0.4
-    // A label that titles content rather than being content (eyebrows, captions).
-    readonly property real opacityMuted: 0.6
 
     function surfaceAlpha(color, alpha) {
         return Qt.rgba(color.r, color.g, color.b, alpha)

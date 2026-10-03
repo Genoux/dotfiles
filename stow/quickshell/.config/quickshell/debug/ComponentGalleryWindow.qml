@@ -23,6 +23,7 @@ PanelWindow {
     property bool displayed: false
     property bool toggleValue: true
     property real sliderValue: 0.62
+    property real levelValue: 0.62
     property int segmentIndex: 1
     property int galleryPage: 1
     property int demoWorkspace: 2
@@ -359,7 +360,8 @@ PanelWindow {
 
                             Repeater {
                                 model: [
-                                    { label: "Display", size: StyleTokens.fontSizeXl },
+                                    { label: "Display", size: StyleTokens.fontSizeDisplay },
+                                    { label: "Headline", size: StyleTokens.fontSizeXl },
                                     { label: "Title", size: StyleTokens.fontSizeLg },
                                     { label: "Supporting title", size: StyleTokens.fontSizeMd },
                                     { label: "Body and controls", size: StyleTokens.fontSizeSm },
@@ -404,7 +406,7 @@ PanelWindow {
                             }
 
                             GuideText {
-                                text: "Radii: " + StyleTokens.radiusXs + " / " + StyleTokens.radiusSm + " / " + StyleTokens.radiusMd
+                                text: "Radii: " + StyleTokens.radiusXs + " / " + StyleTokens.radiusSm + " / " + StyleTokens.radiusMd + " / " + StyleTokens.radiusLg + " / " + StyleTokens.radiusXl
                                     + " px · Borders: " + StyleTokens.borderWidth + " px"
                             }
                         }
@@ -430,6 +432,22 @@ PanelWindow {
                                         iconName: "utilities-terminal-symbolic"
                                         text: "Terminal"
                                         interactive: true
+                                    }
+                                }
+
+                                DemoSample {
+                                    caption: "Circular"
+                                    PillButton {
+                                        iconName: "system-search-symbolic"
+                                        paddingHorizontal: StylePopover.pillPaddingV
+                                    }
+                                }
+
+                                DemoSample {
+                                    caption: "Chip"
+                                    PillButton {
+                                        text: "Selected"
+                                        active: true
                                     }
                                 }
 
@@ -492,6 +510,26 @@ PanelWindow {
                         }
 
                         GalleryCard {
+                            title: "Level"
+
+                            LevelBar {
+                                width: parent.width
+                                label: "Volume"
+                                value: root.levelValue
+                                onMoved: (value) => {
+                                    root.levelValue = value
+                                }
+                            }
+
+                            LevelBar {
+                                width: parent.width
+                                label: "Volume"
+                                value: root.levelValue
+                                muted: true
+                            }
+                        }
+
+                        GalleryCard {
                             title: "Slider"
 
                             Slider {
@@ -502,7 +540,7 @@ PanelWindow {
                                 }
                             }
 
-                            GuideText { text: "Level · " + Math.round(root.sliderValue * 100) + "%" }
+                            GuideText { text: "Seek · " + Math.round(root.sliderValue * 100) + "%" }
                         }
 
                         GalleryCard {

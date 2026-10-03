@@ -16,9 +16,6 @@ Singleton {
     readonly property int timeout: 5000
     readonly property int showDuration: StyleTokens.motionEnterDuration
     readonly property int hideDuration: StyleTokens.motionExitDuration
-    readonly property real surfaceAlpha: 0.54
-    readonly property color surface: Qt.rgba(8 / 255, 8 / 255, 8 / 255, surfaceAlpha)
-    readonly property color border: StyleTokens.alphaHairline
 
     // Room to the right of a card for the drag-to-dismiss gesture. A layer
     // surface cannot paint outside itself, so its window is widened by this and

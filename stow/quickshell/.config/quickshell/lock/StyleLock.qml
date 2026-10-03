@@ -6,7 +6,6 @@ pragma Singleton
 Singleton {
     readonly property color transparent: "transparent"
     // ── Wallpaper / dim ───────────────────────────────────────────────────────
-    readonly property string wallpaperPath: Quickshell.env("HOME") + "/.config/hypr/wallpapers/current/current_wallpaper.jpg"
     readonly property real wallpaperBlur: 0.8
     readonly property int wallpaperBlurMax: 32
     readonly property real wallpaperDimOpacity: 0.08

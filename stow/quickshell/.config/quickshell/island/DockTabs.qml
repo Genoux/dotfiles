@@ -4,10 +4,11 @@ import qs.components
 import qs.config
 import qs.services as Services
 
-// The island's page switcher: one icon per page, a selected fill that travels
-// to the current page and a hover fill that follows the pointer. Used by the
-// expanded island's footer and by the wide bar, which is why it owns neither a
-// track nor a size.
+// The island's page switcher: one icon per page, a selected chip that fades in
+// on the current page and a hover fill that follows the pointer. The chip does
+// not travel: a page change is a choice, not a movement along the row. Used by
+// the expanded island's footer and by the wide bar, which is why it owns
+// neither a track nor a size.
 Item {
     id: root
 
@@ -18,8 +19,6 @@ Item {
     property int spacing: StyleIsland.footerTrackPadding
 
     signal tabSelected(string tab)
-
-    readonly property int currentIndex: tabs.indexOf(currentTab)
 
     implicitWidth: tabRow.implicitWidth
     implicitHeight: tabSize
@@ -48,11 +47,6 @@ Item {
     }
 
     SlidingHighlight {
-        radius: root.tabRadius
-        target: tabRepeater.count > 0 && root.currentIndex >= 0 ? tabRepeater.itemAt(root.currentIndex) : null
-    }
-
-    SlidingHighlight {
         run: tabRow
         radius: root.tabRadius
     }
@@ -63,8 +57,6 @@ Item {
         spacing: root.spacing
 
         Repeater {
-            id: tabRepeater
-
             model: root.tabs
 
             Item {
@@ -80,18 +72,41 @@ Item {
                 width: root.tabSize
                 height: root.tabSize
 
+                Rectangle {
+                    anchors.fill: parent
+                    radius: root.tabRadius
+                    color: StyleControl.chipFill
+                    opacity: tab.selected ? 1 : 0
+
+                    Behavior on opacity {
+                        NumberAnimation {
+                            duration: StyleTokens.motionFeedbackDuration
+                            easing.type: StyleTokens.easeFade
+                        }
+                    }
+                }
+
                 Button {
                     id: icon
 
                     anchors.fill: parent
                     iconSource: root.iconFor(tab.modelData)
-                    foreground: tab.selected ? Colors.base05 : Colors.base04
+                    foreground: tab.selected ? StyleControl.chipContent : Colors.base04
                     hoverBackground: StyleTokens.transparent
                     minimumWidth: 0
                     minimumHeight: 0
                     interactive: true
                     Accessible.name: tab.modelData
                     onClicked: root.tabSelected(tab.modelData)
+
+                    // In step with the chip, or the glyph turns light while the
+                    // chip under it is still white and vanishes for a frame.
+                    Behavior on foreground {
+                        ColorAnimation {
+                            duration: StyleTokens.motionFeedbackDuration
+                            easing.type: StyleTokens.easeFade
+                        }
+                    }
                 }
             }
         }

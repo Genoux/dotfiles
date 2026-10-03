@@ -28,9 +28,6 @@ Singleton {
     readonly property real panelExitScale: 1
     readonly property int panelExitEasing: Easing.OutQuad
 
-    readonly property int shadowRadius: 8
-    readonly property int shadowSamples: 17
-
     // Tray context menu — a system right-click menu, not a bar widget panel.
     // It hugs its content instead of filling panelWidth and aligns to the
     // icon's edge instead of centring on it.
@@ -98,9 +95,6 @@ Singleton {
     readonly property int tileWidth: 72
     readonly property int tileHeight: 58
     readonly property int tileIconSize: 20
-    readonly property int tileBadgeSize: 10
-    readonly property int tileSpacing: StyleTokens.space2
-    readonly property int tileCaptionPadding: StyleTokens.space4
 
     // Shared panel chrome — the vertical rhythm every popover is built from.
     // A panel is: header, separator, then sections of rows.
@@ -110,19 +104,23 @@ Singleton {
     // that the panel still reads as a surface rather than a title bar.
     readonly property int emptyStateHeight: 120
 
-    // Section labels are eyebrows, not content: a shorter band than a row, in
-    // the smallest type, so they group without competing with what they title.
+    // Section labels are eyebrows, not content: a shorter band than a row, so
+    // they group without competing with what they title.
     readonly property int sectionHeight: 26
     // Air above a section that follows content, so groups read as separate
     // without needing a rule between them.
     readonly property int sectionTopGap: StyleTokens.space6
-    readonly property real sectionLabelOpacity: StyleTokens.opacityMuted
-    readonly property real sectionLetterSpacing: 0.6
 
     // Two-line rows (name over status) need more height than the single-line
     // menu rowHeight, and inset so the hover fill floats inside the panel
     // instead of bleeding into its border.
     readonly property int listRowHeight: 44
+    // Every list row in every panel — Wi-Fi, Bluetooth, sound, menus, the
+    // launcher — has this corner, and so does the hover that travels along it.
+    readonly property int listRowRadius: StyleTokens.radiusSm
+    // The rounded-square well a row's leading glyph sits in; a connected row's well turns
+    // into a chip.
+    readonly property int rowGlyphWellSize: 32
     readonly property int listRowInset: StyleTokens.space4
     readonly property int listRowSpacing: StyleTokens.space2
     readonly property int listMaxHeight: 300

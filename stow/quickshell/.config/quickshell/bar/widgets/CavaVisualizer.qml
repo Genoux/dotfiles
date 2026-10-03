@@ -8,10 +8,15 @@ Row {
 
     property bool enabled: true
     property bool active: false
+    property color barColor: Colors.base04
+    property int barCount: StyleCava.displayBars
+    property int barWidth: StyleCava.barWidth
+    property int barHeight: StyleCava.barHeight
+    property int barSpacing: StyleCava.spacing
 
     readonly property string cavaConfig: `
 [general]
-bars = ${StyleCava.analyzeBars}
+bars = ${root.barCount}
 framerate = ${StyleCava.framerate}
 
 [input]
@@ -29,9 +34,9 @@ monstercat = ${StyleCava.monstercat ? 1 : 0}
 noise_reduction = ${StyleCava.noiseReduction}
 `
 
-    spacing: StyleCava.spacing
-    height: StyleCava.barHeight
-    width: StyleCava.visualWidth
+    spacing: barSpacing
+    height: barHeight
+    width: barCount * barWidth + (barCount - 1) * barSpacing
 
     onActiveChanged: {
         if (!active)
@@ -39,6 +44,7 @@ noise_reduction = ${StyleCava.noiseReduction}
     }
 
     Component.onCompleted: rebuildBarsModel()
+    onBarCountChanged: rebuildBarsModel()
 
     ListModel {
         id: barsModel
@@ -58,11 +64,11 @@ noise_reduction = ${StyleCava.noiseReduction}
                     return
 
                 const values = data.trim().split(";").map(Number).filter(v => !Number.isNaN(v))
-                if (values.length < StyleCava.analyzeBars)
+                if (values.length < root.barCount)
                     return
 
-                const displayValues = root.mapToDisplay(values.slice(0, StyleCava.analyzeBars))
-                for (let i = 0; i < StyleCava.displayBars; i++)
+                const displayValues = values.slice(0, root.barCount)
+                for (let i = 0; i < root.barCount; i++)
                     barsModel.setProperty(i, "barValue", root.normalize(displayValues[i]))
             }
         }
@@ -74,15 +80,15 @@ noise_reduction = ${StyleCava.noiseReduction}
         Item {
             required property real barValue
 
-            width: StyleCava.barWidth
-            height: StyleCava.barHeight
+            width: root.barWidth
+            height: root.barHeight
 
             Rectangle {
                 anchors.centerIn: parent
-                width: StyleCava.barWidth
+                width: root.barWidth
                 height: Math.max(barValue, StyleCava.silenceThreshold)
                 radius: StyleTokens.radiusMd
-                color: Colors.base04
+                color: root.barColor
                 opacity: root.active ? 1 : StyleCava.inactiveOpacity
 
                 Behavior on height {
@@ -105,7 +111,7 @@ noise_reduction = ${StyleCava.noiseReduction}
     function rebuildBarsModel() {
         barsModel.clear()
 
-        for (let i = 0; i < StyleCava.displayBars; i++)
+        for (let i = 0; i < root.barCount; i++)
             barsModel.append({ barValue: 0 })
     }
 
@@ -114,38 +120,11 @@ noise_reduction = ${StyleCava.noiseReduction}
             barsModel.setProperty(i, "barValue", 0)
     }
 
-    function averageRange(values, start, end) {
-        const from = Math.max(0, Math.min(start, values.length))
-        const to = Math.max(from + 1, Math.min(end, values.length))
-        let sum = 0
-
-        for (let i = from; i < to; i++)
-            sum += values[i]
-
-        return sum / (to - from)
-    }
-
-    function mapToDisplay(values) {
-        if (StyleCava.displayBars === StyleCava.analyzeBars)
-            return values.slice(0, StyleCava.displayBars)
-
-        const bucketSize = values.length / StyleCava.displayBars
-        const mapped = []
-
-        for (let i = 0; i < StyleCava.displayBars; i++) {
-            const start = Math.floor(i * bucketSize)
-            const end = Math.floor((i + 1) * bucketSize)
-            mapped.push(averageRange(values, start, end))
-        }
-
-        return mapped
-    }
-
     function normalize(value) {
         if (value < StyleCava.silenceThreshold)
             return 0
 
-        const usableHeight = StyleCava.barHeight - StyleCava.silenceThreshold
+        const usableHeight = root.barHeight - StyleCava.silenceThreshold
         const level = Math.min(value / StyleCava.asciiMaxRange, 1) * StyleCava.maxFill
         const barValue = StyleCava.silenceThreshold + (level * usableHeight)
 

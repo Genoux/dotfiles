@@ -48,13 +48,15 @@ Rectangle {
         if (!name)
             return IconRegistry.bluetoothIcon(true)
 
-        const themed = Quickshell.iconPath(name, true)
+        // Symbolic first: full-colour theme art ignores the tint and vanishes on the
+        // connected row's light chip.
+        const themed = Quickshell.iconPath(`${name}-symbolic`, true) || Quickshell.iconPath(name, true)
         return String(themed).length > 0 ? themed : IconRegistry.bluetoothIcon(true)
     }
 
     implicitHeight: StylePopover.listRowHeight
     height: implicitHeight
-    radius: StyleTokens.radiusSm
+    radius: StylePopover.listRowRadius
     color: StyleTokens.transparent
 
     // The list's travelling indicator paints the hover fill for the whole run.
@@ -72,17 +74,33 @@ Rectangle {
         id: hover
     }
 
-    ThemedIcon {
-        id: deviceIcon
+    Rectangle {
+        id: glyphWell
 
         anchors.left: parent.left
         anchors.leftMargin: StylePopover.contentPaddingH - row.x
         anchors.verticalCenter: parent.verticalCenter
-        source: row.deviceIconSource
+        width: StylePopover.rowGlyphWellSize
+        height: width
+        radius: StyleControl.chipRadius
+        color: row.device.connected ? StyleControl.chipFill : StyleTokens.alphaLight
+
+        Behavior on color {
+            ColorAnimation {
+                duration: StyleTokens.motionFeedbackDuration
+                easing.type: StyleTokens.easeFade
+            }
+        }
+
+        ThemedIcon {
+            anchors.centerIn: parent
+            source: row.deviceIconSource
+            tint: row.device.connected ? StyleControl.chipContent : Colors.base05
+        }
     }
 
     Column {
-        anchors.left: deviceIcon.right
+        anchors.left: glyphWell.right
         anchors.leftMargin: StyleTokens.space10
         anchors.right: rowActions.left
         anchors.rightMargin: StyleTokens.space6

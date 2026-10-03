@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Widgets
 import qs
 import qs.components
 import qs.config
@@ -15,7 +16,7 @@ Item {
     signal pageRequested(string pageId)
 
     implicitWidth: StyleIsland.pageWidth
-    implicitHeight: column.implicitHeight + StyleIsland.pagePaddingTop + StyleIsland.pagePaddingBottom
+    implicitHeight: column.implicitHeight + StyleIsland.fillInset + StyleIsland.pagePaddingBottom
     width: implicitWidth
     height: implicitHeight
 
@@ -28,86 +29,133 @@ Item {
     ColumnLayout {
         id: column
 
-        x: StyleIsland.pagePaddingH
-        y: StyleIsland.pagePaddingTop
-        width: parent.width - StyleIsland.pagePaddingH * 2
-        spacing: StyleIsland.pageSpacing
+        x: StyleIsland.fillInset
+        y: StyleIsland.fillInset
+        width: parent.width - StyleIsland.fillInset * 2
+        spacing: StyleIsland.tileGridGap
 
-        RowLayout {
+        ClippingRectangle {
             Layout.fillWidth: true
+            Layout.preferredHeight: StyleIsland.heroHeight
+            radius: StyleIsland.heroRadius
+            color: StyleTokens.alphaLight
+
+            // Uncached: theme.sh rewrites this one path, and the page is rebuilt
+            // each time the island opens, so a fresh decode picks up a new
+            // wallpaper without watching the file.
+            Image {
+                anchors.fill: parent
+                source: StyleTokens.wallpaperPath
+                sourceSize.width: StyleIsland.heroImageWidth
+                fillMode: Image.PreserveAspectCrop
+                asynchronous: true
+                cache: false
+            }
+
+            Rectangle {
+                anchors.fill: parent
+                gradient: Gradient {
+                    GradientStop { position: StyleIsland.heroScrimStart; color: StyleTokens.transparent }
+                    GradientStop { position: 1; color: StyleIsland.heroScrim }
+                }
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: root.pageRequested("calendar")
+            }
 
             Column {
-                spacing: StyleTokens.space2
+                anchors.left: parent.left
+                anchors.bottom: parent.bottom
+                anchors.margins: StyleIsland.heroPadding
+                spacing: 0
 
                 Text {
                     text: Qt.formatDateTime(clock.date, "HH:mm")
-                    color: Colors.base05
+                    color: Colors.base07
                     font.family: StyleTokens.fontSans
-                    font.pixelSize: StyleIsland.clockSize
-                    font.weight: Font.DemiBold
+                    font.pixelSize: StyleTokens.fontSizeDisplay
+                    font.weight: Font.Light
+                    font.letterSpacing: StyleIsland.clockLetterSpacing
                 }
 
                 Text {
                     text: Qt.formatDateTime(clock.date, "dddd, d MMMM")
-                    color: Colors.base04
+                    color: Colors.base07
+                    opacity: StyleIsland.heroDateOpacity
                     font.family: StyleTokens.fontSans
                     font.pixelSize: StyleTokens.fontSizeSm
                 }
             }
 
-            Item {
-                Layout.fillWidth: true
-            }
-
-            ColumnLayout {
+            Column {
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
+                anchors.margins: StyleIsland.heroPadding
                 visible: Services.WeatherState.hasData
                 spacing: StyleTokens.space2
 
-                RowLayout {
-                    Layout.alignment: Qt.AlignRight
+                Row {
+                    anchors.right: parent.right
                     spacing: StyleTokens.space4
 
                     ThemedIcon {
+                        anchors.verticalCenter: parent.verticalCenter
+                        size: StyleIsland.heroWeatherIconSize
                         source: IconRegistry.weatherIcon(Services.WeatherState.icon)
                     }
 
                     Text {
+                        anchors.verticalCenter: parent.verticalCenter
                         text: Services.WeatherState.temperature
-                        color: Colors.base05
+                        color: Colors.base07
                         font.family: StyleTokens.fontSans
-                        font.pixelSize: StyleTokens.fontSizeMd
+                        font.pixelSize: StyleTokens.fontSizeLg
                     }
                 }
 
                 Text {
-                    Layout.alignment: Qt.AlignRight
-                    Layout.maximumWidth: StyleIsland.pageWidth / 3
+                    anchors.right: parent.right
+                    width: Math.min(implicitWidth, StyleIsland.pageWidth / 3)
                     horizontalAlignment: Text.AlignRight
                     elide: Text.ElideRight
                     text: Services.WeatherState.description
-                    color: Colors.base04
+                    color: Colors.base07
+                    opacity: StyleIsland.heroDateOpacity
                     font.family: StyleTokens.fontSans
-                    font.pixelSize: StyleTokens.fontSizeXs
+                    font.pixelSize: StyleTokens.fontSizeSm
                 }
+            }
+
+            MouseArea {
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
+                width: parent.width / 2
+                height: parent.height / 2
+                visible: Services.WeatherState.hasData
+                cursorShape: Qt.PointingHandCursor
+                onClicked: root.pageRequested("weather")
             }
         }
 
         LevelBar {
+            label: "Volume"
             Layout.fillWidth: true
             enabled: Services.AudioState.hasSink
             value: Services.AudioState.sinkVolume
             muted: Services.AudioState.sinkMuted
-            iconSource: IconRegistry.volumeIcon(Services.AudioState.sinkVolume, Services.AudioState.sinkMuted, Services.AudioState.hasSink)
             onMoved: (level) => Services.AudioState.setVolume(Services.AudioState.sink, level)
-            onIconClicked: Services.AudioState.toggleMute(Services.AudioState.sink)
+            onMuteRequested: Services.AudioState.toggleMute(Services.AudioState.sink)
         }
 
         Rectangle {
             Layout.fillWidth: true
-            Layout.preferredHeight: StyleIsland.miniArtSize + StyleTokens.space8 * 2
+            Layout.preferredHeight: StyleIsland.miniArtSize + StyleIsland.fillInset * 2
             visible: root.hasMedia
-            radius: StyleTokens.radiusSm
-            color: nowPlayingArea.containsMouse ? StyleTokens.alphaLight : StyleTokens.transparent
+            radius: StyleTokens.radiusMd
+            color: nowPlayingArea.containsMouse ? StyleTokens.alphaActive : StyleTokens.alphaLight
 
             Behavior on color {
                 ColorAnimation {
@@ -127,15 +175,15 @@ Item {
 
             RowLayout {
                 anchors.fill: parent
-                anchors.margins: StyleTokens.space8
+                anchors.margins: StyleIsland.fillInset
                 spacing: StyleTokens.space12
 
                 ArtImage {
                     Layout.preferredWidth: StyleIsland.miniArtSize
                     Layout.preferredHeight: StyleIsland.miniArtSize
-                    radius: StyleTokens.radiusXs
+                    radius: StyleTokens.radiusMd
                     source: Services.MediaPlayers.artUrl(root.player)
-                isIcon: Services.MediaPlayers.isSiteIcon(root.player)
+                    isIcon: Services.MediaPlayers.isSiteIcon(root.player)
                 }
 
                 Column {
@@ -163,7 +211,8 @@ Item {
                     }
                 }
 
-                Button {
+                PillButton {
+                    active: true
                     iconSource: IconRegistry.mediaIcon(root.player && root.player.isPlaying ? "pause" : "play")
                     interactive: Services.MediaPlayers.canTogglePlayback
                     onClicked: Services.MediaPlayers.togglePlayback()

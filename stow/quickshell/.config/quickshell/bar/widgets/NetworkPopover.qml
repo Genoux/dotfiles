@@ -65,13 +65,22 @@ PopoverPanel {
                 implicitHeight: StylePopover.listRowHeight
                 height: implicitHeight
 
-                ThemedIcon {
+                Rectangle {
                     id: wiredIcon
 
                     anchors.left: parent.left
                     anchors.leftMargin: StylePopover.contentPaddingH
                     anchors.verticalCenter: parent.verticalCenter
-                    source: IconRegistry.networkIcon("wired")
+                    width: StylePopover.rowGlyphWellSize
+                    height: width
+                    radius: StyleControl.chipRadius
+                    color: StyleControl.chipFill
+
+                    ThemedIcon {
+                        anchors.centerIn: parent
+                        source: IconRegistry.networkIcon("wired")
+                        tint: StyleControl.chipContent
+                    }
                 }
 
                 Column {

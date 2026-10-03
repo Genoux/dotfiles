@@ -8,8 +8,7 @@ import qs.config
 // rather than a state you are looking at.
 //
 // Monochrome on purpose. The shell carries state in weight and fill rather than
-// accent colour, so "on" is a bright track with a dark knob and "off" is the
-// same faint tint every other resting control wears.
+// accent colour, so "on" is the selected chip and "off" is a faint glass track.
 Rectangle {
     id: control
 
@@ -23,9 +22,7 @@ Rectangle {
     width: implicitWidth
     height: implicitHeight
     radius: height / 2
-    color: control.checked ? Colors.base05 : StyleTokens.alphaLight
-    border.width: StyleTokens.borderWidth
-    border.color: control.checked ? StyleTokens.transparent : StyleOverlay.borderSubtle
+    color: control.checked ? StyleControl.chipFill : StyleTokens.alphaActive
     opacity: control.interactive ? 1 : StyleTokens.opacityDisabled
 
     Behavior on color {
@@ -45,9 +42,7 @@ Rectangle {
         x: control.checked
             ? control.width - width - StyleControl.toggleInset
             : StyleControl.toggleInset
-        // Dark against a lit track, muted against an unlit one — legible either
-        // way without reaching for an accent.
-        color: control.checked ? Colors.base00 : Colors.base04
+        color: control.checked ? StyleControl.chipContent : Colors.base05
 
         Behavior on x {
             NumberAnimation {

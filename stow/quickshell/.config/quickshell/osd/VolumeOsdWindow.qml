@@ -1,7 +1,6 @@
 import Quickshell
 import Quickshell.Wayland
 import QtQuick
-import QtQuick.Layouts
 import qs
 import qs.config
 import qs.components
@@ -28,33 +27,16 @@ PanelWindow {
 
     Rectangle {
         anchors.fill: parent
-        radius: StyleTokens.radiusMd
-        color: StyleOsd.background(Colors.base00)
-        border.width: StyleTokens.borderWidth
-        border.color: StyleOsd.border
+        radius: StyleOsd.radius
+        color: StyleOverlay.surface
 
-        ColumnLayout {
-            anchors.centerIn: parent
-            spacing: StyleOsd.contentSpacing
-
-            Button {
-                Layout.alignment: Qt.AlignHCenter
-                Layout.preferredWidth: StyleOsd.iconSize
-                Layout.preferredHeight: StyleOsd.iconSize
-                width: StyleOsd.iconSize
-                height: StyleOsd.iconSize
-                iconSource: IconRegistry.volumeIcon(VolumeOsd.volume, VolumeOsd.muted, !!VolumeOsd.sink)
-                iconSize: StyleOsd.iconSize
-                interactive: false
-                background: StyleTokens.transparent
-                hoverBackground: StyleTokens.transparent
-            }
-
-            VolumeStepBar {
-                Layout.alignment: Qt.AlignHCenter
-                volume: VolumeOsd.volume
-                muted: VolumeOsd.muted
-            }
+        LevelBar {
+            anchors.fill: parent
+            anchors.margins: StyleOsd.padding
+            enabled: false
+            label: "Volume"
+            value: VolumeOsd.volume
+            muted: VolumeOsd.muted
         }
     }
 }

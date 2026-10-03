@@ -27,9 +27,9 @@ A multi-perspective guide to the Quickshell desktop bar in John's dotfiles. This
 
 | Aspect | Detail |
 |--------|--------|
-| **Purpose** | Bottom panel bar on every monitor: workspaces, tray, window title, media, system controls |
+| **Purpose** | Island on every monitor: a floating pill that expands into pages, or stretches into a full-width bar with workspaces, tray, window title, media, system controls |
 | **Files** | ~57 QML/assets (excluding generated `Colors.qml` and Gentle AI metadata) |
-| **Entry point** | `shell.qml` — one `Bar` per screen via `Variants` |
+| **Entry point** | `shell.qml` — one `Island` per screen via `Variants` |
 | **State model** | QML singletons under `config/` and `services/` |
 | **Hyprland bridge** | All window/workspace logic delegated to Lua `actions/*` modules |
 | **Theming** | matugen generates `~/.config/quickshell/Colors.qml` (not in git) |
@@ -52,7 +52,7 @@ flowchart TB
 
     subgraph Shell["Quickshell (~/.config/quickshell)"]
         SR[shell.qml]
-        BAR[Bar.qml × N monitors]
+        BAR[island/Island.qml × N monitors]
         W[bar/widgets/*]
         SVC[services/*]
         CFG[config/*]
@@ -102,7 +102,7 @@ flowchart TB
 
 **Strengths**
 
-- Adding a bar widget: create `bar/widgets/Foo.qml`, import in `Bar.qml`, optionally add a service singleton.
+- Adding a bar widget: create `bar/widgets/Foo.qml`, add it to the wide bar in `island/Island.qml`, optionally add a service singleton.
 - Hyprland behavior changes stay in one Lua codebase (`actions/*`), shared conceptually with any future shell.
 - Polling tiers in `Style.qml` (1s / 5s / 30s / 10min) prevent runaway subprocess churn.
 
@@ -123,24 +123,23 @@ flowchart TB
 ShellRoot {
     Variants {
         model: Quickshell.screens
-        Bar { screen: modelData }
+        Island { screen: modelData }
     }
 }
 ```
 
-Quickshell discovers config at `~/.config/quickshell/shell.qml` and instantiates one bottom `PanelWindow` per connected screen.
+Quickshell discovers config at `~/.config/quickshell/shell.qml` and instantiates one `Island` `PanelWindow` per connected screen.
 
-### Bar Layout
+### Wide Bar Layout
 
-Three zones mirror the former AGS `Bar.tsx`:
+The island's wide mode (`ShellLayout.wide`, toggled from the More page or `qs ipc call shell toggleWideBar`) shows two runs:
 
-| Zone | Widgets |
-|------|---------|
-| **Left** | Workspaces, SystemTray |
-| **Center** | WindowTitle |
-| **Right** | Privacy → Media → Volume → Network → Bluetooth → Capture → Keyboard → Battery → Weather → Temperature → Clock → Info → Menu → Dotfiles |
+| Run | Widgets |
+|-----|---------|
+| **Left** | Workspaces, SystemTray, WindowTitle |
+| **Right** | Media → Launcher → Volume → Network → Bluetooth → Clipboard → Capture → Keyboard → Battery → Clock → Dotfiles → More |
 
-See `bar/Bar.qml` for the canonical widget order.
+See `island/Island.qml` for the canonical widget order. Weather, System, About and Power live behind More.
 
 ### Module Map
 
@@ -222,7 +221,7 @@ Freedesktop lookup depends on `QT_QPA_PLATFORMTHEME=gtk3`, which reaches Quicksh
 ### Key Implementation Conventions
 
 1. **PascalCase** QML filenames matching component types
-2. **`bar/widgets/` naming:** domain name for controls (`Volume`, `Clock`); compound name for composites (`MediaPlayer`, `PrivacyIndicator`) — no `Button` suffix; qualify services as `Services.Network` when names collide
+2. **`bar/widgets/` naming:** domain name for controls (`Volume`, `Clock`); compound name for composites (`MediaPlayer`, `MoreMenu`) — no `Button` suffix; qualify services as `Services.Network` when names collide
 3. **`pragma Singleton`** for shared config/services
 4. **`Colors.base00`–`base0F`** base16 slots from matugen (same as AGS)
 5. **Process patterns:** long-running (`Privacy`) vs one-shot polls vs `FileView` watches
@@ -263,7 +262,6 @@ A **always-visible bottom bar** on every monitor that surfaces desktop state and
 | **Workspaces** | See and switch virtual desktops per monitor | Click pill → switch workspace |
 | **System tray** | Background apps (Discord, Nextcloud, etc.) | Left/right: focus app; middle: menu |
 | **Window title** | Context for focused window | Read-only; shows app icon + title |
-| **Privacy indicators** | Know when cam/mic/recording is active | Visual only (colored badges) |
 | **Media player** | Control music without switching windows | Hover for controls; scroll title |
 | **Volume** | Adjust audio | Opens wiremix |
 | **Network** | Wi-Fi/Ethernet status | Opens impala |
@@ -323,7 +321,6 @@ Click workspace pill → `ShellActions.switchWorkspace(modelData)` → `workspac
 | **Modular Hyprland config** | Shell never owns window rules — only dispatches to Lua |
 | **Matugen-driven theming** | Shared base16 palette with GTK/Hypr/terminal |
 | **Script-first TUIs** | Volume, network, dotfiles menus reuse `~/.local/bin` helpers |
-| **Privacy awareness** | Visible cam/mic/recording indicators |
 | **Minimal moving parts** | No npm build; QML edits reload live |
 
 ### Known Product Gaps vs AGS
@@ -338,11 +335,11 @@ Click workspace pill → `ShellActions.switchWorkspace(modelData)` → `workspac
 
 ```
 .config/quickshell/
-├── shell.qml                 # Entry: Variants → Bar per screen
+├── shell.qml                 # Entry: Variants → Island per screen
 ├── Colors.qml                # GENERATED by matugen (not in stow)
 ├── bar/
-│   ├── Bar.qml               # PanelWindow layout
-│   └── widgets/              # 18 feature widgets
+│   └── widgets/              # feature widgets shared by the wide bar and popovers
+├── island/                   # Island.qml: pill, pages and wide bar
 ├── components/               # IconButton, Pill, CavaVisualizer, …
 ├── config/                   # Style, ShellActions, IconRegistry singletons
 ├── services/                 # Privacy, TrayFocus, Network, … singletons
@@ -381,7 +378,7 @@ sequenceDiagram
     AS->>SD: import-environment + start desktop services
     AS->>QS: exec quickshell (direct, not via systemd)
     QS->>QS: Load shell.qml
-    QS->>QS: Bar × screen count
+    QS->>QS: Island × screen count
 
     Note over MAT,QS: On dotfiles config link
     MAT->>QS: Generate Colors.qml
@@ -413,7 +410,7 @@ Quickshell is positioned as a **parity replacement**, not a redesign:
 |------|-----|------------|
 | Language | TypeScript + SCSS | QML only |
 | Build | pnpm | None |
-| Bar layout | `widget/Bar.tsx` | `bar/Bar.qml` (same order) |
+| Bar layout | `widget/Bar.tsx` | `island/Island.qml` (wide mode) |
 | Hyprland bridge | `services/hyprland.ts` | `config/ShellActions.qml` |
 | Tray focus | `widget/systemtray/service.ts` | `services/TrayFocus.qml` |
 | Media selection | explicit player key | Same policy in `MediaPlayer.qml` |
@@ -446,7 +443,6 @@ Quickshell is positioned as a **parity replacement**, not a redesign:
 - [ ] Workspace pills filter correctly per monitor
 - [ ] Tray left-click focuses app; middle-click opens menu
 - [ ] Media player sticks to explicitly selected source after interaction
-- [ ] Privacy indicators light up when cam/mic/recording active
 - [ ] `Colors.qml` updates after wallpaper/matugen run without shell restart
 - [ ] Dotfiles button shows badge when `UPDATES_AVAILABLE=true`
 - [ ] Layer blur applies to bar (check `hyprctl layers`)

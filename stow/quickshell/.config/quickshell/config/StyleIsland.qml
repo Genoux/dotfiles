@@ -1,5 +1,6 @@
 import QtQuick
 import Quickshell
+import qs
 pragma Singleton
 
 // The experimental island: one floating surface that morphs between a compact
@@ -34,47 +35,44 @@ Singleton {
     // "top", `align` is "left", "center" or "right". The surface floats off the
     // screen edge by the bar's own margin, and windows are held clear of it by a
     // spacing step beyond that.
-    readonly property string edge: "top"
+    readonly property string edge: "bottom"
     readonly property string align: "center"
     readonly property bool atTop: edge === "top"
     readonly property int edgeMargin: StyleBar.margin
     readonly property int reservedHeight: edgeMargin + compactHeight + StyleTokens.space4
-    // The wide bar: the island stretched across the screen. Tall enough for the
-    // workspaces and tray it carries, which are the old bar's own widgets.
-    // The same air above, below and to either side of the widgets.
+    // The wide bar: the island across the screen, with no glass, at the pill's
+    // height. One height keeps one exclusive zone: a different one made
+    // Hyprland re-tile every window on the switch, late and on its own timing.
     readonly property int wideInset: 0
-    readonly property int wideHeight: StyleBar.estimatedContentHeight + wideInset * 2
-    readonly property int wideReservedHeight: edgeMargin + wideHeight + StyleTokens.space4
+    readonly property int wideHeight: compactHeight
     // One gap between every widget in the bar, the media player and the clock
     // included.
     readonly property int wideSpacing: StyleTokens.space6
-    // Squarer than the pill, with no surface of its own: the widgets sit directly
-    // on the screen, like the old bar's.
-    readonly property int wideRadius: StyleTokens.radiusMd
-    readonly property color wideSurface: StyleTokens.transparent
     // The layer window must contain the largest expanded state plus its
     // shadow; input outside the surface is masked away, so the slack is inert.
-    readonly property int shadowMargin: StylePopover.shadowRadius + StyleTokens.space8
+    readonly property int shadowMargin: StyleOverlay.shadowBlur + StyleOverlay.shadowOffset
     readonly property int expandedMaxHeight: 900
-    // Softer than the 12px panel radius because this surface is a pill first;
-    // the radius follows its height up to this cap, so the morph never snaps.
-    readonly property int expandedRadius: StyleTokens.space20 + StyleTokens.space2
-    // Glass over the compositor's blur, denser than a bar popover's: the island
-    // is tall enough to span two windows, and a bright one behind it would
-    // wash the text out.
-    readonly property color surface: Qt.rgba(8 / 255, 8 / 255, 8 / 255, 0.6)
+    // The radius follows the surface's height up to this cap, so the morph
+    // from pill to panel never snaps.
+    readonly property int expandedRadius: StyleTokens.radiusXl
+    // Nearly solid, like the Dynamic Island: as see-through glass it took on
+    // the light of whatever window sat behind it. Darker than the palette's
+    // darkest surface, toward the Dynamic Island's black, but still the
+    // palette's hue so it follows the wallpaper, and translucent enough that a
+    // blur of what is behind reads through it.
+    readonly property real surfaceDarkening: 0
+    readonly property real surfaceOpacity: 0.8
+    readonly property color surface: StyleTokens.surfaceAlpha(Qt.darker(Colors.base00, surfaceDarkening), surfaceOpacity)
     // Expanded layout. The island is one width for every page, so it never
     // resizes sideways, and a page's full-width rules reach its edges.
     readonly property int pageWidth: StylePopover.panelWidth
     // Search and About want room; the footer menu keeps its own width and stays
     // centred under them.
     readonly property int wideWidth: 420
-    // The footer menu: a track of square tabs. The track floats off the island's
-    // edge by `edgeInset`, and one gap
-    // runs through it: between tabs, and from the tabs to the track's edge, so
-    // the tab size is what the width leaves over. Corner radii are concentric:
-    // each shape's radius is its parent's less the gap between them, so the
-    // curves stay parallel all the way round.
+    // The footer menu: a rounded track of rounded-square tabs. The track floats off the
+    // island's edge by `edgeInset`, and one gap runs through it: between tabs,
+    // and from the tabs to the track's edge, so the tab size is what the width
+    // leaves over.
     // Content running under the footer fades out over this stretch, measured up
     // from the island's bottom edge: it is gone by the time it reaches the track.
     // As long as the gap above the track, so a list scrolled to its end rests
@@ -85,7 +83,10 @@ Singleton {
     readonly property int footerTabCount: 8
     readonly property int footerInset: edgeInset
     readonly property int footerTrackPadding: StyleTokens.space8
-    readonly property int footerTabSize: (pageWidth - footerInset * 2 - (footerTabCount + 1) * footerTrackPadding) / footerTabCount
+    // Rounded down to even, like the glyph inside it, so the glyph sits on whole
+    // pixels; the tabs are centred in the track and the spare width goes to its
+    // ends.
+    readonly property int footerTabSize: Math.floor((pageWidth - footerInset * 2 - (footerTabCount + 1) * footerTrackPadding) / footerTabCount / 2) * 2
     readonly property int footerTrackHeight: footerTabSize + footerTrackPadding * 2
     readonly property int footerHeight: footerTrackHeight + footerInset * 2
     // The air around the content of the pages built for the island. The sides
@@ -96,35 +97,25 @@ Singleton {
     // scrolls (a reused popover's list, the launcher) runs all the way to the
     // footer.
     readonly property int pagePaddingH: padding
-    readonly property int pageSpacing: StyleTokens.space20 + StyleTokens.space4
-    // One vertical system for every page. The island puts `pageInsetTop` above
-    // whatever page it shows, and a page starts `padding` in from there, the way
-    // a popover's header band does. The air under the last fill matches the air
-    // above the first: the footer's own inset already sits between the page and
-    // its track, so the page adds only what is left of `padding`.
-    readonly property int pageInsetTop: StyleTokens.space8
+    // Each page owns the air above it: a header band centres its title, a page
+    // without one starts its content as far from the top as from the sides.
+    // The air under the last fill matches the air above the first: the
+    // footer's own inset already sits between the page and its track, so the
+    // page adds only what is left of `padding`.
     readonly property int pagePaddingTop: padding
     readonly property int pagePaddingBottom: dockGap - footerInset
-    readonly property int footerTrackRadius: expandedRadius - footerInset
-    readonly property int footerTabRadius: footerTrackRadius - footerTrackPadding
+    readonly property int footerTrackRadius: footerTabRadius + footerTrackPadding
+    readonly property int footerTabRadius: StyleControl.chipRadius
     // Shape motion. A shape that changes size tenfold needs longer than the
     // 100ms a popover spends scaling one percent. Opening overshoots slightly,
     // which is what reads as a spring. Nothing else does: a page that resizes
     // an open island, or the way back to the pill, takes a plain ease-out,
     // because an overshoot on a shrinking shape is a visible dip.
-    readonly property int morphDuration: 340
+    readonly property int morphDuration: 400
     readonly property int morphEasing: Easing.OutBack
     readonly property real morphOvershoot: 0.7
-    readonly property int collapseDuration: 220
+    readonly property int collapseDuration: 340
     readonly property int resizeDuration: 260
-    // Bar to island hand-over. One progress runs the whole switch; the bar's
-    // right side finishes leaving before `islandEntryStart` is far enough in
-    // for the pill to arrive, so the two overlap briefly rather than cut.
-    readonly property int handoverDuration: 380
-    readonly property real barExitShare: 0.55
-    readonly property real islandEntryStart: 0.35
-    readonly property int handoverSlide: StyleTokens.space8
-    readonly property real arrivalScale: 0.9
     readonly property int plainEasing: StyleTokens.easeStandard
     // Content motion. Content is laid out at its final size and never reflows
     // while the shape moves; it is hidden by a veil instead (opacity, blur and a
@@ -135,12 +126,15 @@ Singleton {
     // Opening: the compact content clears fast, the expanded content arrives
     // once the shape is already most of the way there.
     readonly property int compactOutDuration: 90
-    readonly property int expandInDelay: 110
-    readonly property int expandInDuration: 200
+    readonly property int expandInDelay: 60
+    readonly property int expandInDuration: 240
     // Closing is the same motion reversed and quicker.
     readonly property int expandOutDuration: 80
-    readonly property int compactInDelay: 120
+    readonly property int compactInDelay: 160
     readonly property int compactInDuration: 140
+    // Pill and wide bar never resize into each other: the island fades out,
+    // swaps, and fades back in.
+    readonly property int layoutFadeDuration: 140
     // Which of the above applies is chosen by direction. They travel together as
     // one object because the island has to pick the set *before* it flips state:
     // a Behavior that reads a binding on the very property that triggers it
@@ -182,32 +176,82 @@ Singleton {
         "expandedPause": 0,
         "expandedDuration": 0
     })
-    // A page change is one motion: the old page clears, the shape resizes, the
-    // new page arrives. The settle delay is how long the resize runs before the
-    // new page starts to appear.
+    // A page change is one motion: the old page clears, then the new page
+    // arrives while the shape resizes to it. Waiting for the resize before
+    // showing it left an empty box on screen for a fifth of a second.
     readonly property int pageOutDuration: 90
-    readonly property int pageSettleDelay: 140
     readonly property int pageInDuration: 160
     // How long a page's size must hold still before the island moves to it, and
     // the longest the island will wait for one that never does.
-    readonly property int pageSizeSettle: 80
+    readonly property int pageSizeSettle: 40
     readonly property int pageSizeLimit: 400
-    // Home page
-    readonly property int clockSize: StyleTokens.fontSizeXl
+    // Notification: the pill opens in place into a card as wide as the toasts it
+    // replaces, two body lines at most, so a burst cannot grow it into a panel.
+    readonly property int alertWidth: StyleNotification.width
+    // A short card is a true capsule, a tall one a rounded rect; a fixed 22 on
+    // a 64px card is neither (Apple's Live Activity guidance says to pick one).
+    readonly property int alertRadius: 32
+    // Concentric with alertRadius: the icon, the actions and the X sit on the
+    // same 14px from the edge.
+    readonly property int alertPadding: 14
+    readonly property int alertIconSize: 36
+    readonly property int alertIconGap: StyleTokens.space12
+    readonly property int alertTitleGap: StyleTokens.space2
+    readonly property int alertBodyLines: 2
+    readonly property int alertActionsGap: StyleTokens.space10
+    readonly property int alertActionHeight: 36
+    readonly property int alertActionSpacing: StyleTokens.space8
+    readonly property int alertMaxActions: 3
+    // The X mirrors the icon: centred on the icon's line, its edge on the same
+    // inset, with a hit area larger than it looks.
+    readonly property int alertDismissSize: 24
+    readonly property int alertDismissHitSize: 32
+    readonly property int alertDismissIconSize: 12
+    readonly property int alertTrailingReserve: alertDismissSize + alertPadding + StyleTokens.space8
+    // A newer notification replaces the card's content in place.
+    readonly property int alertSwapOut: 90
+    readonly property int alertSwapIn: 200
+    readonly property int alertBlurMax: 8
+    // Home page: the wallpaper as a card with the time and weather printed on
+    // it. The scrim darkens only its lower half, where the text sits, so the
+    // picture stays the picture.
+    readonly property int heroHeight: 168
+    readonly property int heroRadius: expandedRadius - fillInset
+    readonly property int heroPadding: padding
+    readonly property int heroImageWidth: pageWidth * 2
+    readonly property color heroScrim: Qt.rgba(0, 0, 0, 0.5)
+    readonly property real heroScrimStart: 0.35
+    readonly property real heroDateOpacity: 0.8
+    readonly property int clockLetterSpacing: -1
     readonly property int miniArtSize: 40
+    readonly property int heroWeatherIconSize: 20
     // Media page
-    readonly property int artSize: 64
-    // 22% of the art's edge, the proportion of an app icon's corner, so the
-    // tile reads as the album cover it is and not as a card.
-    readonly property int artRadius: 14
-    readonly property int transportIconSize: 26
-    readonly property int sourceChevronSize: 12
+    // Laid out like the iPhone's expanded Now Playing: art and two lines of
+    // text, a quiet scrubber, then bare transport glyphs where play/pause
+    // stands out by size alone.
+    readonly property int artSize: 56
+    // As many bars as leave the title room to breathe at 320px.
+    readonly property int waveformBars: 6
+    readonly property int waveformBarWidth: StyleTokens.space2
+    readonly property int waveformBarSpacing: StyleTokens.space2
+    readonly property int waveformHeight: 12
+    readonly property int artRadius: StyleTokens.radiusSm
+    readonly property int mediaScrubberGap: StyleTokens.space20
+    readonly property int mediaTransportGap: StyleTokens.space8
+    readonly property int transportHitSize: 44
+    readonly property int transportIconSize: 24
+    readonly property int transportPrimaryIconSize: 32
+    readonly property int transportSpacing: StyleTokens.space20
+    // The playing app's badge on the art's corner, overhanging it slightly.
+    readonly property int sourceBadgeSize: 22
+    readonly property int sourceIconSize: 16
+    readonly property int sourceBadgeOverhang: StyleTokens.space4
+    readonly property real sourceBadgeHoverScale: 1.1
     // Position is published by the player only on request, so a playing track
     // is re-read on this cadence for the progress bar to move.
     readonly property int positionPollInterval: 1000
     // Every band of tiles sits inside the same 16px on each side as the page
     // around it, and its gap leaves whole-pixel columns in what remains:
-    // 320 - 2 * 16 - 2 * 12 divides by three. A single row of five (Power) has no
-    // gap, because its captions need the width.
+    // 320 - 2 * 16 - 2 * 12 divides by three.
     readonly property int tileGridGap: edgeInset
 }

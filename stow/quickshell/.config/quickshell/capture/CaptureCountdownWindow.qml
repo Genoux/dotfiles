@@ -33,18 +33,16 @@ PanelWindow {
 
     Rectangle {
         anchors.fill: parent
-        radius: StyleTokens.radiusMd
-        color: StyleOsd.background(Colors.base00)
-        border.width: StyleTokens.borderWidth
-        border.color: StyleOsd.border
+        radius: width / 2
+        color: StyleOverlay.surface
 
         Text {
             anchors.centerIn: parent
             text: Services.CaptureState.countdownSeconds
-            color: Colors.base05
+            color: Colors.base07
             font.family: StyleTokens.fontSans
-            font.pixelSize: StyleTokens.fontSizeXl
-            font.weight: Font.DemiBold
+            font.pixelSize: StyleTokens.fontSizeDisplay
+            font.weight: Font.Light
         }
     }
 }

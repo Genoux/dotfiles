@@ -4,8 +4,8 @@ import Quickshell
 import Quickshell.Hyprland
 import qs.config
 
-// Session actions, plus the switch between bar and island. The menu itself is
-// a bar popover anchored to the power widget, or a page of the island; this
+// Session actions. The menu itself is a popover anchored to the wide bar's
+// more button, or a page of the island; this
 // singleton owns the entries and dispatch, and relays the keybind's toggle to
 // whichever is on the focused screen.
 Singleton {
@@ -39,20 +39,13 @@ Singleton {
             iconName: "system-log-out-symbolic",
             dispatch: "exit",
         },
-        {
-            label: ShellLayout.island ? "Bar" : "Island",
-            iconName: "view-restore-symbolic",
-            toggleLayout: true,
-        },
     ]
 
     function activate(entry) {
         if (!entry)
             return
 
-        if (entry.toggleLayout)
-            ShellLayout.toggleIsland()
-        else if (entry.dispatch)
+        if (entry.dispatch)
             Hyprland.dispatch(entry.dispatch)
         else if (entry.command)
             Quickshell.execDetached(entry.command)

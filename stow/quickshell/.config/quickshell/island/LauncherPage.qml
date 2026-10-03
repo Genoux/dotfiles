@@ -36,9 +36,7 @@ Item {
         id: panel
 
         anchors.fill: parent
-        // The island already leaves pageInsetTop above a page, which the top
-        // padding takes back, so the field sits the launcher's own inset down.
-        topPadding: StyleLauncher.padding - StyleIsland.pageInsetTop
+        topPadding: StyleLauncher.padding
         bottomPadding: StyleIsland.footerFadeEnd + StyleIsland.footerFadeLength
         listMaxHeight: StyleLauncher.listMaxHeight + StyleIsland.footerHeight
         filteredEntries: root.filteredEntries

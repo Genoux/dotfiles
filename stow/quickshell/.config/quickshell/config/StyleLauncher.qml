@@ -13,9 +13,8 @@ Singleton {
     readonly property int width: 600
     readonly property int padding: StyleIsland.fillInset
     readonly property int spacing: StyleIsland.fillInset
-    readonly property int surfaceRadius: StyleIsland.expandedRadius
-    readonly property int fieldRadius: surfaceRadius - padding
-    readonly property color surfaceColor: StyleOverlay.surface
+    readonly property int surfaceRadius: StyleTokens.radiusXl
+    readonly property int rowRadius: StylePopover.listRowRadius
     readonly property int searchHeight: 40
     readonly property int resultHeight: 40
     readonly property int emptyHeight: 200
@@ -25,7 +24,5 @@ Singleton {
     readonly property int maxResults: 100
     readonly property color text: Colors.base05
     readonly property color selection: StyleTokens.surfaceAlpha(text, 0.2)
-    readonly property color searchBg: Qt.rgba(0, 0, 0, 0.08)
-    readonly property color selectedBg: StyleTokens.alphaHairline
-    readonly property color placeholder: StyleTokens.surfaceAlpha(text, StyleTokens.opacityDisabled)
+    readonly property color placeholder: Colors.base04
 }

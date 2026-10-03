@@ -4,7 +4,6 @@ pragma Singleton
 
 Singleton {
     readonly property int displayBars: 4
-    readonly property int analyzeBars: 4
     readonly property int barWidth: 3
     readonly property int barHeight: 12
     readonly property int spacing: StyleTokens.space2

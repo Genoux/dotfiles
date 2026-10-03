@@ -108,8 +108,8 @@ PopoverPanel {
 
             Repeater {
                 model: [
-                    { title: "HARDWARE", rows: SystemInfo.hardware.filter(row => row.label !== "PC") },
-                    { title: "SOFTWARE", rows: SystemInfo.software.filter(row => row.label !== "OS") }
+                    { title: "Hardware", rows: SystemInfo.hardware.filter(row => row.label !== "PC") },
+                    { title: "Software", rows: SystemInfo.software.filter(row => row.label !== "OS") }
                 ]
 
                 Rectangle {
@@ -118,10 +118,8 @@ PopoverPanel {
                     required property var modelData
                     Layout.fillWidth: true
                     implicitHeight: groupContent.implicitHeight + StylePopover.systemInfoGroupPadding * 2
-                    radius: StyleTokens.radiusSm
+                    radius: StyleTokens.radiusMd
                     color: StyleTokens.alphaLight
-                    border.width: StyleTokens.borderWidth
-                    border.color: StyleTokens.alphaHairline
 
                     ColumnLayout {
                         id: groupContent
@@ -132,14 +130,9 @@ PopoverPanel {
                         anchors.margins: StylePopover.systemInfoGroupPadding
                         spacing: 0
 
-                        Text {
+                        EyebrowLabel {
                             Layout.bottomMargin: StyleTokens.space8
                             text: group.modelData.title
-                            color: Colors.base04
-                            font.family: StyleTokens.fontSans
-                            font.pixelSize: StyleTokens.fontSizeXs
-                            font.weight: Font.DemiBold
-                            font.letterSpacing: StyleTokens.space1
                         }
 
                         Repeater {

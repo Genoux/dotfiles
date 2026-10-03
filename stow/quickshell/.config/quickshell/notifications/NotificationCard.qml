@@ -1,6 +1,3 @@
-import Quickshell
-import Quickshell.Services.Notifications
-import Quickshell.Widgets
 import QtQuick
 import QtQuick.Layouts
 import qs
@@ -13,11 +10,9 @@ Rectangle {
 
     required property var notification
 
-    readonly property string summary: cleanText(notification?.summary ?? "")
-    readonly property string body: cleanText(notification?.body ?? "")
-    readonly property string iconName: notification?.appIcon || notification?.desktopEntry || "dialog-information-symbolic"
-    readonly property bool hasImage: (notification?.image ?? "").length > 0
-    readonly property var namedActions: (notification?.actions ?? []).filter(action => action.identifier !== "default" && action.identifier !== "")
+    readonly property string summary: Services.Notifications.cleanText(notification?.summary)
+    readonly property string body: Services.Notifications.cleanText(notification?.body)
+    readonly property var namedActions: Services.Notifications.namedActions(notification)
 
     property bool hovered: false
 
@@ -31,10 +26,8 @@ Rectangle {
     x: restingX
     implicitHeight: content.implicitHeight + StyleNotification.padding * 2
     opacity: 1 - Math.min(1, dragOffset / StyleNotification.dragRunway)
-    radius: StyleTokens.radiusMd
-    color: StyleNotification.surface
-    border.width: StyleTokens.borderWidth
-    border.color: StyleNotification.border
+    radius: StyleTokens.radiusLg
+    color: StyleOverlay.surface
 
     NumberAnimation {
         id: returnAnimation
@@ -91,29 +84,12 @@ Rectangle {
         anchors.margins: StyleNotification.padding
         spacing: StyleTokens.space10
 
-        Item {
+        NotificationIcon {
             Layout.alignment: Qt.AlignTop
             Layout.preferredWidth: StyleNotification.iconSize
             Layout.preferredHeight: StyleNotification.iconSize
-            clip: true
-
-            Image {
-                anchors.fill: parent
-                anchors.margins: StyleTokens.space2
-                visible: root.hasImage
-                source: root.notification?.image ?? ""
-                fillMode: Image.PreserveAspectCrop
-                sourceSize: Qt.size(StyleNotification.iconSize, StyleNotification.iconSize)
-            }
-
-            IconImage {
-                anchors.centerIn: parent
-                visible: !root.hasImage
-                width: StyleControl.iconSizeMd
-                height: StyleControl.iconSizeMd
-                implicitSize: StyleControl.iconSizeMd
-                source: Quickshell.iconPath(root.iconName, "dialog-information-symbolic")
-            }
+            image: root.notification?.image ?? ""
+            iconName: root.notification?.appIcon || root.notification?.desktopEntry || ""
         }
 
         ColumnLayout {
@@ -124,10 +100,10 @@ Rectangle {
                 Layout.fillWidth: true
                 visible: root.summary.length > 0
                 text: root.summary
-                color: Colors.base05
+                color: Colors.base07
                 font.family: StyleTokens.fontSans
                 font.pixelSize: StyleTokens.fontSizeSm
-                font.weight: Font.DemiBold
+                font.weight: Font.Medium
                 textFormat: Text.PlainText
                 elide: Text.ElideRight
             }
@@ -158,7 +134,7 @@ Rectangle {
                 Layout.fillWidth: true
                 visible: root.body.length > 0
                 text: root.body
-                color: Colors.base05
+                color: Colors.base04
                 font.family: StyleTokens.fontSans
                 font.pixelSize: StyleTokens.fontSizeSm
                 textFormat: Text.PlainText
@@ -206,23 +182,12 @@ Rectangle {
                 return
             }
 
-            root.activate()
+            Services.Notifications.activate(root.notification)
         }
     }
 
-    function expiryMs() {
-        if (notification?.urgency === NotificationUrgency.Critical)
-            return 0
-        const requestedTimeout = Number(notification?.expireTimeout ?? -1)
-        if (!Number.isFinite(requestedTimeout) || requestedTimeout < 0)
-            return StyleNotification.timeout
-
-        // Quickshell 0.3.0 notification.cpp stores the DBus milliseconds unchanged.
-        return requestedTimeout
-    }
-
     function startExpireTimer() {
-        const nextInterval = expiryMs()
+        const nextInterval = Services.Notifications.expiryMs(notification)
         expireTimer.stop()
 
         if (nextInterval <= 0 || hovered || dragging)
@@ -230,32 +195,5 @@ Rectangle {
 
         expireTimer.interval = nextInterval
         expireTimer.restart()
-    }
-
-    function activate() {
-        const actions = notification?.actions ?? []
-        const action = actions.find((candidate) => candidate.identifier === "default")
-
-        if (action) {
-            action.invoke()
-            return
-        }
-
-        const entryId = notification?.desktopEntry ?? ""
-        if (entryId.length === 0)
-            return
-
-        const normalizedId = entryId.endsWith(".desktop") ? entryId : `${entryId}.desktop`
-        const entry = DesktopEntries.applications.values.find((candidate) => {
-            return candidate.id === entryId
-                || candidate.id === normalizedId
-                || candidate.id.replace(/\.desktop$/, "") === entryId
-        })
-
-        entry?.execute()
-    }
-
-    function cleanText(value) {
-        return (value ?? "").toString().replace(/\s+/g, " ").trim()
     }
 }

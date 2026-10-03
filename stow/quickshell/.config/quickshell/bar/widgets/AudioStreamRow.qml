@@ -16,7 +16,7 @@ Rectangle {
 
     implicitHeight: StylePopover.streamRowHeight
     height: implicitHeight
-    radius: StyleTokens.radiusSm
+    radius: StylePopover.listRowRadius
     color: StyleTokens.transparent
 
     ThemedIcon {

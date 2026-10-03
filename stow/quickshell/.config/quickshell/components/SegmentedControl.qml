@@ -8,14 +8,13 @@ import qs.config
 // Not a row of PillButtons: the segments share one recessed track so they read as
 // a single control with a current position rather than three separate toggles.
 // Only the selected segment carries a fill, per the Quiet Chrome Rule — and that
-// fill travels between segments, because a shared track with a current position
+// chip travels between segments, because a shared track with a current position
 // is exactly the thing a moving indicator describes.
 Item {
     id: control
 
     property var labels: []
     property color textColor: Colors.base04
-    property color selectedTextColor: Colors.base06
     // Controlled, not self-managing: the owner holds the current index and this
     // only asks for a new one. Assigning currentIndex from inside would overwrite
     // the owner's binding on first click, and every later programmatic change —
@@ -33,7 +32,7 @@ Item {
     Rectangle {
         anchors.fill: parent
         radius: StyleControl.segmentTrackRadius
-        color: StyleTokens.alphaHairline
+        color: StyleTokens.alphaLight
     }
 
     // Shares the row's rect without being laid out by it: a Row positions every
@@ -47,6 +46,7 @@ Item {
             // its segments; itemAt alone returns null on the first evaluation.
             target: segments.count > 0 ? segments.itemAt(control.currentIndex) : null
             radius: control.segmentRadius
+            color: StyleControl.chipFill
         }
     }
 
@@ -77,7 +77,7 @@ Item {
                 // The selected fill is the travelling indicator above, so this
                 // paints only the hover preview of a segment you have not picked.
                 color: area.containsMouse && !segment.selected
-                    ? StyleTokens.alphaHairline
+                    ? StyleTokens.alphaActive
                     : StyleTokens.transparent
 
                 Behavior on color {
@@ -90,7 +90,7 @@ Item {
                 Text {
                     anchors.centerIn: parent
                     text: segment.modelData
-                    color: segment.selected ? control.selectedTextColor : control.textColor
+                    color: segment.selected ? StyleControl.chipContent : (area.containsMouse ? Colors.base05 : control.textColor)
                     font.family: StyleTokens.fontSans
                     font.pixelSize: StyleTokens.fontSizeSm
                     font.weight: segment.selected ? Font.DemiBold : Font.Normal

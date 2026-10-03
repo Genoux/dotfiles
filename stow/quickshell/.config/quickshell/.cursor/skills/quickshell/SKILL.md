@@ -13,7 +13,7 @@ description: >-
 
 1. Read `OVERVIEW.md` for this codebase's architecture and UX policies
 2. Query **Context7** for upstream API (`/websites/quickshell_v0_3_0` on 0.3.x)
-3. Match patterns in existing files — especially `bar/Bar.qml`, `config/ShellActions.qml`, `components/IconButton.qml`
+3. Match patterns in existing files — especially `island/Island.qml`, `config/ShellActions.qml`, `components/IconButton.qml`
 
 For detailed local reference, see [references.md](references.md).
 
@@ -22,12 +22,12 @@ For detailed local reference, see [references.md](references.md).
 ```qml
 // shell.qml
 import Quickshell
-import qs.bar
+import qs.island
 
 ShellRoot {
     Variants {
         model: Quickshell.screens
-        Bar {
+        Island {
             required property var modelData
             screen: modelData
         }
@@ -35,10 +35,10 @@ ShellRoot {
 }
 ```
 
-## PanelWindow Bar Pattern
+## PanelWindow Island Pattern
 
 ```qml
-// bar/Bar.qml (abbreviated)
+// island/Island.qml (abbreviated)
 import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Wayland
@@ -54,9 +54,8 @@ PanelWindow {
     implicitHeight: Style.barHeight
     color: Style.transparent
 
-    // Left: Workspaces + SystemTray
-    // Center: WindowTitle
-    // Right: Privacy → Media → Volume → … → Dotfiles
+    // Wide bar, left: Workspaces + SystemTray + WindowTitle
+    // Wide bar, right: Media → Volume → … → Dotfiles → More
 }
 ```
 
@@ -122,7 +121,7 @@ When adding `bar/widgets/NewWidget.qml`:
 - [ ] Colors from `Colors.base**` — never hardcode theme colors
 - [ ] Sizes/spacing from `Style.qml` constants
 - [ ] Hyprland/app actions via `ShellActions` only
-- [ ] Per-monitor data: accept `hyprMonitor` prop from `Bar.qml`
+- [ ] Per-monitor data: accept `hyprMonitor` prop from `Island.qml`
 - [ ] Polling: reuse `Style.pollIntervalFast|Normal|Slow`
 
 ## Process & Polling Patterns
@@ -170,7 +169,7 @@ Player selection: explicit user interaction key → playing player → first act
 
 After changes:
 
-- [ ] Bar renders on all monitors
+- [ ] Island renders on all monitors
 - [ ] QML saves without Quickshell console errors
 - [ ] Workspace pills scoped per monitor
 - [ ] New widget uses `ShellActions` for Hyprland/apps (if applicable)

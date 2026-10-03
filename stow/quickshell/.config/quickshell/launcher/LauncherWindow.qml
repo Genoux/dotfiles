@@ -72,7 +72,6 @@ PanelWindow {
         anchors.centerIn: parent
         active: root.active
         radius: StyleLauncher.surfaceRadius
-        surfaceColor: StyleLauncher.surfaceColor
         onHideFinished: root.finishHide()
 
         LauncherPanel {

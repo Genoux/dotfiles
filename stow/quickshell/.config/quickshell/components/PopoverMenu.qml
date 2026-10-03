@@ -24,21 +24,19 @@ PopoverPanel {
         id: iconTileRow
 
         visible: menu.iconRow
-        spacing: StylePopover.tileSpacing
+        spacing: StyleIsland.tileGridGap
         padding: StylePopover.contentPaddingV
 
         Repeater {
             model: menu.iconRow ? menu.entries : []
 
-            PopoverAction {
+            PopoverTile {
                 required property var modelData
                 required property int index
 
-                stacked: true
+                width: StylePopover.tileWidth
                 label: modelData?.label ?? ""
-                iconName: modelData?.iconName ?? ""
-                badgeIconName: modelData?.badgeIconName ?? ""
-                separator: modelData?.separator ?? false
+                iconSource: IconRegistry.source(modelData?.iconName ?? "")
                 onActivated: menu.selected(index)
             }
         }
@@ -65,8 +63,6 @@ PopoverPanel {
 
                 width: StylePopover.panelWidth
                 label: modelData?.label ?? ""
-                iconName: modelData?.iconName ?? ""
-                badgeIconName: modelData?.badgeIconName ?? ""
                 separator: modelData?.separator ?? false
                 onActivated: menu.selected(index)
             }

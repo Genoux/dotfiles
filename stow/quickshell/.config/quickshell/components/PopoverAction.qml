@@ -6,9 +6,6 @@ Rectangle {
     id: action
 
     required property string label
-    property string iconName: ""
-    property string badgeIconName: ""
-    property bool stacked: false
     property bool separator: false
     property bool actionEnabled: true
 
@@ -17,77 +14,29 @@ Rectangle {
     property int rowHeight: StylePopover.rowHeight
     property int paddingH: StylePopover.contentPaddingH
 
-    readonly property bool hasIcon: iconName.length > 0
-    readonly property var resolvedSource: hasIcon ? IconRegistry.source(iconName) : ""
-    readonly property var badgeSource: badgeIconName.length > 0 ? IconRegistry.source(badgeIconName) : ""
-
     signal activated()
 
     implicitWidth: {
         if (separator)
             return 0;
-        if (stacked)
-            return StylePopover.tileWidth;
         return labelText.implicitWidth + paddingH * 2;
     }
     implicitHeight: {
         if (separator)
             return StylePopover.separatorHeight;
-        if (stacked)
-            return StylePopover.tileHeight;
         return rowHeight;
     }
-    radius: separator ? 0 : StyleTokens.radiusSm
+    radius: separator ? 0 : StylePopover.listRowRadius
     // A menu row's hover fill is painted by its list's travelling indicator;
     // only the separator keeps a colour of its own.
     color: separator ? StyleOverlay.borderSubtle : StyleTokens.transparent
 
     readonly property bool hovered: !separator && mouseArea.containsMouse
 
-    Column {
-        id: tileColumn
-
-        visible: action.stacked && !action.separator
-        anchors.centerIn: parent
-        spacing: StyleTokens.space4
-        width: parent.width - StylePopover.tileCaptionPadding * 2
-
-        ThemedIcon {
-            anchors.horizontalCenter: parent.horizontalCenter
-            visible: action.hasIcon
-            source: action.resolvedSource
-            size: StylePopover.tileIconSize
-
-            ThemedIcon {
-                visible: action.badgeIconName.length > 0
-                anchors.right: parent.right
-                anchors.bottom: parent.bottom
-                anchors.rightMargin: -StyleTokens.space3
-                anchors.bottomMargin: -StyleTokens.space3
-                source: action.badgeSource
-                size: StylePopover.tileBadgeSize
-            }
-        }
-
-        Text {
-            width: parent.width
-            text: action.label
-        textFormat: Text.PlainText
-            color: Colors.base05
-            opacity: action.actionEnabled ? 1.0 : StyleTokens.opacityDisabled
-            font.family: StyleTokens.fontSans
-            font.pixelSize: StyleTokens.fontSizeXs
-            horizontalAlignment: Text.AlignHCenter
-            wrapMode: Text.WordWrap
-            maximumLineCount: 2
-            elide: Text.ElideRight
-        }
-    }
-
     Text {
         id: labelText
 
-        visible: !action.separator && !action.stacked
+        visible: !action.separator
         anchors.left: parent.left
         anchors.leftMargin: action.paddingH
         anchors.right: parent.right

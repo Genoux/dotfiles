@@ -1,3 +1,4 @@
 module qs.notifications
 NotificationWindow 1.0 NotificationWindow.qml
 NotificationCard 1.0 NotificationCard.qml
+NotificationIcon 1.0 NotificationIcon.qml

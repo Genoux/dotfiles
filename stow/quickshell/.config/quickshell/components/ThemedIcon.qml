@@ -23,7 +23,12 @@ Item {
     // Keep application artwork full-size while giving first-party symbolic
     // assets the optical inset used throughout the shell.
     readonly property real baseScale: symbolic ? StyleControl.symbolicIconVisualScale : 1
-    readonly property int drawSize: Math.round(size * baseScale)
+    // Same parity as the box, so the margin around the glyph splits evenly. An
+    // odd margin halves to .5 and Qt rounds the glyph a pixel to one side.
+    readonly property int drawSize: {
+        const scaled = Math.round(size * baseScale);
+        return (size - scaled) % 2 === 0 ? scaled : scaled - 1;
+    }
 
     implicitWidth: size
     implicitHeight: size

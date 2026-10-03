@@ -9,6 +9,8 @@ Row {
     id: root
 
     property int filled: 0
+    property color activeColor: Colors.base05
+    property color idleColor: Colors.base04
     property int count: StyleControl.signalBarCount
 
     readonly property int tallest: StyleControl.signalBarBase + StyleControl.signalBarStep * (count - 1)
@@ -31,7 +33,7 @@ Row {
                 width: parent.width
                 height: StyleControl.signalBarBase + StyleControl.signalBarStep * parent.index
                 radius: StyleTokens.radiusXs
-                color: parent.index < root.filled ? Colors.base05 : Colors.base04
+                color: parent.index < root.filled ? root.activeColor : root.idleColor
                 opacity: parent.index < root.filled ? 1 : StyleTokens.opacityDisabled
 
                 Behavior on color {

@@ -6,8 +6,8 @@ import qs.config
 // Horizontal level control: click to set, drag to scrub, wheel to step.
 //
 // Button, PillButton and PopoverAction are all discrete, so none of them owns a
-// continuous value. VolumeStepBar stays its separate self on purpose: that one
-// reports a level in the OSD, this one sets it.
+// continuous value. For a volume or brightness control use LevelBar; this one
+// is the thin scale, for seeking and other values read against a track.
 Item {
     id: slider
 
@@ -75,14 +75,14 @@ Item {
             y: control.topPadding + control.availableHeight / 2 - height / 2
             width: control.availableWidth
             height: StyleControl.sliderTrackHeight
-            radius: StyleTokens.radiusXs
-            color: StyleTokens.alphaLight
+            radius: height / 2
+            color: StyleTokens.alphaActive
 
             Rectangle {
                 width: parent.width * control.visualPosition
                 height: parent.height
                 radius: parent.radius
-                color: Colors.base05
+                color: Colors.base07
             }
         }
 
@@ -92,13 +92,13 @@ Item {
             width: StyleControl.sliderHandleSize
             height: width
             radius: width / 2
-            color: Colors.base05
-            scale: slider.scrubbing ? 1.15 : 1
+            color: Colors.base07
+            opacity: control.hovered || slider.scrubbing ? 1 : 0
 
-            Behavior on scale {
+            Behavior on opacity {
                 NumberAnimation {
                     duration: StyleTokens.motionFeedbackDuration
-                    easing.type: StyleTokens.easeStandard
+                    easing.type: StyleTokens.easeFade
                 }
             }
         }

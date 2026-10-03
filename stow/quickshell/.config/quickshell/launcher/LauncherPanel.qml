@@ -16,7 +16,6 @@ Item {
     // list runs under the footer menu.
     property int padding: StyleLauncher.padding
     property int spacing: StyleLauncher.spacing
-    property int fieldRadius: StyleLauncher.fieldRadius
     property int topPadding: padding
     property int bottomPadding: StyleLauncher.padding
     property int listMaxHeight: StyleLauncher.listMaxHeight
@@ -80,10 +79,8 @@ Item {
             Accessible.name: placeholderText
 
             background: Rectangle {
-                radius: root.fieldRadius
-                color: StyleLauncher.searchBg
-                border.width: StyleTokens.borderWidth
-                border.color: StyleOverlay.borderSubtle
+                radius: StyleTokens.radiusMd
+                color: StyleTokens.alphaLight
 
                 ThemedIcon {
                     x: StyleTokens.space12
@@ -143,10 +140,8 @@ Item {
                 interactive: root.active
 
                 highlight: Rectangle {
-                    radius: StyleTokens.radiusSm
-                    color: StyleLauncher.selectedBg
-                    border.width: StyleTokens.borderWidth
-                    border.color: StyleOverlay.borderSubtle
+                    radius: StyleLauncher.rowRadius
+                    color: StyleTokens.alphaLight
                 }
                 // ListView paces the highlight by velocity unless duration wins.
                 highlightMoveVelocity: -1

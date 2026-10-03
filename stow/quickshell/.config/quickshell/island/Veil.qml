@@ -12,6 +12,7 @@ Item {
     id: root
 
     property real veil: 0
+    property int blurMax: StyleIsland.blurMax
     // A hidden item is not laid out, and a list inside it builds nothing until
     // it is shown. Content whose size has to be known before it appears keeps
     // its `visible`; at full veil it is transparent, so nothing is drawn anyway.
@@ -23,7 +24,7 @@ Item {
     layer.enabled: veil > 0 && veil < 1
     layer.effect: MultiEffect {
         blurEnabled: true
-        blurMax: StyleIsland.blurMax
+        blurMax: root.blurMax
         blur: root.veil
     }
 }

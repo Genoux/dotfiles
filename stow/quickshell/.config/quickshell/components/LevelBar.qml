@@ -1,22 +1,21 @@
 import QtQuick
+import Quickshell.Widgets
 import qs
 import qs.config
 
-// A level as one rounded bar: a quiet track and a bright fill that grows from the
-// glyph. The value rides the fill's end: inside it, dark on the bright fill,
-// while there is room for it, and just past it, light on the track, once the
-// fill is too short to hold it -- so it is always next to the level it names and
-// never on top of the glyph. Click or drag anywhere to set the level, wheel to
-// step it, click the glyph for its own action (mute).
+// A level as one glass slab: a quiet track, a lighter fill whose leading edge
+// carries a thin handle, the label at the start and the value at the end. Text
+// never inverts -- the fill is translucent, so one colour reads over both
+// halves. Drag or click to set the level, wheel to step it, right-click for the
+// level's own toggle (mute).
 Item {
     id: bar
 
     property real value: 0
     property real step: StyleControl.sliderStep
-    property var iconSource: ""
     property bool muted: false
-    property bool iconInteractive: true
-    property bool showValue: true
+    property string label: ""
+    property string valueText: bar.muted ? "Muted" : Math.round(bar.shownValue * 100) + "%"
 
     // The pointer owns the position while it is down: binding straight to a value
     // that round-trips through the audio server makes the edge stutter under the
@@ -29,32 +28,31 @@ Item {
     // a peer.
     readonly property bool hovered: false
 
-    readonly property int barWidth: width
-    readonly property real fillWidth: barHeight + (barWidth - barHeight) * shownValue
-    readonly property string valueText: Math.round(shownValue * 100) + "%"
-    readonly property real valueWidth: valueMeasure.width
-    // Room for the value between the glyph and the fill's end.
-    readonly property bool valueFits: fillWidth >= barHeight + valueWidth + StyleControl.levelBarValuePadding
-    readonly property int barHeight: StyleControl.levelBarHeight
+    readonly property real fillWidth: width * shownValue
+    readonly property real handleX: fillWidth - StyleControl.levelBarHandleInset - StyleControl.levelBarHandleWidth
+    // The handle steps aside rather than cutting through the label or the value.
+    readonly property bool handleClear: !muted
+        && handleX > labelText.x + labelText.contentWidth + StyleControl.levelBarHandleClearance
+        && handleX + StyleControl.levelBarHandleWidth < valueLabel.x - StyleControl.levelBarHandleClearance
 
     signal moved(real value)
-    signal iconClicked()
+    signal muteRequested()
 
-    implicitHeight: barHeight
+    implicitHeight: StyleControl.levelBarHeight
     height: implicitHeight
 
     function clamped(v) {
         return Math.max(0, Math.min(1, v))
     }
 
+    function levelAt(x) {
+        return x / width
+    }
+
     function commit(v) {
         const next = clamped(v)
         shownValue = next
         bar.moved(next)
-    }
-
-    function levelAt(x) {
-        return (x - barHeight / 2) / (barWidth - barHeight)
     }
 
     onValueChanged: {
@@ -64,26 +62,24 @@ Item {
 
     Component.onCompleted: shownValue = clamped(value)
 
-    Rectangle {
-        id: track
-
-        y: (bar.height - height) / 2
-        width: bar.barWidth
-        height: bar.barHeight
-        radius: height / 2
-        color: StyleTokens.alphaLight
-        clip: true
+    // The fill is a whole slab sliding in from the left, clipped by the track,
+    // not a rectangle growing from zero: narrower than its own corners, a
+    // growing rectangle collapses into a hard sliver standing on the edge.
+    ClippingRectangle {
+        anchors.fill: parent
+        radius: StyleControl.levelBarRadius
+        color: StyleControl.levelBarTrack
 
         Rectangle {
-            id: fill
-
+            x: bar.fillWidth - width
+            width: parent.width
             height: parent.height
-            // Never narrower than the bar is tall, so the glyph always has its
-            // fill behind it.
-            width: bar.fillWidth
-            radius: height / 2
-            color: Colors.base05
-            opacity: bar.muted ? StyleTokens.opacityDisabled : (bar.scrubbing ? 1 : 0.92)
+            radius: StyleControl.levelBarRadius
+            color: StyleControl.levelBarFill
+            // Fades in across its first corner's width, so the last few percent
+            // thin out to nothing instead of ending as a bright edge.
+            opacity: (bar.muted ? StyleTokens.opacityDisabled : 1)
+                * Math.min(1, bar.fillWidth / (StyleControl.levelBarRadius * 2))
 
             Behavior on opacity {
                 NumberAnimation {
@@ -92,7 +88,7 @@ Item {
                 }
             }
 
-            Behavior on width {
+            Behavior on x {
                 enabled: !dragArea.pressed
                 NumberAnimation {
                     duration: StyleTokens.motionFeedbackDuration
@@ -102,84 +98,88 @@ Item {
         }
     }
 
-    TextMetrics {
-        id: valueMeasure
+    Rectangle {
+        x: bar.handleX
+        anchors.verticalCenter: parent.verticalCenter
+        width: StyleControl.levelBarHandleWidth
+        height: StyleControl.levelBarHandleHeight
+        radius: width / 2
+        color: Colors.base07
+        opacity: bar.handleClear ? 1 : 0
+        transform: Scale {
+            origin.y: StyleControl.levelBarHandleHeight / 2
+            yScale: bar.scrubbing ? StyleControl.levelBarScrubScale : 1
 
-        text: "100%"
-        font: valueInside.font
+            Behavior on yScale {
+                NumberAnimation {
+                    duration: StyleTokens.motionFeedbackDuration
+                    easing.type: StyleTokens.easeStandard
+                }
+            }
+        }
+
+        Behavior on x {
+            enabled: !dragArea.pressed
+            NumberAnimation {
+                duration: StyleTokens.motionFeedbackDuration
+                easing.type: StyleTokens.easeStandard
+            }
+        }
+
+        Behavior on opacity {
+            NumberAnimation {
+                duration: StyleTokens.motionFeedbackDuration
+                easing.type: StyleTokens.easeFade
+            }
+        }
     }
 
     Text {
-        id: valueInside
+        id: labelText
 
-        x: bar.fillWidth - width - StyleControl.levelBarValuePadding
+        x: StyleControl.levelBarPadding
+        width: Math.max(0, valueLabel.x - StyleControl.levelBarHandleClearance - x)
         anchors.verticalCenter: parent.verticalCenter
-        visible: bar.showValue
-        text: bar.valueText
-        color: Colors.base00
-        opacity: bar.valueFits && !bar.muted ? 1 : 0
+        text: bar.label
+        elide: Text.ElideRight
+        color: Colors.base07
         font.family: StyleTokens.fontSans
-        font.pixelSize: StyleTokens.fontSizeSm
-        font.weight: Font.DemiBold
-
-        Behavior on opacity {
-            NumberAnimation {
-                duration: StyleTokens.motionFeedbackDuration
-                easing.type: StyleTokens.easeFade
-            }
-        }
+        font.pixelSize: StyleTokens.fontSizeMd
     }
 
     Text {
-        x: bar.fillWidth + StyleControl.levelBarValuePadding
+        id: valueLabel
+
+        x: bar.width - width - StyleControl.levelBarPadding
         anchors.verticalCenter: parent.verticalCenter
-        visible: bar.showValue
         text: bar.valueText
-        color: Colors.base05
-        opacity: bar.valueFits && !bar.muted ? 0 : 1
-        font: valueInside.font
-
-        Behavior on opacity {
-            NumberAnimation {
-                duration: StyleTokens.motionFeedbackDuration
-                easing.type: StyleTokens.easeFade
-            }
-        }
-    }
-
-    ThemedIcon {
-        anchors.left: parent.left
-        anchors.leftMargin: (bar.barHeight - height) / 2
-        anchors.verticalCenter: parent.verticalCenter
-        size: StyleControl.levelBarIconSize
-        source: bar.iconSource
-        tint: Colors.base00
-        opacity: bar.muted ? StyleTokens.opacityDisabled : 1
+        color: Colors.base07
+        font.family: StyleTokens.fontSans
+        font.pixelSize: StyleTokens.fontSizeMd
+        font.features: ({ "tnum": 1 })
     }
 
     MouseArea {
         id: dragArea
 
-        width: bar.barWidth
-        height: parent.height
+        anchors.fill: parent
         enabled: bar.enabled
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
         cursorShape: Qt.PointingHandCursor
-        onPressed: (mouse) => bar.commit(bar.levelAt(mouse.x))
+        onPressed: (mouse) => {
+            if (mouse.button === Qt.RightButton)
+                bar.muteRequested()
+            else
+                bar.commit(bar.levelAt(mouse.x))
+        }
         onPositionChanged: (mouse) => {
-            if (pressed)
+            if (pressedButtons & Qt.LeftButton)
                 bar.commit(bar.levelAt(mouse.x))
         }
     }
 
-    MouseArea {
-        width: bar.barHeight
-        height: parent.height
-        enabled: bar.enabled && bar.iconInteractive
-        cursorShape: Qt.PointingHandCursor
-        onClicked: bar.iconClicked()
-    }
-
     WheelHandler {
+        enabled: bar.enabled
         onWheel: (event) => bar.commit(bar.shownValue + (event.angleDelta.y > 0 ? bar.step : -bar.step))
     }
 }

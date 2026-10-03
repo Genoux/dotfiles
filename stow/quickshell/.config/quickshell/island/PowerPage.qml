@@ -12,8 +12,7 @@ Item {
     signal actionChosen()
 
     // The island/bar switch lives on the More page; here are only the session's.
-    readonly property var entries: Services.PowerMenu.entries.filter(entry => !entry.toggleLayout)
-    readonly property int tileWidth: (width - StyleIsland.fillInset * 2) / entries.length
+    readonly property var entries: Services.PowerMenu.entries
 
     implicitWidth: StyleIsland.pageWidth
     implicitHeight: content.implicitHeight
@@ -35,34 +34,73 @@ Item {
             width: parent.width
         }
 
+        // A list rather than a row of tiles: five captions do not fit five
+        // tiles across the island without crowding.
         Item {
             width: parent.width
-            height: StylePopover.tileHeight + StyleIsland.fillPaddingTop + StyleIsland.pagePaddingBottom
+            height: actionColumn.height + StyleIsland.fillPaddingTop + StyleIsland.pagePaddingBottom
 
             SlidingHighlight {
-                run: tileRow
+                run: actionColumn
             }
 
-            Row {
-                id: tileRow
+            Column {
+                id: actionColumn
 
-                anchors.top: parent.top
-                anchors.topMargin: StyleIsland.fillPaddingTop
-                anchors.horizontalCenter: parent.horizontalCenter
-                spacing: 0
+                x: StyleIsland.fillInset
+                y: StyleIsland.fillPaddingTop
+                width: parent.width - StyleIsland.fillInset * 2
+                spacing: StylePopover.listRowSpacing
 
                 Repeater {
                     model: root.entries
 
-                    PopoverTile {
+                    Item {
+                        id: actionRow
+
                         required property var modelData
 
-                        width: root.tileWidth
-                        label: modelData.label
-                        iconSource: IconRegistry.source(modelData.iconName)
-                        onActivated: {
-                            root.actionChosen();
-                            Services.PowerMenu.activate(modelData);
+                        readonly property bool hovered: actionArea.containsMouse
+
+                        width: parent.width
+                        height: StylePopover.listRowHeight
+
+                        Rectangle {
+                            id: glyphWell
+
+                            x: StylePopover.contentPaddingH - StyleIsland.fillInset
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: StylePopover.rowGlyphWellSize
+                            height: width
+                            radius: StyleControl.chipRadius
+                            color: StyleTokens.alphaLight
+
+                            ThemedIcon {
+                                anchors.centerIn: parent
+                                source: IconRegistry.source(actionRow.modelData.iconName)
+                            }
+                        }
+
+                        Text {
+                            anchors.left: glyphWell.right
+                            anchors.leftMargin: StyleTokens.space10
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: actionRow.modelData.label
+                            color: Colors.base05
+                            font.family: StyleTokens.fontSans
+                            font.pixelSize: StyleTokens.fontSizeSm
+                        }
+
+                        MouseArea {
+                            id: actionArea
+
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                root.actionChosen();
+                                Services.PowerMenu.activate(actionRow.modelData);
+                            }
                         }
                     }
                 }

@@ -4,22 +4,30 @@ description: A compact, wallpaper-aware instrument panel for John's Hyprland des
 typography:
   display:
     fontFamily: "SF Pro Text"
+    fontSize: "48px"
+    fontWeight: 300
+  headline:
+    fontFamily: "SF Pro Text"
     fontSize: "32px"
+    fontWeight: 300
   title:
     fontFamily: "SF Pro Text"
-    fontSize: "16px"
+    fontSize: "18px"
+    fontWeight: 500
   body:
     fontFamily: "SF Pro Text"
     fontSize: "12px"
   label:
     fontFamily: "SF Pro Text"
-    fontSize: "10px"
+    fontSize: "11px"
   mono:
     fontFamily: "JetBrainsMono Nerd Font Mono"
 rounded:
-  xs: "2px"
-  sm: "4px"
-  md: "8px"
+  xs: "4px"
+  sm: "8px"
+  md: "12px"
+  lg: "16px"
+  xl: "22px"
 spacing:
   space1: "1px"
   space2: "2px"
@@ -37,9 +45,17 @@ components:
     rounded: "{rounded.sm}"
     padding: "4px"
     height: "24px"
-  popover-surface:
-    rounded: "{rounded.md}"
+  glass-surface:
+    rounded: "{rounded.xl}"
     padding: "4px"
+  well:
+    rounded: "{rounded.md}"
+  chip:
+    rounded: "{rounded.sm}"
+  level-bar:
+    typography: "{typography.body}"
+    height: "44px"
+    rounded: "{rounded.md}"
   popover-pill:
     typography: "{typography.body}"
     padding: "6px 10px"
@@ -49,16 +65,23 @@ components:
 
 ## Overview
 
-**Creative North Star: "The Frosted Instrument Panel"**
+**Creative North Star: "Soft Glass"**
 
-The shell is a compact control surface, not a miniature application dashboard. It stays quiet over the wallpaper, reveals detail only when requested, and gives each recurring action the same geometry and feedback. Matugen supplies the atmosphere; precise spacing, restrained borders, and consistent motion supply the structure.
+The shell is a frosted instrument panel, softened. Every floating thing is cut
+from one sheet of wallpaper-tinted glass; inside it, controls are lighter glass
+*wells*, and whatever is current is a solid light *chip*. It stays quiet over
+the wallpaper, reveals detail only when requested, and gives each recurring
+action the same geometry and feedback. Matugen supplies the atmosphere; one
+material, concentric radii and consistent motion supply the structure.
 
 Density is intentional. Most bar controls are roughly 24px tall and use small type, so one- to three-pixel decisions are meaningful. Reuse the existing scales and components instead of rounding values to generic web or touch-interface defaults.
 
 **Key Characteristics:**
 
-- Wallpaper-derived colour with translucent frosted surfaces.
-- Rounded, one-pixel chrome with subtle depth.
+- One wallpaper-tinted glass material for every floating surface.
+- Concentric, mostly rounded-rect geometry: 22px surfaces, 12px wells, 8px
+  chips. Circles are the exception, not the vocabulary.
+- Three states, three treatments: resting well, hovered well, selected chip.
 - Dense but legible typography and spacing.
 - Fast, reversible feedback without decorative motion.
 - Shared primitives for every repeated interaction pattern.
@@ -78,13 +101,26 @@ The palette is dynamic. `Colors.base00` through `Colors.base0F` are generated fr
 - **Surface ramp:** `base00`–`base03` for background, surface, selection, and structural lines.
 - **Content ramp:** `base04` for muted text; `base05` for normal text and icons; `base06`–`base07` for stronger emphasis.
 - **Accents:** `base08`–`base0F` for semantic state and small highlights. Do not use an accent as general panel chrome.
-- **Interaction tint:** `StyleTokens.alphaLight` is the shared hover and selected fill.
+- **Glass scale:** white overlays on the surface, from faint to strong —
+  `alphaHairline` (0.06) separators, `alphaLight` (0.07) resting wells, tracks
+  and hover; `alphaActive` (0.12) hovered or pressed wells. A level's track
+  (3%) and fill (4%) stack to exactly `alphaLight`, so a full bar is the dock's
+  tone. Nothing brighter: a 20% level fill read as a lit slab. Nothing below the surface either: a recessed black
+  track read as an opaque block on the translucent island.
+- **Selected chip:** `StyleControl.chipFill` (`base07`) with
+  `StyleControl.chipContent` (`base00`) for its glyph and text.
 - **Structural hairline:** `StyleTokens.alphaHairline` and `StyleOverlay.borderSubtle` define faint internal edges.
 - **Transparency:** use `StyleTokens.transparent`, not repeated transparent string or hex literals.
 
 **The Wallpaper Leads Rule.** Never hardcode a foreground colour when a `Colors` role expresses the same intent. Literal black, white, and alpha values are reserved for masks or a documented material effect.
 
-**The Quiet Chrome Rule.** State is shown with a faint fill and hairline border. A selected item must not look like a separate opaque card pasted onto the bar.
+**The One Chip Rule.** Exactly one thing per control reads as *current*: the
+selected segment, the open dock page, today's date, the connected device's
+glyph, a switched-on toggle or tile, the primary transport button. It is a
+solid `chipFill` shape with `chipContent` inside. Everything else is a well.
+Hover never becomes a chip — it is the travelling `alphaLight` fill — so a
+glance can tell "here" from "pointed at". Accents stay for semantics (error,
+recording, privacy, data), never for selection.
 
 ## Typography
 
@@ -93,15 +129,21 @@ The palette is dynamic. `Colors.base00` through `Colors.base0F` are generated fr
 **Icon Font:** JetBrainsMono Nerd Font  
 **Emoji Font:** Noto Color Emoji
 
-The type system is compact and practical. Weight and colour create hierarchy before size does.
+The type system is compact in rows and generous in heroes. Big values go Light
+— numerals carry by size, a heavy weight at 48px is a shout. Weight and colour
+create hierarchy everywhere else.
 
 ### Hierarchy
 
-- **Display** (`fontSizeXl`, 32px): hero values such as the current weather temperature.
-- **Title** (`fontSizeLg`, 16px): popover headers.
+- **Display** (`fontSizeDisplay`, 48px, Light): the island's hero clock.
+- **Headline** (`fontSizeXl`, 32px, Light): hero values such as the weather temperature.
+- **Title** (`fontSizeLg`, 18px, Medium): popover and page headers.
 - **Supporting title** (`fontSizeMd`, 14px): calendar and compact secondary headings.
 - **Body** (`fontSizeSm`, 12px): controls, rows, bar labels, and ordinary content.
-- **Eyebrow** (`fontSizeXs`, 11px): uppercase section labels, captions, and metadata.
+- **Section label** (`EyebrowLabel`, `fontSizeSm`, Medium, `base04`): sentence
+  case — "Connected", "Available". Never uppercase, never tracked; a kicker
+  shouting over its own list is noise.
+- **Caption** (`fontSizeXs`, 11px): tile captions and metadata.
 
 **The 11px Floor Rule.** No text renders below `fontSizeXs`. Every surface here
 sits over a wallpaper, and at 10px SF Pro loses the stem contrast that separates
@@ -148,6 +190,15 @@ on the fill edge with the rows beneath it.
 - Use `RowLayout`/`ColumnLayout` when siblings negotiate space; use `Row`/`Column` for fixed implicit geometry.
 - Optical corrections may be off-scale only when the value is local, necessary, and commented.
 
+**The Even Box Rule.** A glyph is centred only when the margin around it splits
+into whole pixels, so a box and the glyph in it share parity. `ThemedIcon`
+draws its glyph at the box's parity on its own; containers keep even sizes
+(the dock's tabs are 28, not the 29 the width would give, and the spare goes
+to the track's ends). An odd box around an even glyph sits it half a pixel
+off, which Qt rounds into a visible one-pixel lean. Measure it, do not eyeball
+it: the ink box of every dock glyph sits at 0.0 from its cell's centre, except
+artwork whose ink is itself an odd width.
+
 **The One Icon Box Rule.** Every icon-only button in the bar occupies the same
 square, `StyleControl.buttonWidth` x `buttonHeight`. Buttons carrying text grow
 past it on content — forcing a shared width on a label pads `US` and `9:41 AM`
@@ -171,35 +222,93 @@ toward each other and reads worse than uneven boxes ever did.
 
 ## Elevation & Depth
 
-Depth is a hybrid of compositor blur, translucent QML surfaces, a quiet border, and a soft shadow. Hyprland applies blur to the `quickshell` layer namespace; that namespace is load-bearing and must match `windowrules.lua`.
+Depth is compositor blur behind one translucent material, and one soft shadow
+under the panels that float free of the screen edge. Hyprland applies blur per layer namespace; those namespaces are
+load-bearing and must match `windowrules.lua`.
 
-- `PopoverPanel` is the standard bar-attached elevated surface.
-- `OverlayPanel` is for the centered launcher surface with its distinct reveal contract.
-- Both use `StyleOverlay.surface` and `shadow`, with no outline.
-- Keep shadows ambient. They separate a floating surface from a varied wallpaper; they are not decoration.
-- Do not add nested card shadows inside a popover. Use spacing, muted text, or `PopoverSeparator` for internal hierarchy.
+**No strokes on glass.** A white rim on a translucent surface reads as a
+border drawn around a sticker, not as an edge; the blur and the fill already
+define where the glass ends.
 
-**The One Surface Rule.** A popover is one elevated surface with internal rhythm, not a stack of independently elevated cards.
+**The One Material Rule.** Every floating surface — bar popovers, tray menus,
+launcher, notifications, capture card, OSD, countdown, gallery — is
+`StyleOverlay.surface` (`base00` at 0.62) and no stroke. Bar popovers and
+centred panels add one soft `StyleOverlay.shadow` (4px down, 12px blur). A
+domain style never defines its own surface colour; it aliases this one. The tint comes
+from the palette, so the glass shifts with the wallpaper instead of sitting on
+it as a grey slab.
+
+**The island is the exception, and nearly solid.** `StyleIsland.surface` is
+`base00` darkened by `surfaceDarkening` (2.2) toward the Dynamic Island's
+black, keeping the palette's hue, at `surfaceOpacity` (0.82): dark enough that a
+bright window behind it does not wash it out, translucent enough that a blur of
+what is behind still reads through. It has its own layer namespace (`quickshell-island`)
+with blur under the same 0.5 cut, no open/close animation, and no shadow.
+
+- `PopoverPanel` is the standard bar-attached surface; `OverlayPanel` is the
+  centred one with its distinct reveal contract.
+- Hyprland blurs per pixel, all or nothing, above the `quickshell-popover`
+  rule's `ignore_alpha` (0.5). It sits just under the surface's 0.62 so a
+  rounded corner's antialiased edge is left unblurred and blends into what is
+  beside it — at 0.3 those edge pixels showed blurred backdrop and read as a
+  bright rim. The shadow (0.2) stays under it, or it blurs into a rectangle.
+  No `xray`: it swaps the backdrop for the wallpaper and lights the rim up
+  over every window.
+
+**Wells, not cards.** Inside a surface, structure is a lighter fill —
+`alphaLight` at `radiusMd` — never another elevated surface. A well has no
+shadow and no border: the now-playing card, segmented tracks, the dock track,
+the search field and glyph wells are all the same fill at different sizes.
+Tiles in a grid have no fill at rest — the travelling hover is their only
+background, so a page of them reads as one surface, not a tray of boxes. If something inside a panel needs a shadow to read,
+the panel's hierarchy is wrong.
 
 ## Shapes
 
 The radius scale keeps compact controls crisp while giving larger surfaces a
 softer silhouette:
 
-- **4px (`radiusXs`):** tiny fills. The volume OSD's steps are the one documented exception — `StyleOsd.stepRadius` (2px) keeps them reading as meter ticks rather than dots, because radiusXs is half their height.
-- **8px (`radiusSm`):** bar buttons, list rows, compact actions.
-- **12px (`radiusMd`):** groups, popovers, notifications, and the launcher surface.
-- **Pills:** use `height / 2` only for explicit pill controls such as `PillButton`.
+- **4px (`radiusXs`):** tiny fills.
+- **8px (`radiusSm`, `StyleControl.chipRadius`):** bar buttons and every
+  icon-sized chip or well — dock tabs, row glyphs, calendar days, notification
+  icons. A rounded square, the way a calendar wears its selected day.
+- **12px (`radiusMd`):** wells — tiles, cards, list-row fills, the search
+  field, segmented tracks, level bars.
+- **16px (`radiusLg`):** notifications and the capture card: small floating
+  cards that would read as pills at the surface radius.
+- **22px (`radiusXl`):** the island, popovers, launcher and gallery.
+- **Circles and pills, sparingly:** toggles, text `PillButton`s, and the media
+  transport (prev, play, next in one pill), where the round shape is the
+  control's own convention. Nothing else is round; a column of circles reads
+  as a list of avatars.
 
-Every structural stroke is `StyleTokens.borderWidth` (1px). Create hierarchy through alpha rather than thicker borders. Preserve full rounding on floating panels so all four edges read cleanly over compositor blur.
+**The Concentric Rule.** An inner shape's radius is its container's radius
+minus the inset between them, so the curves run parallel: the home hero 8px
+inside the island is 14px (`StyleIsland.heroRadius`), the OSD is its level
+bar's 12px plus its 8px padding. List rows are the deliberate exception: every
+row in every panel — Wi-Fi, Bluetooth, sound, menus, the launcher — shares
+`StylePopover.listRowRadius` (8), so lists read alike wherever they appear. Pick the inner
+radius from the inset, not from taste.
+
+Every structural stroke is `StyleTokens.borderWidth` (1px), used only for
+internal rules and input outlines. Create hierarchy through alpha rather than
+borders. Preserve full rounding on floating panels so all four edges read cleanly over compositor blur.
 
 ## Components
 
 ### Buttons and icons
 
 - Use `Button` for bar controls and ordinary icon/text actions. Set `interactive: true`; use `active` while its popover is open.
-- Use `PillButton` for compact toggles inside panels.
-- Use `PopoverAction` for menu rows and stacked action tiles.
+- Use `PillButton` for text actions inside panels; `active` turns it into the
+  chip. Icon-only and round only in the media transport.
+- Use `PopoverTile` for a panel's primary actions (More, capture, the bar's
+  power row): a glyph over a caption with no fill at rest, `active` as a chip. `PopoverMenu`'s
+  `iconRow` is a row of them.
+- Use `PopoverAction` for text menu rows.
+- A list row's leading glyph sits in a rounded-square well
+  (`StylePopover.rowGlyphWellSize`, `StyleControl.chipRadius`); the connected
+  or current row's well is the chip. Wi-Fi, Bluetooth and the island's power
+  list share this row.
 - Use `ThemedIcon` for rendered icons. Let `IconRegistry` decide between bundled SVG and Freedesktop sources.
 - Hover and selection use `StyleTokens.alphaLight`, `motionFeedbackDuration`, and `easeFade`. A lone control fades that fill in place; a control standing in a run of peers does not — see The Travelling Fill.
 - Disabled content uses `StyleTokens.opacityDisabled`, not a hardcoded grey.
@@ -265,15 +374,26 @@ wrap — the same shape `HoverRow` already uses.
 
 ### Levels and continuous values
 
-- Use `Slider` for any continuous value. `Button`, `PillButton`, and `PopoverAction` are all discrete and own no scrub interaction.
+- `LevelBar` is the signature control, for volume and brightness: a 44px
+  rounded slab whose fill grows over a faint track from the left — together
+  they stack to the dock's tone
+  edge, the label
+  at the start and the value at the end in regular `fontSizeMd`, and a thin
+  `base07` handle just inside the fill's leading edge. The handle fades out
+  rather than cross the label or the value. No glyph — right-click is the
+  level's own toggle (mute). Text never inverts: the fill is translucent, so
+  one colour reads over both halves.
+- `Slider` is the thin line for seek and per-app levels, where a pill would
+  shout; its handle appears only on hover or scrub.
+- `Button`, `PillButton`, and `PopoverAction` are all discrete and own no scrub interaction.
 - A slider's shown position is local while the pointer is down and re-syncs from its bound value only when nobody is dragging. Do not bind the handle straight to a value that round-trips through a service — the handle stutters under the cursor and snaps back on release.
-- `VolumeStepBar` stays separate on purpose: it reports a level in the OSD, `Slider` sets one.
-- Track, fill, and handle read from `StyleControl.slider*`. The 24px pointer floor is met by the slider's hit area, not by the handle.
+- The volume OSD shows a display-only `LevelBar`.
+- Track, fill, and handle read from `StyleControl.slider*` and `StyleControl.levelBar*`. The 24px pointer floor is met by the slider's hit area, not by the handle.
 
 ### Segmented views
 
 - Use `SegmentedControl` when one popover covers several subjects that would otherwise stack into a single long scroll.
-- It is not a row of `PillButton`s: the segments share one recessed track so they read as one control with a current position, and only the selected segment carries `alphaLight`.
+- It is not a row of `PillButton`s: the segments share one pill track so they read as one control with a current position, and only the selected segment is the chip, travelling between positions.
 - Sound device and application lists fit their current rows up to `StylePopover.soundBodyMaxHeight`; longer lists scroll. Do not reserve blank rows below a short list.
 - Where a list can run past the fold, scroll the current item into view when the segment opens. A selection the reader has to hunt for is not a selection.
 
@@ -296,7 +416,56 @@ wrap — the same shape `HoverRow` already uses.
 ### Overlays, launcher, and notifications
 
 - Centered shell surfaces use `Backdrop` plus `OverlayPanel`.
-- Notifications reuse the shared radius, border width, spacing, and surface material, but hover pauses expiry rather than pretending the whole card is a button.
+- Notifications reuse the shared material at `radiusLg`, put a symbolic app glyph in a rounded-square well (real images keep `radiusMd`), and pause expiry on hover rather than pretending the whole card is a button.
+- The volume OSD is a glass card around a display-only `LevelBar`; the capture countdown is a rounded glass square with a Display numeral.
+
+### Island media
+
+- Laid out like the iPhone's expanded Now Playing: 56px art at `radiusSm`,
+  title and artist at the same 14px (DemiBold `base07` over regular `base04`),
+  the waveform beside the track, faded out when paused, a seek bar with a solid `base07` fill on an `alphaActive` track and
+  times in the shell's sans with tabular figures, then the theme's transport
+  glyphs bare. Play/pause stands out by size alone (32 against 24) on 44px hit
+  targets; no pill track, no solid disc.
+- The waveform is a full 16-bar `CavaVisualizer` beside the track, in the
+  palette accent; the compact pill keeps its own four small bars. Each instance
+  runs cava at exactly its bar count.
+- A source with no timeline, a live stream, has no seek row at all.
+- The playing app is a small badge on the art's corner, the way macOS and
+  Android mark it, shown only when there is more than one player; clicking it
+  steps to the next. There is no list: one grew the page under the dock while
+  the island resized, and a button at the end of the transport row read as a
+  stray control.
+- Every page owns the air above it: header pages centre their title in the
+  header band, home and the launcher start on the 8px fill inset, the media
+  page on its 16px side padding.
+
+### Island home
+
+- The home page opens on the wallpaper itself (`StyleTokens.wallpaperPath`,
+  the file `lib/theme.sh` writes): an image card with the time bottom-left and
+  the weather bottom-right, over a scrim that darkens only the lower half.
+  Clicking the time opens the calendar, the weather opens the forecast.
+- Below it, the volume `LevelBar` and the now-playing card, all on the island's
+  fill inset (`StyleIsland.fillInset`) so their edges line up with the dock
+  track's.
+- A notification opens the resting pill in place into a card
+  (`IslandAlert`), laid out like a Live Activity: the app icon without a
+  container (an image becomes a circle) top-left, a 14px DemiBold title and two
+  lines of body beside it, equal-width capsule actions underneath, and an X
+  that mirrors the icon: a 24px disc on the icon's centre line, its edge on the
+  same 14px inset, always shown so it belongs to the layout rather than
+  floating in the corner. A short
+  card is a true capsule (`alertRadius` 32), so it never sits between capsule
+  and rounded rect. It springs open on the island's own open motion, folds
+  back without overshoot, and a newer notification replaces the content in
+  place; hover holds it. One at a time, newest first. An open panel is never
+  interrupted, and the wide and old bars keep the corner toasts
+  (`ShellLayout.islandAlerts`). Expiry, activation and the icon live in
+  `Notifications` and `NotificationIcon`, shared with the toasts.
+- The dock rides the surface's animated bottom edge: the expanded content is
+  given the morph's height, not its own, so a page change can never leave the
+  dock floating above the glass or clipped below it.
 
 ### Interaction policy
 

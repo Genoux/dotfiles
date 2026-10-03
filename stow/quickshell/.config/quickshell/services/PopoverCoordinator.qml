@@ -76,7 +76,8 @@ Singleton {
         }
     }
 
-    // Click-away dismissal from bare bar surface; see the MouseArea in Bar.qml.
+    // Click-away dismissal from the bare wide-bar surface; see the MouseArea in
+    // Island.qml.
     function closeCurrent() {
         if (current !== null)
             current.open = false;

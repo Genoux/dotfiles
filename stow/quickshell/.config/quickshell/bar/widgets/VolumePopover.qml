@@ -141,13 +141,11 @@ PopoverPanel {
                     anchors.top: parent.top
                     anchors.topMargin: root.embedded ? 0 : StylePopover.contentPaddingV
                     enabled: !!root.bandNode
+                    label: root.onInput ? "Microphone" : "Volume"
                     value: root.bandVolume
                     muted: root.bandMuted
-                    iconSource: root.onInput
-                        ? IconRegistry.barControlIcon("microphone")
-                        : IconRegistry.volumeIcon(root.bandVolume, root.bandMuted, AudioState.hasSink)
                     onMoved: (level) => AudioState.setVolume(root.bandNode, level)
-                    onIconClicked: AudioState.toggleMute(root.bandNode)
+                    onMuteRequested: AudioState.toggleMute(root.bandNode)
                 }
             }
 

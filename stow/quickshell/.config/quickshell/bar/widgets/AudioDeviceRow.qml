@@ -6,9 +6,8 @@ import qs.services
 
 // One selectable device in the output or input list.
 //
-// Not a PopoverAction: that component's row mode renders a label only, and its
-// icon lives in the stacked tile branch. This row ends in a check for the
-// current device, which PopoverAction has no notion of.
+// Not a PopoverAction: that renders a label only, and this row ends in a check
+// for the current device, which PopoverAction has no notion of.
 Rectangle {
     id: row
 
@@ -19,11 +18,13 @@ Rectangle {
 
     implicitHeight: StylePopover.rowHeight
     height: implicitHeight
-    radius: StyleTokens.radiusSm
-    color: StyleTokens.transparent
+    radius: StylePopover.listRowRadius
+    // The current device keeps its own fill: it outlasts the pointer, so it is
+    // state rather than hover and the run's indicator cannot express it.
+    color: row.selected ? StyleTokens.alphaLight : StyleTokens.transparent
 
     // The list's travelling indicator paints the hover fill for the whole run.
-    readonly property bool hovered: area.containsMouse
+    readonly property bool hovered: area.containsMouse && !row.selected
 
     Behavior on color {
         ColorAnimation {

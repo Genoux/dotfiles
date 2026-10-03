@@ -12,7 +12,8 @@ PanelWindow {
     readonly property var shownNotifications: Services.Notifications.notifications
         .slice(Math.max(0, Services.Notifications.notifications.length - StyleNotification.maxVisible))
         .reverse()
-    readonly property bool active: Services.Notifications.visible
+    readonly property bool active: !Services.ShellLayout.islandAlerts
+        && Services.Notifications.visible
         && Services.Notifications.screen === root.screen
         && shownNotifications.length > 0
 

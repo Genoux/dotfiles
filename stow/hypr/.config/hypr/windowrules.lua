@@ -65,22 +65,23 @@ hl.window_rule({
 
 hl.window_rule({ name = "satty", size = "1280 800", center = true, float = true, match = { title = "^(satty)$" } })
 
-hl.layer_rule({ name = "osd", blur = true, ignore_alpha = 0.0, blur_popups = true, animation = "fade", match = { namespace = "osd" } })
+hl.layer_rule({ name = "osd", blur = true, ignore_alpha = 0.5, blur_popups = true, animation = "fade", match = { namespace = "osd" } })
 hl.layer_rule({ name = "layerrule-brightness-osd", blur = true, ignore_alpha = 0.0, blur_popups = true, animation = "fade", match = { namespace = "^(brightness-osd)$" } })
 hl.layer_rule({ name = "layerrule-quickshell", blur = true, blur_popups = true, ignore_alpha = 0.1, animation = "fade", match = { namespace = "^(quickshell)$" } })
-hl.layer_rule({ name = "layerrule-quickshell-popover", blur = true, blur_popups = true, ignore_alpha = 0.3, no_anim = true, xray = true, match = { namespace = "^(quickshell-popover)$" } })
+hl.layer_rule({ name = "layerrule-quickshell-popover", blur = true, blur_popups = true, ignore_alpha = 0.5, no_anim = true, match = { namespace = "^(quickshell-popover)$" } })
+hl.layer_rule({ name = "layerrule-quickshell-island", blur = true, ignore_alpha = 0.5, match = { namespace = "^(quickshell-island)$" } })
 hl.layer_rule({ name = "layerrule-calendar", blur = true, blur_popups = true, ignore_alpha = 0.1, animation = "fade", match = { namespace = "^(calendar_widget)$" } })
 hl.layer_rule({ name = "gtk4-layer-shell", blur = true, blur_popups = true, ignore_alpha = 0.1, match = { namespace = "gtk4-layer-shell" } })
 
 hl.window_rule({ name = "claude-desktop", float = true, center = true, size = "1280 800", match = { class = "^(Claude|com\\.anthropic\\.claude-desktop)$" } })
 
-hl.layer_rule({ name = "notifications", blur = true, blur_popups = true, ignore_alpha = 0.1, match = { namespace = "^(notifications)$" } })
+hl.layer_rule({ name = "notifications", blur = true, blur_popups = true, ignore_alpha = 0.5, match = { namespace = "^(notifications)$" } })
 hl.layer_rule({ name = "launcher-backdrop", no_anim = true, match = { namespace = "^(launcher-backdrop)$" } })
-hl.layer_rule({ name = "launcher", blur = true, ignore_alpha = 0.1, no_anim = true, match = { namespace = "^(launcher)$" } })
-hl.layer_rule({ name = "component-gallery", blur = true, ignore_alpha = 0.1, no_anim = true, match = { namespace = "^(component-gallery)$" } })
+hl.layer_rule({ name = "launcher", blur = true, ignore_alpha = 0.5, no_anim = true, match = { namespace = "^(launcher)$" } })
+hl.layer_rule({ name = "component-gallery", blur = true, ignore_alpha = 0.5, no_anim = true, match = { namespace = "^(component-gallery)$" } })
 hl.layer_rule({ name = "workspace-manager", blur = true, ignore_alpha = 0.1, no_anim = true, match = { namespace = "^(workspace-manager)$" } })
 hl.layer_rule({ name = "workspace-manager-backdrop", no_anim = true, match = { namespace = "^(workspace-manager-backdrop)$" } })
-hl.layer_rule({ name = "capture-preview", blur = true, ignore_alpha = 0.1, animation = "slide", match = { namespace = "^(capture-preview)$" } })
+hl.layer_rule({ name = "capture-preview", blur = true, ignore_alpha = 0.5, animation = "slide", match = { namespace = "^(capture-preview)$" } })
 hl.window_rule({ name = "flow-console", float = true, match = { class = "^(flow-console)$" } })
 hl.layer_rule({ name = "flow-island", blur = true, blur_popups = true, ignore_alpha = 0.1, animation = "fade", match = { namespace = "^(flow)$" } })
 

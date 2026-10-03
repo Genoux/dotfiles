@@ -6,8 +6,7 @@ Item {
     id: root
 
     property bool active: false
-    property color surfaceColor: StyleOverlay.surface
-    property int radius: StyleTokens.radiusMd
+    property int radius: StyleTokens.radiusXl
 
     default property alias content: contentLayer.data
 
@@ -37,11 +36,10 @@ Item {
     DropShadow {
         anchors.fill: surface
         source: surface
-        horizontalOffset: StyleTokens.space6
-        verticalOffset: StyleTokens.space6
-        radius: StyleTokens.space10
-        // Render-quality knob, not a design dimension.
-        samples: 21
+        horizontalOffset: 0
+        verticalOffset: StyleOverlay.shadowOffset
+        radius: StyleOverlay.shadowBlur
+        samples: StyleOverlay.shadowSamples
         color: StyleOverlay.shadow
         opacity: root.revealOpacityValue
         transparentBorder: true
@@ -52,7 +50,7 @@ Item {
 
         anchors.fill: parent
         radius: root.radius
-        color: root.surfaceColor
+        color: StyleOverlay.surface
         opacity: root.revealOpacityValue
     }
 

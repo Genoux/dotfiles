@@ -43,7 +43,7 @@ Rectangle {
 
     implicitHeight: expanded ? StylePopover.listRowExpandedHeight : StylePopover.listRowHeight
     height: implicitHeight
-    radius: StyleTokens.radiusSm
+    radius: StylePopover.listRowRadius
     // The field below sits at a fixed offset and the row's growth uncovers it.
     // Without this clip it would be drawn outside the row at full size from the
     // first frame.
@@ -71,20 +71,37 @@ Rectangle {
         id: hover
     }
 
-    SignalBars {
-        id: signalMeter
+    Rectangle {
+        id: glyphWell
 
         anchors.left: parent.left
         anchors.leftMargin: StylePopover.contentPaddingH - row.x
         anchors.top: parent.top
         anchors.topMargin: (StylePopover.listRowHeight - height) / 2
-        filled: row.network.strength
+        width: StylePopover.rowGlyphWellSize
+        height: width
+        radius: StyleControl.chipRadius
+        color: row.isConnected ? StyleControl.chipFill : StyleTokens.alphaLight
+
+        Behavior on color {
+            ColorAnimation {
+                duration: StyleTokens.motionFeedbackDuration
+                easing.type: StyleTokens.easeFade
+            }
+        }
+
+        SignalBars {
+            anchors.centerIn: parent
+            filled: row.network.strength
+            activeColor: row.isConnected ? StyleControl.chipContent : Colors.base05
+            idleColor: row.isConnected ? StyleControl.chipContent : Colors.base04
+        }
     }
 
     Column {
         id: labels
 
-        anchors.left: signalMeter.right
+        anchors.left: glyphWell.right
         anchors.leftMargin: StyleTokens.space10
         anchors.right: rowActions.left
         anchors.rightMargin: StyleTokens.space6

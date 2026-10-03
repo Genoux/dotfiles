@@ -142,7 +142,7 @@ PopoverPanel {
                 anchors.verticalCenter: parent.verticalCenter
                 width: StylePopover.calendarNavSize
                 height: StylePopover.calendarNavSize
-                radius: width / 2
+                radius: StyleControl.chipRadius
                 iconSource: IconRegistry.shellIcon("chevron-left")
                 iconSize: StyleControl.iconSizeMd
                 foreground: Colors.base05
@@ -165,7 +165,7 @@ PopoverPanel {
                 anchors.verticalCenter: parent.verticalCenter
                 width: StylePopover.calendarNavSize
                 height: StylePopover.calendarNavSize
-                radius: width / 2
+                radius: StyleControl.chipRadius
                 iconSource: IconRegistry.shellIcon("chevron-right")
                 iconSize: StyleControl.iconSizeMd
                 foreground: Colors.base05
@@ -220,11 +220,10 @@ PopoverPanel {
                     height: implicitHeight
 
                     // The peers are the day cells, two levels down inside the week
-                    // rows; a circle rather than the default pill, because that is
-                    // the shape a calendar day already wears.
+                    // rows.
                     SlidingHighlight {
                         run: dayGrid
-                        radius: height / 2
+                        radius: StyleControl.chipRadius
                     }
 
                     Column {
@@ -260,21 +259,20 @@ PopoverPanel {
                                         width: root.cellSize
                                         height: root.cellSize
 
-                                        // Today: filled accent circle
+                                        // Today: chip
                                         Rectangle {
                                             anchors.centerIn: parent
                                             visible: dayCell.isToday
                                             width: StylePopover.calendarDayCircle
                                             height: StylePopover.calendarDayCircle
-                                            radius: width / 2
-                                            color: Colors.base0D
+                                            radius: StyleControl.chipRadius
+                                            color: StyleControl.chipFill
                                         }
 
                                         Text {
                                             anchors.centerIn: parent
                                             text: dayCell.cell.day
-                                            // today gets contrasting dark text over the accent fill
-                                            color: dayCell.isToday ? Colors.base00 : Colors.base05
+                                            color: dayCell.isToday ? StyleControl.chipContent : Colors.base05
                                             opacity: dayCell.cell.currentMonth ? 1 : StylePopover.calendarOtherMonthOpacity
                                             font.family: StyleTokens.fontSans
                                             font.pixelSize: StyleTokens.fontSizeMd

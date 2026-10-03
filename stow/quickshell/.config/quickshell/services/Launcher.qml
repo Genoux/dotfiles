@@ -65,7 +65,7 @@ Singleton {
     }
 
     function toggleFor(targetScreen) {
-        if (ShellLayout.island && !ShellLayout.wide) {
+        if (!ShellLayout.wide) {
             ShellLayout.togglePage("launcher", targetScreen);
             return;
         }

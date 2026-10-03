@@ -70,7 +70,7 @@ Rectangle {
     // A first appearance must not travel from wherever the last one died.
     property bool travels: false
 
-    radius: StyleTokens.radiusSm
+    radius: shownTarget && shownTarget.radius > 0 ? shownTarget.radius : StyleTokens.radiusMd
     color: StyleTokens.alphaLight
     visible: opacity > 0
     opacity: target ? 1 : 0

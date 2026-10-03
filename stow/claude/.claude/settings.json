@@ -61,7 +61,7 @@
       "Bash(qmllint services/WeatherState.qml)",
       "Bash(qmllint services/WeatherState.qml bar/widgets/Weather.qml)",
       "Bash(git -C /home/john/dotfiles status --short)",
-      "Bash(qmllint /home/john/dotfiles/stow/quickshell/.config/quickshell/bar/widgets/WeatherPopover.qml /home/john/dotfiles/stow/quickshell/.config/quickshell/bar/widgets/TrayMenu.qml /home/john/dotfiles/stow/quickshell/.config/quickshell/bar/widgets/SystemTray.qml /home/john/dotfiles/stow/quickshell/.config/quickshell/bar/widgets/ClockPopover.qml /home/john/dotfiles/stow/quickshell/.config/quickshell/bar/widgets/Clock.qml /home/john/dotfiles/stow/quickshell/.config/quickshell/components/PopoverAction.qml /home/john/dotfiles/stow/quickshell/.config/quickshell/bar/Bar.qml)",
+      "Bash(qmllint /home/john/dotfiles/stow/quickshell/.config/quickshell/bar/widgets/WeatherPopover.qml /home/john/dotfiles/stow/quickshell/.config/quickshell/bar/widgets/TrayMenu.qml /home/john/dotfiles/stow/quickshell/.config/quickshell/bar/widgets/SystemTray.qml /home/john/dotfiles/stow/quickshell/.config/quickshell/bar/widgets/ClockPopover.qml /home/john/dotfiles/stow/quickshell/.config/quickshell/bar/widgets/Clock.qml /home/john/dotfiles/stow/quickshell/.config/quickshell/components/PopoverAction.qml)",
       "Bash(rg -r \"Colors\" /home/john/dotfiles/stow/quickshell/.config/quickshell/ --files-with-matches -l)",
       "Bash(rg -r \"Colors\\\\.\" /home/john/dotfiles/stow/quickshell/.config/quickshell/bar/widgets/WeatherPopover.qml)",
       "Bash(qmllint --import-path . bar/widgets/WeatherPopover.qml)",
