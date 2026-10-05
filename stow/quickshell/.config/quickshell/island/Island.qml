@@ -573,11 +573,46 @@ PanelWindow {
         }
     }
 
+    // The recording's mirror on the other flank. Only its placement mirrors:
+    // the dots inside must keep counting up from the left. The wide bar has its
+    // own.
+    // ponytail: grouped beside a left-aligned island, both companions land on
+    // the right, on top of each other; stack them if that alignment is used.
+    Veil {
+        id: workspacesVeil
+
+        LayoutMirroring.enabled: StyleIsland.align === "left"
+        anchors.right: morph.left
+        anchors.rightMargin: StyleIsland.companionGap
+        anchors.top: StyleIsland.atTop ? morph.top : undefined
+        anchors.bottom: StyleIsland.atTop ? undefined : morph.bottom
+        width: workspacesPill.width
+        height: workspacesPill.height
+        veil: root.wideLayout ? 1 : 0
+
+        Behavior on veil {
+            NumberAnimation {
+                duration: StyleIsland.layoutFadeDuration
+                easing.type: StyleIsland.veilEasing
+            }
+        }
+
+        IslandWorkspaces {
+            id: workspacesPill
+
+            hyprMonitor: root.hyprMonitor
+        }
+    }
+
     mask: Region {
         item: morph
 
         Region {
             item: recordingVeil.visible ? recordingVeil : null
+        }
+
+        Region {
+            item: workspacesVeil.visible ? workspacesVeil : null
         }
     }
 

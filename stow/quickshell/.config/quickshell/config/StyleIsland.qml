@@ -33,7 +33,31 @@ Singleton {
     readonly property int activityArtRadius: StyleTokens.radiusXs
     // The recording island floats this far off the main one's flank: close
     // enough to read as its companion, apart enough to read as a second shape.
-    readonly property int companionGap: StyleTokens.space8
+    readonly property int companionGap: StyleTokens.space4
+    // Workspace dots: quiet at rest, the current one only a little longer and
+    // brighter. Each slot's hit area takes in half the gap on either side, so
+    // the side padding only has to make up the rest of the clock's.
+    readonly property int workspaceDotSize: 7
+    readonly property int workspaceDotActiveWidth: 16
+    readonly property real workspaceDotIdleOpacity: 0.5
+    readonly property int workspaceDotSpacing: StyleTokens.space8
+    readonly property int workspacePaddingH: compactPaddingH - workspaceDotSpacing / 2
+    // Pointed at, each dot opens into its app on a chip that fills the pill
+    // as concentrically as the dock's tabs fill their track.
+    readonly property int workspaceChipInset: StyleTokens.space4
+    readonly property int workspaceChipSize: compactHeight - workspaceChipInset * 2
+    // Concentric with the capsule around it, so a chip is a capsule too, not
+    // the bar's rounded square: the curves would cross at every end.
+    readonly property int workspaceChipRadius: compactHeight / 2 - workspaceChipInset
+    // Open, the chips nearly touch: their own padding already separates one
+    // workspace's icons from the next, wider than icons within one chip.
+    readonly property int workspaceChipGap: StyleTokens.space2
+    readonly property int workspaceOpenPaddingH: workspaceChipInset - workspaceChipGap / 2
+    readonly property int workspaceIconSize: StyleControl.iconSize
+    // Snappier than the island's own resize: a hover reveal is a glance, and a
+    // long ease-out tail on a small shape only reads as lag.
+    readonly property int workspaceRevealDuration: 180
+    readonly property int workspaceChipPadding: (workspaceChipSize - workspaceIconSize) / 2
     // Placement. Change these two to move the island: `edge` is "bottom" or
     // "top", `align` is "left", "center" or "right". The surface floats off the
     // screen edge by the bar's own margin, and windows are held clear of it by a
