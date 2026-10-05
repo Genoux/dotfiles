@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
-import Quickshell.Widgets
 import qs
 import qs.components
 import qs.config
@@ -34,31 +33,9 @@ Item {
         width: parent.width - StyleIsland.fillInset * 2
         spacing: StyleIsland.tileGridGap
 
-        ClippingRectangle {
+        WallpaperCard {
             Layout.fillWidth: true
             Layout.preferredHeight: StyleIsland.heroHeight
-            radius: StyleIsland.heroRadius
-            color: StyleTokens.alphaLight
-
-            // Uncached: theme.sh rewrites this one path, and the page is rebuilt
-            // each time the island opens, so a fresh decode picks up a new
-            // wallpaper without watching the file.
-            Image {
-                anchors.fill: parent
-                source: StyleTokens.wallpaperPath
-                sourceSize.width: StyleIsland.heroImageWidth
-                fillMode: Image.PreserveAspectCrop
-                asynchronous: true
-                cache: false
-            }
-
-            Rectangle {
-                anchors.fill: parent
-                gradient: Gradient {
-                    GradientStop { position: StyleIsland.heroScrimStart; color: StyleTokens.transparent }
-                    GradientStop { position: 1; color: StyleIsland.heroScrim }
-                }
-            }
 
             MouseArea {
                 anchors.fill: parent
