@@ -378,7 +378,6 @@ Item {
         Widgets.SystemInfoPopover {
             embedded: true
             popoverWidth: StyleIsland.wideWidth
-            onCloseRequested: root.pageSelected("home")
         }
     }
 

@@ -11,93 +11,76 @@ PopoverPanel {
     flushBottom: true
 
     property int popoverWidth: StylePopover.systemInfoWidth
+    // The rows carry no fill, so they take the hero's text edge directly: one
+    // left edge from the hostname down to the last value.
+    readonly property int textInset: fillInset + StyleIsland.heroPadding
     readonly property string operatingSystem: SystemInfo.software.find(row => row.label === "OS")?.value ?? ""
     readonly property string machineModel: SystemInfo.hardware.find(row => row.label === "PC")?.value ?? ""
+    // Two runs of rows, told apart by the gap between them rather than by a
+    // pair of headings. The hero already names the PC and the OS.
+    readonly property var groups: [
+        SystemInfo.hardware.filter(row => row.label !== "PC"),
+        SystemInfo.software.filter(row => row.label !== "OS")
+            .concat(SystemInfo.uptime ? [{ label: "Uptime", value: SystemInfo.uptime }] : [])
+    ]
 
-    signal closeRequested()
-
-    FontMetrics {
-        id: artMetrics
-        font.family: StyleTokens.fontMono
-        font.pixelSize: StylePopover.systemInfoArtSize
-    }
-
-    // ColumnLayout reports an implicit size that ignores its own anchor margins,
-    // so the panel would size to the content and drop the inset. This carries it.
     Item {
         implicitWidth: root.popoverWidth
-        implicitHeight: content.implicitHeight + StylePopover.contentPaddingH
-            + (root.embedded ? StyleIsland.pagePaddingBottom : StylePopover.contentPaddingH)
+        // The last value ends as far from the bottom as the values sit from the
+        // side; in the island the dock's own gap supplies part of it.
+        implicitHeight: content.implicitHeight + root.textInset
+            - StylePopover.systemInfoRowPadding - (root.embedded ? StyleIsland.dockGap : 0)
         width: implicitWidth
         height: implicitHeight
 
         ColumnLayout {
             id: content
 
-            anchors.top: parent.top
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.margins: StylePopover.contentPaddingH
-            spacing: StyleTokens.space12
+            width: parent.width
+            spacing: 0
 
-            RowLayout {
+            WallpaperCard {
+                shown: root.displaying
                 Layout.fillWidth: true
+                Layout.margins: root.fillInset
+                Layout.bottomMargin: 0
+                Layout.preferredHeight: StylePopover.systemInfoHeroHeight
 
-                Text {
-                    Layout.fillWidth: true
-                    text: "About this system"
-                    color: Colors.base04
-                    font.family: StyleTokens.fontSans
-                    font.pixelSize: StyleTokens.fontSizeSm
-                }
+                Column {
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.bottom: parent.bottom
+                    anchors.margins: StyleIsland.heroPadding
+                    spacing: StyleTokens.space2
 
-                PillButton {
-                    text: "Close"
-                    onClicked: root.closeRequested()
-                }
-            }
+                    Text {
+                        width: parent.width
+                        text: SystemInfo.hostname || "Reading system…"
+                        color: Colors.base07
+                        font.family: StyleTokens.fontSans
+                        font.pixelSize: StyleTokens.fontSizeXl
+                        font.weight: Font.Light
+                        font.letterSpacing: StyleIsland.clockLetterSpacing
+                        elide: Text.ElideRight
+                    }
 
-            ColumnLayout {
-                Layout.fillWidth: true
-                Layout.topMargin: StyleTokens.space4
-                Layout.bottomMargin: StyleTokens.space8
-                spacing: StyleTokens.space6
-
-                Text {
-                    Layout.alignment: Qt.AlignHCenter
-                    Layout.bottomMargin: StyleTokens.space12
-                    Layout.preferredWidth: artMetrics.averageCharacterWidth * SystemInfo.gridWidth
-                    Layout.preferredHeight: artMetrics.height * SystemInfo.gridHeight
-                    text: SystemInfo.art
-                    textFormat: Text.StyledText
-                    font: artMetrics.font
-                    lineHeight: 1
-                }
-
-                Text {
-                    Layout.fillWidth: true
-                    horizontalAlignment: Text.AlignHCenter
-                    text: SystemInfo.hostname || "Reading system…"
-                    color: Colors.base05
-                    font.family: StyleTokens.fontSans
-                    font.pixelSize: StyleTokens.fontSizeXl
-                    font.weight: Font.DemiBold
-                    wrapMode: Text.Wrap
-                }
-
-                Text {
-                    Layout.fillWidth: true
-                    horizontalAlignment: Text.AlignHCenter
-                    text: [root.machineModel, root.operatingSystem].filter(Boolean).join(" · ")
-                    color: Colors.base04
-                    font.family: StyleTokens.fontSans
-                    font.pixelSize: StyleTokens.fontSizeSm
-                    wrapMode: Text.Wrap
+                    Text {
+                        width: parent.width
+                        text: [root.machineModel, root.operatingSystem].filter(Boolean).join(" · ")
+                        color: Colors.base07
+                        opacity: StyleIsland.heroDateOpacity
+                        font.family: StyleTokens.fontSans
+                        font.pixelSize: StyleTokens.fontSizeSm
+                        elide: Text.ElideRight
+                    }
                 }
             }
 
             Text {
                 Layout.fillWidth: true
+                Layout.topMargin: StylePopover.systemInfoListGap
+                Layout.leftMargin: root.textInset
+                Layout.rightMargin: root.textInset
                 visible: SystemInfo.error.length > 0
                 text: SystemInfo.error
                 color: Colors.base08
@@ -107,87 +90,59 @@ PopoverPanel {
             }
 
             Repeater {
-                model: [
-                    { title: "Hardware", rows: SystemInfo.hardware.filter(row => row.label !== "PC") },
-                    { title: "Software", rows: SystemInfo.software.filter(row => row.label !== "OS") }
-                ]
+                model: root.groups
 
-                Rectangle {
+                ColumnLayout {
                     id: group
 
                     required property var modelData
+                    required property int index
+
                     Layout.fillWidth: true
-                    implicitHeight: groupContent.implicitHeight + StylePopover.systemInfoGroupPadding * 2
-                    radius: StyleTokens.radiusMd
-                    color: StyleTokens.alphaLight
+                    visible: modelData.length > 0
+                    Layout.topMargin: index === 0 ? StylePopover.systemInfoListGap : StylePopover.systemInfoGroupGap
+                    Layout.leftMargin: root.textInset
+                    Layout.rightMargin: root.textInset
+                    spacing: 0
 
-                    ColumnLayout {
-                        id: groupContent
+                    Repeater {
+                        model: group.modelData
 
-                        anchors.top: parent.top
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        anchors.margins: StylePopover.systemInfoGroupPadding
-                        spacing: 0
+                        RowLayout {
+                            id: row
 
-                        EyebrowLabel {
-                            Layout.bottomMargin: StyleTokens.space8
-                            text: group.modelData.title
-                        }
+                            required property var modelData
+                            required property int index
+                            // A second GPU reads as a continuation of the first,
+                            // not as a second "Graphics" heading.
+                            readonly property bool continues: index > 0
+                                && group.modelData[index - 1].label === modelData.label
 
-                        Repeater {
-                            model: group.modelData.rows
+                            Layout.fillWidth: true
+                            Layout.topMargin: StylePopover.systemInfoRowPadding
+                            Layout.bottomMargin: StylePopover.systemInfoRowPadding
+                            spacing: StylePopover.systemInfoLabelGap
 
-                            ColumnLayout {
-                                required property var modelData
-                                required property int index
+                            Text {
+                                Layout.preferredWidth: StylePopover.systemInfoLabelWidth
+                                Layout.alignment: Qt.AlignTop
+                                text: row.continues ? "" : row.modelData.label
+                                color: Colors.base04
+                                font.family: StyleTokens.fontSans
+                                font.pixelSize: StyleTokens.fontSizeSm
+                            }
+
+                            Text {
                                 Layout.fillWidth: true
-                                spacing: 0
-
-                                PopoverSeparator {
-                                    Layout.fillWidth: true
-                                    visible: index > 0
-                                }
-
-                                RowLayout {
-                                    Layout.fillWidth: true
-                                    Layout.topMargin: StylePopover.systemInfoRowPadding
-                                    Layout.bottomMargin: StylePopover.systemInfoRowPadding
-                                    spacing: StylePopover.systemInfoLabelGap
-
-                                    Text {
-                                        Layout.preferredWidth: StylePopover.systemInfoLabelWidth
-                                        Layout.alignment: Qt.AlignTop
-                                        text: modelData.label
-                                        color: Colors.base04
-                                        font.family: StyleTokens.fontSans
-                                        font.pixelSize: StyleTokens.fontSizeSm
-                                    }
-
-                                    Text {
-                                        Layout.fillWidth: true
-                                        text: modelData.value
-                                        color: Colors.base05
-                                        font.family: StyleTokens.fontSans
-                                        font.pixelSize: StyleTokens.fontSizeSm
-                                        wrapMode: Text.Wrap
-                                    }
-                                }
+                                text: row.modelData.value
+                                color: Colors.base05
+                                font.family: StyleTokens.fontSans
+                                font.pixelSize: StyleTokens.fontSizeSm
+                                wrapMode: Text.Wrap
                             }
                         }
                     }
                 }
-            }
-
-            Text {
-                Layout.fillWidth: true
-                Layout.topMargin: StyleTokens.space4
-                text: SystemInfo.uptime ? "Uptime  ·  " + SystemInfo.uptime : ""
-                color: Colors.base04
-                font.family: StyleTokens.fontSans
-                font.pixelSize: StyleTokens.fontSizeSm
-                horizontalAlignment: Text.AlignHCenter
-                wrapMode: Text.Wrap
             }
         }
     }

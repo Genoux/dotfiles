@@ -221,7 +221,9 @@ Singleton {
     readonly property int heroHeight: 168
     readonly property int heroRadius: expandedRadius - fillInset
     readonly property int heroPadding: padding
-    readonly property int heroImageWidth: pageWidth * 2
+    // Decoded for the widest page that shows the wallpaper, at the 2x scale Qt
+    // renders the shell at.
+    readonly property int heroImageWidth: wideWidth * 2
     readonly property color heroScrim: Qt.rgba(0, 0, 0, 0.5)
     readonly property real heroScrimStart: 0.35
     readonly property real heroDateOpacity: 0.8

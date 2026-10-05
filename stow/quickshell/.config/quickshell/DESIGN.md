@@ -149,9 +149,7 @@ create hierarchy everywhere else.
 sits over a wallpaper, and at 10px SF Pro loses the stem contrast that separates
 a word from a smudge — the shell can spend a pixel on legibility without
 spending one on every other size. The old 11px media microcopy size folded into
-this step; do not reintroduce a per-surface type size. A value below the floor is
-only legitimate when it is not text: `StylePopover.systemInfoArtSize` (8px) is a
-mono glyph mosaic drawing a logo, and it says so at its definition.
+this step; do not reintroduce a per-surface type size.
 
 **The Smallest Useful Type Rule.** New text starts at `fontSizeSm`. Use `fontSizeXs` only for short metadata or structural labels, never for primary actions or long prose.
 

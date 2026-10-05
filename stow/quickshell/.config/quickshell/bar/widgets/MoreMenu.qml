@@ -127,7 +127,6 @@ Button {
 
         SystemInfoPopover {
             active: info.open
-            onCloseRequested: info.open = false
         }
     }
 

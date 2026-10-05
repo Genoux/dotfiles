@@ -160,16 +160,14 @@ Singleton {
     readonly property int systemProcessListHeight: systemProcessRowHeight * systemProcessRowCount + StyleTokens.space8
 
     readonly property int systemInfoWidth: 420
-    // Off the type scale on purpose: this is the distribution logo drawn as a
-    // mono glyph mosaic, not text. Its size is set by the 420px panel it has to
-    // fit beside the hero block, and it carries no reading load.
-    readonly property int systemInfoArtSize: 8
-    readonly property int systemInfoHeroPaddingV: StyleTokens.space20
+    readonly property int systemInfoHeroHeight: 208
     readonly property int systemInfoLabelWidth: 64
-    readonly property int systemInfoLabelGap: StyleTokens.space12
-    readonly property int systemInfoBodyPaddingV: StyleTokens.space16
-    readonly property int systemInfoGroupPadding: StyleTokens.space12
+    readonly property int systemInfoLabelGap: StyleTokens.space16
     readonly property int systemInfoRowPadding: StyleTokens.space6
+    // Hero to first row, and hardware to software: the second is wider, so the
+    // two runs read as groups without a heading.
+    readonly property int systemInfoListGap: StyleTokens.space10
+    readonly property int systemInfoGroupGap: StyleTokens.space16
 
     readonly property int pillPaddingH: StyleTokens.space10
     readonly property int pillPaddingV: StyleTokens.space6

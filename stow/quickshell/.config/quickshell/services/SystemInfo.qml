@@ -3,7 +3,6 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
-import qs
 import qs.config
 
 Singleton {
@@ -13,24 +12,14 @@ Singleton {
     // GPU names) contain colons of their own.
     readonly property string separator: "=|="
 
-    // The bonsai's canvas, in terminal cells. Fixing both dimensions is what
-    // lets the art be redrawn without the panel changing size.
-    readonly property int gridWidth: 40
-    readonly property int gridHeight: 16
-    readonly property int artSeed: 12345
-
     property bool loaded: false
     property string hostname: ""
-    property string art: ""
     property var hardware: []
     property var software: []
     property string uptime: ""
     property string error: ""
 
-    Component.onCompleted: {
-        refresh()
-        artProcess.running = true
-    }
+    Component.onCompleted: refresh()
 
     function refresh() {
         if (!fetchProcess.running)
@@ -42,7 +31,7 @@ Singleton {
             return
         infoCache.setText(JSON.stringify({
             hostname: hostname, hardware: hardware, software: software,
-            uptime: uptime, art: art,
+            uptime: uptime,
         }))
     }
 
@@ -64,8 +53,6 @@ Singleton {
                     root.uptime = String(saved.uptime || "")
                     root.loaded = true
                 }
-                if (!root.art)
-                    root.art = String(saved.art || "")
             } catch (error) {}
         }
     }
@@ -135,72 +122,6 @@ Singleton {
                 root.saveCache()
             }
         }
-    }
-
-    // The one place the shell does not map onto base16. matugen collapses this
-    // theme's base0B ("green") onto the same blue as base0D, and a bonsai that
-    // is not green stops reading as a tree. Terminal colours here also keep the
-    // art identical to the fastfetch report it is lifted from.
-    readonly property var ansiPalette: ({
-        "30": "#6b7280", "31": "#e06c75", "32": "#6a9955",
-        "33": "#b58863", "34": "#61afef", "35": "#c678dd",
-        "36": "#56b6c2", "37": "#c8ccd4",
-        "90": "#8b93a1", "91": "#ef8b93", "92": "#98c379",
-        "93": "#d19a66", "94": "#8ec7ff", "95": "#dc9ff0",
-        "96": "#7fd4de", "97": "#e6e9ef"
-    })
-
-    // Same seed as the fastfetch config, so the panel grows the tree the
-    // terminal report already draws. -g fixes the canvas at gridWidth x
-    // gridHeight cells and every line is padded back out to that grid, so the
-    // art occupies the same box no matter what it draws inside it.
-    Process {
-        id: artProcess
-
-        command: ["bash", "-c",
-            `~/.config/fastfetch/scripts/bonsai.sh -n -L 20 -g ${root.gridWidth},${root.gridHeight} -T -s ${root.artSeed} 2>/dev/null`]
-
-        stdout: StdioCollector {
-            onStreamFinished: {
-                if (!this.text.trim())
-                    return
-                root.art = root.ansiToMarkup(this.text)
-                root.saveCache()
-            }
-        }
-    }
-
-    // The bonsai script emits SGR colour runs around single characters, which
-    // become <font> spans on a grid-locked canvas.
-    function ansiToMarkup(text) {
-        const lines = text.split("\n").slice(0, root.gridHeight)
-        while (lines.length < root.gridHeight)
-            lines.push("")
-        const canvas = lines.map(line => {
-            const visible = line.replace(/\u001b\[[0-9;]*m/g, "").length
-            return line + " ".repeat(Math.max(0, root.gridWidth - visible))
-        }).join("\n")
-
-        const parts = canvas.split(/\u001b\[([0-9;]*)m/)
-        let markup = ""
-        let color = Colors.base07
-
-        for (let index = 0; index < parts.length; index++) {
-            if (index % 2 === 1) {
-                const code = parts[index].split(";").pop()
-                color = code === "0" || code === "" ? Colors.base07 : (root.ansiPalette[code] || color)
-                continue
-            }
-            const chunk = parts[index]
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/ /g, "&nbsp;")
-                .replace(/\n/g, "<br>")
-            if (chunk)
-                markup += color ? `<font color="${color}">${chunk}</font>` : chunk
-        }
-        return markup
     }
 
     Timer {
