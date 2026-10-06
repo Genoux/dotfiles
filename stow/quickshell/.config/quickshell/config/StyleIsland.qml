@@ -219,7 +219,8 @@ Singleton {
     readonly property int pageSizeSettle: 40
     readonly property int pageSizeLimit: 400
     // Notification: the pill opens in place into a card as wide as the toasts it
-    // replaces, two body lines at most, so a burst cannot grow it into a panel.
+    // replaces, one body line, so the text block stands no taller than the icon
+    // and a burst cannot grow the card into a panel.
     readonly property int alertWidth: StyleNotification.width
     // A short card is a true capsule, a tall one a rounded rect; a fixed 22 on
     // a 64px card is neither (Apple's Live Activity guidance says to pick one).
@@ -230,7 +231,7 @@ Singleton {
     readonly property int alertIconSize: 36
     readonly property int alertIconGap: StyleTokens.space12
     readonly property int alertTitleGap: StyleTokens.space2
-    readonly property int alertBodyLines: 2
+    readonly property int alertBodyLines: 1
     readonly property int alertActionsGap: StyleTokens.space10
     readonly property int alertActionHeight: 36
     readonly property int alertActionSpacing: StyleTokens.space8

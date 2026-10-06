@@ -449,8 +449,9 @@ wrap — the same shape `HoverRow` already uses.
   track's.
 - A notification opens the resting pill in place into a card
   (`IslandAlert`), laid out like a Live Activity: the app icon without a
-  container (an image becomes a circle) top-left, a 14px DemiBold title and two
-  lines of body beside it, equal-width capsule actions underneath, and an X
+  container (an image becomes a circle) on the left, a 14px DemiBold title and
+  one line of body beside it, icon, text and X all centred on one line,
+  equal-width capsule actions underneath, and an X
   that mirrors the icon: a 24px disc on the icon's centre line, its edge on the
   same 14px inset, always shown so it belongs to the layout rather than
   floating in the corner. A short

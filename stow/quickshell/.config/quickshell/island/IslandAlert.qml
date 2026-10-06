@@ -25,9 +25,12 @@ Item {
     readonly property bool hovered: hover.hovered
     readonly property var actions: (shown.actions ?? []).slice(0, StyleIsland.alertMaxActions)
 
+    // The band the icon, the text and the X share. All three centre on it: an
+    // icon hung from the top padding sat above a taller text block.
+    readonly property real headHeight: Math.max(StyleIsland.alertIconSize, textColumn.implicitHeight)
+
     implicitWidth: StyleIsland.alertWidth
-    implicitHeight: StyleIsland.alertPadding * 2
-        + Math.max(StyleIsland.alertIconSize, textColumn.implicitHeight)
+    implicitHeight: StyleIsland.alertPadding * 2 + headHeight
         + (actions.length > 0 ? StyleIsland.alertActionsGap + StyleIsland.alertActionHeight : 0)
 
     onNotificationChanged: {
@@ -127,7 +130,7 @@ Item {
 
         NotificationIcon {
             x: StyleIsland.alertPadding
-            y: StyleIsland.alertPadding
+            y: StyleIsland.alertPadding + Math.round((root.headHeight - height) / 2)
             width: StyleIsland.alertIconSize
             height: width
             bare: true
@@ -139,7 +142,7 @@ Item {
             id: textColumn
 
             x: StyleIsland.alertPadding + StyleIsland.alertIconSize + StyleIsland.alertIconGap
-            y: StyleIsland.alertPadding
+            y: StyleIsland.alertPadding + Math.round((root.headHeight - implicitHeight) / 2)
             width: parent.width - x - StyleIsland.alertTrailingReserve
             spacing: StyleIsland.alertTitleGap
 
@@ -174,7 +177,7 @@ Item {
             readonly property real buttonWidth: (width - spacing * Math.max(0, root.actions.length - 1)) / Math.max(1, root.actions.length)
 
             x: StyleIsland.alertPadding
-            y: StyleIsland.alertPadding + Math.max(StyleIsland.alertIconSize, textColumn.implicitHeight) + StyleIsland.alertActionsGap
+            y: StyleIsland.alertPadding + root.headHeight + StyleIsland.alertActionsGap
             width: parent.width - StyleIsland.alertPadding * 2
             visible: root.actions.length > 0
             spacing: StyleIsland.alertActionSpacing
@@ -201,7 +204,7 @@ Item {
 
     Item {
         x: parent.width - StyleIsland.alertPadding - (StyleIsland.alertDismissSize + width) / 2
-        y: StyleIsland.alertPadding + (StyleIsland.alertIconSize - height) / 2
+        y: StyleIsland.alertPadding + Math.round((root.headHeight - height) / 2)
         width: StyleIsland.alertDismissHitSize
         height: width
 
