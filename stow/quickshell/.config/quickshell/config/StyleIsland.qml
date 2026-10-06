@@ -172,8 +172,8 @@ Singleton {
     // Opening: the compact content clears fast, the expanded content arrives
     // once the shape is already most of the way there.
     readonly property int compactOutDuration: 90
-    readonly property int expandInDelay: 60
-    readonly property int expandInDuration: 240
+    readonly property int expandInDelay: 160
+    readonly property int expandInDuration: 180
     // Closing is the same motion reversed and quicker.
     readonly property int expandOutDuration: 80
     readonly property int compactInDelay: 160
@@ -187,6 +187,7 @@ Singleton {
     // starts before that binding has re-evaluated, and runs the previous
     // direction's timing.
     readonly property var openMotion: ({
+        "shapePause": 0,
         "shapeDuration": morphDuration,
         "shapeEasing": morphEasing,
         "compactPause": 0,
@@ -197,6 +198,7 @@ Singleton {
     // The open morph's timing minus its overshoot, for the island's life once
     // it has finished opening.
     readonly property var restingMotion: ({
+        "shapePause": 0,
         "shapeDuration": resizeDuration,
         "shapeEasing": plainEasing,
         "compactPause": 0,
@@ -204,7 +206,11 @@ Singleton {
         "expandedPause": expandInDelay,
         "expandedDuration": expandInDuration
     })
+    // Closing holds the shape still until the content has cleared: shrinking
+    // at once carried the dock, which rides the bottom edge, up across a page
+    // that was still visible.
     readonly property var closeMotion: ({
+        "shapePause": expandOutDuration,
         "shapeDuration": collapseDuration,
         "shapeEasing": plainEasing,
         "compactPause": compactInDelay,
@@ -215,6 +221,7 @@ Singleton {
     // For a handoff to something that screenshots or records the screen: the
     // island must already be a pill by the time that starts.
     readonly property var instantMotion: ({
+        "shapePause": 0,
         "shapeDuration": 0,
         "shapeEasing": plainEasing,
         "compactPause": 0,

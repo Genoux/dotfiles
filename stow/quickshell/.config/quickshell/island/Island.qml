@@ -6,6 +6,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Wayland
+import Quickshell.Widgets
 import qs.bar.widgets as Widgets
 import qs.components
 import qs.config
@@ -36,9 +37,15 @@ PanelWindow {
     property real radiusCap: expanded ? StyleIsland.expandedRadius : StyleIsland.alertRadius
 
     Behavior on radiusCap {
-        NumberAnimation {
-            duration: StyleIsland.resizeDuration
-            easing.type: StyleIsland.plainEasing
+        SequentialAnimation {
+            PauseAnimation {
+                duration: root.motion.shapePause
+            }
+
+            NumberAnimation {
+                duration: StyleIsland.resizeDuration
+                easing.type: StyleIsland.plainEasing
+            }
         }
     }
     readonly property bool wantsKeyboard: expanded && !!expandedLoader.item && expandedLoader.item.wantsKeyboard
@@ -260,284 +267,305 @@ PanelWindow {
             }
         }
 
-        FocusScope {
+        // Clips to the glass's own rounded shape, not its bounding box: mid-morph
+        // the veiled content, and its blur, spilled into the corners outside the
+        // curve. The wide bar has no glass and needs no rounding.
+        ClippingRectangle {
             anchors.fill: parent
-            clip: true
-            Keys.onEscapePressed: root.collapse()
+            radius: surface.visible ? surface.radius : 0
+            color: StyleTokens.transparent
 
-            // Dismisses an open popover when the bare bar is clicked. The focus
-            // grab treats the bar as inside the grab so its other buttons keep
-            // working, which leaves bar clicks unable to dismiss anything.
-            // Declared first so it sits below the widgets: an interactive one
-            // consumes its own click. Dismissing on `clicked`, not `pressed`:
-            // hiding a popover mid-press releases its grab while the pointer is
-            // down, which cancels the press and swallows the click.
-            MouseArea {
+            FocusScope {
                 anchors.fill: parent
-                // Hidden rather than disabled: a disabled MouseArea still owns the
-                // cursor over its area, and this one covers the pill (Qt 6.11).
-                visible: root.wide
-                acceptedButtons: Qt.AllButtons
-                onClicked: Services.PopoverCoordinator.closeCurrent()
-            }
+                Keys.onEscapePressed: root.collapse()
 
-            Veil {
-                id: barVeil
-
-                anchors.left: parent.left
-                anchors.leftMargin: StyleIsland.wideInset
-                anchors.verticalCenter: parent.verticalCenter
-                width: barLoader.item ? barLoader.item.implicitWidth : 0
-                height: barLoader.item ? barLoader.item.implicitHeight : 0
-                veil: root.wideLayout && !root.expanded ? 0 : 1
-
-                Loader {
-                    id: barLoader
-
-                    // Built from the moment the bar is asked for, off the main thread,
-                    // so it is ready by the time the pill has gone.
-                    active: root.wide || barVeil.visible
-                    asynchronous: true
-
-                    sourceComponent: Row {
-                        spacing: StyleIsland.wideSpacing
-
-                        Widgets.Workspaces {
-                            anchors.verticalCenter: parent.verticalCenter
-                            hyprMonitor: root.hyprMonitor
-                        }
-
-                        Widgets.SystemTray {
-                            anchors.verticalCenter: parent.verticalCenter
-                            barWindow: root
-                        }
-                    }
+                // Dismisses an open popover when the bare bar is clicked. The focus
+                // grab treats the bar as inside the grab so its other buttons keep
+                // working, which leaves bar clicks unable to dismiss anything.
+                // Declared first so it sits below the widgets: an interactive one
+                // consumes its own click. Dismissing on `clicked`, not `pressed`:
+                // hiding a popover mid-press releases its grab while the pointer is
+                // down, which cancels the press and swallows the click.
+                MouseArea {
+                    anchors.fill: parent
+                    // Hidden rather than disabled: a disabled MouseArea still owns the
+                    // cursor over its area, and this one covers the pill (Qt 6.11).
+                    visible: root.wide
+                    acceptedButtons: Qt.AllButtons
+                    onClicked: Services.PopoverCoordinator.closeCurrent()
                 }
-            }
 
-            Veil {
-                anchors.centerIn: parent
-                width: windowTitle.implicitWidth
-                height: windowTitle.implicitHeight
-                veil: barVeil.veil
+                Veil {
+                    id: barVeil
 
-                Widgets.WindowTitle {
-                    id: windowTitle
+                    anchors.left: parent.left
+                    anchors.leftMargin: StyleIsland.wideInset
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: barLoader.item ? barLoader.item.implicitWidth : 0
+                    height: barLoader.item ? barLoader.item.implicitHeight : 0
+                    veil: root.wideLayout && !root.expanded ? 0 : 1
 
-                    hyprMonitor: root.hyprMonitor
-                }
-            }
+                    Loader {
+                        id: barLoader
 
-            // Each widget opens its popover over its own button rather than
-            // expanding the island.
-            Veil {
-                id: controlsVeil
+                        // Built from the moment the bar is asked for, off the main thread,
+                        // so it is ready by the time the pill has gone.
+                        active: root.wide || barVeil.visible
+                        asynchronous: true
 
-                anchors.right: parent.right
-                anchors.rightMargin: StyleIsland.wideInset
-                anchors.verticalCenter: parent.verticalCenter
-                width: controlsLoader.item ? controlsLoader.item.implicitWidth : 0
-                height: controlsLoader.item ? controlsLoader.item.implicitHeight : 0
-                veil: barVeil.veil
-
-                Loader {
-                    id: controlsLoader
-
-                    active: root.wide || controlsVeil.visible
-                    asynchronous: true
-
-                    sourceComponent: Row {
-                        spacing: StyleIsland.wideSpacing
-
-                        Widgets.MediaPlayer {
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-
-                        // One run of peers with the clock in it, so the icons and
-                        // the time share a size, a rhythm and one travelling
-                        // hover fill.
-                        HoverRow {
-                            anchors.verticalCenter: parent.verticalCenter
+                        sourceComponent: Row {
                             spacing: StyleIsland.wideSpacing
 
-                            Widgets.Launcher {
-                                screen: root.screen
+                            Widgets.Workspaces {
+                                anchors.verticalCenter: parent.verticalCenter
+                                hyprMonitor: root.hyprMonitor
                             }
 
-                            Widgets.Volume {
-                                barWindow: root
-                            }
-
-                            Widgets.Network {
-                                barWindow: root
-                            }
-
-                            Widgets.Bluetooth {
-                                barWindow: root
-                            }
-
-                            Widgets.Clipboard {
-                                barWindow: root
-                            }
-
-                            Widgets.Capture {
-                                screen: root.screen
-                                barWindow: root
-                            }
-
-                            Widgets.Keyboard {
-                            }
-
-                            Widgets.Battery {
-                            }
-
-                            Widgets.Clock {
-                                barWindow: root
-                            }
-
-                            Widgets.Dotfiles {
-                            }
-
-                            Widgets.MoreMenu {
+                            Widgets.SystemTray {
+                                anchors.verticalCenter: parent.verticalCenter
                                 barWindow: root
                             }
                         }
                     }
                 }
+
+                Veil {
+                    anchors.centerIn: parent
+                    width: windowTitle.implicitWidth
+                    height: windowTitle.implicitHeight
+                    veil: barVeil.veil
+
+                    Widgets.WindowTitle {
+                        id: windowTitle
+
+                        hyprMonitor: root.hyprMonitor
+                    }
+                }
+
+                // Each widget opens its popover over its own button rather than
+                // expanding the island.
+                Veil {
+                    id: controlsVeil
+
+                    anchors.right: parent.right
+                    anchors.rightMargin: StyleIsland.wideInset
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: controlsLoader.item ? controlsLoader.item.implicitWidth : 0
+                    height: controlsLoader.item ? controlsLoader.item.implicitHeight : 0
+                    veil: barVeil.veil
+
+                    Loader {
+                        id: controlsLoader
+
+                        active: root.wide || controlsVeil.visible
+                        asynchronous: true
+
+                        sourceComponent: Row {
+                            spacing: StyleIsland.wideSpacing
+
+                            Widgets.MediaPlayer {
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+
+                            // One run of peers with the clock in it, so the icons and
+                            // the time share a size, a rhythm and one travelling
+                            // hover fill.
+                            HoverRow {
+                                anchors.verticalCenter: parent.verticalCenter
+                                spacing: StyleIsland.wideSpacing
+
+                                Widgets.Launcher {
+                                    screen: root.screen
+                                }
+
+                                Widgets.Volume {
+                                    barWindow: root
+                                }
+
+                                Widgets.Network {
+                                    barWindow: root
+                                }
+
+                                Widgets.Bluetooth {
+                                    barWindow: root
+                                }
+
+                                Widgets.Clipboard {
+                                    barWindow: root
+                                }
+
+                                Widgets.Capture {
+                                    screen: root.screen
+                                    barWindow: root
+                                }
+
+                                Widgets.Keyboard {
+                                }
+
+                                Widgets.Battery {
+                                }
+
+                                Widgets.Clock {
+                                    barWindow: root
+                                }
+
+                                Widgets.Dotfiles {
+                                }
+
+                                Widgets.MoreMenu {
+                                    barWindow: root
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Veil {
+                    id: compactVeil
+
+                    anchors.centerIn: parent
+                    width: compact.implicitWidth
+                    height: compact.implicitHeight
+                    veil: root.expanded || root.wideLayout || root.alerting ? 1 : 0
+
+                    IslandCompact {
+                        id: compact
+                    }
+
+                    Behavior on veil {
+                        SequentialAnimation {
+                            PauseAnimation {
+                                duration: root.motion.compactPause
+                            }
+
+                            NumberAnimation {
+                                duration: root.motion.compactDuration
+                                easing.type: StyleIsland.veilEasing
+                            }
+
+                        }
+
+                    }
+
+                }
+
+                Veil {
+                    id: alertVeil
+
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.top: StyleIsland.atTop ? parent.top : undefined
+                    anchors.bottom: StyleIsland.atTop ? undefined : parent.bottom
+                    width: alert.implicitWidth
+                    height: alert.implicitHeight
+                    blurMax: StyleIsland.alertBlurMax
+                    veil: root.alerting ? 0 : 1
+
+                    IslandAlert {
+                        id: alert
+
+                        notification: root.alertNotification
+                    }
+
+                    Behavior on veil {
+                        SequentialAnimation {
+                            PauseAnimation {
+                                duration: root.motion.expandedPause
+                            }
+
+                            NumberAnimation {
+                                duration: root.motion.expandedDuration
+                                easing.type: StyleIsland.veilEasing
+                            }
+
+                        }
+
+                    }
+
+                }
+
+                Veil {
+                    id: expandedVeil
+
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.top: StyleIsland.atTop ? parent.top : undefined
+                    anchors.bottom: StyleIsland.atTop ? undefined : parent.bottom
+                    width: expandedLoader.item ? expandedLoader.item.width : 0
+                    // The surface's animated height, not the page's: the dock is
+                    // anchored to the bottom of this, so it rides the glass edge
+                    // through a resize instead of jumping to where it will end up.
+                    height: morph.height
+                    veil: root.expanded ? 0 : 1
+
+                    Loader {
+                        id: expandedLoader
+
+                        height: parent.height
+                        active: root.expanded || expandedVeil.visible
+
+                        sourceComponent: IslandExpanded {
+                            active: root.expanded
+                            pageId: root.pageId
+                            onPageSelected: (selectedPage) => {
+                                return root.pageId = selectedPage;
+                            }
+                            onCollapseRequested: root.collapse()
+                            onCollapseNowRequested: root.collapseNow()
+                        }
+
+                    }
+
+                    Behavior on veil {
+                        SequentialAnimation {
+                            PauseAnimation {
+                                duration: root.motion.expandedPause
+                            }
+
+                            NumberAnimation {
+                                duration: root.motion.expandedDuration
+                                easing.type: StyleIsland.veilEasing
+                            }
+
+                        }
+
+                    }
+
+                }
+
             }
-
-            Veil {
-                id: compactVeil
-
-                anchors.centerIn: parent
-                width: compact.implicitWidth
-                height: compact.implicitHeight
-                veil: root.expanded || root.wideLayout || root.alerting ? 1 : 0
-
-                IslandCompact {
-                    id: compact
-                }
-
-                Behavior on veil {
-                    SequentialAnimation {
-                        PauseAnimation {
-                            duration: root.motion.compactPause
-                        }
-
-                        NumberAnimation {
-                            duration: root.motion.compactDuration
-                            easing.type: StyleIsland.veilEasing
-                        }
-
-                    }
-
-                }
-
-            }
-
-            Veil {
-                id: alertVeil
-
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.top: StyleIsland.atTop ? parent.top : undefined
-                anchors.bottom: StyleIsland.atTop ? undefined : parent.bottom
-                width: alert.implicitWidth
-                height: alert.implicitHeight
-                blurMax: StyleIsland.alertBlurMax
-                veil: root.alerting ? 0 : 1
-
-                IslandAlert {
-                    id: alert
-
-                    notification: root.alertNotification
-                }
-
-                Behavior on veil {
-                    SequentialAnimation {
-                        PauseAnimation {
-                            duration: root.motion.expandedPause
-                        }
-
-                        NumberAnimation {
-                            duration: root.motion.expandedDuration
-                            easing.type: StyleIsland.veilEasing
-                        }
-
-                    }
-
-                }
-
-            }
-
-            Veil {
-                id: expandedVeil
-
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.top: StyleIsland.atTop ? parent.top : undefined
-                anchors.bottom: StyleIsland.atTop ? undefined : parent.bottom
-                width: expandedLoader.item ? expandedLoader.item.width : 0
-                // The surface's animated height, not the page's: the dock is
-                // anchored to the bottom of this, so it rides the glass edge
-                // through a resize instead of jumping to where it will end up.
-                height: morph.height
-                veil: root.expanded ? 0 : 1
-
-                Loader {
-                    id: expandedLoader
-
-                    height: parent.height
-                    active: root.expanded || expandedVeil.visible
-
-                    sourceComponent: IslandExpanded {
-                        active: root.expanded
-                        pageId: root.pageId
-                        onPageSelected: (selectedPage) => {
-                            return root.pageId = selectedPage;
-                        }
-                        onCollapseRequested: root.collapse()
-                        onCollapseNowRequested: root.collapseNow()
-                    }
-
-                }
-
-                Behavior on veil {
-                    SequentialAnimation {
-                        PauseAnimation {
-                            duration: root.motion.expandedPause
-                        }
-
-                        NumberAnimation {
-                            duration: root.motion.expandedDuration
-                            easing.type: StyleIsland.veilEasing
-                        }
-
-                    }
-
-                }
-
-            }
-
         }
 
         Behavior on width {
-            NumberAnimation {
-                duration: root.motion.shapeDuration
-                easing.type: root.motion.shapeEasing
-                easing.overshoot: StyleIsland.morphOvershoot
+            SequentialAnimation {
+                PauseAnimation {
+                    duration: root.motion.shapePause
+                }
+
+                NumberAnimation {
+                    duration: root.motion.shapeDuration
+                    easing.type: root.motion.shapeEasing
+                    easing.overshoot: StyleIsland.morphOvershoot
+                }
             }
 
         }
 
         Behavior on height {
-            NumberAnimation {
-                duration: root.motion.shapeDuration
-                easing.type: root.motion.shapeEasing
-                easing.overshoot: StyleIsland.morphOvershoot
+            SequentialAnimation {
                 // Only the opening overshoots; from here on the island resizes
                 // with a plain ease-out, as a page change would otherwise dip.
                 onRunningChanged: {
                     if (!running && root.expanded)
                         root.motion = StyleIsland.restingMotion;
+                }
+
+                PauseAnimation {
+                    duration: root.motion.shapePause
+                }
+
+                NumberAnimation {
+                    duration: root.motion.shapeDuration
+                    easing.type: root.motion.shapeEasing
+                    easing.overshoot: StyleIsland.morphOvershoot
                 }
             }
 
