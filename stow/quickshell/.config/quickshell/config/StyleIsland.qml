@@ -106,8 +106,8 @@ Singleton {
     // darkest surface, toward the Dynamic Island's black, but still the
     // palette's hue so it follows the wallpaper, and translucent enough that a
     // blur of what is behind reads through it.
-    readonly property real surfaceDarkening: 0
-    readonly property real surfaceOpacity: 0.8
+    readonly property real surfaceDarkening: 1.8
+    readonly property real surfaceOpacity: 1
     readonly property color surface: StyleTokens.surfaceAlpha(Qt.darker(Colors.base00, surfaceDarkening), surfaceOpacity)
     // Expanded layout. The island is one width for every page, so it never
     // resizes sideways, and a page's full-width rules reach its edges.

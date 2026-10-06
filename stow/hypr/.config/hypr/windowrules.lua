@@ -69,7 +69,7 @@ hl.layer_rule({ name = "osd", blur = true, ignore_alpha = 0.5, blur_popups = tru
 hl.layer_rule({ name = "layerrule-brightness-osd", blur = true, ignore_alpha = 0.0, blur_popups = true, animation = "fade", match = { namespace = "^(brightness-osd)$" } })
 hl.layer_rule({ name = "layerrule-quickshell", blur = true, blur_popups = true, ignore_alpha = 0.1, animation = "fade", match = { namespace = "^(quickshell)$" } })
 hl.layer_rule({ name = "layerrule-quickshell-popover", blur = true, blur_popups = true, ignore_alpha = 0.5, no_anim = true, match = { namespace = "^(quickshell-popover)$" } })
-hl.layer_rule({ name = "layerrule-quickshell-island", blur = true, ignore_alpha = 0.5, match = { namespace = "^(quickshell-island)$" } })
+--hl.layer_rule({ name = "layerrule-quickshell-island", blur = true, ignore_alpha = 0.5, match = { namespace = "^(quickshell-island)$" } })
 hl.layer_rule({ name = "layerrule-calendar", blur = true, blur_popups = true, ignore_alpha = 0.1, animation = "fade", match = { namespace = "^(calendar_widget)$" } })
 hl.layer_rule({ name = "gtk4-layer-shell", blur = true, blur_popups = true, ignore_alpha = 0.1, match = { namespace = "gtk4-layer-shell" } })
 
