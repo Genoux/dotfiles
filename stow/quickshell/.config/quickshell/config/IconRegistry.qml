@@ -78,6 +78,7 @@ Singleton {
             "chevron-left": "go-previous-symbolic",
             "chevron-right": "go-next-symbolic",
             "navigation": "find-location-symbolic",
+            "wallpaper": "preferences-desktop-wallpaper-symbolic",
         }
         return themeIcon(icons[name] ?? name)
     }

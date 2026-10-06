@@ -269,6 +269,20 @@ Singleton {
     // renders the shell at.
     readonly property int heroImageWidth: wideWidth * 2
     readonly property color heroScrim: Qt.rgba(0, 0, 0, 0.5)
+    // The hero's one action, in its top-right corner: a dark chip, since it
+    // sits on the bright upper half the scrim leaves alone, and concentric with
+    // the hero's corner.
+    readonly property int heroActionInset: StyleTokens.space8
+    readonly property int heroActionRadius: heroRadius - heroActionInset
+    readonly property color heroActionFill: heroScrim
+    readonly property color heroActionHoverFill: Qt.rgba(0, 0, 0, 0.7)
+    // Long enough for a wallpaper write to finish, and for a swap that never
+    // lands to give the button back.
+    readonly property int wallpaperSettleDelay: 300
+    // A new wallpaper fades in over the old one: long enough to read as a
+    // crossfade rather than a flicker.
+    readonly property int wallpaperCrossfadeDuration: 400
+    readonly property int wallpaperSwapTimeout: 15000
     readonly property real heroScrimStart: 0.35
     readonly property real heroDateOpacity: 0.8
     readonly property int clockLetterSpacing: -1

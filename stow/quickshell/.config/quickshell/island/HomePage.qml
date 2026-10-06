@@ -12,12 +12,22 @@ Item {
     readonly property var player: Services.MediaPlayers.player
     readonly property bool hasMedia: Services.MediaPlayers.hasTrackMetadata(player)
 
+    property bool heroActionsShown: false
+    property bool swappingWallpaper: false
+
     signal pageRequested(string pageId)
 
     implicitWidth: StyleIsland.pageWidth
     implicitHeight: column.implicitHeight + StyleIsland.fillInset + StyleIsland.pagePaddingBottom
     width: implicitWidth
     height: implicitHeight
+
+    Timer {
+        id: swapTimeout
+
+        interval: StyleIsland.wallpaperSwapTimeout
+        onTriggered: root.swappingWallpaper = false
+    }
 
     SystemClock {
         id: clock
@@ -36,11 +46,67 @@ Item {
         WallpaperCard {
             Layout.fillWidth: true
             Layout.preferredHeight: StyleIsland.heroHeight
+            onRefreshed: root.swappingWallpaper = false
+
+            HoverHandler {
+                id: heroHover
+
+                onHoveredChanged: {
+                    if (hovered) {
+                        heroReveal.restart();
+                    } else {
+                        heroReveal.stop();
+                        root.heroActionsShown = false;
+                    }
+                }
+            }
+
+            Timer {
+                id: heroReveal
+
+                interval: StyleTokens.motionHoverDelay
+                onTriggered: root.heroActionsShown = true
+            }
 
             MouseArea {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
                 onClicked: root.pageRequested("calendar")
+            }
+
+            // Runs detached through Hyprland, like the keybind: a child of this
+            // page would die with it when the island closed, part way between
+            // swapping the image and regenerating the theme.
+            Button {
+                anchors.top: parent.top
+                anchors.right: parent.right
+                anchors.margins: StyleIsland.heroActionInset
+                radius: StyleIsland.heroActionRadius
+                iconSource: IconRegistry.shellIcon("wallpaper")
+                foreground: Colors.base07
+                background: StyleIsland.heroActionFill
+                hoverBackground: StyleIsland.heroActionHoverFill
+                interactive: true
+                opacity: root.heroActionsShown ? (root.swappingWallpaper ? StyleTokens.opacityDisabled : 1) : 0
+                visible: opacity > 0
+                // Ignored rather than disabled while a swap runs: a disabled
+                // button lets the click through to the hero, which opens the
+                // calendar.
+                onClicked: {
+                    if (root.swappingWallpaper)
+                        return;
+
+                    root.swappingWallpaper = true;
+                    swapTimeout.restart();
+                    ShellActions.runLocalScript("system-pick-wallpaper");
+                }
+
+                Behavior on opacity {
+                    NumberAnimation {
+                        duration: StyleTokens.motionFeedbackDuration
+                        easing.type: StyleTokens.easeFade
+                    }
+                }
             }
 
             Column {
