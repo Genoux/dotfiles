@@ -195,6 +195,13 @@ Singleton {
             return null
 
         const normalized = className.toLowerCase()
+        // An app's own StartupWMClass outranks an entry that merely shares the
+        // class as its file name: "orca" is both the Orca app's declared class
+        // and the id of GNOME's Orca screen reader.
+        const declared = DesktopEntries.applications.values.find((entry) => (entry.startupClass || "").toLowerCase() === normalized)
+        if (declared && declared.icon)
+            return declared
+
         const exact = DesktopEntries.byId(className)
             ?? DesktopEntries.applications.values.find((entry) => entry.id.toLowerCase() === normalized)
         if (exact && exact.icon)
