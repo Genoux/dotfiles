@@ -58,12 +58,18 @@ Singleton {
     // long ease-out tail on a small shape only reads as lag.
     readonly property int workspaceRevealDuration: 180
     readonly property int workspaceChipPadding: (workspaceChipSize - workspaceIconSize) / 2
-    // Placement. Change these two to move the island: `edge` is "bottom" or
-    // "top", `align` is "left", "center" or "right". The surface floats off the
-    // screen edge by the bar's own margin, and windows are held clear of it by a
+    // Placement. Change these to move the island: `edge` is "bottom" or "top",
+    // `align` is "left", "center" or "right". The surface floats off the screen
+    // edge by the bar's own margin, and windows are held clear of it by a
     // spacing step beyond that.
     readonly property string edge: "bottom"
     readonly property string align: "center"
+    // The workspace and recording pills: "center" hugs them to the island's
+    // flanks, "spread" sends them to the screen's left and right edges, like
+    // flex space-between. Spread suits a centred island; a left or right one
+    // would share its edge with a pill.
+    readonly property string companions: "center"
+    readonly property bool companionsSpread: companions === "spread"
     readonly property bool atTop: edge === "top"
     readonly property int edgeMargin: StyleBar.margin
     readonly property int reservedHeight: edgeMargin + compactHeight + StyleTokens.space4

@@ -545,16 +545,17 @@ PanelWindow {
 
     }
 
-    // On the right-aligned island it sits on the left and opens leftward, so it
-    // never runs off the screen.
+    // Laid out for the island's right flank, opening rightward; mirrored, it
+    // takes the left flank, or the screen's right edge when spread, and opens
+    // leftward, so it always opens away from what it is anchored to.
     // The wide bar carries the recording in its own capture button instead.
     Veil {
         id: recordingVeil
 
-        LayoutMirroring.enabled: StyleIsland.align === "right"
+        LayoutMirroring.enabled: StyleIsland.companionsSpread || StyleIsland.align === "right"
         LayoutMirroring.childrenInherit: true
-        anchors.left: morph.right
-        anchors.leftMargin: StyleIsland.companionGap
+        anchors.left: StyleIsland.companionsSpread ? parent.left : morph.right
+        anchors.leftMargin: StyleIsland.companionsSpread ? StyleIsland.edgeMargin : StyleIsland.companionGap
         anchors.top: StyleIsland.atTop ? morph.top : undefined
         anchors.bottom: StyleIsland.atTop ? undefined : morph.bottom
         width: recordingPill.width
@@ -573,17 +574,17 @@ PanelWindow {
         }
     }
 
-    // The recording's mirror on the other flank. Only its placement mirrors:
-    // the dots inside must keep counting up from the left. The wide bar has its
-    // own.
+    // The recording's mirror on the other flank, or at the screen's left edge
+    // when spread. Only its placement mirrors: the dots inside must keep
+    // counting up from the left. The wide bar has its own.
     // ponytail: grouped beside a left-aligned island, both companions land on
     // the right, on top of each other; stack them if that alignment is used.
     Veil {
         id: workspacesVeil
 
-        LayoutMirroring.enabled: StyleIsland.align === "left"
-        anchors.right: morph.left
-        anchors.rightMargin: StyleIsland.companionGap
+        LayoutMirroring.enabled: StyleIsland.companionsSpread || StyleIsland.align === "left"
+        anchors.right: StyleIsland.companionsSpread ? parent.right : morph.left
+        anchors.rightMargin: StyleIsland.companionsSpread ? StyleIsland.edgeMargin : StyleIsland.companionGap
         anchors.top: StyleIsland.atTop ? morph.top : undefined
         anchors.bottom: StyleIsland.atTop ? undefined : morph.bottom
         width: workspacesPill.width
