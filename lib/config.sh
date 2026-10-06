@@ -186,15 +186,12 @@ config_manage_interactive() {
 # Quickshell was sometimes linked with absolute symlinks; stow requires relative ones.
 quickshell_remove_absolute_symlinks() {
     local qs_dir="$HOME/.config/quickshell"
-    local entry target base
+    local entry target
 
     [[ -d "$qs_dir" ]] || return 0
 
     for entry in "$qs_dir"/*; do
         [[ -e "$entry" || -L "$entry" ]] || continue
-        base=$(basename "$entry")
-        [[ "$base" == "Colors.qml" ]] && continue
-
         [[ -L "$entry" ]] || continue
         target=$(readlink "$entry")
         [[ "$target" == /* ]] || continue

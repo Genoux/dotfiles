@@ -80,7 +80,7 @@ stow/claude/.claude.json
 themes/*/
 
 # Matugen-generated theme outputs (live under ~/.config, not stow)
-stow/quickshell/.config/quickshell/Colors.qml
+stow/quickshell/.config/quickshell/colors.json
 stow/btop/.config/btop/themes/matugen.theme
 
 /stow/flow/.config/flow/config.toml

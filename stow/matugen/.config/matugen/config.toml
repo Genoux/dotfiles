@@ -23,11 +23,12 @@ input_path = "~/.config/matugen/templates/btop.theme"
 output_path = "~/.config/btop/themes/matugen.theme"
 post_hook = "pkill -USR2 btop 2>/dev/null || true"
 
-# Quickshell - imported as the Colors singleton by ~/.config/quickshell/shell.qml.
-# Quickshell hot-reloads QML on file change, so no post_hook is needed.
+# Quickshell - read live by the Colors singleton (stow/quickshell/Colors.qml).
+# Data, not QML: a regenerated QML file hot-reloaded the whole shell on every
+# wallpaper change.
 [templates.quickshell]
-input_path = "~/.config/matugen/templates/quickshell-colors.qml"
-output_path = "~/.config/quickshell/Colors.qml"
+input_path = "~/.config/matugen/templates/quickshell-colors.json"
+output_path = "~/.config/quickshell/colors.json"
 
 # Starship - matugen renders the full config (replaces the previous static stow copy)
 [templates.starship]

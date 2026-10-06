@@ -14,7 +14,7 @@ CURRENT_WALLPAPER="$HOME/.config/hypr/wallpapers/current/current_wallpaper.jpg"
 declare -a MATUGEN_OUTPUTS=(
     "$HOME/.config/kitty/matugen-theme.conf"
     "$HOME/.config/btop/themes/matugen.theme"
-    "$HOME/.config/quickshell/Colors.qml"
+    "$HOME/.config/quickshell/colors.json"
     "$HOME/.config/starship.toml"
     "$HOME/.config/zsh/highlight-colors.zsh"
     "$HOME/.config/matugen/dotfiles-gum.env"
@@ -23,7 +23,6 @@ declare -a MATUGEN_OUTPUTS=(
 )
 
 declare -a MATUGEN_STOW_SYMLINK_OUTPUTS=(
-    "$HOME/.config/quickshell/Colors.qml"
     "$HOME/.config/btop/themes/matugen.theme"
 )
 

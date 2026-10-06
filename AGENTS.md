@@ -232,7 +232,7 @@ For shell changes:
 For Quickshell changes:
 
 - Edit QML under `stow/quickshell/.config/quickshell/`; Quickshell hot-reloads.
-- Use `Colors.base**` from matugen-generated `Colors.qml`.
+- Use `Colors.base**` from `Colors.qml`, which reads matugen's generated `colors.json` live.
 - Hyprland actions go through `config/ShellActions.qml`, not `hyprctl` subprocesses.
 
 For package/config changes:
