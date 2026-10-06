@@ -3,6 +3,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Services.Mpris
+import qs.config
 
 Singleton {
     id: root
@@ -236,6 +237,18 @@ Singleton {
             target.pause();
         else
             target.play();
+    }
+
+    // MPRIS lets a player raise its own window; one that cannot is found by the
+    // window class its desktop entry names.
+    function focusSource(target = player) {
+        if (!target)
+            return;
+
+        if (target.canRaise)
+            target.raise();
+        else if (target.desktopEntry)
+            ShellActions.focusWindow(`class:(?i)^${target.desktopEntry}$`);
     }
 
     function next(target = player) {

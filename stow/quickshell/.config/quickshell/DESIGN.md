@@ -446,7 +446,10 @@ wrap — the same shape `HoverRow` already uses.
   Clicking the time opens the calendar, the weather opens the forecast.
 - Below it, the volume `LevelBar` and the now-playing card, all on the island's
   fill inset (`StyleIsland.fillInset`) so their edges line up with the dock
-  track's.
+  track's. The card ends in previous, play and next as three bare theme glyphs
+  sharing the travelling fill, and it stays lit while the pointer is anywhere
+  on it. Clicking it goes to the source, not the media page: the player raises
+  its own window (MPRIS), and the island closes.
 - A notification opens the resting pill in place into a card
   (`IslandAlert`), laid out like a Live Activity: the app icon without a
   container (an image becomes a circle) on the left, a 14px DemiBold title and

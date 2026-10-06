@@ -16,6 +16,7 @@ Item {
     property bool swappingWallpaper: false
 
     signal pageRequested(string pageId)
+    signal collapseRequested()
 
     implicitWidth: StyleIsland.pageWidth
     implicitHeight: column.implicitHeight + StyleIsland.fillInset + StyleIsland.pagePaddingBottom
@@ -198,7 +199,7 @@ Item {
             Layout.preferredHeight: StyleIsland.miniArtSize + StyleIsland.fillInset * 2
             visible: root.hasMedia
             radius: StyleTokens.radiusMd
-            color: nowPlayingArea.containsMouse ? StyleTokens.alphaActive : StyleTokens.alphaLight
+            color: cardHover.hovered ? StyleTokens.alphaActive : StyleTokens.alphaLight
 
             Behavior on color {
                 ColorAnimation {
@@ -207,13 +208,19 @@ Item {
                 }
             }
 
-            MouseArea {
-                id: nowPlayingArea
+            // Passive, so the card stays lit while the pointer is on its
+            // transport buttons, which take the click area's own hover.
+            HoverHandler {
+                id: cardHover
+            }
 
+            MouseArea {
                 anchors.fill: parent
-                hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
-                onClicked: root.pageRequested("media")
+                onClicked: {
+                    Services.MediaPlayers.focusSource(root.player);
+                    root.collapseRequested();
+                }
             }
 
             RowLayout {
@@ -254,11 +261,32 @@ Item {
                     }
                 }
 
-                PillButton {
-                    active: true
-                    iconSource: IconRegistry.mediaIcon(root.player && root.player.isPlaying ? "pause" : "play")
-                    interactive: Services.MediaPlayers.canTogglePlayback
-                    onClicked: Services.MediaPlayers.togglePlayback()
+                HoverRow {
+                    spacing: StyleTokens.space2
+
+                    Button {
+                        iconSource: IconRegistry.mediaIcon("skip-backward")
+                        iconSize: StyleIsland.miniTransportIconSize
+                        interactive: Services.MediaPlayers.canGoPrevious
+                        opacity: interactive ? 1 : StyleTokens.opacityDisabled
+                        onClicked: Services.MediaPlayers.previous()
+                    }
+
+                    Button {
+                        iconSource: IconRegistry.mediaIcon(root.player && root.player.isPlaying ? "pause" : "play")
+                        iconSize: StyleIsland.miniTransportIconSize
+                        interactive: Services.MediaPlayers.canTogglePlayback
+                        opacity: interactive ? 1 : StyleTokens.opacityDisabled
+                        onClicked: Services.MediaPlayers.togglePlayback()
+                    }
+
+                    Button {
+                        iconSource: IconRegistry.mediaIcon("skip-forward")
+                        iconSize: StyleIsland.miniTransportIconSize
+                        interactive: Services.MediaPlayers.canGoNext
+                        opacity: interactive ? 1 : StyleTokens.opacityDisabled
+                        onClicked: Services.MediaPlayers.next()
+                    }
                 }
             }
         }

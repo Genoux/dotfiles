@@ -275,6 +275,7 @@ Item {
 
         HomePage {
             onPageRequested: (requestedPage) => root.pageSelected(requestedPage)
+            onCollapseRequested: root.collapseRequested()
         }
     }
 

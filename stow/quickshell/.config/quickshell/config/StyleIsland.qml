@@ -294,6 +294,9 @@ Singleton {
     readonly property real heroDateOpacity: 0.8
     readonly property int clockLetterSpacing: -1
     readonly property int miniArtSize: 40
+    // The home card's previous, play and next: one size for all three, a step
+    // above the base so the theme's light glyphs still read.
+    readonly property int miniTransportIconSize: StyleControl.iconSizeMd
     readonly property int heroWeatherIconSize: 20
     // Media page
     // Laid out like the iPhone's expanded Now Playing: art and two lines of
