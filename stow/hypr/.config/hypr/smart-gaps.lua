@@ -1,7 +1,13 @@
+-- dofile, not require: hyprland.lua only clears its own module list on reload,
+-- so a required value would survive an edit.
+local spacing = dofile(os.getenv("HOME") .. "/.config/hypr/spacing.lua")
+
+-- Only the gaps between windows adapt to how many there are. The outer gap is
+-- the shared spacing, so windows, bar and screen edges stay balanced.
 local gapProfiles = {
-  solo = { gaps_in = 2, gaps_out = 6 },
-  normal = { gaps_in = 2, gaps_out = 4 },
-  dense = { gaps_in = 1, gaps_out = 2 },
+  solo = { gaps_in = 1 },
+  normal = { gaps_in = 2 },
+  dense = { gaps_in = 1 },
 }
 
 local function tiledWindowCount(workspace)
@@ -37,7 +43,7 @@ local function applySmartGaps()
     profile = gapProfiles.dense
   end
 
-  hl.config({ general = profile })
+  hl.config({ general = { gaps_in = profile.gaps_in, gaps_out = spacing } })
 end
 
 for _, event in ipairs({

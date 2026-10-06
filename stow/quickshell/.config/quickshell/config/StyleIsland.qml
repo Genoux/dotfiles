@@ -1,5 +1,6 @@
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import qs
 pragma Singleton
 
@@ -7,6 +8,8 @@ pragma Singleton
 // pill, live-activity widths, and an expanded panel. Everything here is the
 // island's own vocabulary; type, spacing and radii still come from StyleTokens.
 Singleton {
+    id: root
+
     // Spacing. One value sets the air of the whole island: the page sides, the
     // gap above a page's first fill and under its last, a list's inset and a
     // grid's. It is the popovers' own `contentPaddingH`, so a bar popover and an
@@ -71,8 +74,18 @@ Singleton {
     readonly property string companions: "center"
     readonly property bool companionsSpread: companions === "spread"
     readonly property bool atTop: edge === "top"
-    readonly property int edgeMargin: StyleBar.margin
-    readonly property int reservedHeight: edgeMargin + compactHeight + StyleTokens.space4
+    // The one spacing around every window, shared with Hyprland through
+    // hypr/spacing.lua: the island floats this far off the screen edge, and
+    // Hyprland's outer gap holds windows this far from the island, so the
+    // island reserves nothing beyond itself.
+    property int spacingRevision: 0
+    readonly property int windowSpacing: {
+        const _ = spacingRevision;
+        const match = spacingFile.loaded ? spacingFile.text().match(/^\s*return\s+(\d+)\s*$/m) : null;
+        return match ? Number(match[1]) : StyleBar.margin;
+    }
+    readonly property int edgeMargin: windowSpacing
+    readonly property int reservedHeight: edgeMargin + compactHeight
     // The wide bar: the island across the screen, with no glass, at the pill's
     // height. One height keeps one exclusive zone: a different one made
     // Hyprland re-tile every window on the switch, late and on its own timing.
@@ -290,4 +303,18 @@ Singleton {
     // around it, and its gap leaves whole-pixel columns in what remains:
     // 320 - 2 * 16 - 2 * 12 divides by three.
     readonly property int tileGridGap: edgeInset
+
+    FileView {
+        id: spacingFile
+
+        path: Quickshell.env("HOME") + "/.config/hypr/spacing.lua"
+        blockLoading: true
+        watchChanges: true
+        printErrors: false
+        onLoadedChanged: root.spacingRevision++
+        onFileChanged: {
+            reload();
+            root.spacingRevision++;
+        }
+    }
 }
