@@ -12,7 +12,7 @@ Item {
     signal pageRequested(string pageId)
 
     readonly property var entries: [
-        { id: "capture", label: "Capture", icon: IconRegistry.captureIcon("idle") },
+        { id: "clipboard", label: "Clipboard", icon: IconRegistry.themeIcon("edit-paste-symbolic") },
         { id: "calendar", label: "Calendar", icon: IconRegistry.themeIcon("calendar-symbolic") },
         { id: "weather", label: "Weather", icon: IconRegistry.weatherIcon(Services.WeatherState.icon) },
         { id: "system", label: "System", icon: IconRegistry.themeIcon("utilities-system-monitor-symbolic") },

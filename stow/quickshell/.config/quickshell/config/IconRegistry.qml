@@ -191,22 +191,32 @@ Singleton {
         return ""
     }
 
+    // The entry that names this exactly, with no fuzzy matching. An app's own
+    // StartupWMClass outranks an entry that merely shares the name as its file
+    // name: "orca" is both the Orca app's declared class and the id of GNOME's
+    // Orca screen reader.
+    function declaredEntry(name) {
+        if (!name)
+            return null
+
+        const normalized = name.toLowerCase()
+        const declared = DesktopEntries.applications.values.find((entry) => (entry.startupClass || "").toLowerCase() === normalized)
+        if (declared && declared.icon)
+            return declared
+
+        const exact = DesktopEntries.byId(name)
+            ?? DesktopEntries.applications.values.find((entry) => entry.id.toLowerCase() === normalized)
+        return exact && exact.icon ? exact : null
+    }
+
     function desktopEntryForClass(className) {
         if (!className)
             return null
 
         const normalized = className.toLowerCase()
-        // An app's own StartupWMClass outranks an entry that merely shares the
-        // class as its file name: "orca" is both the Orca app's declared class
-        // and the id of GNOME's Orca screen reader.
-        const declared = DesktopEntries.applications.values.find((entry) => (entry.startupClass || "").toLowerCase() === normalized)
-        if (declared && declared.icon)
-            return declared
-
-        const exact = DesktopEntries.byId(className)
-            ?? DesktopEntries.applications.values.find((entry) => entry.id.toLowerCase() === normalized)
-        if (exact && exact.icon)
-            return exact
+        const named = declaredEntry(className)
+        if (named)
+            return named
 
         const matched = DesktopEntries.applications.values.find((entry) => {
             const startup = (entry.startupClass || "").toLowerCase()

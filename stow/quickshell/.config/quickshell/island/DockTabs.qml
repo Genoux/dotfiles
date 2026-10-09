@@ -37,8 +37,8 @@ Item {
             return IconRegistry.networkIcon(Services.Network.iconKey);
         case "bluetooth":
             return IconRegistry.bluetoothIcon(true);
-        case "clipboard":
-            return IconRegistry.themeIcon("edit-paste-symbolic");
+        case "capture":
+            return IconRegistry.captureIcon("idle");
         case "more":
             return IconRegistry.themeIcon("view-more-symbolic");
         default:

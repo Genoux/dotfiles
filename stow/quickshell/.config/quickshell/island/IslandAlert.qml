@@ -52,7 +52,8 @@ Item {
             "title": Services.Notifications.cleanText(notification.summary) || notification.appName || "",
             "body": Services.Notifications.cleanText(notification.body),
             "image": notification.image ?? "",
-            "iconName": notification.appIcon || notification.desktopEntry || "",
+            "iconName": notification.appIcon || "",
+            "desktopEntry": notification.desktopEntry || "",
             "actions": Services.Notifications.namedActions(notification)
         }
         restartExpiry()
@@ -136,6 +137,7 @@ Item {
             bare: true
             image: root.shown.image ?? ""
             iconName: root.shown.iconName ?? ""
+            desktopEntry: root.shown.desktopEntry ?? ""
         }
 
         ColumnLayout {

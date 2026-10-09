@@ -35,8 +35,8 @@ Item {
 
     // The footer holds the pages used most; the rest are one step further, on
     // the More page.
-    readonly property var tabs: ["home", "launcher", "media", "sound", "network", "bluetooth", "clipboard", "more"]
-    readonly property var morePages: ["capture", "calendar", "weather", "system", "info", "power"]
+    readonly property var tabs: ["home", "launcher", "media", "sound", "network", "bluetooth", "capture", "more"]
+    readonly property var morePages: ["clipboard", "calendar", "weather", "system", "info", "power"]
     readonly property var pages: ({
         "home": homePage,
         "launcher": launcherPage,
@@ -190,11 +190,15 @@ Item {
         keepLaidOut: true
 
         // A page that runs under the footer dissolves into it rather than being
-        // cut off above it: it is gone by the time it reaches the track.
+        // cut off above it: it is gone by the time it reaches the track. The
+        // fade is measured from the live bottom edge, not the page's own: while
+        // the shape is still growing to the page, rows that sat where the dock
+        // is were left unfaded and drew over it. Any other page is cut at the
+        // track's top while the shape is shorter than it.
         Item {
             width: parent.width
             height: parent.height
-            layer.enabled: root.pageUnderFooter
+            layer.enabled: root.pageUnderFooter || root.height < root.pageHeight + StyleIsland.footerHeight
             // OpacityMask multiplies by the mask's alpha. MultiEffect's mask is a
             // threshold map, so a gradient through it clips instead of fading.
             layer.effect: OpacityMask {
@@ -218,11 +222,20 @@ Item {
             layer.enabled: true
 
             Rectangle {
+                id: fadeRamp
+
+                readonly property real fadeStart: root.pageUnderFooter ? StyleIsland.footerFadeStart : StyleIsland.footerHeight - StyleIsland.footerInset
+                readonly property real fadeEnd: root.pageUnderFooter ? StyleIsland.footerFadeEnd : fadeStart
+
+                function stop(fromBottom) {
+                    return Math.min(1, Math.max(0, (root.height - fromBottom) / Math.max(1, height)));
+                }
+
                 anchors.fill: parent
                 gradient: Gradient {
                     GradientStop { position: 0; color: "#ff000000" }
-                    GradientStop { position: Math.max(0, 1 - StyleIsland.footerFadeStart / Math.max(1, parent.height)); color: "#ff000000" }
-                    GradientStop { position: Math.max(0, 1 - StyleIsland.footerFadeEnd / Math.max(1, parent.height)); color: StyleTokens.transparent }
+                    GradientStop { position: fadeRamp.stop(fadeRamp.fadeStart); color: "#ff000000" }
+                    GradientStop { position: fadeRamp.stop(fadeRamp.fadeEnd); color: StyleTokens.transparent }
                     GradientStop { position: 1; color: StyleTokens.transparent }
                 }
             }

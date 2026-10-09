@@ -89,7 +89,8 @@ Rectangle {
             Layout.preferredWidth: StyleNotification.iconSize
             Layout.preferredHeight: StyleNotification.iconSize
             image: root.notification?.image ?? ""
-            iconName: root.notification?.appIcon || root.notification?.desktopEntry || ""
+            iconName: root.notification?.appIcon ?? ""
+            desktopEntry: root.notification?.desktopEntry ?? ""
         }
 
         ColumnLayout {

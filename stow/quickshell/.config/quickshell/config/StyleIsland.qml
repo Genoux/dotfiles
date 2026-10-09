@@ -248,7 +248,7 @@ Singleton {
     // Concentric with alertRadius: the icon, the actions and the X sit on the
     // same 14px from the edge.
     readonly property int alertPadding: 14
-    readonly property int alertIconSize: 36
+    readonly property int alertIconSize: 32
     readonly property int alertIconGap: StyleTokens.space12
     readonly property int alertTitleGap: StyleTokens.space2
     readonly property int alertBodyLines: 1

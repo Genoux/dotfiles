@@ -13,11 +13,20 @@ Item {
 
     property string image: ""
     property string iconName: ""
+    property string desktopEntry: ""
     property bool bare: false
 
     readonly property bool hasImage: image.length > 0
-    readonly property string iconSource: Quickshell.iconPath(root.iconName || "dialog-information-symbolic", "dialog-information-symbolic")
+    // A name that is an app's desktop entry shows that entry's Icon=, not the
+    // theme icon of the same name. Quickshell moves a sender's desktop-entry
+    // hint into appIcon, so an icon name may be an entry id in disguise; only
+    // exact matches count, so a stock name never borrows an app's icon.
+    readonly property var namedEntry: IconRegistry.declaredEntry(desktopEntry) ?? IconRegistry.declaredEntry(iconName)
+    readonly property string entryIcon: namedEntry ? Quickshell.iconPath(namedEntry.icon, true) : ""
+    readonly property string iconSource: entryIcon
+        || Quickshell.iconPath(root.iconName || root.desktopEntry || "dialog-information-symbolic", "dialog-information-symbolic")
     readonly property bool symbolic: iconSource.includes("-symbolic") || iconSource.includes("/symbolic/")
+
 
     ClippingRectangle {
         anchors.fill: parent
