@@ -17,6 +17,12 @@ input_path = "~/.config/matugen/templates/kitty.conf"
 output_path = "~/.config/kitty/matugen-theme.conf"
 post_hook = "kill -SIGUSR1 $(pgrep kitty) 2>/dev/null || true"
 
+# Ghostty - selected via theme = matugen in stow/ghostty/.config/ghostty/config
+[templates.ghostty]
+input_path = "~/.config/matugen/templates/ghostty"
+output_path = "~/.config/ghostty/themes/matugen"
+post_hook = "pkill -USR2 -x ghostty 2>/dev/null || true"
+
 # Btop - selected via color_theme = "matugen" in btop.conf
 [templates.btop]
 input_path = "~/.config/matugen/templates/btop.theme"

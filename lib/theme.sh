@@ -13,6 +13,7 @@ CURRENT_WALLPAPER="$HOME/.config/hypr/wallpapers/current/current_wallpaper.jpg"
 
 declare -a MATUGEN_OUTPUTS=(
     "$HOME/.config/kitty/matugen-theme.conf"
+    "$HOME/.config/ghostty/themes/matugen"
     "$HOME/.config/btop/themes/matugen.theme"
     "$HOME/.config/quickshell/colors.json"
     "$HOME/.config/starship.toml"
