@@ -163,11 +163,11 @@ export VISUAL="$EDITOR"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
 # Created by `pipx` on 2025-05-19 14:48:23
-export PATH="$PATH:/home/john/.local/bin"
+export PATH="$PATH:$HOME/.local/bin"
 
 # Console Ninja extension (only add if directory exists)
-if [ -d "/home/john/.console-ninja/.bin" ]; then
-    export PATH="$PATH:/home/john/.console-ninja/.bin"
+if [ -d "$HOME/.console-ninja/.bin" ]; then
+    export PATH="$PATH:$HOME/.console-ninja/.bin"
 fi
 
 # Wayland environment
@@ -187,7 +187,7 @@ export NVM_DIR="$HOME/.nvm"
 export PATH=~/.npm-global/bin:$PATH
 
 # pnpm
-export PNPM_HOME="/home/john/.local/share/pnpm"
+export PNPM_HOME="$HOME/.local/share/pnpm"
 case ":$PATH:" in
   *":$PNPM_HOME:"*) ;;
   *) export PATH="$PNPM_HOME:$PATH" ;;
@@ -226,10 +226,10 @@ fi
 export PATH="$HOME/development/flutter/bin:$PATH"
 
 # opencode
-export PATH=/home/john/.opencode/bin:$PATH
+export PATH=$HOME/.opencode/bin:$PATH
 
 # bun completions
-[ -s "/home/john/.bun/_bun" ] && source "/home/john/.bun/_bun"
+[ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
 
 # bun
 export BUN_INSTALL="$HOME/.bun"
@@ -239,7 +239,7 @@ export PATH="$HOME/.local/bin:$PATH"
 export PATH="$HOME/.cargo/bin:$PATH"
 
 # >>> Codex installer >>>
-export PATH="/home/john/.local/bin:$PATH"
+export PATH="$HOME/.local/bin:$PATH"
 # <<< Codex installer <<<
 
 # Run a command in a memory-capped cgroup scope, so one runaway dev server
