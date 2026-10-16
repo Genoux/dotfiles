@@ -19,18 +19,12 @@ Item {
     readonly property real position: player && player.positionSupported ? player.position : 0
     readonly property bool seekable: length > 0 && !Services.MediaPlayers.isLiveStream(player)
     readonly property bool canChoose: players.length > 1
+    signal pageRequested(string requestedPage)
 
     implicitWidth: StyleIsland.pageWidth
     implicitHeight: column.implicitHeight + StyleIsland.pagePaddingTop + StyleIsland.pagePaddingBottom
     width: implicitWidth
     height: implicitHeight
-
-    // The source badge steps through the players rather than opening a list:
-    // a list grew the page under the dock while the island resized.
-    function selectNextPlayer() {
-        const index = players.indexOf(player);
-        Services.MediaPlayers.selectPlayer(players[(index + 1) % players.length]);
-    }
 
     function formatTime(seconds) {
         const total = Math.max(0, Math.floor(seconds));
@@ -59,54 +53,44 @@ Item {
             Layout.fillWidth: true
             spacing: StyleTokens.space12
 
-            Item {
+            ArtImage {
                 Layout.preferredWidth: StyleIsland.artSize
                 Layout.preferredHeight: StyleIsland.artSize
+                radius: StyleIsland.artRadius
+                source: Services.MediaPlayers.artUrl(root.player)
+                isIcon: Services.MediaPlayers.isSiteIcon(root.player)
 
-                ArtImage {
+                // The way to the other sources, shown on hover rather than
+                // standing on the page as chrome.
+                Rectangle {
                     anchors.fill: parent
                     radius: StyleIsland.artRadius
-                    source: Services.MediaPlayers.artUrl(root.player)
-                    isIcon: Services.MediaPlayers.isSiteIcon(root.player)
-                }
+                    color: StyleIsland.artScrim
+                    opacity: artArea.containsMouse ? 1 : 0
 
-                // Which app is playing, on the art's corner the way macOS and
-                // Android mark it. Shown only when there is a choice; clicking it
-                // steps to the next player.
-                Rectangle {
-                    anchors.right: parent.right
-                    anchors.bottom: parent.bottom
-                    anchors.rightMargin: -StyleIsland.sourceBadgeOverhang
-                    anchors.bottomMargin: -StyleIsland.sourceBadgeOverhang
-                    width: StyleIsland.sourceBadgeSize
-                    height: width
-                    radius: width / 2
-                    visible: root.canChoose
-                    color: StyleIsland.surface
-                    scale: sourceArea.containsMouse ? StyleIsland.sourceBadgeHoverScale : 1
-
-                    Behavior on scale {
+                    Behavior on opacity {
                         NumberAnimation {
                             duration: StyleTokens.motionFeedbackDuration
-                            easing.type: StyleTokens.easeStandard
+                            easing.type: StyleTokens.easeFade
                         }
                     }
 
                     ThemedIcon {
                         anchors.centerIn: parent
-                        size: StyleIsland.sourceIconSize
-                        source: IconRegistry.playerIcon(root.player)
-                        colored: true
+                        size: StyleControl.iconSizeMd
+                        source: IconRegistry.themeIcon("view-list-symbolic")
+                        tint: Colors.base07
                     }
+                }
 
-                    MouseArea {
-                        id: sourceArea
+                MouseArea {
+                    id: artArea
 
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.selectNextPlayer()
-                    }
+                    anchors.fill: parent
+                    enabled: root.canChoose
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.pageRequested("sources")
                 }
             }
 
@@ -162,12 +146,13 @@ Item {
             Layout.fillWidth: true
             Layout.topMargin: StyleIsland.mediaScrubberGap
             spacing: StyleTokens.space8
-            // A source with no timeline (a live stream) has nothing to show.
-            visible: root.seekable
-            opacity: root.player && root.player.canSeek ? 1 : StyleTokens.opacityDisabled
+            // Kept, dimmed, for a source with no timeline: hiding it made the
+            // page's height depend on the player, so every source switch
+            // resized the island under the dock.
+            opacity: root.seekable && root.player.canSeek ? 1 : StyleTokens.opacityDisabled
 
             Text {
-                text: root.formatTime(root.position)
+                text: root.seekable ? root.formatTime(root.position) : "--:--"
                 color: Colors.base04
                 font.family: StyleTokens.fontSans
                 font.pixelSize: StyleTokens.fontSizeXs
@@ -176,13 +161,13 @@ Item {
 
             Slider {
                 Layout.fillWidth: true
-                enabled: !!root.player && root.player.canSeek
-                value: root.length > 0 ? root.position / root.length : 0
+                enabled: root.seekable && root.player.canSeek
+                value: root.seekable ? root.position / root.length : 0
                 onMoved: (fraction) => root.player.position = fraction * root.length
             }
 
             Text {
-                text: "-" + root.formatTime(root.length - root.position)
+                text: root.seekable ? "-" + root.formatTime(root.length - root.position) : "--:--"
                 color: Colors.base04
                 font.family: StyleTokens.fontSans
                 font.pixelSize: StyleTokens.fontSizeXs
@@ -240,4 +225,5 @@ Item {
             }
         }
     }
+
 }

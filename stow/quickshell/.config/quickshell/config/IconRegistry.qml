@@ -24,6 +24,7 @@ Singleton {
         dotfiles: "utilities-terminal-symbolic",
         info: "emblem-favorite-symbolic",
         launcher: "system-search-symbolic",
+        nebula: "audio-chat-symbolic",
         power: "system-shutdown-symbolic",
         camera: "camera-video-symbolic",
         microphone: "audio-input-microphone-symbolic",

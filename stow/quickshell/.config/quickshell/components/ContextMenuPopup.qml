@@ -38,11 +38,21 @@ Item {
     // method call, so as a declarative binding it would latch onto a
     // pre-layout value at construction and never update.
     property real anchorLeft: 0
+    property real anchorTop: 0
 
     readonly property int screenWidth: (root.barWindow && root.barWindow.screen) ? root.barWindow.screen.width : 0
+    // Measured from the item's top, as BarPopover does: the island's window is
+    // as tall as its largest panel, so its height alone floated the menu far
+    // above the icon.
+    readonly property int bottomMargin: {
+        const barHeight = root.barWindow ? root.barWindow.height : 0;
+        return Math.round(Math.max(0, barHeight - root.anchorTop + StylePopover.barGap));
+    }
 
     function resolveAnchor() {
-        anchorLeft = anchorItem.mapToItem(null, 0, 0).x;
+        const origin = anchorItem.mapToItem(null, 0, 0);
+        anchorLeft = origin.x;
+        anchorTop = origin.y;
     }
 
     function toggle() {
@@ -110,7 +120,7 @@ Item {
                 const rightLimit = root.screenWidth > 0 ? root.screenWidth - slot.width : root.anchorLeft;
                 return Math.round(Math.max(0, Math.min(root.anchorLeft, rightLimit)));
             }
-            bottom: (root.barWindow ? root.barWindow.height : 0) + StylePopover.barGap
+            bottom: root.bottomMargin
         }
 
         Connections {

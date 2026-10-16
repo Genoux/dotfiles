@@ -312,14 +312,13 @@ Singleton {
     readonly property int mediaScrubberGap: StyleTokens.space20
     readonly property int mediaTransportGap: StyleTokens.space8
     readonly property int transportHitSize: 44
-    readonly property int transportIconSize: 24
+    readonly property int transportIconSize: 20
     readonly property int transportPrimaryIconSize: 32
     readonly property int transportSpacing: StyleTokens.space20
-    // The playing app's badge on the art's corner, overhanging it slightly.
-    readonly property int sourceBadgeSize: 22
-    readonly property int sourceIconSize: 16
-    readonly property int sourceBadgeOverhang: StyleTokens.space4
-    readonly property real sourceBadgeHoverScale: 1.1
+    readonly property color artScrim: heroScrim
+    readonly property int sourceArtSize: 32
+    readonly property int sourceRowHeight: sourceArtSize + fillInset * 2
+    readonly property int sourceRowSpacing: StyleTokens.space4
     // Position is published by the player only on request, so a playing track
     // is re-read on this cadence for the progress bar to move.
     readonly property int positionPollInterval: 1000

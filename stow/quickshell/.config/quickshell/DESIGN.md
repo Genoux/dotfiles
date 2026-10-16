@@ -423,17 +423,24 @@ wrap — the same shape `HoverRow` already uses.
   title and artist at the same 14px (DemiBold `base07` over regular `base04`),
   the waveform beside the track, faded out when paused, a seek bar with a solid `base07` fill on an `alphaActive` track and
   times in the shell's sans with tabular figures, then the theme's transport
-  glyphs bare. Play/pause stands out by size alone (32 against 24) on 44px hit
+  glyphs bare. Play/pause stands out by size alone (32 against 20) on 44px hit
   targets; no pill track, no solid disc.
 - The waveform is a full 16-bar `CavaVisualizer` beside the track, in the
   palette accent; the compact pill keeps its own four small bars. Each instance
   runs cava at exactly its bar count.
-- A source with no timeline, a live stream, has no seek row at all.
-- The playing app is a small badge on the art's corner, the way macOS and
-  Android mark it, shown only when there is more than one player; clicking it
-  steps to the next. There is no list: one grew the page under the dock while
-  the island resized, and a button at the end of the transport row read as a
-  stray control.
+- A source with no timeline (a live stream, a browser that reports no length)
+  keeps its seek row, dimmed, with `--:--` times. The page's height never
+  depends on which player it shows, so switching sources never resizes the
+  island.
+- With more than one player, hovering the art darkens it under a list glyph;
+  clicking it opens the sources page: every source as a row (art, track,
+  artist, app icon), sized to its rows, with the media tab still lit. Picking
+  one makes it the player and returns. Moving between them is an ordinary page
+  change, out, resize, in, so nothing draws over the dock. Not page dots (a
+  band of the page for nothing), not a badge on the art's corner (it stepped
+  through sources a click at a time), not a segmented bar (too heavy), not a
+  list inside the media page (it either grew the page under the dock or left
+  empty space), not a button at the end of the transport row (a stray control).
 - Every page owns the air above it: header pages centre their title in the
   header band, home and the launcher start on the 8px fill inset, the media
   page on its 16px side padding.

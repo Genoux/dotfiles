@@ -37,10 +37,15 @@ Item {
     // the More page.
     readonly property var tabs: ["home", "launcher", "media", "sound", "network", "bluetooth", "capture", "more"]
     readonly property var morePages: ["clipboard", "calendar", "weather", "system", "info", "power"]
+    // A page reached from inside another keeps that page's tab lit.
+    readonly property var subPages: ({
+        "sources": "media"
+    })
     readonly property var pages: ({
         "home": homePage,
         "launcher": launcherPage,
         "media": mediaPage,
+        "sources": sourcesPage,
         "sound": soundPage,
         "network": networkPage,
         "bluetooth": bluetoothPage,
@@ -53,7 +58,7 @@ Item {
         "info": infoPage,
         "power": powerPage
     })
-    readonly property string shownTab: morePages.includes(shownPageId) ? "more" : shownPageId
+    readonly property string shownTab: morePages.includes(shownPageId) ? "more" : subPages[shownPageId] ?? shownPageId
     readonly property int tabIndex: tabs.indexOf(shownTab)
     readonly property bool pageLive: active && !switching
     readonly property bool wantsKeyboard: {
@@ -194,11 +199,13 @@ Item {
         // fade is measured from the live bottom edge, not the page's own: while
         // the shape is still growing to the page, rows that sat where the dock
         // is were left unfaded and drew over it. Any other page is cut at the
-        // track's top while the shape is shorter than it.
+        // track's top while the shape is shorter than it, measured against its
+        // live height: `pageHeight` trails a page that grows in place by the
+        // settle delay, long enough for its new rows to draw over the dock.
         Item {
             width: parent.width
             height: parent.height
-            layer.enabled: root.pageUnderFooter || root.height < root.pageHeight + StyleIsland.footerHeight
+            layer.enabled: root.pageUnderFooter || root.height < (pageLoader.item ? pageLoader.item.implicitHeight : 0) + StyleIsland.footerHeight
             // OpacityMask multiplies by the mask's alpha. MultiEffect's mask is a
             // threshold map, so a gradient through it clips instead of fading.
             layer.effect: OpacityMask {
@@ -304,6 +311,15 @@ Item {
         id: mediaPage
 
         MediaPage {
+            onPageRequested: (requestedPage) => root.pageSelected(requestedPage)
+        }
+    }
+
+    Component {
+        id: sourcesPage
+
+        MediaSourcesPage {
+            onPageRequested: (requestedPage) => root.pageSelected(requestedPage)
         }
     }
 

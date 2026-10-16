@@ -132,6 +132,11 @@ else
     PROMPT='%F{blue}%n@%m%f %F{green}%~%f %# '
 fi
 
+# zoxide: smarter cd (z <dir>)
+if command -v zoxide &>/dev/null; then
+    eval "$(zoxide init zsh)"
+fi
+
 # User configuration
 
 # export MANPATH="/usr/local/man:$MANPATH"

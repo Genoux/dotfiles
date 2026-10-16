@@ -81,6 +81,14 @@ Item {
                         onActivated: root.pageRequested(modelData.id)
                     }
                 }
+
+                PopoverTile {
+                    width: root.tileWidth
+                    label: "Nebula"
+                    iconSource: IconRegistry.barControlIcon("nebula")
+                    active: Services.Nebula.active
+                    onActivated: Services.Nebula.toggle()
+                }
             }
         }
     }

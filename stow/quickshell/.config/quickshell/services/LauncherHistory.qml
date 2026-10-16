@@ -158,14 +158,9 @@ Singleton {
         id: historyFile
 
         path: root.historyPath
-        watchChanges: true
         printErrors: false
 
         onLoadedChanged: root.syncFromFile()
-        onFileChanged: {
-            reload()
-            root.syncFromFile()
-        }
 
         JsonAdapter {
             property list<string> recent: []

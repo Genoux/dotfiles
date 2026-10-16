@@ -5,6 +5,7 @@
 import QtQuick
 import Quickshell
 import Quickshell.Hyprland
+import Quickshell.Services.SystemTray
 import Quickshell.Wayland
 import Quickshell.Widgets
 import qs.bar.widgets as Widgets
@@ -378,6 +379,9 @@ PanelWindow {
                                     screen: root.screen
                                 }
 
+                                Widgets.Nebula {
+                                }
+
                                 Widgets.Volume {
                                     barWindow: root
                                 }
@@ -573,6 +577,49 @@ PanelWindow {
 
     }
 
+    // Placed like the recording, which rides outside it: the recording widens
+    // on hover and would otherwise shove the tray. The wide bar has its own.
+    // Gated on the service, not the widget's own `visible`, which reads false
+    // whenever this veil is hidden and so could never bring it back.
+    Veil {
+        id: trayVeil
+
+        LayoutMirroring.enabled: StyleIsland.companionsSpread || StyleIsland.align === "right"
+        anchors.left: StyleIsland.companionsSpread ? parent.left : morph.right
+        anchors.leftMargin: StyleIsland.companionsSpread ? StyleIsland.edgeMargin : StyleIsland.companionGap
+        anchors.top: StyleIsland.atTop ? morph.top : undefined
+        anchors.bottom: StyleIsland.atTop ? undefined : morph.bottom
+        width: trayPill.width
+        height: trayPill.height
+        veil: SystemTray.items.values.length > 0 && !root.wideLayout ? 0 : 1
+
+        Behavior on veil {
+            NumberAnimation {
+                duration: StyleIsland.layoutFadeDuration
+                easing.type: StyleIsland.veilEasing
+            }
+        }
+
+        // Inset by the same distance on every side, so the icons' hover fill
+        // stays concentric with the capsule.
+        Rectangle {
+            id: trayPill
+
+            width: tray.width + height - tray.height
+            height: StyleIsland.compactHeight
+            radius: height / 2
+            color: StyleIsland.surface
+
+            Widgets.SystemTray {
+                id: tray
+
+                anchors.centerIn: parent
+                border.width: 0
+                barWindow: root
+            }
+        }
+    }
+
     // Laid out for the island's right flank, opening rightward; mirrored, it
     // takes the left flank, or the screen's right edge when spread, and opens
     // leftward, so it always opens away from what it is anchored to.
@@ -582,8 +629,8 @@ PanelWindow {
 
         LayoutMirroring.enabled: StyleIsland.companionsSpread || StyleIsland.align === "right"
         LayoutMirroring.childrenInherit: true
-        anchors.left: StyleIsland.companionsSpread ? parent.left : morph.right
-        anchors.leftMargin: StyleIsland.companionsSpread ? StyleIsland.edgeMargin : StyleIsland.companionGap
+        anchors.left: trayVeil.visible ? trayVeil.right : StyleIsland.companionsSpread ? parent.left : morph.right
+        anchors.leftMargin: StyleIsland.companionsSpread && !trayVeil.visible ? StyleIsland.edgeMargin : StyleIsland.companionGap
         anchors.top: StyleIsland.atTop ? morph.top : undefined
         anchors.bottom: StyleIsland.atTop ? undefined : morph.bottom
         width: recordingPill.width
@@ -635,6 +682,10 @@ PanelWindow {
 
     mask: Region {
         item: morph
+
+        Region {
+            item: trayVeil.visible ? trayVeil : null
+        }
 
         Region {
             item: recordingVeil.visible ? recordingVeil : null
