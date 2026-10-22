@@ -16,6 +16,7 @@ Item {
     // and drops the surface, shadow, reveal scale and inset, so its rules run
     // edge to edge.
     property bool embedded: false
+    property int radius: StyleTokens.radiusXl
     // An embedded page that ends on its own bottom edge (a list that scrolls to
     // the island's footer, or a page with its own inset) opts out of the air the
     // island otherwise leaves beneath a page's last row.
@@ -195,7 +196,7 @@ Item {
 
         visible: !panel.embedded
         anchors.fill: parent
-        radius: StyleTokens.radiusXl
+        radius: panel.radius
         color: StyleOverlay.surface
     }
 

@@ -67,6 +67,11 @@ Rectangle {
     // into the corner on its way out.
     property Item shownTarget: null
 
+    // A list scanned at speed, a context menu above all, wants the fill on the
+    // row under the pointer at once: travelling, it trails the pointer down
+    // the list.
+    property bool slides: true
+
     // A first appearance must not travel from wherever the last one died.
     property bool travels: false
 
@@ -117,9 +122,9 @@ Rectangle {
         if (!target)
             return
 
-        travels = opacity > 0
+        travels = slides && opacity > 0
         shownTarget = target
-        travels = true
+        travels = slides
     }
 
     Behavior on x {

@@ -92,6 +92,9 @@ BarGroup {
                         TrayMenu {
                             active: trayPopover.open
                             trayItem: trayDelegate.modelData
+                            screen: root.barWindow.screen
+                            originX: trayPopover.windowLeft
+                            originY: trayPopover.windowTop
                             onCloseRequested: trayPopover.open = false
                             onDismissFinished: trayPopover.finishDismissal()
                         }

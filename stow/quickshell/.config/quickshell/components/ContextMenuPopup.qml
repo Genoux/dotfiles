@@ -49,6 +49,21 @@ Item {
         return Math.round(Math.max(0, barHeight - root.anchorTop + StylePopover.barGap));
     }
 
+    readonly property int screenHeight: (root.barWindow && root.barWindow.screen) ? root.barWindow.screen.height : 0
+
+    // Aligned to the item's left edge rather than centred on it. Clamping to
+    // the screen makes it right-align on its own near the far edge, which is
+    // what a menu spawned by the last tray icon should do. screenWidth is 0
+    // until the bar window resolves; clamping against it then yields a negative
+    // bound and slams the menu to x=0, so the right-edge clamp waits for it.
+    readonly property int windowLeft: {
+        const rightLimit = root.screenWidth > 0 ? root.screenWidth - slot.width : root.anchorLeft;
+        return Math.round(Math.max(0, Math.min(root.anchorLeft, rightLimit)));
+    }
+    // The window is bottom-anchored, so its top edge is derived. Submenus
+    // position against these screen coordinates.
+    readonly property int windowTop: screenHeight - bottomMargin - slot.height
+
     function resolveAnchor() {
         const origin = anchorItem.mapToItem(null, 0, 0);
         anchorLeft = origin.x;
@@ -109,17 +124,8 @@ Item {
                 root.resolveAnchor();
         }
 
-        // Aligned to the item's left edge rather than centred on it. Clamping
-        // to the screen makes it right-align on its own near the far edge,
-        // which is what a menu spawned by the last tray icon should do.
         margins {
-            // screenWidth is 0 until the bar window resolves. Clamping against
-            // it while it is 0 yields a negative bound and slams the menu to
-            // x=0, so skip the right-edge clamp until it is known.
-            left: {
-                const rightLimit = root.screenWidth > 0 ? root.screenWidth - slot.width : root.anchorLeft;
-                return Math.round(Math.max(0, Math.min(root.anchorLeft, rightLimit)));
-            }
+            left: root.windowLeft
             bottom: root.bottomMargin
         }
 
@@ -134,7 +140,7 @@ Item {
 
         HyprlandFocusGrab {
             active: root.open && PopoverCoordinator.current === root
-            windows: [root.barWindow, overlay]
+            windows: [root.barWindow, overlay].concat(PopoverCoordinator.grabPassthroughWindows)
             onCleared: {
                 if (PopoverCoordinator.current === root)
                     root.open = false;

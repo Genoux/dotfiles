@@ -8,6 +8,8 @@ Rectangle {
     required property string label
     property bool separator: false
     property bool actionEnabled: true
+    // Holds the hover look while something this row opened is still showing.
+    property bool pinned: false
 
     // Metrics default to the bar-panel row; a context menu overrides them for
     // tighter rows and narrower gutters.
@@ -23,15 +25,22 @@ Rectangle {
     }
     implicitHeight: {
         if (separator)
-            return StylePopover.separatorHeight;
+            return StylePopover.separatorHeight + StylePopover.separatorGap * 2;
         return rowHeight;
     }
     radius: separator ? 0 : StylePopover.listRowRadius
-    // A menu row's hover fill is painted by its list's travelling indicator;
-    // only the separator keeps a colour of its own.
-    color: separator ? StyleOverlay.borderSubtle : StyleTokens.transparent
+    // A menu row's hover fill is painted by its list's travelling indicator.
+    color: StyleTokens.transparent
 
-    readonly property bool hovered: !separator && mouseArea.containsMouse
+    readonly property bool hovered: !separator && (pinned || mouseArea.containsMouse)
+
+    Rectangle {
+        visible: action.separator
+        anchors.verticalCenter: parent.verticalCenter
+        width: parent.width
+        height: StylePopover.separatorHeight
+        color: StyleOverlay.borderSubtle
+    }
 
     Text {
         id: labelText

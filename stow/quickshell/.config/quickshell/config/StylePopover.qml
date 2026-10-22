@@ -21,6 +21,9 @@ Singleton {
     readonly property int contentPaddingH: StyleTokens.space16
     readonly property int rowHeight: 32
     readonly property int separatorHeight: StyleTokens.borderWidth
+    // Air between a menu rule and the rows either side, so a row's hover fill
+    // never touches the line.
+    readonly property int separatorGap: StyleTokens.space4
     readonly property int panelMotionDuration: 100
     readonly property real panelStartScale: 0.99
     readonly property int panelMotionEasing: StyleTokens.easeStandard
@@ -35,7 +38,14 @@ Singleton {
     readonly property int contextMenuMaxWidth: 360
     readonly property int contextMenuRowHeight: 28
     readonly property int contextMenuPaddingH: StyleTokens.space12
-    readonly property int contextMenuPaddingV: StyleTokens.space4
+    // Concentric with the row hover: the fill sits `padding` in from every
+    // edge, so the surface's corner is the row's corner plus that inset.
+    readonly property int contextMenuRadius: listRowRadius + padding
+    // Hover must rest this long before a submenu opens or closes, so a diagonal
+    // move from a row toward its submenu does not cross a neighbour and swap it.
+    readonly property int contextMenuSubmenuDelay: 180
+    // A submenu tucks under its parent's edge instead of butting against it.
+    readonly property int contextMenuSubmenuOverlap: StyleTokens.space4
 
     // Weather popover — the hero and stats bands are taller than a list row
     // because each holds stacked figures rather than a single line. Both are
