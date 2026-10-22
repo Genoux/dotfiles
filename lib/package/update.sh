@@ -225,6 +225,12 @@ packages_update() {
         fi
     fi
 
+    if ! $update_failed && command -v flatpak &>/dev/null \
+        && ! run_command_logged "Update Flatpak apps" flatpak update -y --noninteractive; then
+        update_failed=true
+        failure_message="System update failed: Flatpak update failed"
+    fi
+
     _restore_npmrc "$npmrc_backup"
 
     finish_logging
