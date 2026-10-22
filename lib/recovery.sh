@@ -216,7 +216,7 @@ auto_recover() {
 
     # Check critical packages
     local missing_critical=()
-    for pkg in hyprland kitty stow gum; do
+    for pkg in hyprland ghostty stow gum; do
         if ! command -v "$pkg" &>/dev/null && ! pacman -Qq "$pkg" &>/dev/null; then
             missing_critical+=("$pkg")
         fi
@@ -230,7 +230,7 @@ auto_recover() {
 
     # Check configs
     local missing_configs=()
-    for config in hypr kitty; do
+    for config in hypr ghostty; do
         if [[ ! -L "$HOME/.config/$config" ]] && [[ ! -d "$HOME/.config/$config" ]]; then
             missing_configs+=("$config")
         fi
@@ -261,11 +261,11 @@ emergency_shell() {
     log_section "Emergency Shell"
 
     # Ensure basic terminal works
-    if ! command -v kitty &>/dev/null; then
-        log_error "Kitty not installed"
+    if ! command -v ghostty &>/dev/null; then
+        log_error "Ghostty not installed"
 
         # Try alternatives
-        for term in alacritty foot wezterm; do
+        for term in kitty alacritty foot wezterm; do
             if command -v "$term" &>/dev/null; then
                 log_info "Using $term as fallback terminal"
                 export TERMINAL="$term"
@@ -288,7 +288,7 @@ emergency_shell() {
         local minimal_conf="/tmp/hyprland-minimal.conf"
         cat > "$minimal_conf" <<'EOF'
 monitor=,preferred,auto,1
-exec-once = kitty || alacritty || foot
+exec-once = ghostty || kitty || alacritty || foot
 input {
     kb_layout = us
     follow_mouse = 1

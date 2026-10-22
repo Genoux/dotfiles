@@ -223,7 +223,7 @@ BOLD="$(tput bold)"
 # prefix as 3 printable columns and under-pads the logo, so keep the reset pure CSI.
 RESET=$'\e[0m'
 if ((termColors)); then
-	# ANSI blue (4) / bright blue (12) — matches matugen Kitty primary on color4/color12 (accent)
+	# ANSI blue (4) / bright blue (12) — matches matugen Ghostty primary on color4/color12 (accent)
 	BROWN="$BOLD$(tput setaf 12)"
 	DARK_BROWN="$BOLD$(tput setaf 4)"
 	DARK_GREEN="$BOLD$(tput setaf 10)" # bright green (dying)

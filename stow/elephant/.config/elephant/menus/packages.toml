@@ -6,15 +6,15 @@ icon = "system-software-install"
 [[entries]]
 icon = "list-add-symbolic"
 text = "Install Package (Official)"
-actions = { install = "kitty --class=PackageManager -e system-package-install" }
+actions = { install = "ghostty --class=tui.package-manager -e system-package-install" }
 
 [[entries]]
 icon = "list-add-symbolic"
 text = "Install Package (AUR)"
-actions = { install_aur = "kitty --class=PackageManager -e system-package-install-aur" }
+actions = { install_aur = "ghostty --class=tui.package-manager -e system-package-install-aur" }
 
 [[entries]]
 icon = "list-remove-symbolic"
 text = "Remove Package"
-actions = { remove = "kitty --class=PackageManager -e system-package-remove" }
+actions = { remove = "ghostty --class=tui.package-manager -e system-package-remove" }
 

@@ -64,8 +64,8 @@ Singleton {
             fastfetch --logo none --pipe --separator '${root.separator}' \
                 --structure Title:Host:CPU:GPU:Display:Memory:OS:Kernel:WM:Uptime || exit $?
             df -h / | awk 'NR==2 {printf "Storage=|=%s / %s (%s)\\n", $3, $2, $5}'
-            printf 'Terminal=|=%s\\n' "$(kitty --version | cut -d ' ' -f 1,2)"
-            awk '/^font_family[[:space:]]/ {$1=""; family=substr($0,2)} /^font_size[[:space:]]/ {size=$2} END {if (family) printf "Font=|=%s (%spt)\\n", family, size}' ~/.config/kitty/kitty.conf
+            printf 'Terminal=|=%s\\n' "$(ghostty --version | head -n 1)"
+            awk -F' *= *' '$1 == "font-family" {family=$2} $1 == "font-size" {size=$2} END {if (family) printf "Font=|=%s (%spt)\\n", family, size}' ~/.config/ghostty/config
             if test -f ~/.config/matugen/dotfiles-gum.env; then
                 printf 'Theme=|=matugen\\n'
             fi

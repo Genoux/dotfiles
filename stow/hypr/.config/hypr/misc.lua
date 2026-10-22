@@ -9,7 +9,7 @@ hl.config({
     animate_manual_resizes = false,
     animate_mouse_windowdragging = false,
     enable_swallow = false,
-    swallow_regex = "(foot|kitty|alacritty|Alacritty)",
+    swallow_regex = "(foot|com\\.mitchellh\\.ghostty|alacritty|Alacritty)",
     on_focus_under_fullscreen = 2,
     allow_session_lock_restore = false,
     session_lock_xray = true,

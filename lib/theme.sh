@@ -12,7 +12,6 @@ MATUGEN_CONFIG="$HOME/.config/matugen/config.toml"
 CURRENT_WALLPAPER="$HOME/.config/hypr/wallpapers/current/current_wallpaper.jpg"
 
 declare -a MATUGEN_OUTPUTS=(
-    "$HOME/.config/kitty/matugen-theme.conf"
     "$HOME/.config/ghostty/themes/matugen"
     "$HOME/.config/btop/themes/matugen.theme"
     "$HOME/.config/quickshell/colors.json"
@@ -66,7 +65,7 @@ matugen_generate_from_wallpaper() {
     fi
 
     # On a fresh machine there is no current wallpaper yet, so seed one from the
-    # shipped saves/ — otherwise themes (kitty, starship, btop, ...) never get
+    # shipped saves/ — otherwise themes (ghostty, starship, btop, ...) never get
     # generated on install.
     if [[ ! -f "$wallpaper" ]]; then
         local seed

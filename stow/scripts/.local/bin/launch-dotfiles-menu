@@ -25,9 +25,9 @@ if hyprctl clients 2>/dev/null | grep -q "^[[:space:]]*title: $TERMINAL_TITLE$";
     hyprctl dispatch "hl.dsp.focus({ window = $(lua_string "title:$TERMINAL_TITLE") })" 2>/dev/null
 else
     # Launch new instance with specific size
-    kitty --class=dotfiles-manager --title "$TERMINAL_TITLE" \
-        -o initial_window_width=80c \
-        -o initial_window_height=25c \
-        env DOTFILES_MENU_DISPLAY=1 "$0" 2>/dev/null &
+    ghostty --class=tui.dotfiles-manager --title="$TERMINAL_TITLE" \
+        --window-width=80 \
+        --window-height=25 \
+        -e env DOTFILES_MENU_DISPLAY=1 "$0" 2>/dev/null &
 fi
 

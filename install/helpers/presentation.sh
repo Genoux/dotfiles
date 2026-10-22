@@ -2,7 +2,7 @@
 # Presentation helpers - gum-powered UI components
 # Requires: gum (charmbracelet/gum)
 
-# Configure gum from matugen (same pipeline as kitty).
+# Configure gum from matugen (same pipeline as ghostty).
 # 1) Source ~/.config/matugen/dotfiles-gum.env (written by matugen)
 # 2) Else 256-color fallbacks
 configure_gum_colors() {

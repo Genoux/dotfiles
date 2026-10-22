@@ -45,7 +45,7 @@ hl.env("ELECTRON_DISABLE_DEFAULT_MENU_BAR", "1")
 hl.env("GTK_THEME", "MacTahoe-Dark")
 hl.env("XCURSOR_PATH", home .. "/.local/share/icons:" .. home .. "/.icons:/usr/share/icons:/usr/share/pixmaps")
 
-hl.env("TERMINAL", "kitty")
+hl.env("TERMINAL", "ghostty")
 hl.env("JAVA_AWT_WM_NONREPARENTING", "1")
 hl.env("GDK_SCALE", "1")
 hl.env("QT_SCALE_FACTOR", "1")

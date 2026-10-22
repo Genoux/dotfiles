@@ -174,7 +174,13 @@ Singleton {
         "camera-video": "camera-video-symbolic",
     })
 
+    // TUIs run in Ghostty as "tui.<app>", because Ghostty rejects a class that
+    // is not a dotted GTK application id; the bare name is what owns the icon.
     function className(toplevel) {
+        return rawClassName(toplevel).replace(/^tui\./, "")
+    }
+
+    function rawClassName(toplevel) {
         if (!toplevel)
             return ""
 

@@ -3,10 +3,8 @@
 
 DOTFILES_DIR="$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" && pwd)"
 
-# Terminal configuration
-TERMINAL="kitty"
 WINDOW_TITLE="Dotfiles Manager"
-WINDOW_CLASS="dotfiles-manager"
+WINDOW_CLASS="tui.dotfiles-manager"
 
 # Window size (columns x rows)
 WINDOW_COLS=80
@@ -25,11 +23,9 @@ if command -v hyprctl &>/dev/null; then
     fi
 fi
 
-# Launch in kitty with fixed size
-exec kitty \
+exec ghostty \
     --class="$WINDOW_CLASS" \
     --title="$WINDOW_TITLE" \
-    --override "remember_window_size=no" \
-    --override "initial_window_width=${WINDOW_COLS}c" \
-    --override "initial_window_height=${WINDOW_ROWS}c" \
-    "$DOTFILES_DIR/dotfiles" menu
+    --window-width="$WINDOW_COLS" \
+    --window-height="$WINDOW_ROWS" \
+    -e "$DOTFILES_DIR/dotfiles" menu

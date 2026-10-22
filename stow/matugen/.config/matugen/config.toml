@@ -11,12 +11,6 @@ custom_colors = {}
 # When multiple source colors are extracted, pick the most saturated (e.g. grass vs grey sky).
 prefer = "saturation"
 
-# Kitty - included by stow/kitty/.config/kitty/kitty.conf
-[templates.kitty]
-input_path = "~/.config/matugen/templates/kitty.conf"
-output_path = "~/.config/kitty/matugen-theme.conf"
-post_hook = "kill -SIGUSR1 $(pgrep kitty) 2>/dev/null || true"
-
 # Ghostty - selected via theme = matugen in stow/ghostty/.config/ghostty/config
 [templates.ghostty]
 input_path = "~/.config/matugen/templates/ghostty"

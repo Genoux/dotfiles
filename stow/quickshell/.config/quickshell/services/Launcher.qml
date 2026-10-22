@@ -32,11 +32,12 @@ Singleton {
     // instead of spawning a duplicate. cliamp writes an IPC socket but only
     // warns on a second instance, so nothing else enforces this.
     function launchInTerminal(entry) {
-        const existing = Hyprland.toplevels.values.find(w => w.wayland?.appId === entry.id || w.lastIpcObject?.class === entry.id);
+        const windowClass = `tui.${entry.id}`;
+        const existing = Hyprland.toplevels.values.find(w => w.wayland?.appId === windowClass || w.lastIpcObject?.class === windowClass);
         if (existing?.wayland)
             existing.wayland.activate();
         else
-            Quickshell.execDetached(["app2unit", "--", "kitty", "--class", entry.id, "-e", ...entry.command]);
+            Quickshell.execDetached(["app2unit", "--", "ghostty", `--class=${windowClass}`, "-e", ...entry.command]);
     }
 
     function recordPendingLaunch() {

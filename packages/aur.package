@@ -49,6 +49,9 @@ python-materialyoucolor
 python-terminaltexteffects
 
 # --- Apps ---
+# 1.3.1 sends Hyprland an empty ext-background-effect region (no blur); fixed after #13699.
+# The AUR PKGBUILD fails on zig 0.16 (--system expects unpacked deps); drop --system to build.
+ghostty-git
 slack-desktop
 spotify
 google-chrome

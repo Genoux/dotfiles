@@ -39,11 +39,13 @@ function M.launchOrFocus(title, command, className, ...)
     innerParts[#innerParts + 1] = paths.shellQuote(select(index, ...))
   end
 
+  -- Ghostty ignores a class that is not a GTK application id (it needs a dot),
+  -- so the prefix keeps per-TUI classes; IconRegistry strips it for icon lookup.
   local launchCommand = shellJoin({
-    "kitty",
-    "--class=" .. paths.shellQuote(className),
-    "--title",
-    paths.shellQuote(title),
+    "ghostty",
+    paths.shellQuote("--class=tui." .. className),
+    paths.shellQuote("--title=" .. title),
+    "-e",
     shellJoin(innerParts),
     "&",
   })

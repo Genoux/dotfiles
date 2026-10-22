@@ -65,7 +65,7 @@ Uses GNU Stow for symlinking dotfiles. Each subdirectory in `stow/` is a stow pa
 - `quickshell/` - QuickShell UI (QML-based, primary shell)
 - `hypr/` - Hyprland compositor config
 - `shell/` - Zsh, shell configs
-- `kitty/` - Kitty terminal
+- `ghostty/` - Ghostty terminal
 - `claude/`, `zed/` - Editor configs
 - `icons/` - App icon overrides layered onto the MacTahoe icon theme
 

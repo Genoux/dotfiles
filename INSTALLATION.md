@@ -297,11 +297,11 @@ Packages are installed in order:
 5. Display Server (Wayland, X11)
 6. Compositor (Hyprland)
 7. Shell UI (QuickShell, waybar)
-8. Terminal (kitty)
+8. Terminal (ghostty)
 9. Themes
 10. Applications
 
-Critical packages (hyprland, quickshell, kitty) are verified and block installation if they fail.
+Critical packages (hyprland, quickshell, ghostty) are verified and block installation if they fail.
 
 ## One-Shot Installation on New Device
 

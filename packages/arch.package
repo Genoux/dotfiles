@@ -156,7 +156,6 @@ papirus-icon-theme
 # --- Shell / terminal ---
 zsh
 fish
-kitty
 bat
 eza
 fd

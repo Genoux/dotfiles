@@ -1,7 +1,5 @@
 # Matugen-generated ghostty theme — do not edit
 # Selected via `theme = matugen` in stow/ghostty/.config/ghostty/config
-# Palette mirrors templates/kitty.conf so both terminals look the same.
-
 background = {{colors.surface.default.hex}}
 foreground = {{colors.on_surface.default.hex}}
 cursor-color = {{colors.primary.default.hex}}

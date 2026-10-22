@@ -29,7 +29,7 @@ verify_package_installation() {
 verify_critical_packages() {
     local critical_packages=(
         "hyprland"
-        "kitty"
+        "ghostty"
         "quickshell"
         "stow"
         "gum"
@@ -57,7 +57,7 @@ verify_critical_packages() {
 verify_config_links() {
     local expected_configs=(
         "hypr"
-        "kitty"
+        "ghostty"
         "quickshell"
         "shell"
     )

@@ -1,6 +1,28 @@
 theme = matugen
-background-opacity = 0.9
+background-opacity = 0.8
 background-blur = 20
 window-padding-x = 14
 window-padding-y = 10
 window-padding-balance = true
+
+font-family = JetBrainsMono Nerd Font
+font-size = 9.5
+font-feature = +zero
+font-feature = +ss02
+font-feature = +ss03
+font-feature = +ss05
+font-feature = +cv01
+adjust-cell-height = 10%
+
+cursor-style = bar
+cursor-style-blink = true
+mouse-hide-while-typing = true
+
+confirm-close-surface = false
+shell-integration-features = ssh-terminfo
+
+# One process per window: a shared instance puts every window
+# under one pid and one app2unit scope, so systemd-oomd reclaims them all at
+# once and hypr-session-restore cannot tell their working directories apart.
+gtk-single-instance = false
+gtk-titlebar = false

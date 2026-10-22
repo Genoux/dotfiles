@@ -6,7 +6,7 @@ local mainMod = "SUPER"
 local launchApp = "app2unit -- "
 
 local browser = launchApp .. "zen-browser"
-local terminal = launchApp .. "kitty"
+local terminal = launchApp .. "ghostty"
 local fileManager = launchApp .. "nautilus"
 local appLauncher = "quickshell ipc call launcher toggle"
 
