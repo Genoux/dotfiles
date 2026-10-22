@@ -1,0 +1,9 @@
+[Unit]
+Description=Check for pending system updates periodically
+
+[Timer]
+OnStartupSec=15min
+OnUnitActiveSec=6h
+
+[Install]
+WantedBy=timers.target

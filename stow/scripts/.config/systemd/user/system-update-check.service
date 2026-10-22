@@ -1,0 +1,6 @@
+[Unit]
+Description=Check for pending system updates
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/system-update-check

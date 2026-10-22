@@ -1,0 +1,30 @@
+#!/bin/bash
+# Reports pending updates and only installs them when the notification is clicked.
+# Unattended installs are deliberately avoided: root is ext4 with no snapshots to
+# roll back to, and AUR builds would run unreviewed PKGBUILDs.
+
+count_lines() {
+    "$@" 2>/dev/null | grep -c .
+}
+
+official_count=$(count_lines checkupdates)
+aur_count=$(count_lines yay -Qua)
+flatpak_count=0
+if command -v flatpak &>/dev/null; then
+    flatpak_count=$(count_lines flatpak remote-ls --updates --columns=application)
+fi
+
+total_count=$((official_count + aur_count + flatpak_count))
+((total_count == 0)) && exit 0
+
+chosen_action=$(notify-send "$total_count updates available" \
+    "Official $official_count · AUR $aur_count · Flatpak $flatpak_count" \
+    --app-name="System Update" --icon=system-software-update \
+    --expire-time=0 --action=default=Update)
+
+[[ "$chosen_action" == "default" ]] || exit 0
+
+# exec keeps the terminal as the unit's main process; a backgrounded child would be
+# killed with the oneshot's cgroup as soon as this script exits.
+exec ghostty --title="System Update" --wait-after-command=true \
+    -e "$HOME/dotfiles/dotfiles" packages update
