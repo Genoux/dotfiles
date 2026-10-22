@@ -86,6 +86,7 @@ hl.layer_rule({ name = "workspace-manager", blur = true, ignore_alpha = 0.1, no_
 hl.layer_rule({ name = "workspace-manager-backdrop", no_anim = true, match = { namespace = "^(workspace-manager-backdrop)$" } })
 hl.layer_rule({ name = "capture-preview", blur = true, ignore_alpha = 0.5, animation = "slide", match = { namespace = "^(capture-preview)$" } })
 hl.window_rule({ name = "flow-console", float = true, match = { class = "^(flow-console)$" } })
+hl.window_rule({ name = "culture", float = true, center = true, match = { class = "^(culture)$" } })
 hl.layer_rule({ name = "flow-island", blur = true, blur_popups = true, ignore_alpha = 0.1, animation = "fade", match = { namespace = "^(flow)$" } })
 
 hl.window_rule({

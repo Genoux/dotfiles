@@ -16,6 +16,12 @@ hl.layer_rule({
   match = { namespace = "selection" },
 })
 
+hl.layer_rule({
+  name = "no-anim-gramly",
+  no_anim = true,
+  match = { namespace = "^gramly-.*$" },
+})
+
 hl.config({
   animations = {
     enabled = true,
