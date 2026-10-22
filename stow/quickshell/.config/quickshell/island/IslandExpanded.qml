@@ -187,81 +187,84 @@ Item {
         }
     }
 
-    Veil {
+    // Pages end at the track's live top edge, wherever the shape is in its
+    // motion. The clip sits outside the veil because its blur spreads past the
+    // page's edge: clipped inside, the halo still drew over the dock.
+    Item {
         anchors.horizontalCenter: parent.horizontalCenter
         width: root.implicitWidth
-        height: root.pageHeight
-        veil: root.pageVeil
-        keepLaidOut: true
+        height: Math.max(0, root.height - StyleIsland.footerHeight + StyleIsland.footerInset)
+        clip: true
 
-        // A page that runs under the footer dissolves into it rather than being
-        // cut off above it: it is gone by the time it reaches the track. The
-        // fade is measured from the live bottom edge, not the page's own: while
-        // the shape is still growing to the page, rows that sat where the dock
-        // is were left unfaded and drew over it. Any other page is cut at the
-        // track's top while the shape is shorter than it, measured against its
-        // live height: `pageHeight` trails a page that grows in place by the
-        // settle delay, long enough for its new rows to draw over the dock.
-        Item {
-            width: parent.width
-            height: parent.height
-            layer.enabled: root.pageUnderFooter || root.height < (pageLoader.item ? pageLoader.item.implicitHeight : 0) + StyleIsland.footerHeight
-            // OpacityMask multiplies by the mask's alpha. MultiEffect's mask is a
-            // threshold map, so a gradient through it clips instead of fading.
-            layer.effect: OpacityMask {
-                maskSource: fadeMask
-            }
+        Veil {
+            anchors.horizontalCenter: parent.horizontalCenter
+            width: root.implicitWidth
+            height: root.pageHeight
+            veil: root.pageVeil
+            keepLaidOut: true
 
-            Loader {
-                id: pageLoader
-
-                sourceComponent: root.pages[root.shownPageId] ?? null
-                onItemChanged: root.pageSizeChanged()
-            }
-        }
-
-        Item {
-            id: fadeMask
-
-            width: parent.width
-            height: parent.height
-            visible: false
-            layer.enabled: true
-
-            Rectangle {
-                id: fadeRamp
-
-                readonly property real fadeStart: root.pageUnderFooter ? StyleIsland.footerFadeStart : StyleIsland.footerHeight - StyleIsland.footerInset
-                readonly property real fadeEnd: root.pageUnderFooter ? StyleIsland.footerFadeEnd : fadeStart
-
-                function stop(fromBottom) {
-                    return Math.min(1, Math.max(0, (root.height - fromBottom) / Math.max(1, height)));
+            // A page that runs under the footer dissolves into it rather than being
+            // cut off above it. The fade is measured from the live bottom edge, not
+            // the page's own: while the shape is still growing to the page, rows
+            // that sat where the dock is were left unfaded.
+            Item {
+                width: parent.width
+                height: parent.height
+                layer.enabled: root.pageUnderFooter
+                // OpacityMask multiplies by the mask's alpha. MultiEffect's mask is a
+                // threshold map, so a gradient through it clips instead of fading.
+                layer.effect: OpacityMask {
+                    maskSource: fadeMask
                 }
 
-                anchors.fill: parent
-                gradient: Gradient {
-                    GradientStop { position: 0; color: "#ff000000" }
-                    GradientStop { position: fadeRamp.stop(fadeRamp.fadeStart); color: "#ff000000" }
-                    GradientStop { position: fadeRamp.stop(fadeRamp.fadeEnd); color: StyleTokens.transparent }
-                    GradientStop { position: 1; color: StyleTokens.transparent }
+                Loader {
+                    id: pageLoader
+
+                    sourceComponent: root.pages[root.shownPageId] ?? null
+                    onItemChanged: root.pageSizeChanged()
                 }
             }
-        }
 
-        Connections {
-            target: pageLoader.item
-            ignoreUnknownSignals: true
+            Item {
+                id: fadeMask
 
-            function onImplicitHeightChanged() {
-                root.pageSizeChanged();
+                width: parent.width
+                height: parent.height
+                visible: false
+                layer.enabled: true
+
+                Rectangle {
+                    id: fadeRamp
+
+                    function stop(fromBottom) {
+                        return Math.min(1, Math.max(0, (root.height - fromBottom) / Math.max(1, height)));
+                    }
+
+                    anchors.fill: parent
+                    gradient: Gradient {
+                        GradientStop { position: 0; color: "#ff000000" }
+                        GradientStop { position: fadeRamp.stop(StyleIsland.footerFadeStart); color: "#ff000000" }
+                        GradientStop { position: fadeRamp.stop(StyleIsland.footerFadeEnd); color: StyleTokens.transparent }
+                        GradientStop { position: 1; color: StyleTokens.transparent }
+                    }
+                }
             }
-        }
 
-        Binding {
-            target: pageLoader.item
-            property: "active"
-            value: root.pageLive
-            when: pageLoader.item !== null && "active" in pageLoader.item
+            Connections {
+                target: pageLoader.item
+                ignoreUnknownSignals: true
+
+                function onImplicitHeightChanged() {
+                    root.pageSizeChanged();
+                }
+            }
+
+            Binding {
+                target: pageLoader.item
+                property: "active"
+                value: root.pageLive
+                when: pageLoader.item !== null && "active" in pageLoader.item
+            }
         }
     }
 
