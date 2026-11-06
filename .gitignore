@@ -84,3 +84,6 @@ stow/quickshell/.config/quickshell/colors.json
 stow/btop/.config/btop/themes/matugen.theme
 
 /stow/flow/.config/flow/config.toml
+
+# Agent scratch output (Codex writes screenshots here when launched in the repo)
+/Documents/
