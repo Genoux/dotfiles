@@ -37,3 +37,12 @@ def test_installer_never_edits_etc_makepkg_conf_directly():
     for line in code_lines:
         assert not re.search(r"/etc/makepkg\.conf(?!\.d)", line), line
         assert not re.search(r"\bsed\b", line), line
+
+
+def test_dropin_keeps_cargo_output_inside_the_build_tree():
+    dropin = REPO / "system/makepkg.conf.d/dotfiles.conf"
+    result = subprocess.run(
+        ["bash", "-c", f'source "{dropin}"; bash -c \'echo "$CARGO_TARGET_DIR"\''],
+        capture_output=True, text=True, check=True,
+    )
+    assert result.stdout.strip() == "target"
