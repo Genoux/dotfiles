@@ -38,6 +38,9 @@ BarGroup {
                     required property var modelData
 
                     readonly property bool hovered: btn.hovered
+                    // Read by SlidingHighlight, so the hover fill and the open-menu
+                    // fill Button paints share one shape.
+                    readonly property real radius: btn.radius
 
                     width: btn.width
                     height: btn.height
@@ -48,6 +51,7 @@ BarGroup {
                         id: btn
 
                         iconSource: trayDelegate.modelData.icon
+                        radius: height / 2
                         hoverBackground: StyleTokens.transparent
                         iconSize: StyleTray.iconSize
                         minimumHeight: StyleControl.buttonHeight
