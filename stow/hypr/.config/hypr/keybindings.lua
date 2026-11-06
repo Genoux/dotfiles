@@ -55,19 +55,11 @@ hl.bind(mainMod .. " + TAB", hl.dsp.focus({ last = true }))
 hl.bind(mainMod .. " + d", launchers.openDotfilesManager)
 hl.bind(mainMod .. " + l", hl.dsp.exec_cmd("system-lock"))
 
--- Dictation: hold to record, release to transcribe and paste.
--- kill(1) rather than `flow start`: that binary pulls in the STT stack and
--- can miss a fast tap. Flow watches the physical chord and also accepts
--- SIGUSR2 if Hyprland sees the release.
--- Not SHIFT+w (the wallpaper picker binds it as code:25, invisible to
--- `hyprctl binds`) and not CTRL+SUPER+w, which whisrs would also catch as its
--- Ctrl+Alt+W since keyd maps alt to meta.
-local flow_pid = (os.getenv("XDG_RUNTIME_DIR") or "/tmp") .. "/flow.pid"
-local function flow_signal(sig)
-  return hl.dsp.exec_cmd('kill -' .. sig .. ' "$(cat "' .. flow_pid .. '")"')
-end
-hl.bind(mainMod .. " + SHIFT + d", flow_signal("USR1"))
-hl.bind(mainMod .. " + SHIFT + d", flow_signal("USR2"), { release = true })
+-- Dictation: Flow watches its own shortcut on /dev/input, which cannot
+-- swallow the keys, so this bind only consumes the chord (otherwise the
+-- focused window types a D). It must not signal Flow: a second start/stop
+-- discards the first tap of a double-tap, so hands-free never latches.
+hl.bind(mainMod .. " + SHIFT + d", hl.dsp.exec_cmd("true"))
 
 hl.bind(mainMod .. " + left", hl.dsp.focus({ direction = "left" }))
 hl.bind(mainMod .. " + right", hl.dsp.focus({ direction = "right" }))
@@ -133,7 +125,6 @@ hl.bind(mainMod .. " + CTRL + SHIFT + F10", hl.dsp.exec_cmd(paths.shellQuote(pat
 
 hl.bind("SUPER + c", hl.dsp.exec_cmd("claude-desktop"))
 hl.bind("SUPER + SHIFT + c", hl.dsp.exec_cmd(terminal .. " -e claude"))
-hl.bind("SUPER + z", hl.dsp.exec_cmd("quickshell ipc call clipboard toggle"))
 hl.bind("SUPER + grave", function()
   if hl.plugin.hyprexpo ~= nil then
     hl.plugin.hyprexpo.expo("toggle")
@@ -148,3 +139,9 @@ hl.bind(mainMod .. " + p", hl.dsp.window.pin())
 -- passively without grabbing, so an unbound chord reaches the focused app and
 -- inserts its base character (SUPER+W typed a literal "w").
 hl.bind(mainMod .. " + w", hl.dsp.exec_cmd("whisrs toggle"))
+
+-- Noted: toggle the running panel straight over its socket (~2 ms); start it
+-- only if it is not running yet (autostart normally has it waiting hidden).
+local notedToggle = [[printf toggle | nc -NU "$XDG_RUNTIME_DIR/noted.sock" 2>/dev/null || ]]
+  .. launchApp .. os.getenv("HOME") .. "/.local/bin/noted"
+hl.bind(mainMod .. " + z", hl.dsp.exec_cmd(notedToggle))

@@ -23,6 +23,8 @@ local startupCommands = {
   "system-bluetooth-reconnect",
   "wl-paste -p --watch wl-copy -pc",
   "clipse -listen",
+  -- Noted waits hidden so SUPER+N opens it instantly.
+  "app2unit -- " .. os.getenv("HOME") .. "/.local/bin/noted --hidden",
 }
 
 hl.on("hyprland.start", function()

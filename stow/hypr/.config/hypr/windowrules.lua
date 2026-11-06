@@ -22,8 +22,8 @@ hl.window_rule({ name = "idleon-render-unfocused", render_unfocused = true, matc
 hl.window_rule({ name = "zen-opaque", opacity = "1.0 override 1.0 override", match = { class = "^(zen)$" } })
 
 hl.window_rule({ name = "slack", float = true, size = "1200 800", match = { class = "^(slack)$" } })
-hl.window_rule({ name = "nautilus", float = true, center = true, size = "(monitor_w*0.65) (monitor_h*0.65)", opacity = "0.90 0.90", match = { class = "^(org.gnome.Nautilus)$" } })
-hl.window_rule({ name = "file-picker-portal", float = true, size = "(monitor_w*0.6) (monitor_h*0.7)", center = true, opacity = "0.90 0.90", match = { class = "^(xdg-desktop-portal-gtk)$" } })
+hl.window_rule({ name = "nautilus", float = true, center = true, size = "(monitor_w*0.65) (monitor_h*0.65)", match = { class = "^(org.gnome.Nautilus)$" } })
+hl.window_rule({ name = "file-picker-portal", float = true, size = "(monitor_w*0.6) (monitor_h*0.7)", center = true, match = { class = "^(xdg-desktop-portal-gtk)$" } })
 hl.window_rule({ name = "modal-open", float = true, match = { title = "^(Open)$" } })
 hl.window_rule({ name = "modal-choose-files", float = true, match = { title = "^(Choose Files)$" } })
 hl.window_rule({ name = "modal-save-as", float = true, match = { title = "^(Save As)$" } })
@@ -98,3 +98,4 @@ hl.window_rule({
   opacity = "1.0 override 1.0 override",
   match = { initial_title = "www.legendsofidleon.com_/ytGl5oc/" },
 })
+hl.window_rule({ name = "noted", float = true, center = true, size = "800 640", match = { class = "^(noted)$" } })
