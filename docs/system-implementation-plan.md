@@ -9,8 +9,7 @@ installed Arch system. Keep the working desktop and reduce duplicate machinery.
 Source: [system proposal](system-proposal.html), audited September 17, 2026 at
 `695ad7f539883f3a3e6ee31beacd53fb8ad111eb`.
 
-This is an execution plan, not a record of completed implementation. All tasks
-below are pending. The user requested this plan; execute it only when asked to
+This is an execution plan. T00 and T01 are implemented; the rest are pending. The user requested this plan; execute it only when asked to
 implement. Once implementation is requested, proceed through ordinary repository
 edits and checks without requesting approval after every task.
 
@@ -69,7 +68,7 @@ Execute `T00` through `T12` sequentially. The four delivery batches are reliabil
 
 ### T00 — Establish a reproducible baseline
 
-- [ ] Complete
+- [x] Complete
 
 Read `dotfiles`, `install.sh`, `bin/dotfiles-menu`, `lib/menu.sh`, the proposal,
 and `tests/installer/conftest.py`. Inventory manager launchers, desktop entries,
@@ -89,7 +88,7 @@ read-only Hyprland errors and failed user units when the session is available.
 
 ### T01 — Make updates fail safely
 
-- [ ] Complete
+- [x] Complete
 
 Read `lib/package/update.sh`, its logging helpers, and callers in `dotfiles` and
 the menu. Remove automatic conflict-package removal with `pacman -Rdd` and its
@@ -116,6 +115,13 @@ System apply must stop on a required failure and avoid its success menu. A statu
 command must not source executable setup scripts that apply changes. Use small,
 side-effect-free checks for known settings and report unknown for unchecked
 settings. Do not count unknown or skipped as healthy.
+
+Status must also be fast enough to sit at the top of the menu. Measured on
+2026-10-22: `dotfiles status` 7.8s, `config status` 7.2s for about 25 links,
+`packages status` 5.8s (mostly `yay -Qu`, recomputed on every menu redraw), and
+the cleanup summary about 31s because `du` runs on each redraw. Compute each
+observation once per menu visit and reuse it; never block a redraw on `du` or
+an AUR query.
 
 Acceptance: stubbed failed setup returns nonzero; later required work does not
 run. Status triggers no sudo, writes, package operations, or service mutations.
@@ -179,7 +185,9 @@ configuration/setup functions through Advanced.
 
 Acceptance: each launch surface opens or focuses the same TUI; default startup
 does not construct/scan the gallery; developer IPC still opens it. Existing daily
-controls and the lock continue working. No new background update checker is added.
+controls and the lock continue working. The only background update checker is the
+user-requested, notify-only `system-update-check` timer (added 2026-10-22); it
+must keep calling the same update workflow and never install unattended.
 
 ### T06 — Add precise cleanup for retired files
 
@@ -283,6 +291,14 @@ Replace recovery's legacy `conf/autostart.conf` edits with targeted diagnostics,
 config relink, and a session-aware Quickshell restart. Preserve the running lock;
 never use broad process termination against all Quickshell processes.
 
+Also remove helpers that the 2026-10-22 audit found with no callers, rechecking
+each with `rg -w` across the whole repository (including `stow/` and `bin/`)
+before deletion: most of `lib/common.sh`; the box, spinner and clean-UI helpers in
+`install/helpers/presentation.sh`; `view_full_log`, `rotate_logs`, `watch_log` and
+`stop_log_watcher` in `logging.sh`; `require_directory` and `check_prerequisites`
+in `errors.sh`; `is_desktop` in `hardware.sh`; the unused menu builders in
+`lib/menu.sh`; `config_select`; and `cleanup_temp_downloads`.
+
 Acceptance: temporary-home tests demonstrate backup and restoration of files and
 symlinks, interruption/retry, and old-state compatibility or a clear migration
 message. No active recovery path edits legacy autostart config. Documentation and
@@ -380,13 +396,48 @@ follow-ups into an unbounded performance rewrite.
 Update this section during implementation so another LLM can resume from files
 without reconstructing a conversation.
 
-- Last completed task: none; plan only.
-- Current task: not started.
-- Files changed for implementation: none.
-- Tests run for implementation: none.
-- Pending runtime/VM checks: all rows requiring those environments.
-- Decisions/deviations: none.
-- Next action: T00 after an implementation request.
+- Last completed task: T01.
+- Current task: none in progress; T02 is next.
+- Files changed for implementation: `lib/package/update.sh` (T01);
+  `tests/installer/test_package_update.py` (new, T01);
+  `tests/quickshell/test_regressions.py` (T00, `saveCache` test double).
+- Tests run for implementation: baseline at `3fcd524` (dirty: only this plan)
+  with the full-suite command from the Validation procedure (GI path
+  `/usr/lib/python3.14/site-packages` verified importable by `/usr/bin/python`):
+  125 + new tests collected, 4 failed, 131 passed. After T00/T01:
+  `uv run --with pytest python -m pytest tests/installer -q` = 103 passed
+  (88 baseline + 15 new); full suite = 3 failed (the
+  pre-existing media/notification drift), rest passed.
+- Pending runtime/VM checks: all rows requiring those environments. T01 was
+  tested only with stubbed `yay`/`pacman`/`flatpak`/`sudo`; no real update was run.
+- Decisions/deviations: 2026-10-22 the user re-confirmed this plan as the source
+  of truth for the Dotfiles Manager revamp (branch
+  `feat/system-management-terminal`) and added a notify-only update timer
+  (see T05). Audit findings on status speed (T02) and dead helpers (T10) were
+  folded in.
+  - T00: the SystemInfo failure was exactly the missing `saveCache()` double and
+    is fixed. Three other `tests/quickshell/test_regressions.py` tests fail
+    from drift unrelated to T01 and were left alone:
+    `test_media_requires_title_and_artist` and `test_media_selection_and_fallback`
+    (extracted `MediaPlayers.qml` code now calls `cleanField` and reads
+    `pinnedPlayerKey`, which the test harness does not define) and
+    `test_notification_timeouts_and_actions` (`qml_function` finds no
+    `expiryMs`/`activate` in `notifications/NotificationCard.qml` any more).
+    Live capture: `hyprctl configerrors` empty; failed user units were
+    `app-walker@autostart.service` and `idleon-sync.service`.
+  - T01: the only retry kept is one purge-and-retry when the log shows corrupt
+    source archives; a conflict or generic failure is not retried. Cancellation
+    is detected both by exit status 130/143 from yay/flatpak and by an INT/TERM
+    trap in `packages_update` (a real Ctrl-C otherwise makes bash exit after the
+    foreground child and skip all cleanup). The trap only records the signal;
+    cleanup runs, the status is returned, and the caller's traps are restored.
+    The flag also blocks the corrupt-sources retry and flatpak. `run_command_logged` already preserved the command
+    status via `PIPESTATUS`, so no change was needed there; the `pacman -Rdd | tee`
+    pipeline that masked status was removed with the retry branch. The npm
+    override now reuses the `env -u ... NPM_CONFIG_USERCONFIG=/dev/null`
+    pattern from `install-aur.sh`. Flatpak update stays after the yay step and
+    follows the same failure rules.
+- Next action: T02.
 
 Suggested execution prompt:
 

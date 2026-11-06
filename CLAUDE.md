@@ -16,7 +16,7 @@ Personal Arch Linux dotfiles with automated system configuration, Hyprland deskt
 ./dotfiles install                   # Full installation
 ./dotfiles packages install          # Install missing packages from packages/*.package
 ./dotfiles packages custom           # Build custom GitHub PKGBUILD packages
-./dotfiles packages update           # System update (yay -Syu)
+./dotfiles packages update           # System update (pacman -Syu, then yay -Sua, then Flatpak)
 ./dotfiles config link [name]        # Stow configs (all or specific)
 ./dotfiles config unlink [name]      # Unstow configs
 ./dotfiles system apply              # Apply system-level configurations

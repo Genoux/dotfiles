@@ -1,6 +1,7 @@
 import os
 import shlex
 import shutil
+import signal
 import stat
 import subprocess
 from pathlib import Path
@@ -69,7 +70,7 @@ class BashSandbox:
             return []
         return [line for line in self.calls_log.read_text().splitlines() if line]
 
-    def run(self, script: str, timeout: int = 20, restrict_path: bool = False) -> subprocess.CompletedProcess:
+    def _bash_invocation(self, script: str, restrict_path: bool):
         env = dict(os.environ)
         # restrict_path=True: PATH is *only* the stub bin dir, none of the
         # real system's binaries — for simulating a command being entirely
@@ -87,12 +88,26 @@ class BashSandbox:
             env[f"XDG_{kind}_HOME"] = str(self.root / {"CACHE": ".cache", "CONFIG": ".config", "DATA": ".local/share", "STATE": ".local/state"}[kind])
         env["DOTFILES_LOG_FILE"] = str(self.root / "dotfiles.log")
         full_script = f"set -uo pipefail\n{STUB_LOGGERS}\n{script}\n"
-        return subprocess.run(
-            [bash_executable, "-c", full_script],
-            capture_output=True,
+        return [bash_executable, "-c", full_script], env
+
+    def run(self, script: str, timeout: int = 20, restrict_path: bool = False) -> subprocess.CompletedProcess:
+        command, env = self._bash_invocation(script, restrict_path)
+        return subprocess.run(command, capture_output=True, text=True, timeout=timeout, env=env)
+
+    def start_in_own_session(self, script: str) -> subprocess.Popen:
+        """Like run(), but detached into its own process group so a test can
+        killpg it the way a terminal's Ctrl-C or a service stop would. SIGINT
+        is reset to its default: a parent started in the background inherits
+        an ignored SIGINT, which would mask exactly what is under test."""
+        command, env = self._bash_invocation(script, restrict_path=False)
+        return subprocess.Popen(
+            command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
             text=True,
-            timeout=timeout,
             env=env,
+            start_new_session=True,
+            preexec_fn=lambda: signal.signal(signal.SIGINT, signal.SIG_DFL),
         )
 
 

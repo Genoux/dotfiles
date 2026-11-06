@@ -26,12 +26,6 @@ rebuild_yay_if_broken() {
     log_success "yay rebuilt successfully"
 }
 
-# Parse the log file for packages that pacman wants to remove due to conflicts
-# Matches lines like: "Remove geocode-glib-common? [y/N]"
-_detect_conflict_packages() {
-    grep -oP "Remove \K[a-zA-Z0-9@._+:-]+" "$DOTFILES_LOG_FILE" 2>/dev/null | sort -u
-}
-
 # Remove old cached packages, keeping one version per package for rollback
 _clean_package_cache() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting: Clean package caches" >> "$DOTFILES_LOG_FILE"
@@ -116,16 +110,29 @@ _ensure_update_disk_space() {
     return 1
 }
 
-_restore_npmrc() {
-    local npmrc_backup="$1"
-
-    if [[ -n "$npmrc_backup" && -f "$npmrc_backup" ]]; then
-        mv "$npmrc_backup" "$HOME/.npmrc" 2>/dev/null || true
-    fi
-}
-
 _update_failed_due_to_disk_space() {
     grep -qE "Partition / too full|not enough free disk space|Not enough free space on /" "$DOTFILES_LOG_FILE" 2>/dev/null
+}
+
+_update_failed_due_to_corrupt_sources() {
+    grep -qE "did not pass the validity check|Validation of source files failed" "$DOTFILES_LOG_FILE" 2>/dev/null
+}
+
+# Only the build command sees the npm override: a user's ~/.npmrc prefix breaks
+# some AUR builds, but the file itself is never touched.
+_run_yay_update() {
+    local step_name="$1"
+    local answer_clean="$2"
+
+    run_command_logged "$step_name" \
+        env -u NPM_CONFIG_PREFIX -u npm_config_prefix -u NPM_CONFIG_GLOBALCONFIG -u npm_config_globalconfig \
+            NPM_CONFIG_USERCONFIG=/dev/null npm_config_userconfig=/dev/null \
+            yay -Sua --noconfirm --answerclean "$answer_clean" --answerdiff N
+}
+
+# 130/143 = SIGINT/SIGTERM: the user asked to stop, so nothing may start after.
+_was_cancelled() {
+    (( $1 == 130 || $1 == 143 ))
 }
 
 _purge_cached_sources() {
@@ -155,7 +162,7 @@ _report_update_failure() {
     fi
 
     local recent_errors
-    recent_errors=$(grep -E "error:|Failed:" "$DOTFILES_LOG_FILE" 2>/dev/null | tail -n 8 || true)
+    recent_errors=$(grep -iE "error:|failed:" "$DOTFILES_LOG_FILE" 2>/dev/null | tail -n 8 || true)
 
     log_error "$fallback_message"
     if [[ -n "$recent_errors" ]]; then
@@ -164,7 +171,53 @@ _report_update_failure() {
     fi
 }
 
-# Update system packages (official + AUR)
+# Names the AUR packages the last yay run failed on, from yay's own messages.
+_failed_aur_packages() {
+    { tac "$DOTFILES_LOG_FILE" | sed '/Starting: Update AUR packages/q' | tac; } 2>/dev/null \
+        | sed -nE \
+            -e 's/.*error making: ([^ ]+[^ -])( - |-)exit status.*/\1/p' \
+            -e 's|.*error downloading sources: .*/([^/ ]+)[[:space:]]*$|\1|p' \
+        | awk '!seen[$0]++' || true
+}
+
+# pacman owns the DB sync and the official packages. Dependency conflicts are
+# never auto-resolved: "Remove X? [y/N]" is answered No by --noconfirm, the
+# transaction aborts and the failure stays visible, so it fails the update.
+# A broken AUR package must not: it is recorded in the caller's aur_warning and
+# retried on the next run. The one yay retry covers corrupt cached sources.
+# Reads the caller's cancelled_status: yay may swallow SIGINT and exit 1.
+_update_packages() {
+    run_command_logged "Update official packages" sudo pacman -Syu --noconfirm || return $?
+
+    local aur_status=0
+    _update_aur_packages || aur_status=$?
+    if (( aur_status == 0 )); then
+        return 0
+    fi
+    if (( cancelled_status != 0 )) || _was_cancelled "$aur_status"; then
+        return "$aur_status"
+    fi
+
+    local failed_packages
+    failed_packages=$(_failed_aur_packages | paste -sd ' ')
+    aur_warning="AUR packages not updated: ${failed_packages:-see the log} - they will be retried on the next update"
+}
+
+_update_aur_packages() {
+    local update_status=0
+    _run_yay_update "Update AUR packages" N || update_status=$?
+
+    if (( update_status == 0 || cancelled_status != 0 )) || _was_cancelled "$update_status" \
+        || ! _update_failed_due_to_corrupt_sources; then
+        return "$update_status"
+    fi
+
+    log_warning "Source archives failed validation, purging source cache and retrying once..."
+    _purge_cached_sources
+    _run_yay_update "Update AUR packages (clean retry)" A
+}
+
+# Update system packages (official + AUR + Flatpak)
 packages_update() {
     if ! ensure_sudo; then
         log_error "Failed to obtain sudo privileges"
@@ -174,10 +227,20 @@ packages_update() {
     init_logging "package"
     start_log_monitor
 
+    # Without a handler, bash exits as soon as the foreground child dies from
+    # SIGINT/SIGTERM and skips the cleanup below, leaving the terminal in the
+    # alternate screen with a hidden cursor. The handler only records the
+    # signal: the flow still reaches cleanup and returns the cancel status.
+    local cancelled_status=0
+    local aur_warning=""
+    local previous_traps
+    previous_traps=$(trap -p INT TERM)
+    trap 'cancelled_status=130' INT
+    trap 'cancelled_status=143' TERM
+
     # yay may be broken after a libalpm/pacman upgrade — fix it before using it
     local update_failed=false
     local failure_message="System update failed"
-    local npmrc_backup=""
 
     if ! rebuild_yay_if_broken; then
         update_failed=true
@@ -190,48 +253,30 @@ packages_update() {
         failure_message="System update skipped: not enough free space on /"
     fi
 
-    # Neutralize npm config that breaks some AUR builds
-    if ! $update_failed && [[ -f "$HOME/.npmrc" ]]; then
-        npmrc_backup="$HOME/.npmrc.dotfiles-backup-$(date +%s)"
-        mv "$HOME/.npmrc" "$npmrc_backup" 2>/dev/null || true
+    if ! $update_failed && (( cancelled_status == 0 )); then
+        local update_status=0
+        _update_packages || update_status=$?
+        (( cancelled_status != 0 )) || ! _was_cancelled "$update_status" || cancelled_status=$update_status
+        (( update_status == 0 )) || update_failed=true
     fi
-    export NPM_CONFIG_USERCONFIG=/dev/null
-    unset NPM_CONFIG_PREFIX npm_config_prefix NPM_CONFIG_GLOBALCONFIG npm_config_globalconfig
 
-    # yay -Syu syncs the DB and updates both official and AUR packages in one pass
-    if ! $update_failed && ! run_command_logged "Update system and AUR packages" yay -Syu --noconfirm --answerclean N --answerdiff N; then
-        # Check if the failure is due to package conflicts (pacman prompts "Remove X? [y/N]"
-        # which --noconfirm answers No, causing the transaction to abort)
-        local -a conflicts=()
-        mapfile -t conflicts < <(_detect_conflict_packages)
-
-        if _update_failed_due_to_disk_space; then
+    if ! $update_failed && (( cancelled_status == 0 )) && command -v flatpak &>/dev/null; then
+        local flatpak_status=0
+        run_command_logged "Update Flatpak apps" flatpak update -y --noninteractive || flatpak_status=$?
+        (( cancelled_status != 0 )) || ! _was_cancelled "$flatpak_status" || cancelled_status=$flatpak_status
+        if (( flatpak_status != 0 )); then
             update_failed=true
-        elif [[ ${#conflicts[@]} -gt 0 ]]; then
-            log_warning "Removing conflicting packages: ${conflicts[*]}"
-            sudo pacman -Rdd --noconfirm "${conflicts[@]}" 2>&1 | tee -a "$DOTFILES_LOG_FILE" || true
-
-            if ! run_command_logged "Update system and AUR packages (after conflict resolution)" yay -Syu --noconfirm --answerclean N --answerdiff N; then
-                update_failed=true
-            fi
-        else
-            # Non-conflict failure — purge cached source tarballs (corrupted checksums) and retry
-            log_warning "Update failed, purging source cache and retrying..."
-            _purge_cached_sources
-
-            if ! run_command_logged "Update system and AUR packages (clean retry)" yay -Syu --noconfirm --answerclean A --answerdiff N; then
-                update_failed=true
-            fi
+            failure_message="System update failed: Flatpak update failed"
         fi
     fi
 
-    if ! $update_failed && command -v flatpak &>/dev/null \
-        && ! run_command_logged "Update Flatpak apps" flatpak update -y --noninteractive; then
+    if (( cancelled_status != 0 )); then
         update_failed=true
-        failure_message="System update failed: Flatpak update failed"
+        failure_message="System update cancelled"
     fi
 
-    _restore_npmrc "$npmrc_backup"
+    trap - INT TERM
+    eval "$previous_traps"
 
     finish_logging
     sleep 1
@@ -239,9 +284,10 @@ packages_update() {
     if $update_failed; then
         stop_log_monitor
         _report_update_failure "$failure_message"
-        return 1
+        return "$(( cancelled_status != 0 ? cancelled_status : 1 ))"
     fi
 
     stop_log_monitor true
     log_success "System update complete"
+    [[ -z "$aur_warning" ]] || log_warning "$aur_warning"
 }

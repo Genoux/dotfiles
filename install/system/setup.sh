@@ -53,6 +53,7 @@ run_logged "$DOTFILES_DIR/install/system/plymouth.sh" || exit 1
 run_logged "$DOTFILES_DIR/install/system/greeter.sh" || exit 1
 run_logged "$DOTFILES_DIR/install/system/pam.sh" || exit 1
 run_logged "$DOTFILES_DIR/install/system/pacman-hooks.sh" || exit 1
+run_logged "$DOTFILES_DIR/install/system/pacman-ignore.sh" || exit 1
 run_logged "$DOTFILES_DIR/install/system/root-space.sh" || exit 1
 
 log_success "System configuration complete"
