@@ -30,6 +30,12 @@ post_hook = "pkill -USR2 btop 2>/dev/null || true"
 input_path = "~/.config/matugen/templates/quickshell-colors.json"
 output_path = "~/.config/quickshell/colors.json"
 
+# GTK4 / libadwaita - imported by ~/.config/gtk-4.0/gtk.css (lib/gtk.sh); apps
+# pick up new colors on their next launch
+[templates.gtk4]
+input_path = "~/.config/matugen/templates/gtk4-colors.css"
+output_path = "~/.config/gtk-4.0/matugen-colors.css"
+
 # Starship - matugen renders the full config (replaces the previous static stow copy)
 [templates.starship]
 input_path = "~/.config/matugen/templates/starship.toml"

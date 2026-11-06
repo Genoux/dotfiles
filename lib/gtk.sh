@@ -182,6 +182,27 @@ apply_cursor_theme() {
     fi
 }
 
+# GTK 4.24 binds ext-background-effect for every toplevel but only sends a blur
+# region for a CSS backdrop-filter (gsk/gskblurutils.c), and Hyprland 0.56 reads
+# an empty region as "never blur": translucent themes showed a sharp backdrop.
+write_gtk4_user_css() {
+    local gtk4_dir="$HOME/.config/gtk-4.0"
+    local user_css="$gtk4_dir/gtk.css"
+    [[ -L "$user_css" ]] || return 0
+
+    local theme_css
+    theme_css=$(readlink -f "$user_css")
+    rm "$user_css"
+    cat > "$user_css" <<EOF
+@import url("file://$theme_css");
+@import url("file://$gtk4_dir/matugen-colors.css");
+
+window.background {
+  backdrop-filter: blur(20px);
+}
+EOF
+}
+
 install_theme() {
     local theme_name="$1"
     local theme_path="$THEMES_DIR/${theme_name}"
@@ -259,7 +280,8 @@ install_theme() {
     if [[ $install_exit -eq 0 ]]; then
         echo
         log_success "Installed: $theme_name"
-        
+        write_gtk4_user_css
+
         if command -v gsettings &>/dev/null; then
             # Strip common suffixes to get base theme name
             local base_theme_name="${theme_name%-gtk-theme}"

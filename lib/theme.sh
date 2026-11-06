@@ -15,6 +15,7 @@ declare -a MATUGEN_OUTPUTS=(
     "$HOME/.config/ghostty/themes/matugen"
     "$HOME/.config/btop/themes/matugen.theme"
     "$HOME/.config/quickshell/colors.json"
+    "$HOME/.config/gtk-4.0/matugen-colors.css"
     "$HOME/.config/starship.toml"
     "$HOME/.config/zsh/highlight-colors.zsh"
     "$HOME/.config/matugen/dotfiles-gum.env"
