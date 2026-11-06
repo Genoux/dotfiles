@@ -46,7 +46,7 @@ activate(); assert.equal(invoked, 'default');
         parser = re.search(r"            onStreamFinished: \{(.*?)^            }", source, re.M | re.S)[1]
         self.run_js("""
 const assert = require('node:assert/strict');
-const root = {separator: '=|='};
+const root = {separator: '=|=', saveCache() {}};
 function parse(text) {
 """ + parser.replace('this.text', 'text') + """
 }

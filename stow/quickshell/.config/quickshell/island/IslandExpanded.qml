@@ -28,6 +28,10 @@ Item {
     // briefly built out of its lists, and a binding would send the island to
     // that smaller height before the page arrived at its real one.
     property real pageHeight: 0
+    // A binding, not Connections on the loader's item: a new page that resizes
+    // as it goes live (the launcher clearing its last query) did so before
+    // Connections retargeted, and the island stayed at the stale height.
+    readonly property real livePageHeight: pageLoader.item ? pageLoader.item.implicitHeight : 0
     property bool pageUnderFooter: false
     signal pageSelected(string selectedPage)
     signal collapseRequested()
@@ -107,6 +111,7 @@ Item {
     width: implicitWidth
 
     Component.onCompleted: shownPageId = pageId
+    onLivePageHeightChanged: pageSizeChanged()
 
     onPageIdChanged: {
         if (shownPageId === "")
@@ -247,15 +252,6 @@ Item {
                         GradientStop { position: fadeRamp.stop(StyleIsland.footerFadeEnd); color: StyleTokens.transparent }
                         GradientStop { position: 1; color: StyleTokens.transparent }
                     }
-                }
-            }
-
-            Connections {
-                target: pageLoader.item
-                ignoreUnknownSignals: true
-
-                function onImplicitHeightChanged() {
-                    root.pageSizeChanged();
                 }
             }
 
