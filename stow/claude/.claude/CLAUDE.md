@@ -561,5 +561,5 @@ Strict TDD Mode: enabled
 <!-- >>> jb-toolkit -->
 Every project follows the jb-toolkit rules below unless its own AGENTS.md
 records an exception. Managed by `jb install`; edit the rules in the toolkit.
-@/home/john/Projects/jb-toolkit/RULES.md
+@/home/john/Projects/john/jb-toolkit/RULES.md
 <!-- <<< jb-toolkit -->
