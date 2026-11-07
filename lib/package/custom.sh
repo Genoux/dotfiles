@@ -62,6 +62,9 @@ _build_custom_package() {
             return 1
         fi
     else
+        # Only a cache: a leftover non-git dir (interrupted clone) would make
+        # the clone fail with "destination path already exists".
+        rm -rf "$repo_dir"
         log_info "Cloning $repo..."
         if ! gh repo clone "$repo" "$repo_dir"; then
             log_error "Failed to clone $repo"
