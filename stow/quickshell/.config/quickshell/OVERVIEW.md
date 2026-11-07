@@ -449,4 +449,4 @@ Quickshell is positioned as a **parity replacement**, not a redesign:
 
 ---
 
-*Generated from multi-perspective codebase analysis. For broader dotfiles conventions, see `/home/john/dotfiles/AGENTS.md`.*
+*Generated from multi-perspective codebase analysis. For broader dotfiles conventions, see `~/Projects/dotfiles/AGENTS.md`.*
