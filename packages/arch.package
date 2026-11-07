@@ -39,7 +39,7 @@ python-pip
 python-pipx
 python-protobuf
 python-gobject
-rust
+rustup
 go
 nodejs
 npm
