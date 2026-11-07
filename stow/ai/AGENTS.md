@@ -64,6 +64,6 @@ Delete the comment. If nothing is lost, it should not exist. If the answer is
 - Write only what you would say out loud in code review. Nothing else.
 
 <!-- >>> jb-toolkit -->
-Before any work, read and follow /home/john/Projects/jb-toolkit/RULES.md. Every project follows it
+Before any work, read and follow /home/john/Projects/john/jb-toolkit/RULES.md. Every project follows it
 unless its own AGENTS.md records an exception.
 <!-- <<< jb-toolkit -->
