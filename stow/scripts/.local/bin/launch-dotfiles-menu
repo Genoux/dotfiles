@@ -9,7 +9,7 @@ lua_string() {
 }
 
 # Get dotfiles directory
-DOTFILES_DIR="$HOME/dotfiles"
+DOTFILES_DIR="$(dirname "$(readlink -f "$HOME/.local/bin/dotfiles")")"
 
 # If we're already in display mode (env var set), just run the menu
 if [ "$DOTFILES_MENU_DISPLAY" = "1" ]; then

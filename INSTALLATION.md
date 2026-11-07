@@ -17,8 +17,8 @@ This dotfiles manager now provides production-grade, plug-and-play installation 
 
 ```bash
 # Clone dotfiles
-git clone https://github.com/YOUR_USERNAME/dotfiles.git ~/dotfiles
-cd ~/dotfiles
+git clone https://github.com/YOUR_USERNAME/dotfiles.git ~/Projects/dotfiles
+cd ~/Projects/dotfiles
 
 # Run installation
 ./install.sh
@@ -311,8 +311,8 @@ For true plug-and-play on a fresh Arch install:
 # 1. Boot Arch ISO
 # 2. Install base system
 # 3. Clone dotfiles
-git clone https://github.com/YOUR_USERNAME/dotfiles.git ~/dotfiles
-cd ~/dotfiles
+git clone https://github.com/YOUR_USERNAME/dotfiles.git ~/Projects/dotfiles
+cd ~/Projects/dotfiles
 
 # 4. Run one command
 ./install.sh
