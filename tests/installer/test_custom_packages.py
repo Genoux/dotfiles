@@ -75,3 +75,21 @@ packages_custom
     assert result.returncode == 0
     assert "gh auth login" not in sandbox.calls()
     assert not any(call.startswith("gh repo clone") for call in sandbox.calls())
+
+
+def test_stale_non_git_cache_dir_is_recloned(sandbox):
+    sandbox.write_package_file("custom.package", ["Genoux/flow"])
+    stale_dir = sandbox.root / ".cache/dotfiles/custom/Genoux/flow"
+    stale_dir.mkdir(parents=True)
+    (stale_dir / "PKGBUILD").touch()
+    sandbox.stub("gh", "if [ \"$1 $2\" = 'auth status' ]; then exit 0; fi\nif [ \"$1\" = repo ]; then [ -e \"$4\" ] && exit 128; mkdir -p \"$4\"; touch \"$4/PKGBUILD\"; fi")
+    sandbox.stub("makepkg", "")
+    result = sandbox.run(
+        f"""
+{source("lib/package/custom.sh")}
+packages_custom
+echo "exit=$?"
+"""
+    )
+    assert result.returncode == 0, result.stderr
+    assert "exit=0" in result.stdout
