@@ -27,6 +27,7 @@ hl.config({
       ignore_opacity = true,
       xray = false,
       special = true,
+      popups = true,
     },
 
     shadow = {

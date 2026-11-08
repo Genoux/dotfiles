@@ -1,8 +1,8 @@
 /* Matugen-generated libadwaita palette — do not edit
  * Imported by ~/.config/gtk-4.0/gtk.css (lib/gtk.sh write_gtk4_user_css).
  * Window glass mirrors StyleOverlay.surface (base00 at 0.62); sidebars and cards
- * are the shell's wells (on_surface at alphaLight). Popovers and dialogs stay
- * opaque: Hyprland does not blur them. */
+ * are the shell's wells (on_surface at alphaLight). Popovers are glass too
+ * (Hyprland decoration:blur:popups); dialogs stay opaque. */
 @define-color window_bg_color {{colors.surface_dim.default.rgba | set_alpha: 0.62}};
 @define-color window_fg_color {{colors.on_surface.default.hex}};
 @define-color view_bg_color transparent;
@@ -18,7 +18,7 @@
 @define-color secondary_sidebar_fg_color {{colors.on_surface.default.hex}};
 @define-color card_bg_color {{colors.on_surface.default.rgba | set_alpha: 0.07}};
 @define-color card_fg_color {{colors.on_surface.default.hex}};
-@define-color popover_bg_color {{colors.surface_container.default.hex}};
+@define-color popover_bg_color {{colors.surface_container.default.rgba | set_alpha: 0.72}};
 @define-color popover_fg_color {{colors.on_surface.default.hex}};
 @define-color dialog_bg_color {{colors.surface_container.default.hex}};
 @define-color dialog_fg_color {{colors.on_surface.default.hex}};
