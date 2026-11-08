@@ -62,8 +62,3 @@ Delete the comment. If nothing is lost, it should not exist. If the answer is
 - If a function needs more than one comment to be understood, fix the function —
   split it or rename it. Do not narrate it.
 - Write only what you would say out loud in code review. Nothing else.
-
-<!-- >>> jb-toolkit -->
-Before any work, read and follow /home/john/Projects/john/jb-toolkit/RULES.md. Every project follows it
-unless its own AGENTS.md records an exception.
-<!-- <<< jb-toolkit -->
