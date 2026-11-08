@@ -263,3 +263,8 @@ Setup and refresh:
 
 Claude settings live in stow; gentle-ai cannot sync symlinked files directly.
 `system-gentle-ai sync claude-code` materializes, syncs, and re-stows automatically.
+
+`~/.claude/CLAUDE.md` is not in stow: it is generated (jb-toolkit's `jb install`
+and gentle-ai each own a block in it). The owner's own Claude rules live in
+`stow/claude/.claude/personal.md`, which that file imports; Codex gets the same
+through `stow/codex/.codex/personal.md`.
