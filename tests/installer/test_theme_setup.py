@@ -97,3 +97,4 @@ ln -sf "$gtk4/gtk-Dark.css" "$gtk4/gtk.css"
     matugen_import = f'@import url("file://{gtk4}/matugen-colors.css");'
     assert css.index(theme_import) < css.index(matugen_import)
     assert 'backdrop-filter: blur(' in css
+    assert 'background-color: alpha(@popover_fg_color, 0.1);' in css

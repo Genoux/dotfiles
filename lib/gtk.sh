@@ -200,6 +200,23 @@ write_gtk4_user_css() {
 window.background {
   backdrop-filter: blur(20px);
 }
+
+/* MacTahoe fills hovered menu items with the accent, and matugen's accent goes
+ * white on a monochrome wallpaper; use the shell's translucent well instead. */
+popover.menu modelbutton:hover,
+popover.menu modelbutton:hover:focus {
+  color: @popover_fg_color;
+  background-color: alpha(@popover_fg_color, 0.1);
+}
+
+popover.menu modelbutton:hover arrow {
+  color: @popover_fg_color;
+}
+
+popover.menu modelbutton:selected:active {
+  color: @popover_fg_color;
+  background-color: alpha(@popover_fg_color, 0.16);
+}
 EOF
 }
 
