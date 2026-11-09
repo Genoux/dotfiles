@@ -58,8 +58,8 @@ resolve_widget_delay() {
 
   $USE_WIDGET_DELAY || return
 
-  # Resolve this only once selection has closed. The widget and keybind paths
-  # therefore share the same select-first, countdown-second behavior.
+  # Resolve this only once selection has closed, so the countdown runs on what
+  # was picked. Only the widget passes --widget-delay; keybinds shoot at once.
   widget_delay=$(quickshell ipc call capture delay 2>/dev/null) || return
   if [[ "$widget_delay" =~ ^[0-9]+$ ]]; then
     DELAY="$widget_delay"

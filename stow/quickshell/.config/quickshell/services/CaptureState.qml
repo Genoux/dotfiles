@@ -23,8 +23,9 @@ Singleton {
     // lands wherever the pointer is, like the launcher and power menu do.
     property var screen: null
     // Remembered rather than duplicated per scope: the record segment offers
-    // two scopes with one toggle, not four entries.
-    property bool audioEnabled: false
+    // two scopes with one toggle, not four entries. On by default: a silent
+    // recording is the mistake you only notice after it is over.
+    property bool audioEnabled: true
     // Countdown before the shutter, in seconds. Three values cycle on one
     // button rather than opening a picker; 0 is off.
     readonly property var delayChoices: [0, 3, 5]
