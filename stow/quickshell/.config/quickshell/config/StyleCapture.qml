@@ -8,6 +8,9 @@ Singleton {
     // The countdown uses the same restrained OSD chrome as volume, but a
     // smaller square: one changing numeral is all it needs to communicate.
     readonly property int countdownSize: 72
+    // A rounded square, not a disc: macOS draws its HUD tiles at about a
+    // fifth of the side, and 16 on 72 lands there.
+    readonly property int countdownRadius: StyleTokens.radiusLg
 
     // Preview card. A tile, not a banner: at notification width the thumbnail
     // stretched across the corner, and a capture is a picture, not text. The

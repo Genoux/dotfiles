@@ -33,7 +33,7 @@ PanelWindow {
 
     Rectangle {
         anchors.fill: parent
-        radius: width / 2
+        radius: StyleCapture.countdownRadius
         color: StyleOverlay.surface
 
         Text {
