@@ -1,0 +1,6 @@
+#!/bin/bash
+# Runs the package update in a terminal. Started by system-update-check's
+# notification action and by the shell's notifications page.
+
+exec ghostty --title="System Update" --wait-after-command=true \
+    -e "$HOME/.local/bin/dotfiles" packages update
