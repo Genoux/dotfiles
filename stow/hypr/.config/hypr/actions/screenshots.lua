@@ -7,9 +7,12 @@ local M = {}
 -- it can offer copy, edit, and discard. This file used to reimplement the
 -- script's grim/slurp/satty pipeline inline, which meant the keybinds and the
 -- script could drift and only the script's callers got the preview card.
+--
+-- No --widget-delay: a keybind is a quick shot. The widget's timer belongs to
+-- captures started from the widget, where the delay is visibly armed.
 local function shoot(mode)
   local command = paths.shellQuote(paths.scripts.systemScreenshot) .. " " .. paths.shellQuote(mode)
-  hl.dispatch(hl.dsp.exec_cmd(command .. " --widget-delay"))
+  hl.dispatch(hl.dsp.exec_cmd(command))
 end
 
 function M.region()
