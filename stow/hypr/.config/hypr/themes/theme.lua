@@ -8,8 +8,8 @@ hl.config({
   },
 
   decoration = {
-    rounding_power = 2,
-    rounding = 14,
+    rounding_power = 4,
+    rounding = 12,
     active_opacity = 0.95,
     inactive_opacity = 0.93,
     dim_special = 0.3,
@@ -32,11 +32,11 @@ hl.config({
 
     shadow = {
       enabled = true,
-      range = 24,
-      render_power = 3,
-      offset = "0 6",
-      color = "rgba(00000047)",
-      color_inactive = "rgba(00000024)",
+      range = 20,
+      render_power = 1,
+      offset = "0 2",
+      color = "rgba(00000026)",
+      color_inactive = "rgba(00000014)",
     },
   },
 })
