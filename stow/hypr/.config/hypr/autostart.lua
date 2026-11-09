@@ -25,6 +25,7 @@ local startupCommands = {
   "clipse -listen",
   -- Noted waits hidden so SUPER+N opens it instantly.
   "app2unit -- " .. os.getenv("HOME") .. "/.local/bin/noted --hidden",
+  "app2unit -- " .. os.getenv("HOME") .. "/.local/bin/monotub",
 }
 
 hl.on("hyprland.start", function()

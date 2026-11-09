@@ -66,6 +66,16 @@ hl.window_rule({
   match = { class = "^(wisper)$" },
 })
 
+hl.window_rule({
+  name = "monotub-widget",
+  opacity = "1.0 override 1.0 override",
+  float = true,
+  center = true,
+  size = "560 220",
+  border_size = 0,
+  match = { class = "^(monotub)$" },
+})
+
 hl.window_rule({ name = "satty", size = "1280 800", center = true, float = true, match = { title = "^(satty)$" } })
 
 hl.layer_rule({ name = "osd", blur = true, ignore_alpha = 0.5, blur_popups = true, animation = "fade", match = { namespace = "osd" } })
@@ -98,4 +108,12 @@ hl.window_rule({
   opacity = "1.0 override 1.0 override",
   match = { initial_title = "www.legendsofidleon.com_/ytGl5oc/" },
 })
-hl.window_rule({ name = "noted", float = true, center = true, size = "800 640", match = { class = "^(noted)$" } })
+hl.window_rule({ name = "noted", float = true, center = true, size = "800 640", rounding = 18, border_size = 0, match = { class = "^(noted)$" } })
+-- focus-noted: give Noted keyboard focus whenever its panel appears. Wayland
+-- ignores the app's own focus request, and focus-follows-mouse would leave
+-- typing in the window under the pointer.
+hl.on("window.open", function(window)
+  if window ~= nil and window.class == "noted" then
+    hl.dispatch(hl.dsp.focus({ window = "class:^(noted)$" }))
+  end
+end)
