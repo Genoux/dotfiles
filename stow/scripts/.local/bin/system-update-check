@@ -15,7 +15,11 @@ if command -v flatpak &>/dev/null; then
 fi
 
 total_count=$((official_count + aur_count + flatpak_count))
-((total_count == 0)) && exit 0
+if ((total_count == 0)); then
+    # The shell keeps the last notice as a card; nothing pending retires it.
+    timeout 5 qs ipc call notifications clearSystemUpdate &>/dev/null
+    exit 0
+fi
 
 chosen_action=$(notify-send "$total_count updates available" \
     "Official $official_count · AUR $aur_count · Flatpak $flatpak_count" \

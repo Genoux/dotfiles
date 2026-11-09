@@ -376,7 +376,7 @@ Item {
     Component {
         id: notificationsPage
 
-        NotificationsPage {
+        Widgets.NotificationsPopover {
             embedded: true
             onCollapseRequested: root.collapseRequested()
         }

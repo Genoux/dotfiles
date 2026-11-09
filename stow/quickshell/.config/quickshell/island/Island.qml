@@ -413,6 +413,10 @@ PanelWindow {
                                     barWindow: root
                                 }
 
+                                Widgets.NotificationBell {
+                                    barWindow: root
+                                }
+
                                 Widgets.Keyboard {
                                 }
 

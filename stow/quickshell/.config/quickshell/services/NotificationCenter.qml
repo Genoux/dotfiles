@@ -107,11 +107,19 @@ Singleton {
 
     // Launched here rather than through the notification's action, which only
     // exists while system-update-check is still waiting on it.
-    function runSystemUpdate(entry) {
+    function runSystemUpdate() {
+        clearSystemUpdate()
+        ShellActions.run("system-update")
+    }
+
+    function clearSystemUpdate() {
+        const entry = systemUpdate
+        if (!entry)
+            return
+
         const live = liveNotification(entry)
         if (live)
             Notifications.dismiss(live)
-        ShellActions.run("system-update")
         remove([entry])
     }
 

@@ -289,5 +289,11 @@ packages_update() {
 
     stop_log_monitor true
     log_success "System update complete"
-    [[ -z "$aur_warning" ]] || log_warning "$aur_warning"
+    if [[ -n "$aur_warning" ]]; then
+        log_warning "$aur_warning"
+    else
+        # An update run outside the shell's Update button leaves its card
+        # behind; after an AUR warning the updates are still pending, so it stays.
+        timeout 5 qs ipc call notifications clearSystemUpdate &>/dev/null || true
+    fi
 }

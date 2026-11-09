@@ -69,7 +69,8 @@ Singleton {
         const entry = IconRegistry.declaredEntry(desktopHint)
             ?? IconRegistry.declaredEntry(entryHint(notification?.appIcon))
             ?? (desktopHint ? DesktopEntries.applications.values.find((candidate) => candidate.id.replace(/\.desktop$/, "") === desktopHint) : null)
-        const window = ShellActions.findToplevel(entry?.startupClass || entry?.id || "", notification?.appName ?? "")
+        const window = ShellActions.findToplevelByClass(entryHint(entry?.startupClass || entry?.id))
+            ?? ShellActions.findToplevelByClass(notification?.appName)
 
         if (window?.wayland) {
             window.wayland.activate()
