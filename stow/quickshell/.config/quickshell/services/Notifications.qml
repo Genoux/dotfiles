@@ -99,10 +99,11 @@ Singleton {
 
         // Left untracked, a notification is closed at once and never pops up.
         // Do not disturb still lets a critical one through: a dying battery.
+        // Tracked before it is recorded, so a history failure cannot cost the popup.
         onNotification: (notification) => {
-            NotificationCenter.record(notification)
             if (!NotificationCenter.doNotDisturb || notification.urgency === NotificationUrgency.Critical)
                 root.track(notification)
+            NotificationCenter.record(notification)
         }
     }
 }
