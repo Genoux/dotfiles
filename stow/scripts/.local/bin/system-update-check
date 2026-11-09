@@ -26,5 +26,4 @@ chosen_action=$(notify-send "$total_count updates available" \
 
 # exec keeps the terminal as the unit's main process; a backgrounded child would be
 # killed with the oneshot's cgroup as soon as this script exits.
-exec ghostty --title="System Update" --wait-after-command=true \
-    -e "$HOME/.local/bin/dotfiles" packages update
+exec "$HOME/.local/bin/system-update"
