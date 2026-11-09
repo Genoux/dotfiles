@@ -16,7 +16,7 @@ Item {
     property string currentTab: ""
     property int tabSize: StyleIsland.footerTabSize
     property int tabRadius: StyleIsland.footerTabRadius
-    property int spacing: StyleIsland.footerTrackPadding
+    property int spacing: StyleIsland.footerTabSpacing
 
     signal tabSelected(string tab)
 
@@ -39,6 +39,8 @@ Item {
             return IconRegistry.bluetoothIcon(true);
         case "capture":
             return IconRegistry.captureIcon("idle");
+        case "notifications":
+            return IconRegistry.themeIcon("notification-symbolic");
         case "more":
             return IconRegistry.themeIcon("view-more-symbolic");
         default:
@@ -107,6 +109,17 @@ Item {
                             easing.type: StyleTokens.easeFade
                         }
                     }
+                }
+
+                Rectangle {
+                    anchors.right: parent.right
+                    anchors.top: parent.top
+                    anchors.margins: StyleIsland.footerBadgeInset
+                    visible: tab.modelData === "notifications" && Services.NotificationCenter.hasUnseen
+                    width: StyleIsland.footerBadgeSize
+                    height: width
+                    radius: width / 2
+                    color: Colors.base0D
                 }
             }
         }

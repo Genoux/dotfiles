@@ -13,6 +13,9 @@ Singleton {
     readonly property int gap: StyleTokens.space8
     readonly property int iconSize: 42
     readonly property int maxVisible: 10
+    readonly property int unseenDotSize: 6
+    readonly property int stackCountPaddingH: StyleTokens.space4
+    readonly property int stackCountPaddingV: StyleTokens.space1
     readonly property int timeout: 5000
     readonly property int showDuration: StyleTokens.motionEnterDuration
     readonly property int hideDuration: StyleTokens.motionExitDuration

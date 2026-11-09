@@ -30,6 +30,18 @@ ShellRoot {
     }
 
     IpcHandler {
+        target: "notifications"
+
+        function toggle(): void {
+            Services.NotificationCenter.toggle()
+        }
+
+        function toggleDoNotDisturb(): void {
+            Services.NotificationCenter.setDoNotDisturb(!Services.NotificationCenter.doNotDisturb)
+        }
+    }
+
+    IpcHandler {
         target: "powermenu"
 
         function toggle(): void {

@@ -49,7 +49,9 @@ Singleton {
         return requestedTimeout
     }
 
-    // The notification's default action, or failing that its app.
+    // The notification's default action, or failing that its app: a window
+    // already open is raised rather than a second instance launched. Also
+    // takes a stored history entry, which has no actions left to invoke.
     function activate(notification) {
         const actions = notification?.actions ?? []
         const action = actions.find((candidate) => candidate.identifier === "default")
@@ -59,16 +61,20 @@ Singleton {
             return
         }
 
-        const entryId = notification?.desktopEntry ?? ""
-        if (entryId.length === 0)
-            return
+        // The icon's own lookup first, so the app raised is the one the icon
+        // shows; it skips entries without an icon, which the plain id match
+        // after it still finds.
+        const entryHint = (value) => String(value ?? "").replace(/\.desktop$/, "")
+        const desktopHint = entryHint(notification?.desktopEntry)
+        const entry = IconRegistry.declaredEntry(desktopHint)
+            ?? IconRegistry.declaredEntry(entryHint(notification?.appIcon))
+            ?? (desktopHint ? DesktopEntries.applications.values.find((candidate) => candidate.id.replace(/\.desktop$/, "") === desktopHint) : null)
+        const window = ShellActions.findToplevel(entry?.startupClass || entry?.id || "", notification?.appName ?? "")
 
-        const normalizedId = entryId.endsWith(".desktop") ? entryId : `${entryId}.desktop`
-        const entry = DesktopEntries.applications.values.find((candidate) => {
-            return candidate.id === entryId
-                || candidate.id === normalizedId
-                || candidate.id.replace(/\.desktop$/, "") === entryId
-        })
+        if (window?.wayland) {
+            window.wayland.activate()
+            return
+        }
 
         entry?.execute()
     }
@@ -91,6 +97,12 @@ Singleton {
         keepOnReload: false
         persistenceSupported: false
 
-        onNotification: (notification) => root.track(notification)
+        // Left untracked, a notification is closed at once and never pops up.
+        // Do not disturb still lets a critical one through: a dying battery.
+        onNotification: (notification) => {
+            NotificationCenter.record(notification)
+            if (!NotificationCenter.doNotDisturb || notification.urgency === NotificationUrgency.Critical)
+                root.track(notification)
+        }
     }
 }

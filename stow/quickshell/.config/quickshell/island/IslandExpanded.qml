@@ -39,7 +39,7 @@ Item {
 
     // The footer holds the pages used most; the rest are one step further, on
     // the More page.
-    readonly property var tabs: ["home", "launcher", "media", "sound", "network", "bluetooth", "capture", "more"]
+    readonly property var tabs: ["home", "launcher", "media", "sound", "network", "bluetooth", "capture", "notifications", "more"]
     readonly property var morePages: ["clipboard", "calendar", "weather", "system", "info", "power"]
     // A page reached from inside another keeps that page's tab lit.
     readonly property var subPages: ({
@@ -56,6 +56,7 @@ Item {
         "clipboard": clipboardPage,
         "more": morePage,
         "capture": capturePage,
+        "notifications": notificationsPage,
         "calendar": calendarPage,
         "weather": weatherPage,
         "system": systemPage,
@@ -369,6 +370,15 @@ Item {
         Widgets.CapturePopover {
             embedded: true
             onDismissRequested: root.collapseNowRequested()
+        }
+    }
+
+    Component {
+        id: notificationsPage
+
+        NotificationsPage {
+            embedded: true
+            onCollapseRequested: root.collapseRequested()
         }
     }
 

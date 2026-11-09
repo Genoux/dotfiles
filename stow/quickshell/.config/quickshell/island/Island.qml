@@ -213,6 +213,16 @@ PanelWindow {
         target: Services.PowerMenu
     }
 
+    Connections {
+        function onToggleRequested(targetScreen) {
+            if (targetScreen === root.screen && !root.wide)
+                root.toggleOn("notifications");
+
+        }
+
+        target: Services.NotificationCenter
+    }
+
     HyprlandFocusGrab {
         active: root.expanded
         windows: [root].concat(Services.PopoverCoordinator.grabPassthroughWindows)
