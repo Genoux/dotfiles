@@ -116,9 +116,9 @@ Singleton {
     // centred under them.
     readonly property int wideWidth: 420
     // The footer menu: a rounded track of rounded-square tabs. The track floats off the
-    // island's edge by `edgeInset`, and one gap runs through it: between tabs,
-    // and from the tabs to the track's edge, so the tab size is what the width
-    // leaves over.
+    // island's edge by `edgeInset` and pads its tabs by `footerTrackPadding`; the
+    // tabs sit closer together than that, because one gap throughout would
+    // shrink nine tabs to 24px. The tab size is what the width leaves over.
     // Content running under the footer fades out over this stretch, measured up
     // from the island's bottom edge: it is gone by the time it reaches the track.
     // As long as the gap above the track, so a list scrolled to its end rests
@@ -126,13 +126,16 @@ Singleton {
     readonly property int footerFadeLength: dockGap
     readonly property int footerFadeEnd: footerHeight - footerInset
     readonly property int footerFadeStart: footerFadeEnd + footerFadeLength
-    readonly property int footerTabCount: 8
+    readonly property int footerTabCount: 9
     readonly property int footerInset: edgeInset
     readonly property int footerTrackPadding: StyleTokens.space8
+    readonly property int footerTabSpacing: StyleTokens.space4
     // Rounded down to even, like the glyph inside it, so the glyph sits on whole
     // pixels; the tabs are centred in the track and the spare width goes to its
     // ends.
-    readonly property int footerTabSize: Math.floor((pageWidth - footerInset * 2 - (footerTabCount + 1) * footerTrackPadding) / footerTabCount / 2) * 2
+    readonly property int footerTabSize: Math.floor((pageWidth - footerInset * 2 - footerTrackPadding * 2 - (footerTabCount - 1) * footerTabSpacing) / footerTabCount / 2) * 2
+    readonly property int footerBadgeSize: 6
+    readonly property int footerBadgeInset: StyleTokens.space4
     readonly property int footerTrackHeight: footerTabSize + footerTrackPadding * 2
     readonly property int footerHeight: footerTrackHeight + footerInset * 2
     // The air around the content of the pages built for the island. The sides
