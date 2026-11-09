@@ -247,7 +247,7 @@ PopoverPanel {
     }
 
     Item {
-        implicitWidth: StyleIsland.pageWidth
+        implicitWidth: StylePopover.panelWidth
         implicitHeight: content.implicitHeight
         width: implicitWidth
         height: implicitHeight
@@ -356,7 +356,7 @@ PopoverPanel {
                             active: true
                             text: "Update"
                             onClicked: {
-                                Services.NotificationCenter.runSystemUpdate(root.systemUpdate)
+                                Services.NotificationCenter.runSystemUpdate()
                                 root.collapseRequested()
                             }
                         }

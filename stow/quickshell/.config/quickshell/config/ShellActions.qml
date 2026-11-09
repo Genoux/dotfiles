@@ -26,16 +26,30 @@ Singleton {
         return field.includes(token) || token.includes(field)
     }
 
+    function toplevelClass(toplevel) {
+        return normalize(toplevel.wayland?.appId || toplevel.lastIpcObject?.class || toplevel.lastIpcObject?.initialClass)
+    }
+
     function findToplevel(appId, fallback) {
         const needles = [appId, fallback].map(normalize).filter(token => token.length > 2)
         if (!needles.length)
             return null
 
         return Hyprland.toplevels.values.find(toplevel => {
-            const cls = normalize(toplevel.wayland?.appId || toplevel.lastIpcObject?.class || toplevel.lastIpcObject?.initialClass)
+            const cls = toplevelClass(toplevel)
             const title = normalize(toplevel.title)
             return needles.some(needle => tokenMatchesField(needle, cls) || tokenMatchesField(needle, title))
         }) ?? null
+    }
+
+    // Exact, unlike findToplevel: a notification's app name is free text, and
+    // matched against window titles it raised whatever window mentioned it.
+    function findToplevelByClass(className) {
+        const wanted = normalize(className)
+        if (!wanted)
+            return null
+
+        return Hyprland.toplevels.values.find(toplevel => toplevelClass(toplevel) === wanted) ?? null
     }
 
     function runLocalScript(scriptName, extraArgs) {

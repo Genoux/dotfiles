@@ -39,6 +39,10 @@ ShellRoot {
         function toggleDoNotDisturb(): void {
             Services.NotificationCenter.setDoNotDisturb(!Services.NotificationCenter.doNotDisturb)
         }
+
+        function clearSystemUpdate(): void {
+            Services.NotificationCenter.clearSystemUpdate()
+        }
     }
 
     IpcHandler {
