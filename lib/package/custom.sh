@@ -78,7 +78,7 @@ _build_custom_package() {
     fi
 
     # BUILDDIR/PKGDEST outside the clone: makepkg's default src/ would land
-    # inside repos whose own source tree is src/ (Genoux/flow), and build
+    # inside repos whose own source tree is src/ (Genoux/offhand), and build
     # output in the clone would dirty it for the next `git pull --ff-only`.
     if ! (cd "$repo_dir" && BUILDDIR="$CUSTOM_PACKAGE_CACHE/.build" PKGDEST="$CUSTOM_PACKAGE_CACHE/.pkg" \
         makepkg -si --needed --noconfirm); then

@@ -73,7 +73,7 @@ printf '%s\\n' "${{pkgs[@]}}"
 
 def test_custom_package_parsing_skips_comments_and_blanks(sandbox):
     sandbox.write_package_file(
-        "custom.package", ["# owner/repo per line", "Genoux/flow", "", "Genoux/idleon-desktop"]
+        "custom.package", ["# owner/repo per line", "Genoux/offhand", "", "Genoux/idleon-desktop"]
     )
     result = sandbox.run(
         f"""
@@ -84,4 +84,4 @@ printf '%s\\n' "${{repos[@]}}"
 """
     )
     assert result.returncode == 0, result.stderr
-    assert result.stdout.splitlines() == ["Genoux/flow", "Genoux/idleon-desktop"]
+    assert result.stdout.splitlines() == ["Genoux/offhand", "Genoux/idleon-desktop"]

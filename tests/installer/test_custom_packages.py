@@ -2,7 +2,7 @@ from conftest import source
 
 
 def test_skipped_not_failed_when_gh_unauthenticated(sandbox):
-    sandbox.write_package_file("custom.package", ["Genoux/flow"])
+    sandbox.write_package_file("custom.package", ["Genoux/offhand"])
     sandbox.stub("gh", "case \"$1 $2\" in\n  'auth status') exit 1 ;;\n  'auth login') exit 1 ;;\nesac")
     result = sandbox.run(
         f"""
@@ -32,7 +32,7 @@ echo "exit=$?"
 
 
 def test_builds_each_repo_when_authenticated(sandbox):
-    sandbox.write_package_file("custom.package", ["Genoux/flow"])
+    sandbox.write_package_file("custom.package", ["Genoux/offhand"])
     sandbox.stub("gh", "if [ \"$1 $2\" = 'auth status' ]; then exit 0; fi\nif [ \"$1\" = repo ]; then mkdir -p \"$4\"; touch \"$4/PKGBUILD\"; fi")
     sandbox.stub("makepkg", "")
     result = sandbox.run(
@@ -50,7 +50,7 @@ echo "exit=$?"
 
 
 def test_build_failure_fails_the_phase(sandbox):
-    sandbox.write_package_file("custom.package", ["Genoux/flow"])
+    sandbox.write_package_file("custom.package", ["Genoux/offhand"])
     sandbox.stub("gh", "if [ \"$1 $2\" = 'auth status' ]; then exit 0; fi\nif [ \"$1\" = repo ]; then mkdir -p \"$4\"; touch \"$4/PKGBUILD\"; fi")
     sandbox.stub("makepkg", "", exit_code=1)
     result = sandbox.run(
@@ -65,7 +65,7 @@ echo "exit=$?"
 
 
 def test_full_install_does_not_open_github_login(sandbox):
-    sandbox.write_package_file("custom.package", ["Genoux/flow"])
+    sandbox.write_package_file("custom.package", ["Genoux/offhand"])
     sandbox.stub("gh", "exit 1")
     result = sandbox.run(f"""
 export FULL_INSTALL=true
@@ -78,8 +78,8 @@ packages_custom
 
 
 def test_stale_non_git_cache_dir_is_recloned(sandbox):
-    sandbox.write_package_file("custom.package", ["Genoux/flow"])
-    stale_dir = sandbox.root / ".cache/dotfiles/custom/Genoux/flow"
+    sandbox.write_package_file("custom.package", ["Genoux/offhand"])
+    stale_dir = sandbox.root / ".cache/dotfiles/custom/Genoux/offhand"
     stale_dir.mkdir(parents=True)
     (stale_dir / "PKGBUILD").touch()
     sandbox.stub("gh", "if [ \"$1 $2\" = 'auth status' ]; then exit 0; fi\nif [ \"$1\" = repo ]; then [ -e \"$4\" ] && exit 128; mkdir -p \"$4\"; touch \"$4/PKGBUILD\"; fi")
