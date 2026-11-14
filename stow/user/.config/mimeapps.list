@@ -22,3 +22,4 @@ image/tiff=imv.desktop
 x-scheme-handler/grokbot=grok-bot.desktop
 x-scheme-handler/sand=grok-bot.desktop
 x-scheme-handler/codex=chatgpt.desktop
+x-scheme-handler/nordpass-cli=nordpass-cli.desktop
