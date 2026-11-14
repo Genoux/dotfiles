@@ -23,9 +23,8 @@ local startupCommands = {
   "system-bluetooth-reconnect",
   "wl-paste -p --watch wl-copy -pc",
   "clipse -listen",
-  -- Noted waits hidden so SUPER+N opens it instantly.
+  -- Noted waits hidden so SUPER+Z opens it instantly.
   "app2unit -- " .. os.getenv("HOME") .. "/.local/bin/noted --hidden",
-  -- monotub starts itself through XDG autostart; its tray menu has "Start at login".
 }
 
 hl.on("hyprland.start", function()

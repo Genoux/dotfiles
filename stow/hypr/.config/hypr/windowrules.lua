@@ -29,8 +29,6 @@ hl.window_rule({ name = "modal-choose-files", float = true, match = { title = "^
 hl.window_rule({ name = "modal-save-as", float = true, match = { title = "^(Save As)$" } })
 hl.window_rule({ name = "modal-confirm-replace", float = true, match = { title = "^(Confirm to replace files)$" } })
 hl.window_rule({ name = "modal-file-operation-progress", float = true, match = { title = "^(File Operation Progress)$" } })
-hl.window_rule({ name = "system-info", float = true, center = true, size = "1016 480", match = { class = "^(system-info)$" } })
-hl.window_rule({ name = "caprine", float = true, center = true, size = "490 700", match = { class = "^(Caprine)$" } })
 hl.window_rule({ name = "calcurse", float = true, size = "1000 800", center = true, match = { title = "^(calcurse)$" } })
 hl.window_rule({ name = "mpv", float = true, center = true, size = "(monitor_w*0.3) (monitor_h*0.3)", pin = true, match = { class = "^(mpv)$" } })
 hl.window_rule({ name = "live-cam", float = true, center = true, size = "1280 720", match = { initial_title = ".*cam\\.jbroom\\.ca.*" } })
@@ -40,7 +38,6 @@ hl.window_rule({ name = "ghostty-float", float = true, center = true, size = "10
 hl.window_rule({ name = "btop", float = true, center = true, size = "1024 600", match = { title = "^(btop)$" } })
 hl.window_rule({ name = "battop", float = true, center = true, size = "1024 700", match = { title = "^(battop)$" } })
 hl.window_rule({ name = "wiremix", float = true, center = true, size = "800 700", match = { title = "^(wiremix)$" } })
-hl.window_rule({ name = "gnome-weather", float = true, center = true, size = "900 650", match = { class = "^(org\\.gnome\\.Weather)$" } })
 hl.window_rule({ name = "wthrr", float = true, center = true, size = "630 650", match = { title = "^(wthrr)$" } })
 hl.window_rule({ name = "clipse", float = true, center = true, size = "700 700", match = { title = "^(clipse)$" } })
 hl.window_rule({ name = "dotfiles-manager", float = true, center = true, size = "628 450", match = { class = "^(tui\\.dotfiles-manager)$" } })
@@ -55,15 +52,6 @@ hl.window_rule({
   size = "(monitor_w*0.25) (monitor_h*0.25)",
   move = "((monitor_w*1)-(monitor_w*0.255)) ((monitor_h*1)-(monitor_h*0.285))",
   match = { title = "^(Picture-in-Picture)$" },
-})
-
-hl.window_rule({
-  name = "wisper",
-  pin = true,
-  float = true,
-  size = "(monitor_w*0.15) (monitor_h*0.15)",
-  move = "((monitor_w*0.5)-(monitor_w*0.075)) ((monitor_h*1)-(monitor_h*0.2))",
-  match = { class = "^(wisper)$" },
 })
 
 hl.window_rule({
@@ -96,7 +84,6 @@ hl.layer_rule({ name = "workspace-manager", blur = true, ignore_alpha = 0.1, no_
 hl.layer_rule({ name = "workspace-manager-backdrop", no_anim = true, match = { namespace = "^(workspace-manager-backdrop)$" } })
 hl.layer_rule({ name = "capture-preview", blur = true, ignore_alpha = 0.5, animation = "slide", match = { namespace = "^(capture-preview)$" } })
 hl.window_rule({ name = "offhand-console", float = true, match = { class = "^(offhand-console)$" } })
-hl.window_rule({ name = "culture", float = true, center = true, match = { class = "^(culture)$" } })
 hl.layer_rule({ name = "flow-island", blur = true, blur_popups = true, ignore_alpha = 0.1, animation = "fade", match = { namespace = "^(flow)$" } })
 
 hl.window_rule({

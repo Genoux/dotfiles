@@ -135,11 +135,6 @@ hl.bind("SUPER + SHIFT + p", hl.dsp.exec_cmd("hyprpicker -a"))
 hl.bind("SUPER + o", hl.dsp.exec_cmd("hypruler"))
 hl.bind(mainMod .. " + p", hl.dsp.window.pin())
 
--- Hyprland owns the dictation chord so it gets consumed here. whisrs reads evdev
--- passively without grabbing, so an unbound chord reaches the focused app and
--- inserts its base character (SUPER+W typed a literal "w").
-hl.bind(mainMod .. " + w", hl.dsp.exec_cmd("whisrs toggle"))
-
 -- Noted: toggle the running panel straight over its socket (~2 ms); start it
 -- only if it is not running yet (autostart normally has it waiting hidden).
 local notedToggle = [[printf toggle | nc -NU "$XDG_RUNTIME_DIR/noted.sock" 2>/dev/null || ]]
