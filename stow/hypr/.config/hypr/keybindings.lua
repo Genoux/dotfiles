@@ -48,7 +48,7 @@ hl.bind(mainMod .. " + SHIFT + left", windows.groupAwareMove("left"))
 hl.bind(mainMod .. " + SHIFT + right", windows.groupAwareMove("right"))
 hl.bind(mainMod .. " + SHIFT + up", windows.groupAwareMove("up"))
 hl.bind(mainMod .. " + SHIFT + down", windows.groupAwareMove("down"))
-hl.bind(mainMod .. " + SHIFT + g", hl.dsp.group.lock_active("toggle"))
+hl.bind(mainMod .. " + SHIFT + g", hl.dsp.group.lock({ action = "toggle" }))
 
 hl.bind(mainMod .. " + a", hl.dsp.exec_cmd(appLauncher))
 hl.bind(mainMod .. " + TAB", hl.dsp.focus({ last = true }))
