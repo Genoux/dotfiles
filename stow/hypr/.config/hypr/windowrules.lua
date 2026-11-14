@@ -71,7 +71,6 @@ hl.layer_rule({ name = "layerrule-brightness-osd", blur = true, ignore_alpha = 0
 hl.layer_rule({ name = "layerrule-quickshell", blur = true, blur_popups = true, ignore_alpha = 0.1, animation = "fade", match = { namespace = "^(quickshell)$" } })
 hl.layer_rule({ name = "layerrule-quickshell-popover", blur = true, blur_popups = true, ignore_alpha = 0.5, no_anim = true, match = { namespace = "^(quickshell-popover)$" } })
 --hl.layer_rule({ name = "layerrule-quickshell-island", blur = true, ignore_alpha = 0.5, match = { namespace = "^(quickshell-island)$" } })
-hl.layer_rule({ name = "layerrule-calendar", blur = true, blur_popups = true, ignore_alpha = 0.1, animation = "fade", match = { namespace = "^(calendar_widget)$" } })
 hl.layer_rule({ name = "gtk4-layer-shell", blur = true, blur_popups = true, ignore_alpha = 0.1, match = { namespace = "gtk4-layer-shell" } })
 
 hl.window_rule({ name = "claude-desktop", float = true, center = true, size = "1280 800", match = { class = "^(Claude|com\\.anthropic\\.claude-desktop)$" } })
@@ -84,7 +83,7 @@ hl.layer_rule({ name = "workspace-manager", blur = true, ignore_alpha = 0.1, no_
 hl.layer_rule({ name = "workspace-manager-backdrop", no_anim = true, match = { namespace = "^(workspace-manager-backdrop)$" } })
 hl.layer_rule({ name = "capture-preview", blur = true, ignore_alpha = 0.5, animation = "slide", match = { namespace = "^(capture-preview)$" } })
 hl.window_rule({ name = "offhand-console", float = true, match = { class = "^(offhand-console)$" } })
-hl.layer_rule({ name = "flow-island", blur = true, blur_popups = true, ignore_alpha = 0.1, animation = "fade", match = { namespace = "^(flow)$" } })
+hl.layer_rule({ name = "offhand-overlay", blur = true, blur_popups = true, ignore_alpha = 0.1, animation = "fade", match = { namespace = "^(offhand-overlay)$" } })
 
 hl.window_rule({
   name = "idleon-game",
