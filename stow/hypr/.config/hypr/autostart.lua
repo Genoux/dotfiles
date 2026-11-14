@@ -25,7 +25,7 @@ local startupCommands = {
   "clipse -listen",
   -- Noted waits hidden so SUPER+N opens it instantly.
   "app2unit -- " .. os.getenv("HOME") .. "/.local/bin/noted --hidden",
-  "app2unit -- " .. os.getenv("HOME") .. "/.local/bin/monotub",
+  -- monotub starts itself through XDG autostart; its tray menu has "Start at login".
 }
 
 hl.on("hyprland.start", function()
